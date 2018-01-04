@@ -1,0 +1,16 @@
+library project Wayland_Client is
+
+   for Library_Name use "adawc";
+
+   for Source_Dirs use ("src");
+
+   for Object_Dir use "obj";
+
+   for Library_Dir use "lib";
+
+   for Source_Files use (
+                         "wl.ads",
+                         "wl.adb"
+                         );
+
+end Wayland_Client;
