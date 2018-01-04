@@ -1,5 +1,4 @@
-with "aida_deepend.gpr";
-with "aida_basic_types.gpr";
+with "wayland_xml.gpr";
 
 project Xml_Parser is
    for Source_Dirs use ("src");
