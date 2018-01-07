@@ -17,4 +17,20 @@ package body Wayland_XML.Interface_Tag is
                           Value  => Value);
    end Set_Version;
 
+   procedure Append_Child (This  : in out Interface_Tag_T;
+                           Item  : not null Wayland_XML.Description_Tag.Description_Tag_Ptr)
+   is
+      Child : Child_T := (Child_Description, Item);
+   begin
+      This.My_Children.Append (Child);
+   end Append_Child;
+
+   procedure Append_Child (This  : in out Interface_Tag_T;
+                           Item  : not null Wayland_XML.Request_Tag.Request_Tag_Ptr)
+   is
+      Child : Child_T := (Child_Request, Item);
+   begin
+      This.My_Children.Append (Child);
+   end Append_Child;
+
 end Wayland_XML.Interface_Tag;

@@ -12,6 +12,9 @@ with Ada.Strings.Fixed;
 with Wayland_XML.Protocol_Tag;
 with Wayland_XML.Copyright_Tag;
 with Wayland_XML.Interface_Tag;
+with Wayland_XML.Description_Tag;
+with Wayland_XML.Request_Tag;
+with Wayland_XML.Arg_Tag;
 
 procedure XML_Parser is
 
@@ -21,6 +24,8 @@ procedure XML_Parser is
    use type Ada.Containers.Count_Type;
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
+
+   XML_Exception : exception;
 
    Default_Subpool : Dynamic_Pools.Dynamic_Pool renames Aida.Deepend_XML_DOM_Parser.Default_Subpool;
 
@@ -131,17 +136,15 @@ procedure XML_Parser is
 
    pragma Unmodified (Protocol_Tag);
 
-   XML_Exception : exception;
-
    procedure Identify_Protocol_Children is
 
-      procedure Identify_Copyright (Child : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) is
+      function Identify_Copyright (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wayland_XML.Copyright_Tag.Copyright_Ptr is
          Copyright_Tag : not null Wayland_XML.Copyright_Tag.Copyright_Ptr :=
            new (Subpool) Wayland_XML.Copyright_Tag.Copyright_Tag_T;
       begin
-         if Child.Tag.Child_Nodes.Length = 1 then
-            if Child.Tag.Child_Nodes.Element (1).Id = XML_Text then
-               Copyright_Tag.Set_Text (Aida.String_T (Ada.Strings.Fixed.Trim (Standard.String (Child.Tag.Child_Nodes.Element (1).Text), Ada.Strings.Both)),
+         if Node.Tag.Child_Nodes.Length = 1 then
+            if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
+               Copyright_Tag.Set_Text (Aida.String_T (Ada.Strings.Fixed.Trim (Standard.String (Node.Tag.Child_Nodes.Element (1).Text), Ada.Strings.Both)),
                                        Subpool);
             else
                raise XML_Exception;
@@ -149,9 +152,121 @@ procedure XML_Parser is
          else
             raise XML_Exception;
          end if;
+         return Copyright_Tag;
       end Identify_Copyright;
 
-      procedure Identify_Interface (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) is
+      function Identify_Description (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wayland_XML.Description_Tag.Description_Tag_Ptr is
+         Description_Tag : not null Wayland_XML.Description_Tag.Description_Tag_Ptr :=
+           new (Subpool) Wayland_XML.Description_Tag.Description_Tag_T;
+      begin
+         if Node.Tag.Attributes.Length = 1 then
+            if Node.Tag.Attributes.Element (1).Name = "summary" then
+               Description_Tag.Set_Summary (Node.Tag.Attributes.Element (1).Value,
+                                            Subpool);
+            else
+               raise XML_Exception;
+            end if;
+         else
+            raise XML_Exception;
+         end if;
+
+         if Node.Tag.Child_Nodes.Length = 1 then
+            if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
+               Description_Tag.Set_Text (Aida.String_T (Ada.Strings.Fixed.Trim (Standard.String (Node.Tag.Child_Nodes.Element (1).Text), Ada.Strings.Both)),
+                                         Subpool);
+            else
+               raise XML_Exception;
+            end if;
+         elsif Node.Tag.Child_Nodes.Length > 1 then
+            raise XML_Exception;
+         end if;
+
+         return Description_Tag;
+      end Identify_Description;
+
+      function Identify_Arg (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wayland_XML.Arg_Tag.Arg_Tag_Ptr is
+         Arg_Tag : not null Wayland_XML.Arg_Tag.Arg_Tag_Ptr:=
+           new (Subpool) Wayland_XML.Arg_Tag.Arg_Tag_T;
+      begin
+         for A of Node.Tag.Attributes loop
+            if A.Name = "name" then
+               Arg_Tag.Set_Name (A.Value,
+                                 Subpool);
+            elsif A.Name = "type" then
+               Arg_Tag.Set_Type_Attribute (A.Value,
+                                           Subpool);
+            elsif A.Name = "summary" then
+               Arg_Tag.Set_Summary (A.Value,
+                                    Subpool);
+            elsif A.Name = "interface" then
+               Arg_Tag.Set_Interface_Attribute (A.Value,
+                                                Subpool);
+            elsif A.Name = "allow-null" then
+               if A.Value ="true" then
+                  Arg_Tag.Set_Allow_Null (True);
+               elsif A.Value ="false" then
+                  Arg_Tag.Set_Allow_Null (False);
+               else
+                  raise XML_Exception;
+               end if;
+            elsif A.Name = "enum" then
+               Arg_Tag.Set_Enum (A.Value,
+                                 Subpool);
+            else
+               raise XML_Exception;
+            end if;
+         end loop;
+
+         return Arg_Tag;
+      end Identify_Arg;
+
+      function Identify_Request (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wayland_XML.Request_Tag.Request_Tag_Ptr is
+         Request_Tag : not null Wayland_XML.Request_Tag.Request_Tag_Ptr :=
+           new (Subpool) Wayland_XML.Request_Tag.Request_Tag_T;
+      begin
+         for A of Node.Tag.Attributes loop
+            if A.Name = "name" then
+               Request_Tag.Set_Name (A.Value,
+                                     Subpool);
+            elsif A.Name = "type" then
+               Request_Tag.Set_Type_Attribute (A.Value,
+                                               Subpool);
+            elsif A.Name = "since" then
+               declare
+                  Value : Aida.Int32_T;
+                  Has_Failed : Boolean;
+               begin
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+
+                  if Has_Failed then
+                     raise XML_Exception;
+                  else
+                     Request_Tag.Set_Since (Wayland_XML.Request_Tag.Version_T (Value));
+                  end if;
+               end;
+            else
+               raise XML_Exception;
+            end if;
+         end loop;
+
+         for Child of Node.Tag.Child_Nodes loop
+            if Child.Id = XML_Tag then
+               if Child.Tag.Name = "description" then
+                  Request_Tag.Append_Child (Identify_Description (Child));
+               elsif Child.Tag.Name = "arg" then
+                  Request_Tag.Append_Child (Identify_Arg (Child));
+               else
+                  raise XML_Exception;
+               end if;
+            else
+               raise XML_Exception;
+            end if;
+         end loop;
+
+         return Request_Tag;
+      end Identify_Request;
+
+      function Identify_Interface (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wayland_XML.Interface_Tag.Interface_Tag_Ptr is
          Interface_Tag : not null Wayland_XML.Interface_Tag.Interface_Tag_Ptr :=
            new (Subpool) Wayland_XML.Interface_Tag.Interface_Tag_T;
       begin
@@ -180,9 +295,9 @@ procedure XML_Parser is
                      for Child of Node.Tag.Child_Nodes loop
                         if Child.Id = XML_Tag then
                            if Child.Tag.Name = "description" then
-                              null;
+                              Interface_Tag.Append_Child (Identify_Description (Child));
                            elsif Child.Tag.Name = "request" then
-                              null;
+                              Interface_Tag.Append_Child (Identify_Request (Child));
                            elsif Child.Tag.Name = "event" then
                               null;
                            elsif Child.Tag.Name = "enum" then
@@ -204,15 +319,17 @@ procedure XML_Parser is
          else
             raise XML_Exception;
          end if;
+
+         return Interface_Tag;
       end Identify_Interface;
 
    begin
       for Child of Root_Node.Tag.Child_Nodes loop
          if Child.Id = XML_Tag then
             if Child.Tag.Name = "interface" then
-               Identify_Interface (Child);
+               Protocol_Tag.Append_Child (Identify_Interface (Child));
             elsif Child.Tag.Name = "copyright" then
-               Identify_Copyright (Child);
+               Protocol_Tag.Append_Child (Identify_Copyright (Child));
             else
                raise XML_Exception;
             end if;

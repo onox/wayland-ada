@@ -1,6 +1,34 @@
+with Ada.Containers.Vectors;
+
+with Wayland_XML.Description_Tag;
+with Wayland_XML.Request_Tag;
+
 package Wayland_XML.Interface_Tag is
 
-   type Version_T is new Aida.Pos32_T;
+   subtype Version_T is Wayland_XML.Request_Tag.Version_T;
+
+   use type Version_T;
+
+   type Child_Kind_Id_T is (
+                            Child_Dummy,
+                            Child_Description,
+                            Child_Request
+                           );
+
+   type Child_T (Kind_Id : Child_Kind_Id_T := Child_Dummy) is record
+      case Kind_Id is
+         when Child_Dummy       => Dummy           : not null String_Ptr := Empty_String'Access;
+         when Child_Description => Description_Tag : not null Wayland_XML.Description_Tag.Description_Tag_Ptr;
+         when Child_Request     => Request_Tag     : not null Wayland_XML.Request_Tag.Request_Tag_Ptr;
+      end case;
+   end record;
+
+   package Child_Vectors is new Ada.Containers.Vectors (Index_Type   => Positive,
+                                                        Element_Type => Child_T,
+                                                        "="          => "=");
+
+   type Children_Ref (E : not null access constant Child_Vectors.Vector) is limited null record with
+     Implicit_Dereference => E;
 
    type Interface_Tag_T is tagged limited private;
 
@@ -31,6 +59,14 @@ package Wayland_XML.Interface_Tag is
    function Exists_Version (This : Interface_Tag_T) return Boolean with
      Global => null;
 
+   function Children (This : aliased Interface_Tag_T) return Children_Ref;
+
+   procedure Append_Child (This : in out Interface_Tag_T;
+                           Item : not null Wayland_XML.Description_Tag.Description_Tag_Ptr);
+
+   procedure Append_Child (This : in out Interface_Tag_T;
+                           Item : not null Wayland_XML.Request_Tag.Request_Tag_Ptr);
+
    type Interface_Tag_Ptr is access all Interface_Tag_T with Storage_Pool => Default_Subpool;
 
 private
@@ -43,8 +79,9 @@ private
    end record;
 
    type Interface_Tag_T is tagged limited record
-      My_Name    : Nullable_String_Ptr;
-      My_Version : Nullable_Version_T;
+      My_Name     : Nullable_String_Ptr;
+      My_Version  : Nullable_Version_T;
+      My_Children : aliased Child_Vectors.Vector;
    end record;
 
    function Name (This : Interface_Tag_T) return Aida.String_T is (This.My_Name.Value.all);
@@ -54,5 +91,7 @@ private
    function Version (This : Interface_Tag_T) return Version_T is (This.My_Version.Value);
 
    function Exists_Version (This : Interface_Tag_T) return Boolean is (This.My_Version.Exists);
+
+   function Children (This : aliased Interface_Tag_T) return Children_Ref is ((E => This.My_Children'Access));
 
 end Wayland_XML.Interface_Tag;

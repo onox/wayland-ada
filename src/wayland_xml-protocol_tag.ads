@@ -1,14 +1,20 @@
 with Ada.Containers.Vectors;
+with Wayland_XML.Copyright_Tag;
+with Wayland_XML.Interface_Tag;
 
 package Wayland_XML.Protocol_Tag is
 
    type Child_Kind_Id_T is (
-                            Child_Dummy
+                            Child_Dummy,
+                            Child_Copyright,
+                            Child_Interface
                            );
 
    type Child_T (Kind_Id : Child_Kind_Id_T := Child_Dummy) is record
       case Kind_Id is
-         when Child_Dummy => Dummy : not null String_Ptr := Empty_String'Access;
+         when Child_Dummy     => Dummy         : not null String_Ptr := Empty_String'Access;
+         when Child_Copyright => Copyright_Tag : not null Wayland_XML.Copyright_Tag.Copyright_Ptr;
+         when Child_Interface => Interface_Tag : not null Wayland_XML.Interface_Tag.Interface_Tag_Ptr;
       end case;
    end record;
 
@@ -38,7 +44,10 @@ package Wayland_XML.Protocol_Tag is
    function Children (This : aliased Protocol_Tag_T) return Children_Ref;
 
    procedure Append_Child (This : in out Protocol_Tag_T;
-                           Item : Child_T);
+                           Item : not null Wayland_XML.Copyright_Tag.Copyright_Ptr);
+
+   procedure Append_Child (This : in out Protocol_Tag_T;
+                           Item : not null Wayland_XML.Interface_Tag.Interface_Tag_Ptr);
 
    type Protocol_Tag_Ptr is access all Protocol_Tag_T with Storage_Pool => Default_Subpool;
 

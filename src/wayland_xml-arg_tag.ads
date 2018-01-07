@@ -58,15 +58,51 @@ package Wayland_XML.Arg_Tag is
    function Exists_Summary (This : Arg_Tag_T) return Boolean with
      Global => null;
 
+   procedure Set_Allow_Null (This  : in out Arg_Tag_T;
+                             Value : Boolean) with
+     Global => null,
+     Pre    => not This.Exists_Allow_Null,
+     Post   => This.Exists_Allow_Null and This.Allow_Null = Value;
+
+   function Allow_Null (This : Arg_Tag_T) return Boolean with
+     Global => null,
+     Pre    => This.Exists_Allow_Null;
+
+   function Exists_Allow_Null (This : Arg_Tag_T) return Boolean with
+     Global => null;
+
+   procedure Set_Enum (This    : in out Arg_Tag_T;
+                       Value   : Aida.String_T;
+                       Subpool : Dynamic_Pools.Subpool_Handle) with
+     Global => null,
+     Pre    => not This.Exists_Enum,
+     Post   => This.Exists_Enum and This.Enum = Value;
+
+   function Enum (This : Arg_Tag_T) return Aida.String_T with
+     Global => null,
+     Pre    => This.Exists_Enum;
+
+   function Exists_Enum (This : Arg_Tag_T) return Boolean with
+     Global => null;
+
    type Arg_Tag_Ptr is access all Arg_Tag_T with Storage_Pool => Default_Subpool;
 
 private
+
+   type Nullable_Allow_Null_T (Exists : Boolean := False) is record
+      case Exists is
+         when True => Value : Boolean;
+         when False => null;
+      end case;
+   end record;
 
    type Arg_Tag_T is tagged limited record
       My_Name                : Nullable_String_Ptr;
       My_Type_Attribute      : Nullable_String_Ptr;
       My_Interface_Attribute : Nullable_String_Ptr;
       My_Summary             : Nullable_String_Ptr;
+      My_Allow_Null          : Nullable_Allow_Null_T;
+      My_Enum                : Nullable_String_Ptr;
    end record;
 
    function Name (This : Arg_Tag_T) return Aida.String_T is (This.My_Name.Value.all);
@@ -84,5 +120,13 @@ private
    function Summary (This : Arg_Tag_T) return Aida.String_T is (This.My_Summary.Value.all);
 
    function Exists_Summary (This : Arg_Tag_T) return Boolean is (This.My_Summary.Exists);
+
+   function Allow_Null (This : Arg_Tag_T) return Boolean is (This.My_Allow_Null.Value);
+
+   function Exists_Allow_Null (This : Arg_Tag_T) return Boolean is (This.My_Allow_Null.Exists);
+
+   function Enum (This : Arg_Tag_T) return Aida.String_T is (This.My_Enum.Value.all);
+
+   function Exists_Enum (This : Arg_Tag_T) return Boolean is (This.My_Enum.Exists);
 
 end Wayland_XML.Arg_Tag;

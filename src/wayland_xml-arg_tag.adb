@@ -36,4 +36,21 @@ package body Wayland_XML.Arg_Tag is
                        Value  => new (Subpool) Aida.String_T'(Value));
    end Set_Name;
 
+   procedure Set_Allow_Null (This  : in out Arg_Tag_T;
+                             Value : Boolean)
+   is
+   begin
+      This.My_Allow_Null := (Exists => True,
+                             Value  => Value);
+   end Set_Allow_Null;
+
+   procedure Set_Enum (This    : in out Arg_Tag_T;
+                       Value   : Aida.String_T;
+                       Subpool : Dynamic_Pools.Subpool_Handle)
+   is
+   begin
+      This.My_Enum := (Exists => True,
+                       Value  => new (Subpool) Aida.String_T'(Value));
+   end Set_Enum;
+
 end Wayland_XML.Arg_Tag;
