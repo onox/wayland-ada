@@ -11,6 +11,8 @@ package Wayland_XML is
 
    Empty_String : aliased Aida.String_T := "";
 
+   type Version_T is new Aida.Pos32_T;
+
 private
 
    type Nullable_String_Ptr (Exists : Boolean := False) is record
@@ -23,6 +25,13 @@ private
    type Nullable_Boolean_T (Exists : Boolean := False) is record
       case Exists is
          when True  => Value : Boolean;
+         when False => null;
+      end case;
+   end record;
+
+   type Nullable_Version_T (Exists : Boolean := False) is record
+      case Exists is
+         when True  => Value : Version_T;
          when False => null;
       end case;
    end record;

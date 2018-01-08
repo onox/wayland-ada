@@ -2,17 +2,17 @@ with Ada.Containers.Vectors;
 
 with Wayland_XML.Description_Tag;
 with Wayland_XML.Request_Tag;
+with Wayland_XML.Event_Tag;
+with Wayland_XML.Enum_Tag;
 
 package Wayland_XML.Interface_Tag is
-
-   subtype Version_T is Wayland_XML.Request_Tag.Version_T;
-
-   use type Version_T;
 
    type Child_Kind_Id_T is (
                             Child_Dummy,
                             Child_Description,
-                            Child_Request
+                            Child_Request,
+                            Child_Event,
+                            Child_Enum
                            );
 
    type Child_T (Kind_Id : Child_Kind_Id_T := Child_Dummy) is record
@@ -20,6 +20,8 @@ package Wayland_XML.Interface_Tag is
          when Child_Dummy       => Dummy           : not null String_Ptr := Empty_String'Access;
          when Child_Description => Description_Tag : not null Wayland_XML.Description_Tag.Description_Tag_Ptr;
          when Child_Request     => Request_Tag     : not null Wayland_XML.Request_Tag.Request_Tag_Ptr;
+         when Child_Event       => Event_Tag       : not null Wayland_XML.Event_Tag.Event_Tag_Ptr;
+         when Child_Enum        => Enum_Tag        : not null Wayland_XML.Enum_Tag.Enum_Tag_Ptr;
       end case;
    end record;
 
@@ -66,6 +68,12 @@ package Wayland_XML.Interface_Tag is
 
    procedure Append_Child (This : in out Interface_Tag_T;
                            Item : not null Wayland_XML.Request_Tag.Request_Tag_Ptr);
+
+   procedure Append_Child (This : in out Interface_Tag_T;
+                           Item : not null Wayland_XML.Event_Tag.Event_Tag_Ptr);
+
+   procedure Append_Child (This : in out Interface_Tag_T;
+                           Item : not null Wayland_XML.Enum_Tag.Enum_Tag_Ptr);
 
    type Interface_Tag_Ptr is access all Interface_Tag_T with Storage_Pool => Default_Subpool;
 

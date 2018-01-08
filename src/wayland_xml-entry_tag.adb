@@ -26,4 +26,11 @@ package body Wayland_XML.Entry_Tag is
                        Value  => new (Subpool) Aida.String_T'(Value));
    end Set_Name;
 
+   procedure Set_Since (This  : in out Entry_Tag_T;
+                        Value : Version_T) is
+   begin
+      This.My_Since := (Exists => True,
+                        Value  => Value);
+   end Set_Since;
+
 end Wayland_XML.Entry_Tag;

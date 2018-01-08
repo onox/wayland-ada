@@ -45,6 +45,20 @@ package Wayland_XML.Entry_Tag is
    function Exists_Value (This : Entry_Tag_T) return Boolean with
      Global => null;
 
+
+   procedure Set_Since (This  : in out Entry_Tag_T;
+                        Value : Version_T) with
+     Global => null,
+     Pre    => not This.Exists_Since,
+     Post   => This.Exists_Since and This.Since = Value;
+
+   function Since (This : Entry_Tag_T) return Version_T with
+     Global => null,
+     Pre    => This.Exists_Since;
+
+   function Exists_Since (This : Entry_Tag_T) return Boolean with
+     Global => null;
+
    type Entry_Tag_Ptr is access all Entry_Tag_T with Storage_Pool => Default_Subpool;
 
 private
@@ -60,6 +74,7 @@ private
       My_Name    : Nullable_String_Ptr;
       My_Value   : Nullable_Value_T;
       My_Summary : Nullable_String_Ptr;
+      My_Since   : Nullable_Version_T;
    end record;
 
    function Name (This : Entry_Tag_T) return Aida.String_T is (This.My_Name.Value.all);
@@ -73,5 +88,9 @@ private
    function Summary (This : Entry_Tag_T) return Aida.String_T is (This.My_Summary.Value.all);
 
    function Exists_Summary (This : Entry_Tag_T) return Boolean is (This.My_Summary.Exists);
+
+   function Since (This : Entry_Tag_T) return Version_T is (This.My_Since.Value);
+
+   function Exists_Since (This : Entry_Tag_T) return Boolean is (This.My_Since.Exists);
 
 end Wayland_XML.Entry_Tag;

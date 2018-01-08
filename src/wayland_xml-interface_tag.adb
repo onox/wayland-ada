@@ -33,4 +33,20 @@ package body Wayland_XML.Interface_Tag is
       This.My_Children.Append (Child);
    end Append_Child;
 
+   procedure Append_Child (This  : in out Interface_Tag_T;
+                           Item  : not null Wayland_XML.Event_Tag.Event_Tag_Ptr)
+   is
+      Child : Child_T := (Child_Event, Item);
+   begin
+      This.My_Children.Append (Child);
+   end Append_Child;
+
+   procedure Append_Child (This  : in out Interface_Tag_T;
+                           Item  : not null Wayland_XML.Enum_Tag.Enum_Tag_Ptr)
+   is
+      Child : Child_T := (Child_Enum, Item);
+   begin
+      This.My_Children.Append (Child);
+   end Append_Child;
+
 end Wayland_XML.Interface_Tag;

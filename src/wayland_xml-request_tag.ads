@@ -5,8 +5,6 @@ with Ada.Containers.Vectors;
 
 package Wayland_XML.Request_Tag is
 
-   type Version_T is new Aida.Pos32_T;
-
    type Child_Kind_Id_T is (
                             Child_Dummy,
                             Child_Description,
