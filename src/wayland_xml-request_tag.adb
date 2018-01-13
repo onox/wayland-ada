@@ -1,12 +1,12 @@
 package body Wayland_XML.Request_Tag is
 
    procedure Set_Name (This    : in out Request_Tag_T;
-                       Value   : Aida.String_T;
+                       Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) Aida.String_T'(Value));
+                       Value  => new (Subpool) String'(Value));
    end Set_Name;
 
    procedure Append_Child (This  : in out Request_Tag_T;
@@ -26,12 +26,12 @@ package body Wayland_XML.Request_Tag is
    end Append_Child;
 
    procedure Set_Type_Attribute (This    : in out Request_Tag_T;
-                                 Value   : Aida.String_T;
+                                 Value   : String;
                                  Subpool : Dynamic_Pools.Subpool_Handle)
    is
    begin
       This.My_Type_Attribute := (Exists => True,
-                                 Value  => new (Subpool) Aida.String_T'(Value));
+                                 Value  => new (Subpool) String'(Value));
    end Set_Type_Attribute;
 
    procedure Set_Since (This  : in out Request_Tag_T;

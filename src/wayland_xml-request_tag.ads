@@ -37,13 +37,13 @@ package Wayland_XML.Request_Tag is
                            Item : not null Wayland_XML.Arg_Tag.Arg_Tag_Ptr);
 
    procedure Set_Name (This    : in out Request_Tag_T;
-                       Value   : Aida.String_T;
+                       Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle) with
      Global => null,
      Pre    => not This.Exists_Name,
      Post   => This.Exists_Name and This.Name = Value;
 
-   function Name (This : Request_Tag_T) return Aida.String_T with
+   function Name (This : Request_Tag_T) return String with
      Global => null,
      Pre    => This.Exists_Name;
 
@@ -51,13 +51,13 @@ package Wayland_XML.Request_Tag is
      Global => null;
 
    procedure Set_Type_Attribute (This    : in out Request_Tag_T;
-                                 Value   : Aida.String_T;
+                                 Value   : String;
                                  Subpool : Dynamic_Pools.Subpool_Handle) with
      Global => null,
      Pre    => not This.Exists_Type_Attribute,
      Post   => This.Exists_Type_Attribute and This.Type_Attribute = Value;
 
-   function Type_Attribute (This : Request_Tag_T) return Aida.String_T with
+   function Type_Attribute (This : Request_Tag_T) return String with
      Global => null,
      Pre    => This.Exists_Type_Attribute;
 
@@ -95,13 +95,13 @@ private
       My_Since          : Nullable_Since_T;
    end record;
 
-   function Name (This : Request_Tag_T) return Aida.String_T is (This.My_Name.Value.all);
+   function Name (This : Request_Tag_T) return String is (This.My_Name.Value.all);
 
    function Exists_Name (This : Request_Tag_T) return Boolean is (This.My_Name.Exists);
 
    function Children (This : aliased Request_Tag_T) return Children_Ref is ((E => This.My_Children'Access));
 
-   function Type_Attribute (This : Request_Tag_T) return Aida.String_T is (This.My_Type_Attribute.Value.all);
+   function Type_Attribute (This : Request_Tag_T) return String is (This.My_Type_Attribute.Value.all);
 
    function Exists_Type_Attribute (This : Request_Tag_T) return Boolean is (This.My_Type_Attribute.Exists);
 

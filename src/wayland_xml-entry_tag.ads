@@ -5,13 +5,13 @@ package Wayland_XML.Entry_Tag is
    type Entry_Tag_T is tagged limited private;
 
    procedure Set_Name (This  : in out Entry_Tag_T;
-                       Value   : Aida.String_T;
+                       Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle) with
      Global => null,
      Pre    => not This.Exists_Name,
      Post   => This.Exists_Name and This.Name = Value;
 
-   function Name (This : Entry_Tag_T) return Aida.String_T with
+   function Name (This : Entry_Tag_T) return String with
      Global => null,
      Pre    => This.Exists_Name;
 
@@ -19,13 +19,13 @@ package Wayland_XML.Entry_Tag is
      Global => null;
 
    procedure Set_Summary (This  : in out Entry_Tag_T;
-                          Value   : Aida.String_T;
+                          Value   : String;
                           Subpool : Dynamic_Pools.Subpool_Handle) with
      Global => null,
      Pre    => not This.Exists_Summary,
      Post   => This.Exists_Summary and This.Summary = Value;
 
-   function Summary (This : Entry_Tag_T) return Aida.String_T with
+   function Summary (This : Entry_Tag_T) return String with
      Global => null,
      Pre    => This.Exists_Summary;
 
@@ -77,7 +77,7 @@ private
       My_Since   : Nullable_Version_T;
    end record;
 
-   function Name (This : Entry_Tag_T) return Aida.String_T is (This.My_Name.Value.all);
+   function Name (This : Entry_Tag_T) return String is (This.My_Name.Value.all);
 
    function Exists_Name (This : Entry_Tag_T) return Boolean is (This.My_Name.Exists);
 
@@ -85,7 +85,7 @@ private
 
    function Exists_Value (This : Entry_Tag_T) return Boolean is (This.My_Value.Exists);
 
-   function Summary (This : Entry_Tag_T) return Aida.String_T is (This.My_Summary.Value.all);
+   function Summary (This : Entry_Tag_T) return String is (This.My_Summary.Value.all);
 
    function Exists_Summary (This : Entry_Tag_T) return Boolean is (This.My_Summary.Exists);
 

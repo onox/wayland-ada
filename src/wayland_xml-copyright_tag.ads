@@ -3,13 +3,13 @@ package Wayland_XML.Copyright_Tag is
    type Copyright_Tag_T is tagged limited private;
 
    procedure Set_Text (This    : in out Copyright_Tag_T;
-                       Value   : Aida.String_T;
+                       Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle) with
      Global => null,
      Pre    => not This.Exists_Text,
      Post   => This.Exists_Text and This.Text = Value;
 
-   function Text (This : Copyright_Tag_T) return Aida.String_T with
+   function Text (This : Copyright_Tag_T) return String with
      Global => null,
      Pre    => This.Exists_Text;
 
@@ -24,7 +24,7 @@ private
       My_Text : Nullable_String_Ptr;
    end record;
 
-   function Text (This : Copyright_Tag_T) return Aida.String_T is (This.My_Text.Value.all);
+   function Text (This : Copyright_Tag_T) return String is (This.My_Text.Value.all);
 
    function Exists_Text (This : Copyright_Tag_T) return Boolean is (This.My_Text.Exists);
 

@@ -1,5 +1,6 @@
 with "deepend.gpr";
 with "aida_utf8.gpr";
+with "aida_io.gpr";
 
 project Aida_Deepend is
 

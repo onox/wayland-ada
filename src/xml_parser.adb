@@ -21,9 +21,6 @@ with Wayland_XML.Entry_Tag;
 
 procedure XML_Parser is
 
-   use all type Aida.String_T;
-   use all type Aida.Int32_T;
-
    use type Ada.Containers.Count_Type;
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
@@ -63,7 +60,7 @@ procedure XML_Parser is
       File_Size := Natural (Ada.Directories.Size (File_Name));
 
       if File_Size > 4 then
-         File_Contents := new (Subpool) Aida.String_T (1..File_Size);
+         File_Contents := new (Subpool) String (1..File_Size);
          Read_Contents_Of_Wayland_XML;
       else
          Ada.Text_IO.Put_Line ("File " & File_Name & " is too small!");
@@ -147,7 +144,7 @@ procedure XML_Parser is
       begin
          if Node.Tag.Child_Nodes.Length = 1 then
             if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
-               Copyright_Tag.Set_Text (Aida.String_T (Ada.Strings.Fixed.Trim (Standard.String (Node.Tag.Child_Nodes.Element (1).Text), Ada.Strings.Both)),
+               Copyright_Tag.Set_Text (Ada.Strings.Fixed.Trim (Node.Tag.Child_Nodes.Element (1).Text, Ada.Strings.Both),
                                        Subpool);
             else
                raise XML_Exception;
@@ -175,7 +172,7 @@ procedure XML_Parser is
 
          if Node.Tag.Child_Nodes.Length = 1 then
             if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
-               Description_Tag.Set_Text (Aida.String_T (Ada.Strings.Fixed.Trim (Standard.String (Node.Tag.Child_Nodes.Element (1).Text), Ada.Strings.Both)),
+               Description_Tag.Set_Text (Ada.Strings.Fixed.Trim (Node.Tag.Child_Nodes.Element (1).Text, Ada.Strings.Both),
                                          Subpool);
             else
                raise XML_Exception;
@@ -239,7 +236,7 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -282,7 +279,7 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -325,7 +322,7 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      if A.Value (A.Value'First..A.Value'First + 1) = "0x" then
@@ -347,7 +344,7 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -388,7 +385,7 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -435,9 +432,9 @@ procedure XML_Parser is
                   Value : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  To_Int32 (Node.Tag.Attributes.Element (2).Value,
-                            Value,
-                            Has_Failed);
+                  Aida.String.To_Int32 (Node.Tag.Attributes.Element (2).Value,
+                                        Value,
+                                        Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;

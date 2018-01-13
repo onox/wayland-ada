@@ -1,12 +1,12 @@
 package body Wayland_XML.Interface_Tag is
 
    procedure Set_Name (This    : in out Interface_Tag_T;
-                       Value   : Aida.String_T;
+                       Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) Aida.String_T'(Value));
+                       Value  => new (Subpool) String'(Value));
    end Set_Name;
 
    procedure Set_Version (This  : in out Interface_Tag_T;

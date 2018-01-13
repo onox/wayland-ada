@@ -5,11 +5,9 @@ package Wayland_XML is
 
    Default_Subpool : Dynamic_Pools.Dynamic_Pool renames Aida.Deepend_XML_DOM_Parser.Default_Subpool;
 
-   use all type Aida.String_T; -- Is used in child packages
+   type String_Ptr is access all String with Storage_Pool => Default_Subpool;
 
-   type String_Ptr is access all Aida.String_T with Storage_Pool => Default_Subpool;
-
-   Empty_String : aliased Aida.String_T := "";
+   Empty_String : aliased String := "";
 
    type Version_T is new Aida.Pos32_T;
 
