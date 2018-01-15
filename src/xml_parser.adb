@@ -6,8 +6,11 @@ with Aida.Subprogram_Call_Result;
 with Dynamic_Pools;
 with Ada.Directories;
 with Aida.Sequential_Stream_IO;
+with Aida.UTF8;
+with Aida.UTF8_Code_Point;
 with Ada.Containers;
 with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
 
 with Wayland_XML.Protocol_Tag;
 with Wayland_XML.Copyright_Tag;
@@ -25,6 +28,13 @@ procedure XML_Parser is
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
 
+   use all type Ada.Strings.Unbounded.Unbounded_String;
+
+   use all type Aida.UTF8_Code_Point.T;
+
+   use all type Wayland_XML.Protocol_Tag.Child_Kind_Id_T;
+   use all type Wayland_XML.Interface_Tag.Child_Kind_Id_T;
+
    XML_Exception : exception;
 
    Default_Subpool : Dynamic_Pools.Dynamic_Pool renames Aida.Deepend_XML_DOM_Parser.Default_Subpool;
@@ -37,6 +47,129 @@ procedure XML_Parser is
                                                                                            Allocation_Block_Size);
 
    Subpool : Dynamic_Pools.Subpool_Handle := Scoped_Subpool.Handle;
+
+   package Utils is
+
+      function Adaify_Name (Old_Name : String) return String;
+
+      function Make_Upper_Case (Source : String) return String;
+
+   end Utils;
+
+   package body Utils is
+
+      -- If input is "wl_hello" then output is "hello". This procedure strips away the first
+      -- three characters if they are "wl_".
+      procedure Remove_Initial_Wl (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
+      begin
+         if
+           Length (New_Name) = 3 and then
+           New_Name = "Wl_"
+         then
+            Set_Unbounded_String (New_Name, "");
+         end if;
+      end Remove_Initial_Wl;
+
+      function Adaify_Name (Old_Name : String) return String is
+         New_Name : Ada.Strings.Unbounded.Unbounded_String;
+
+         P : Aida.Int32_T := Old_Name'First;
+
+         CP : Aida.UTF8_Code_Point.T := 0;
+
+         Is_Previous_Lowercase : Boolean := False;
+         Is_Previous_A_Number  : Boolean := False;
+         Is_Previous_An_Undercase  : Boolean := False;
+      begin
+         Aida.UTF8.Get (Source  => Old_Name,
+                        Pointer => P,
+                        Value   => CP);
+
+         if Is_Uppercase (CP) then
+            Append (New_Name, String (Image (CP)));
+         else
+            Append (New_Name, String (Image (To_Uppercase (CP))));
+         end if;
+
+         while P <= Old_Name'Last loop
+            Aida.UTF8.Get (Source  => Old_Name,
+                           Pointer => P,
+                           Value   => CP);
+
+            if Image (CP) = "_" then
+               Append (New_Name, "_");
+               Remove_Initial_Wl (New_Name);
+               Is_Previous_An_Undercase := True;
+            else
+               if Is_Digit (CP) then
+                  if Is_Previous_A_Number then
+                     Append (New_Name, String (Image (CP)));
+                  else
+                     Append (New_Name, "_");
+                     Remove_Initial_Wl (New_Name);
+                     Append (New_Name, String (Image (CP)));
+                  end if;
+
+                  Is_Previous_A_Number := True;
+               else
+                  if Is_Uppercase (CP) then
+                     if Is_Previous_Lowercase then
+                        Append (New_Name, "_");
+                        Remove_Initial_Wl (New_Name);
+                        Append (New_Name, String (Image (CP)));
+                        Is_Previous_Lowercase := False;
+                     else
+                        Append (New_Name, String (Image (To_Lowercase (CP))));
+                     end if;
+                  else
+                     if Is_Previous_An_Undercase then
+                        Append (New_Name, String (Image (To_Uppercase (CP))));
+                     else
+                        Append (New_Name, String (Image (CP)));
+                     end if;
+                     Is_Previous_Lowercase := True;
+                  end if;
+
+                  Is_Previous_A_Number := False;
+               end if;
+
+               Is_Previous_An_Undercase := False;
+            end if;
+
+         end loop;
+
+         return To_String (New_Name);
+      end Adaify_Name;
+
+      function Make_Upper_Case (Source : String) return String is
+         Target : Ada.Strings.Unbounded.Unbounded_String;
+
+         P : Aida.Int32_T := Source'First;
+
+         CP : Aida.UTF8_Code_Point.T := 0;
+      begin
+         Set_Unbounded_String (Target, "");
+         while P <= Source'Last loop
+            Aida.UTF8.Get (Source  => Source,
+                           Pointer => P,
+                           Value   => CP);
+
+            if Image (CP) = "_" then
+               Append (Target, "_");
+            elsif Is_Digit (CP) then
+               Append (Target, String (Image (CP)));
+            elsif Is_Lowercase (CP) then
+               Append (Target, String (Image (To_Uppercase (CP))));
+            else
+               Append (Target, String (Image (CP)));
+            end if;
+
+         end loop;
+
+         return To_String (Target);
+      end Make_Upper_Case;
+
+   end Utils;
 
    procedure Allocate_Space_For_Wayland_XML_Contents;
 
@@ -135,6 +268,8 @@ procedure XML_Parser is
    end Identify_Protocol_Tag;
 
    pragma Unmodified (Protocol_Tag);
+
+   procedure Create_Wl_Temp_File;
 
    procedure Identify_Protocol_Children is
 
@@ -486,23 +621,88 @@ procedure XML_Parser is
             raise XML_Exception;
          end if;
       end loop;
+
+      Create_Wl_Temp_File;
    end Identify_Protocol_Children;
+
+   procedure Create_Wl_Temp_File is
+
+      File : Ada.Text_IO.File_Type;
+
+      procedure Write_To_File;
+
+      procedure Create_File is
+      begin
+         Ada.Text_IO.Create (File => File,
+                             Mode => Ada.Text_IO.Out_File,
+                             Name => "wl_temp.ads");
+
+         Write_To_File;
+
+         Ada.Text_IO.Close (File);
+      end Create_File;
+
+      pragma Unmodified (File);
+
+      procedure Write_To_File is
+
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T);
+
+         procedure Handle_Protocol_Tag is
+         begin
+            Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
+            Ada.Text_IO.Put_Line (File, "");
+            Ada.Text_IO.Put_Line (File, "package Wl_Temp is");
+            Ada.Text_IO.Put_Line (File, "");
+
+            for Child of Protocol_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy => null;
+                  when Child_Copyright => null;
+                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+               end case;
+            end loop;
+
+            Ada.Text_IO.Put_Line (File, "");
+            Ada.Text_IO.Put_Line (File, "end Wl_Temp;");
+         end Handle_Protocol_Tag;
+
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+            I : Aida.Int32_T := 0;
+
+            procedure Generate_Code_For_Request (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+               Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+            begin
+               Ada.Text_IO.Put (File, Name);
+               Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
+               Ada.Text_IO.Put_Line (File, ";");
+               Ada.Text_IO.Put_Line (File, "");
+
+               I := I + 1;
+            end Generate_Code_For_Request;
+
+         begin
+            for Child of Interface_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy => null;
+                  when Child_Description => null;
+                  when Child_Request => Generate_Code_For_Request (Child.Request_Tag.all);
+                  when Child_Event => null;
+                  when Child_Enum => null;
+               end case;
+            end loop;
+         end Handle_Interface;
+
+      begin
+         Handle_Protocol_Tag;
+      end Write_To_File;
+
+   begin
+      Create_File;
+   end Create_Wl_Temp_File;
 
 begin
    Check_Wayland_XML_File_Exists;
-
---     Parser.Parse (Contents,
---                   Xcb,
---                   Error_Message,
---                   Is_Success);
---
---     if Is_Success then
---        Ada.Text_IO.Put_Line ("Successfully parsed " & File_Name & "! Will create xcb.ads");
---        Creator.Create_XCB_Package (Xcb.all);
---     else
---        Ada.Text_IO.Put_Line (To_String (Error_Message));
---     end if;
-   null;
 exception
    when Ada.Text_IO.Name_Error =>
       Ada.Text_IO.Put_Line ("Could not find file!");
