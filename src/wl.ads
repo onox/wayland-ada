@@ -14,30 +14,26 @@ package Wl is
 
    Default_Display_Name : aliased Interfaces.C.char_array := Interfaces.C.To_C ("wayland-0");
 
-   Failed_To_Connect_Exception : exception;
+   type Proxy_T is limited private;
 
-   type Display_T is limited private;
+   type Proxy_Ptr is access all Proxy_T;
 
-   function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_T;
+   type Display_Ptr is new Proxy_Ptr;
+
+   function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_Ptr;
+
+   procedure Display_Disconnect (This : in out Display_Ptr);
 
 
+   type Registry_Ptr is new Proxy_Ptr;
 
+   function Display_Get_Registry (Display : Display_Ptr) return Registry_Ptr;
 
-   type Registry_T;
-
-   function Display_Get_Registry (Display : Display_T) return Registry_T;
-
-   type Registry_T is limited private;
-
-   type Registry_Ptr is access all Registry_T;
+   procedure Registry_Destroy (Registry : in out Registry_Ptr);
 
    type Interface_T is limited private;
 
    type Interface_Ptr is access all Interface_T;
-
-   type Proxy_T is limited private;
-
-   type Proxy_Ptr is access all Proxy_T;
 
    function Proxy_Marshal_Constructor (Proxy       : Proxy_Ptr;
                                        Opcode      : Interfaces.Unsigned_32;
@@ -47,8 +43,7 @@ package Wl is
      Import        => True,
      External_Name => "wl_proxy_marshal_constructor";
 
---     type Global_Subprogram_Ptr is access procedure (Data     : Wl.Void_Ptr;
---                                                     Registry : Wl.Registry_Ptr);
+
 
 --  struct wl_registry_listener {
 --  	/**
@@ -68,30 +63,38 @@ package Wl is
 --  			      struct wl_registry *wl_registry,
 --  			      uint32_t name);
 --  };
---
---  static inline int
---  wl_registry_add_listener(struct wl_registry *wl_registry,
---  			 const struct wl_registry_listener *listener, void *data)
---  {
---  	return wl_proxy_add_listener((struct wl_proxy *) wl_registry,
---  				     (void (**)(void)) listener, data);
---  }
+
+   type Global_Subprogram_Ptr is access procedure (Data        : Wl.Void_Ptr;
+                                                   Registry    : Wl.Registry_Ptr;
+                                                   Name        : Interfaces.Unsigned_32;
+                                                   Interface_V : Interfaces.C.Strings.chars_ptr;
+                                                   Version     : Interfaces.Unsigned_32) with
+     Convention => C;
+
+   type Global_Remove_Subprogram_Ptr is access procedure (Data        : Wl.Void_Ptr;
+                                                          Registry    : Wl.Registry_Ptr;
+                                                          Name        : Interfaces.Unsigned_32) with
+     Convention => C;
+
+   type Registry_Listener_T is record
+      Global        : Global_Subprogram_Ptr;
+      Global_Remove : Global_Remove_Subprogram_Ptr;
+   end record with
+     Convention => C_Pass_By_Copy;
+
+   type Registry_Listener_Ptr is access all Registry_Listener_T;
+
+   function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:213
+   pragma Import (C, Display_Dispatch, "wl_display_dispatch");
+
+   function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:242
+   pragma Import (C, Display_Roundtrip, "wl_display_roundtrip");
+
+   function Registry_Add_Listener (Registry : Registry_Ptr;
+                                   Listener : Registry_Listener_Ptr;
+                                   Data     : Wl.Void_Ptr) return Interfaces.C.int;
 
 private
-
-   type Display_T is new Ada.Finalization.Limited_Controlled with record
-      My_Proxy : Proxy_Ptr := null;
-   end record;
-
-   overriding
-   procedure Finalize (This : in out Display_T);
-
-   type Registry_T is new Ada.Finalization.Limited_Controlled with record
-      My_Proxy : Proxy_Ptr := null;
-   end record;
-
-   overriding
-   procedure Finalize (This : in out Registry_T);
 
    type Proxy_T is limited null record;
 
