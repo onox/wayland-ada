@@ -60,6 +60,10 @@ package Wayland_XML.Event_Tag is
      Global => null,
      Pre    => This.Exists_Since_Attribute;
 
+   function Since_Attribute_As_Pos32 (This : Event_Tag_T) return Aida.Pos32_T with
+     Global => null,
+     Pre    => This.Exists_Since_Attribute;
+
    function Exists_Since_Attribute (This : Event_Tag_T) return Boolean with
      Global => null;
 
@@ -85,6 +89,8 @@ private
    function Exists_Name (This : Event_Tag_T) return Boolean is (This.My_Name.Exists);
 
    function Since_Attribute (This : Event_Tag_T) return Version_T is (This.My_Since_Attribute.Value);
+
+   function Since_Attribute_As_Pos32 (This : Event_Tag_T) return Aida.Pos32_T is (Aida.Pos32_T (This.My_Since_Attribute.Value));
 
    function Exists_Since_Attribute (This : Event_Tag_T) return Boolean is (This.My_Since_Attribute.Exists);
 

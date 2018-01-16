@@ -74,6 +74,10 @@ package Wayland_XML.Request_Tag is
      Global => null,
      Pre    => This.Exists_Since;
 
+   function Since_As_Pos32 (This : Request_Tag_T) return Aida.Pos32_T with
+     Global => null,
+     Pre    => This.Exists_Since;
+
    function Exists_Since (This : Request_Tag_T) return Boolean with
      Global => null;
 
@@ -106,6 +110,8 @@ private
    function Exists_Type_Attribute (This : Request_Tag_T) return Boolean is (This.My_Type_Attribute.Exists);
 
    function Since (This : Request_Tag_T) return Version_T is (This.My_Since.Value);
+
+   function Since_As_Pos32 (This : Request_Tag_T) return Aida.Pos32_T is (Aida.Pos32_T (This.My_Since.Value));
 
    function Exists_Since (This : Request_Tag_T) return Boolean is (This.My_Since.Exists);
 
