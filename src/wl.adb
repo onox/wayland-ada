@@ -397,10 +397,120 @@ package body Wl is
 
    WL_SUBSURFACE_SET_DESYNC_SINCE_VERSION : constant := 1;
 
-   wl_registry_interface : aliased Interface_T with
-     Import        => True,
-     Convention    => C,
+   --     wl_registry_interface : aliased Interface_T with
+   --       Import        => True,
+   --       Convention    => C,
+   --       External_Name => "wl_registry_interface";
+
+   Display_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_display_interface";
+
+   Registry_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
      External_Name => "wl_registry_interface";
+
+   Callback_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_callback_interface";
+
+   Compositor_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_compositor_interface";
+
+   Shm_Pool_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_shm_pool_interface";
+
+   Shm_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_shm_interface";
+
+   Buffer_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_buffer_interface";
+
+   Data_Offer_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_data_offer_interface";
+
+   Data_Source_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_data_source_interface";
+
+   Data_Device_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_data_device_interface";
+
+   Data_Device_Manager_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_data_device_manager_interface";
+
+   Shell_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_shell_interface";
+
+   Shell_Surface_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_shell_surface_interface";
+
+   Surface_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_surface_interface";
+
+   Seat_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_seat_interface";
+
+   Pointer_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_pointer_interface";
+
+   Keyboard_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_keyboard_interface";
+
+   Touch_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_touch_interface";
+
+   Output_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_output_interface";
+
+   Region_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_region_interface";
+
+   Subcompositor_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_subcompositor_interface";
+
+   Subsurface_Interface : aliased Interface_T with
+     Import => True,
+     Convention => C,
+     External_Name => "wl_subsurface_interface";
 
    function Display_Get_Registry (Display : Display_Ptr) return Registry_Ptr is
       P : Proxy_Ptr;
@@ -408,7 +518,7 @@ package body Wl is
    begin
       P := Proxy_Marshal_Constructor (Display.all'Access,
                                       WL_DISPLAY_GET_REGISTRY,
-                                      wl_registry_interface'Access,
+                                      Registry_Interface'Access,
                                       0);
 
       if P /= null then
@@ -418,9 +528,9 @@ package body Wl is
    end Display_Get_Registry;
 
 
---  int
---  wl_proxy_add_listener(struct wl_proxy *proxy,
---  		      void (**implementation)(void), void *data);
+   --  int
+   --  wl_proxy_add_listener(struct wl_proxy *proxy,
+   --  		      void (**implementation)(void), void *data);
 
 
    function wl_proxy_add_listener
@@ -429,13 +539,13 @@ package body Wl is
       arg3 : Wl.Void_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:171
    pragma Import (C, wl_proxy_add_listener, "wl_proxy_add_listener");
 
---  static inline int
---  wl_registry_add_listener(struct wl_registry *wl_registry,
---  			 const struct wl_registry_listener *listener, void *data)
---  {
---  	return wl_proxy_add_listener((struct wl_proxy *) wl_registry,
---  				     (void (**)(void)) listener, data);
---  }
+   --  static inline int
+   --  wl_registry_add_listener(struct wl_registry *wl_registry,
+   --  			 const struct wl_registry_listener *listener, void *data)
+   --  {
+   --  	return wl_proxy_add_listener((struct wl_proxy *) wl_registry,
+   --  				     (void (**)(void)) listener, data);
+   --  }
    function Registry_Add_Listener (Registry : Registry_Ptr;
                                    Listener : Registry_Listener_Ptr;
                                    Data     : Wl.Void_Ptr) return Interfaces.C.int is

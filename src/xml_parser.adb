@@ -86,9 +86,9 @@ procedure XML_Parser is
                         Value   => CP);
 
          if Is_Uppercase (CP) then
-            Append (New_Name, String (Image (CP)));
+            Append (New_Name, Image (CP));
          else
-            Append (New_Name, String (Image (To_Uppercase (CP))));
+            Append (New_Name, Image (To_Uppercase (CP)));
          end if;
 
          while P <= Old_Name'Last loop
@@ -103,29 +103,31 @@ procedure XML_Parser is
             else
                if Is_Digit (CP) then
                   if Is_Previous_A_Number then
-                     Append (New_Name, String (Image (CP)));
+                     Append (New_Name, Image (CP));
                   else
                      Append (New_Name, "_");
                      Remove_Initial_Wl (New_Name);
-                     Append (New_Name, String (Image (CP)));
+                     Append (New_Name, Image (CP));
                   end if;
 
                   Is_Previous_A_Number := True;
                else
                   if Is_Uppercase (CP) then
-                     if Is_Previous_Lowercase then
+                     if Is_Previous_An_Undercase then
+                        Append (New_Name, Image (CP));
+                     elsif Is_Previous_Lowercase then
                         Append (New_Name, "_");
                         Remove_Initial_Wl (New_Name);
-                        Append (New_Name, String (Image (CP)));
+                        Append (New_Name, Image (CP));
                         Is_Previous_Lowercase := False;
                      else
-                        Append (New_Name, String (Image (To_Lowercase (CP))));
+                        Append (New_Name, Image (To_Lowercase (CP)));
                      end if;
                   else
                      if Is_Previous_An_Undercase then
-                        Append (New_Name, String (Image (To_Uppercase (CP))));
+                        Append (New_Name, Image (To_Uppercase (CP)));
                      else
-                        Append (New_Name, String (Image (CP)));
+                        Append (New_Name, Image (CP));
                      end if;
                      Is_Previous_Lowercase := True;
                   end if;
@@ -157,11 +159,11 @@ procedure XML_Parser is
             if Image (CP) = "_" then
                Append (Target, "_");
             elsif Is_Digit (CP) then
-               Append (Target, String (Image (CP)));
+               Append (Target, Image (CP));
             elsif Is_Lowercase (CP) then
-               Append (Target, String (Image (To_Uppercase (CP))));
+               Append (Target, Image (To_Uppercase (CP)));
             else
-               Append (Target, String (Image (CP)));
+               Append (Target, Image (CP));
             end if;
 
          end loop;
@@ -646,122 +648,155 @@ procedure XML_Parser is
 
       procedure Write_To_File is
 
-         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T);
+         procedure Generate_Code_For_Numeric_Constants;
 
-         procedure Handle_Protocol_Tag is
+         procedure Start_Writing_To_File is
          begin
             Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
             Ada.Text_IO.Put_Line (File, "");
             Ada.Text_IO.Put_Line (File, "package Wl_Temp is");
             Ada.Text_IO.Put_Line (File, "");
 
-            for Child of Protocol_Tag.Children loop
-               case Child.Kind_Id is
-                  when Child_Dummy => null;
-                  when Child_Copyright => null;
-                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
-               end case;
-            end loop;
+            Generate_Code_For_Numeric_Constants;
 
             Ada.Text_IO.Put_Line (File, "");
             Ada.Text_IO.Put_Line (File, "end Wl_Temp;");
-         end Handle_Protocol_Tag;
+         end Start_Writing_To_File;
 
-         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+         procedure Generate_Code_For_Interface_Constants;
 
-            procedure Generate_Code_For_Opcodes is
+         procedure Generate_Code_For_Numeric_Constants is
 
-               I : Aida.Int32_T := 0;
+            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
-               procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+               procedure Generate_Code_For_Opcodes is
+
+                  I : Aida.Int32_T := 0;
+
+                  procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  begin
+                     Ada.Text_IO.Put (File, Name);
+                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
+                     Ada.Text_IO.Put_Line (File, ";");
+                     Ada.Text_IO.Put_Line (File, "");
+
+                     I := I + 1;
+                  end Generate_Code;
+
                begin
-                  Ada.Text_IO.Put (File, Name);
-                  Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
-                  Ada.Text_IO.Put_Line (File, ";");
-                  Ada.Text_IO.Put_Line (File, "");
-
-                  I := I + 1;
-               end Generate_Code;
-
-            begin
-               for Child of Interface_Tag.Children loop
-                  case Child.Kind_Id is
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => Generate_Code (Child.Request_Tag.all);
                      when Child_Event       => null;
                      when Child_Enum        => null;
-                  end case;
-               end loop;
-            end Generate_Code_For_Opcodes;
+                     end case;
+                  end loop;
+               end Generate_Code_For_Opcodes;
 
-            procedure Generate_Code_For_Event_Since_Version is
+               procedure Generate_Code_For_Event_Since_Version is
 
-               procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
+                  procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
+                  begin
+                     if Event_Tag.Exists_Since_Attribute then
+                        Ada.Text_IO.Put (File, Name);
+                        Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Event_Tag.Since_Attribute_As_Pos32));
+                        Ada.Text_IO.Put_Line (File, ";");
+                        Ada.Text_IO.Put_Line (File, "");
+                     else
+                        Ada.Text_IO.Put (File, Name);
+                        Ada.Text_IO.Put_Line (File, " : constant := 1;");
+                        Ada.Text_IO.Put_Line (File, "");
+                     end if;
+                  end Generate_Code;
+
                begin
-                  if Event_Tag.Exists_Since_Attribute then
-                     Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Event_Tag.Since_Attribute_As_Pos32));
-                     Ada.Text_IO.Put_Line (File, ";");
-                     Ada.Text_IO.Put_Line (File, "");
-                  else
-                     Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put_Line (File, " : constant := 1;");
-                     Ada.Text_IO.Put_Line (File, "");
-                  end if;
-               end Generate_Code;
-
-            begin
-               for Child of Interface_Tag.Children loop
-                  case Child.Kind_Id is
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => null;
                      when Child_Event       => Generate_Code (Child.Event_Tag.all);
                      when Child_Enum        => null;
-                  end case;
-               end loop;
-            end Generate_Code_For_Event_Since_Version;
+                     end case;
+                  end loop;
+               end Generate_Code_For_Event_Since_Version;
 
-            procedure Generate_Code_For_Opcodes_Since_Version is
+               procedure Generate_Code_For_Opcodes_Since_Version is
 
-               procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
+                  procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
+                  begin
+                     if Request_Tag.Exists_Since then
+                        Ada.Text_IO.Put (File, Name);
+                        Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
+                        Ada.Text_IO.Put_Line (File, ";");
+                        Ada.Text_IO.Put_Line (File, "");
+                     else
+                        Ada.Text_IO.Put (File, Name);
+                        Ada.Text_IO.Put_Line (File, " : constant := 1;");
+                        Ada.Text_IO.Put_Line (File, "");
+                     end if;
+                  end Generate_Code;
+
                begin
-                  if Request_Tag.Exists_Since then
-                     Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
-                     Ada.Text_IO.Put_Line (File, ";");
-                     Ada.Text_IO.Put_Line (File, "");
-                  else
-                     Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put_Line (File, " : constant := 1;");
-                     Ada.Text_IO.Put_Line (File, "");
-                  end if;
-               end Generate_Code;
-
-            begin
-               for Child of Interface_Tag.Children loop
-                  case Child.Kind_Id is
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => Generate_Code (Child.Request_Tag.all);
                      when Child_Event       => null;
                      when Child_Enum        => null;
-                  end case;
-               end loop;
-            end Generate_Code_For_Opcodes_Since_Version;
+                     end case;
+                  end loop;
+               end Generate_Code_For_Opcodes_Since_Version;
+
+            begin
+               Generate_Code_For_Opcodes;
+               Generate_Code_For_Event_Since_Version;
+               Generate_Code_For_Opcodes_Since_Version;
+            end Handle_Interface;
 
          begin
-            Generate_Code_For_Opcodes;
-            Generate_Code_For_Event_Since_Version;
-            Generate_Code_For_Opcodes_Since_Version;
-         end Handle_Interface;
+            for Child of Protocol_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy     => null;
+                  when Child_Copyright => null;
+                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+               end case;
+            end loop;
+
+            Generate_Code_For_Interface_Constants;
+         end Generate_Code_For_Numeric_Constants;
+
+         procedure Generate_Code_For_Interface_Constants is
+
+            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+            begin
+               Ada.Text_IO.Put (File, Name);
+               Ada.Text_IO.Put_Line (File, " : aliased Interface_T with");
+               Ada.Text_IO.Put_Line (File, "Import => True,");
+               Ada.Text_IO.Put_Line (File, "Convention => C,");
+               Ada.Text_IO.Put_Line (File, "External_Name => """ & Interface_Tag.Name & "_interface"";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Handle_Interface;
+
+         begin
+            for Child of Protocol_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy     => null;
+                  when Child_Copyright => null;
+                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+               end case;
+            end loop;
+         end Generate_Code_For_Interface_Constants;
 
       begin
-         Handle_Protocol_Tag;
+         Start_Writing_To_File;
       end Write_To_File;
 
    begin
