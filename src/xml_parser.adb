@@ -998,12 +998,49 @@ procedure XML_Parser is
                   Ada.Text_IO.Put_Line (File, "");
                end Generate_Code_For_Add_Listener_Subprogram_Declaration;
 
+               procedure Generate_Code_For_Set_User_Data_Subprogram_Declaration is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
+                  Ada.Text_IO.Put_Line (File, "Data : Void_Ptr);");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Set_User_Data_Subprogram_Declaration;
+
+               procedure Generate_Code_For_Get_User_Data_Subprogram_Declaration is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+
+               procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32;");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Get_Version_Subprogram_Declaration;
+
+               procedure Generate_Code_For_Destroy_Subprogram_Declaration is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Destroy_Subprogram_Declaration;
+
             begin
                Generate_Code_For_Enums;
                Generate_Code_For_Interface_Ptr;
                Generate_Code_For_Subprogram_Ptrs;
                Generate_Code_For_Listener_Type_Definition;
                Generate_Code_For_Add_Listener_Subprogram_Declaration;
+               Generate_Code_For_Set_User_Data_Subprogram_Declaration;
+               Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+               Generate_Code_For_Get_Version_Subprogram_Declaration;
+               Generate_Code_For_Destroy_Subprogram_Declaration;
             end Handle_Interface;
 
          begin
@@ -1072,13 +1109,62 @@ procedure XML_Parser is
                Ada.Text_IO.Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
                Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int is");
                Ada.Text_IO.Put_Line (File, "begin");
-               Ada.Text_IO.Put_Line (File, "wl_proxy_add_listener (" & Name &".all'Access, Listener.all'Access, Data);");
+               Ada.Text_IO.Put_Line (File, "return wl_proxy_add_listener (" & Name &".all'Access, Listener.all'Access, Data);");
                Ada.Text_IO.Put_Line (File, "end " & Name & ";");
                Ada.Text_IO.Put_Line (File, "");
             end Generate_Code_For_Add_Listener_Subprogram_Implementations;
 
+            procedure Generate_Code_For_Set_User_Data_Subprogram_Implementations is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) is");
+               Ada.Text_IO.Put_Line (File, "begin");
+               Ada.Text_IO.Put_Line (File, "wl_proxy_set_user_data (" & Name &".all'Access, Data);");
+               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Set_User_Data_Subprogram_Implementations;
+
+            procedure Generate_Code_For_Get_User_Data_Subprogram_Implementations is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr is");
+               Ada.Text_IO.Put_Line (File, "begin");
+               Ada.Text_IO.Put_Line (File, "return wl_proxy_get_user_data (" & Name &".all'Access);");
+               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Get_User_Data_Subprogram_Implementations;
+
+            procedure Generate_Code_For_Get_Version_Subprogram_Implementations is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32 is");
+               Ada.Text_IO.Put_Line (File, "begin");
+               Ada.Text_IO.Put_Line (File, "return wl_proxy_get_version (" & Name &".all'Access);");
+               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Get_Version_Subprogram_Implementations;
+
+            procedure Generate_Code_For_Destroy_Subprogram_Implementations is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ") is");
+               Ada.Text_IO.Put_Line (File, "begin");
+               Ada.Text_IO.Put_Line (File, "wl_proxy_destroy (" & Name &".all'Access);");
+               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Destroy_Subprogram_Implementations;
+
          begin
             Generate_Code_For_Add_Listener_Subprogram_Implementations;
+            Generate_Code_For_Set_User_Data_Subprogram_Implementations;
+            Generate_Code_For_Get_User_Data_Subprogram_Implementations;
+            Generate_Code_For_Get_Version_Subprogram_Implementations;
+            Generate_Code_For_Destroy_Subprogram_Implementations;
          end Handle_Interface;
 
       begin

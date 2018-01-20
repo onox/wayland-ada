@@ -43,26 +43,13 @@ package Wl is
      Import        => True,
      External_Name => "wl_proxy_marshal_constructor";
 
+   function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:213
+   pragma Import (C, Display_Dispatch, "wl_display_dispatch");
+
+   function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:242
+   pragma Import (C, Display_Roundtrip, "wl_display_roundtrip");
 
 
---  struct wl_registry_listener {
---  	/**
---  	 * announce global object
---  	 *
---  	 * Notify the client of global objects.
---  	 */
---  	void (*global)(void *data,
---  		       struct wl_registry *wl_registry,
---  		       uint32_t name,
---  		       const char *interface,
---  		       uint32_t version);
---  	/**
---  	 * announce removal of global object
---  	 */
---  	void (*global_remove)(void *data,
---  			      struct wl_registry *wl_registry,
---  			      uint32_t name);
---  };
 
    type Global_Subprogram_Ptr is access procedure (Data        : Wl.Void_Ptr;
                                                    Registry    : Wl.Registry_Ptr;
@@ -84,11 +71,6 @@ package Wl is
 
    type Registry_Listener_Ptr is access all Registry_Listener_T;
 
-   function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:213
-   pragma Import (C, Display_Dispatch, "wl_display_dispatch");
-
-   function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:242
-   pragma Import (C, Display_Roundtrip, "wl_display_roundtrip");
 
    function Registry_Add_Listener (Registry : Registry_Ptr;
                                    Listener : Registry_Listener_Ptr;

@@ -527,25 +527,33 @@ package body Wl is
       return This;
    end Display_Get_Registry;
 
-
-   --  int
-   --  wl_proxy_add_listener(struct wl_proxy *proxy,
-   --  		      void (**implementation)(void), void *data);
-
-
    function wl_proxy_add_listener
      (arg1 : Proxy_Ptr;
-      arg2 : Registry_Listener_Ptr;
-      arg3 : Wl.Void_Ptr) return Interfaces.C.int;  -- /usr/include/wayland-client-core.h:171
-   pragma Import (C, wl_proxy_add_listener, "wl_proxy_add_listener");
+      arg2 : Void_Ptr;
+      arg3 : Void_Ptr) return Interfaces.C.int with
+     Import        => True,
+     Convention    => C,
+     External_Name => "wl_proxy_add_listener";
 
-   --  static inline int
-   --  wl_registry_add_listener(struct wl_registry *wl_registry,
-   --  			 const struct wl_registry_listener *listener, void *data)
-   --  {
-   --  	return wl_proxy_add_listener((struct wl_proxy *) wl_registry,
-   --  				     (void (**)(void)) listener, data);
-   --  }
+   procedure wl_proxy_set_user_data
+     (arg1 : Proxy_Ptr;
+      arg3 : Void_Ptr) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "wl_proxy_set_user_data";
+
+   function wl_proxy_get_user_data
+     (arg1 : Proxy_Ptr) return Void_Ptr with
+     Import        => True,
+     Convention    => C,
+     External_Name => "wl_proxy_get_user_data";
+
+   function wl_proxy_get_version
+     (arg1 : Proxy_Ptr) return Interfaces.Unsigned_32 with
+     Import        => True,
+     Convention    => C,
+     External_Name => "wl_proxy_get_version";
+
    function Registry_Add_Listener (Registry : Registry_Ptr;
                                    Listener : Registry_Listener_Ptr;
                                    Data     : Wl.Void_Ptr) return Interfaces.C.int is
