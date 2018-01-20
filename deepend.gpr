@@ -23,4 +23,8 @@ project Deepend is
                                        );
    end Compiler;
 
+   package Check is
+      for Default_Switches ("ada") use ("-rules", "-from=gnatcheck_deepend_check_for_forbidden.txt");
+   end Check;
+
 end Deepend;

@@ -23,4 +23,8 @@ project Xml_Parser is
       for Default_Switches ("Ada") use ("-g");
    end Linker;
 
+   package Check is
+      for Default_Switches ("ada") use ("-rules", "-from=gnatcheck_check_for_forbidden.txt");
+   end Check;
+
 end Xml_Parser;

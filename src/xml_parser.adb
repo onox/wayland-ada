@@ -34,6 +34,7 @@ procedure XML_Parser is
 
    use all type Wayland_XML.Protocol_Tag.Child_Kind_Id_T;
    use all type Wayland_XML.Interface_Tag.Child_Kind_Id_T;
+   use all type Wayland_XML.Enum_Tag.Child_Kind_Id_T;
 
    XML_Exception : exception;
 
@@ -271,7 +272,7 @@ procedure XML_Parser is
 
    pragma Unmodified (Protocol_Tag);
 
-   procedure Create_Wl_Temp_File;
+   procedure Create_Wl_Thin_Spec_File;
 
    procedure Identify_Protocol_Children is
 
@@ -330,8 +331,7 @@ procedure XML_Parser is
                Arg_Tag.Set_Name (A.Value,
                                  Subpool);
             elsif A.Name = "type" then
-               Arg_Tag.Set_Type_Attribute (A.Value,
-                                           Subpool);
+               Arg_Tag.Set_Type_Attribute (A.Value);
             elsif A.Name = "summary" then
                Arg_Tag.Set_Summary (A.Value,
                                     Subpool);
@@ -624,10 +624,10 @@ procedure XML_Parser is
          end if;
       end loop;
 
-      Create_Wl_Temp_File;
+      Create_Wl_Thin_Spec_File;
    end Identify_Protocol_Children;
 
-   procedure Create_Wl_Temp_File is
+   procedure Create_Wl_Thin_Spec_File is
 
       File : Ada.Text_IO.File_Type;
 
@@ -637,7 +637,7 @@ procedure XML_Parser is
       begin
          Ada.Text_IO.Create (File => File,
                              Mode => Ada.Text_IO.Out_File,
-                             Name => "wl_temp.ads");
+                             Name => "wl_thin.ads");
 
          Write_To_File;
 
@@ -654,13 +654,14 @@ procedure XML_Parser is
          begin
             Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
             Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "package Wl_Temp is");
+            Ada.Text_IO.Put_Line (File, "-- Auto generated from Wayland.xml except for the Wayland Core parts");
+            Ada.Text_IO.Put_Line (File, "package Wl_Thin is");
             Ada.Text_IO.Put_Line (File, "");
 
             Generate_Code_For_Numeric_Constants;
 
             Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "end Wl_Temp;");
+            Ada.Text_IO.Put_Line (File, "end Wl_Thin;");
          end Start_Writing_To_File;
 
          procedure Generate_Code_For_Interface_Constants;
@@ -772,6 +773,8 @@ procedure XML_Parser is
             Generate_Code_For_Interface_Constants;
          end Generate_Code_For_Numeric_Constants;
 
+         procedure Generate_Code_For_Each_Interface;
+
          procedure Generate_Code_For_Interface_Constants is
 
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
@@ -793,7 +796,106 @@ procedure XML_Parser is
                   when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
                end case;
             end loop;
+
+            Generate_Code_For_Each_Interface;
          end Generate_Code_For_Interface_Constants;
+
+         procedure Generate_Code_For_Each_Interface is
+
+            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+
+               function Interface_Ptr_Name return String is
+               begin
+                  return Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               end Interface_Ptr_Name;
+
+               procedure Generate_Code_For_Interface_Ptr is
+                  Name : String := Interface_Ptr_Name;
+               begin
+                  Ada.Text_IO.Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Interface_Ptr;
+
+               procedure Generate_Code_For_Enums is
+
+                  procedure Generate_Code (Enum_Tag : Wayland_XML.Enum_Tag.Enum_Tag_T) is
+                     Enum_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
+
+                     procedure Generate_Code_For_Enum_Value (Entry_Tag : Wayland_XML.Entry_Tag.Entry_Tag_T) is
+                        Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Entry_Tag.Name & "_" & Entry_Tag.Name);
+                     begin
+                        Ada.Text_IO.Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & "; -- " & Entry_Tag.Summary);
+                        Ada.Text_IO.Put_Line (File, "");
+                     end Generate_Code_For_Enum_Value;
+
+                  begin
+                     Ada.Text_IO.Put_Line (File, "type " & Enum_Type_Name & " is new Interfaces.Unsigned_32;");
+
+                     for Child of Enum_Tag.Children loop
+                        case Child.Kind_Id is
+                           when Child_Dummy       => null;
+                           when Child_Description => null;
+                           when Child_Entry       => Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
+                        end case;
+                     end loop;
+                  end Generate_Code;
+
+               begin
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Request     => null;
+                        when Child_Event       => null;
+                        when Child_Enum        => Generate_Code (Child.Enum_Tag.all);
+                     end case;
+                  end loop;
+               end Generate_Code_For_Enums;
+
+               procedure Generate_Code_For_Subprogram_Ptrs is
+
+                  procedure Generate_Code_For_Subprogram (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+                     Subprogram_Name : String := Utils.Adaify_Name (Event_Tag.Name & "_Subprogram_Ptr");
+                     Interface_Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  begin
+                     Ada.Text_IO.Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
+                     Ada.Text_IO.Put_Line (File, "     " & Interface_Name & " : " & Interface_Ptr_Name & ";");
+                  end Generate_Code_For_Subprogram;
+
+               begin
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Request     => null;
+                        when Child_Event       => Generate_Code_For_Subprogram (Child.Event_Tag.all);
+                        when Child_Enum        => null;
+                     end case;
+                  end loop;
+               end Generate_Code_For_Subprogram_Ptrs;
+
+               procedure Generate_Code_For_Listener_Type_Definition is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "type " & Name & " is new Interfaces.Unsigned_32;");
+               end Generate_Code_For_Listener_Type_Definition;
+
+            begin
+               Generate_Code_For_Enums;
+               Generate_Code_For_Interface_Ptr;
+               Generate_Code_For_Listener_Type_Definition;
+            end Handle_Interface;
+
+         begin
+            for Child of Protocol_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy     => null;
+                  when Child_Copyright => null;
+                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+               end case;
+            end loop;
+         end Generate_Code_For_Each_Interface;
 
       begin
          Start_Writing_To_File;
@@ -801,7 +903,7 @@ procedure XML_Parser is
 
    begin
       Create_File;
-   end Create_Wl_Temp_File;
+   end Create_Wl_Thin_Spec_File;
 
 begin
    Check_Wayland_XML_File_Exists;

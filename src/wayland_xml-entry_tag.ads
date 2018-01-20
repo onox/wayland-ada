@@ -42,6 +42,10 @@ package Wayland_XML.Entry_Tag is
      Global => null,
      Pre    => This.Exists_Value;
 
+   function Value_As_String (This : Entry_Tag_T) return String with
+     Global => null,
+     Pre    => This.Exists_Value;
+
    function Exists_Value (This : Entry_Tag_T) return Boolean with
      Global => null;
 
@@ -82,6 +86,8 @@ private
    function Exists_Name (This : Entry_Tag_T) return Boolean is (This.My_Name.Exists);
 
    function Value (This : Entry_Tag_T) return Value_T is (This.My_Value.Value);
+
+   function Value_As_String (This : Entry_Tag_T) return String is (Aida.Int32.To_String (Aida.Nat32_T (This.My_Value.Value)));
 
    function Exists_Value (This : Entry_Tag_T) return Boolean is (This.My_Value.Exists);
 

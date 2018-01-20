@@ -39,9 +39,9 @@ package Wayland_XML.Request_Tag is
    procedure Set_Name (This    : in out Request_Tag_T;
                        Value   : String;
                        Subpool : Dynamic_Pools.Subpool_Handle) with
-     Global => null,
-     Pre    => not This.Exists_Name,
-     Post   => This.Exists_Name and This.Name = Value;
+     Global         => null,
+       Pre'Class    => not This.Exists_Name,
+         Post'Class => This.Exists_Name and This.Name = Value;
 
    function Name (This : Request_Tag_T) return String with
      Global => null,

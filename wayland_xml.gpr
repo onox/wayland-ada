@@ -32,4 +32,8 @@ library project Wayland_XML is
                          "wayland_xml-protocol_tag.adb"
                          );
 
+   package Check is
+      for Default_Switches ("ada") use ("-rules", "-from=gnatcheck_check_for_forbidden.txt");
+   end Check;
+
 end Wayland_XML;
