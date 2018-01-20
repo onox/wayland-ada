@@ -225,7 +225,12 @@ procedure XML_Parser is
             when Type_String           => Set_Unbounded_String (N, "Interfaces.C.Strings.chars_ptr");
             when Type_FD               => Set_Unbounded_String (N, "Integer");
             when Type_New_Id           => Set_Unbounded_String (N, "Interfaces.Unsigned_32");
-            when Type_Object           => Set_Unbounded_String (N, Utils.Adaify_Name (Arg_Tag.Interface_Attribute));
+            when Type_Object           =>
+               if Arg_Tag.Exists_Interface_Attribute then
+                  Set_Unbounded_String (N, Utils.Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
+               else
+                  Set_Unbounded_String (N, "Void_Ptr");
+               end if;
             when Type_Fixed            => Set_Unbounded_String (N, "Fixed_T");
             when Type_Array            => Set_Unbounded_String (N, "Wayland_Array_T");
          end case;
@@ -1077,20 +1082,16 @@ procedure XML_Parser is
                                                            Is_Last : Boolean)
                      is
                      begin
-                        if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
-                           declare
-                              Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                              Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
-                           begin
-                              if Is_Last then
-                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                              else
-                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                              end if;
-                           end;
-                        else
-                           Ada.Text_IO.Put_Line ("Cannot correctly handle " & Arg_Tag.Name);
-                        end if;
+                        declare
+                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        begin
+                           if Is_Last then
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                           else
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                           end if;
+                        end;
                      end Generate_Code_For_Argument;
 
                      Subprogram_Name : String := Utils.Adaify_Name (Event_Tag.Name & "_Subprogram_Ptr");
@@ -1204,20 +1205,16 @@ procedure XML_Parser is
                      procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
                                                       Is_Last : Boolean) is
                      begin
-                        if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
-                           declare
-                              Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                              Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
-                           begin
-                              if Is_Last then
-                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                              else
-                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                              end if;
-                           end;
-                        else
-                           Ada.Text_IO.Put_Line ("2 Cannot correctly handle " & Arg_Tag.Name);
-                        end if;
+                        declare
+                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        begin
+                           if Is_Last then
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                           else
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                           end if;
+                        end;
                      end Generate_Code_For_Arg;
 
                      Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
@@ -1458,20 +1455,16 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
                                                    Is_Last : Boolean) is
                   begin
-                     if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
-                        declare
-                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     else
-                        Ada.Text_IO.Put_Line ("2 Cannot correctly handle " & Arg_Tag.Name);
-                     end if;
+                     declare
+                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                     begin
+                        if Is_Last then
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                        else
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                        end if;
+                     end;
                   end Generate_Code_For_Arg;
 
                   Opcode          : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
