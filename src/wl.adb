@@ -558,7 +558,7 @@ package body Wl is
                                    Listener : Registry_Listener_Ptr;
                                    Data     : Wl.Void_Ptr) return Interfaces.C.int is
    begin
-      return wl_proxy_add_listener (Registry.all'Access, Listener, Data);
+      return wl_proxy_add_listener (Registry.all'Access, Listener.all'Address, Data);
    end Registry_Add_Listener;
 
    procedure Registry_Destroy (Registry : in out Registry_Ptr) is

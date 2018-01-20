@@ -38,7 +38,7 @@ package Wl is
 --     end record with
 --       Convention => C_Pass_By_Copy;
 
-   type
+--   type
 
    type Interface_T is limited record
       Name         : Interfaces.C.Strings.chars_ptr;
