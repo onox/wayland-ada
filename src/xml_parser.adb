@@ -87,6 +87,8 @@ procedure XML_Parser is
 
       function Exists_Destructor (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean;
 
+      function Exists_Any_Event_Tag (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean;
+
    end Utils;
 
    package body Utils is
@@ -337,6 +339,24 @@ procedure XML_Parser is
 
          return Result;
       end Exists_Destructor;
+
+      function Exists_Any_Event_Tag (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean is
+         Result : Boolean := False;
+      begin
+         for Child of Interface_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy       => null;
+               when Child_Description => null;
+               when Child_Request     => null;
+               when Child_Event       =>
+                     Result := True;
+                     exit;
+               when Child_Enum        => null;
+            end case;
+         end loop;
+
+         return Result;
+      end Exists_Any_Event_Tag;
 
    end Utils;
 
@@ -1259,7 +1279,19 @@ procedure XML_Parser is
                      elsif Utils.Is_Request_Destructor (Request_Tag) then
                         null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
                      else
-                        Ada.Text_IO.Put_Line ("4 Cannot correctly handle ");
+                        if Utils.Number_Of_Args (Request_Tag) > 0 then
+                           Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                           for Child of Request_Tag.Children loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                              end case;
+                           end loop;
+                           Ada.Text_IO.Put_Line (File, "   );");
+                        else
+                           Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ");");
+                        end if;
                      end if;
                      Ada.Text_IO.Put_Line (File, "");
                   end Generate_Code_For_Subprogram_Declaration;
@@ -1279,8 +1311,12 @@ procedure XML_Parser is
             begin
                Generate_Code_For_Enums;
                Generate_Code_For_Subprogram_Ptrs;
-               Generate_Code_For_Listener_Type_Definition;
-               Generate_Code_For_Add_Listener_Subprogram_Declaration;
+
+               if Utils.Exists_Any_Event_Tag (Interface_Tag) then
+                  Generate_Code_For_Listener_Type_Definition;
+                  Generate_Code_For_Add_Listener_Subprogram_Declaration;
+               end if;
+
                Generate_Code_For_Set_User_Data_Subprogram_Declaration;
                Generate_Code_For_Get_User_Data_Subprogram_Declaration;
                Generate_Code_For_Get_Version_Subprogram_Declaration;
@@ -1404,7 +1440,7 @@ procedure XML_Parser is
                   Ada.Text_IO.Put_Line (File, "     " & Utils.Make_Upper_Case (Interface_Tag.Name & "_Destroy") &");");
                   Ada.Text_IO.Put_Line (File, "");
                   Ada.Text_IO.Put_Line (File, "wl_proxy_destroy (" & Name &".all'Access);");
-                  Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+                  Ada.Text_IO.Put_Line (File, "end " & Name & "_Destroy;");
                   Ada.Text_IO.Put_Line (File, "");
                else
                   Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ") is");
@@ -1449,11 +1485,10 @@ procedure XML_Parser is
                            Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
                         begin
                            if Utils.Number_Of_Args (Request_Tag) > 1 then
-                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-
                               declare
                                  V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
                               begin
+                                 Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                                  for Child of Request_Tag.Children loop
                                     case Child.Kind_Id is
                                        when Child_Dummy       => null;
@@ -1472,13 +1507,29 @@ procedure XML_Parser is
                                        when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
                                     end case;
                                  end loop;
-                              end;
 
-                              Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & " is");
-                              Ada.Text_IO.Put_Line (File, "begin");
-                              Ada.Text_IO.Put_Line (File, "wl_proxy_marshal_constructor_versioned (" & Name &".all'Access,");
-                              Ada.Text_IO.Put_Line (File, "    " & Opcode & ",");
-                              Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                                 Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & " is");
+                                 Ada.Text_IO.Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name &".all'Access,");
+                                 Ada.Text_IO.Put_Line (File, "    " & Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name) & ",");
+                                 Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
+                                 Ada.Text_IO.Put (File, "    0");
+
+                                 for Child of V loop
+                                    case Child.Kind_Id is
+                                       when Child_Dummy       => null;
+                                       when Child_Description => null;
+                                       when Child_Arg         =>
+                                          Ada.Text_IO.Put_Line (File, ",");
+                                          Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                                    end case;
+                                 end loop;
+
+                                 Ada.Text_IO.Put_Line (File, "    );");
+                                 Ada.Text_IO.Put_Line (File, "begin");
+                                 Ada.Text_IO.Put_Line (File, "    return (if P /= null then P.all'Access else null);");
+                                 Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+
+                              end;
                            else
                               Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & " is");
                               Ada.Text_IO.Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name &".all'Access,");
@@ -1549,8 +1600,56 @@ procedure XML_Parser is
                            Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
                         end if;
                      end if;
+                  elsif Utils.Is_Request_Destructor (Request_Tag) then
+                     null; -- Body is generated in Generate_Code_For_Destroy_Subprogram_Implementation
                   else
-                     Ada.Text_IO.Put_Line ("6 Cannot correctly handle ");
+                     if Utils.Number_Of_Args (Request_Tag) > 0 then
+                        declare
+                           V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+                        begin
+                           Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                           for Child of Request_Tag.Children loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         =>
+                                    if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
+                                       V.Append (Child);
+                                    end if;
+                              end case;
+                           end loop;
+
+                           for Child of V loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                              end case;
+                           end loop;
+
+                           Ada.Text_IO.Put_Line (File, "   ) is");
+                           Ada.Text_IO.Put_Line (File, "begin");
+                           Ada.Text_IO.Put_Line (File, "Proxy_Marshal (" & Name &".all'Access,");
+                           Ada.Text_IO.Put (File, "    " & Opcode);
+
+                           for Child of V loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         =>
+                                    Ada.Text_IO.Put_Line (File, ",");
+                                    Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                              end case;
+                           end loop;
+                           Ada.Text_IO.Put_Line (File, "    );");
+                           Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                        end;
+                     else
+                        Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
+                        Ada.Text_IO.Put_Line (File, "begin");
+                        Ada.Text_IO.Put_Line (File, "Proxy_Marshal (" & Name &".all'Access, " & Opcode & ");");
+                        Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                     end if;
                   end if;
 
                   Ada.Text_IO.Put_Line (File, "");
@@ -1569,7 +1668,9 @@ procedure XML_Parser is
             end Generate_Code_For_Requests;
 
          begin
-            Generate_Code_For_Add_Listener_Subprogram_Implementations;
+            if Utils.Exists_Any_Event_Tag (Interface_Tag) then
+               Generate_Code_For_Add_Listener_Subprogram_Implementations;
+            end if;
             Generate_Code_For_Set_User_Data_Subprogram_Implementations;
             Generate_Code_For_Get_User_Data_Subprogram_Implementations;
             Generate_Code_For_Get_Version_Subprogram_Implementations;
