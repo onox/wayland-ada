@@ -26,6 +26,8 @@ procedure XML_Parser is
 
    use type Ada.Containers.Count_Type;
 
+   use type Wayland_XML.Event_Tag.Child_T;
+
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
@@ -35,6 +37,8 @@ procedure XML_Parser is
    use all type Wayland_XML.Protocol_Tag.Child_Kind_Id_T;
    use all type Wayland_XML.Interface_Tag.Child_Kind_Id_T;
    use all type Wayland_XML.Enum_Tag.Child_Kind_Id_T;
+   use all type Wayland_XML.Event_Tag.Child_Kind_Id_T;
+   use all type Wayland_XML.Arg_Tag.Type_Attribute_T;
 
    XML_Exception : exception;
 
@@ -53,7 +57,14 @@ procedure XML_Parser is
 
       function Adaify_Name (Old_Name : String) return String;
 
+      -- If the variable name is "Interface" then it will be recognized as
+      -- a reserved word in Ada and it will be suffixed with "_V" resulting
+      -- in "Interface_V".
+      function Adaify_Variable_Name (Old_Name : String) return String;
+
       function Make_Upper_Case (Source : String) return String;
+
+      function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T) return String;
 
    end Utils;
 
@@ -70,6 +81,16 @@ procedure XML_Parser is
             Set_Unbounded_String (New_Name, "");
          end if;
       end Remove_Initial_Wl;
+
+      function Adaify_Variable_Name (Old_Name : String) return String is
+         Result : String := Adaify_Name (Old_Name);
+      begin
+         if Result = "Interface" then
+            return Result & "_V";
+         else
+            return Result;
+         end if;
+      end Adaify_Variable_Name;
 
       function Adaify_Name (Old_Name : String) return String is
          New_Name : Ada.Strings.Unbounded.Unbounded_String;
@@ -171,6 +192,22 @@ procedure XML_Parser is
 
          return To_String (Target);
       end Make_Upper_Case;
+
+      function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T) return String is
+         N : Ada.Strings.Unbounded.Unbounded_String;
+      begin
+         case Arg_Tag.Type_Attribute is
+            when Type_Integer          => Set_Unbounded_String (N, "Integer");
+            when Type_Unsigned_Integer => Set_Unbounded_String (N, "Interfaces.Unsigned_32");
+            when Type_String           => Set_Unbounded_String (N, "Interfaces.C.Strings.chars_ptr");
+            when Type_FD               => Set_Unbounded_String (N, "Integer");
+            when Type_New_Id           => Set_Unbounded_String (N, "Interfaces.Unsigned_32");
+            when Type_Object           => Set_Unbounded_String (N, Utils.Adaify_Name (Arg_Tag.Interface_Attribute));
+            when Type_Fixed            => Set_Unbounded_String (N, "Fixed_T");
+            when Type_Array            => Set_Unbounded_String (N, "Wayland_Array_T");
+         end case;
+         return To_String (N);
+      end Arg_Type_As_String;
 
    end Utils;
 
@@ -627,6 +664,8 @@ procedure XML_Parser is
       Create_Wl_Thin_Spec_File;
    end Identify_Protocol_Children;
 
+   procedure Create_Wl_Thin_Body_File;
+
    procedure Create_Wl_Thin_Spec_File is
 
       File : Ada.Text_IO.File_Type;
@@ -653,9 +692,21 @@ procedure XML_Parser is
          procedure Start_Writing_To_File is
          begin
             Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
+            Ada.Text_IO.Put_Line (File, "with System;");
             Ada.Text_IO.Put_Line (File, "");
             Ada.Text_IO.Put_Line (File, "-- Auto generated from Wayland.xml except for the Wayland Core parts");
             Ada.Text_IO.Put_Line (File, "package Wl_Thin is");
+            Ada.Text_IO.Put_Line (File, "");
+            Ada.Text_IO.Put_Line (File, "subtype Void_Ptr is System.Address;");
+            Ada.Text_IO.Put_Line (File, "");
+            Ada.Text_IO.Put_Line (File, "type Fixed_T is new Interfaces.Integer_32;");
+            Ada.Text_IO.Put_Line (File, "");
+            Ada.Text_IO.Put_Line (File, "type Wayland_Array_T is record");
+            Ada.Text_IO.Put_Line (File, "Size  : Interfaces.Unsigned_32;");
+            Ada.Text_IO.Put_Line (File, "Alloc : Interfaces.Unsigned_32;");
+            Ada.Text_IO.Put_Line (File, "Data : Void_Ptr;");
+            Ada.Text_IO.Put_Line (File, "end record with");
+            Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
             Ada.Text_IO.Put_Line (File, "");
 
             Generate_Code_For_Numeric_Constants;
@@ -825,7 +876,6 @@ procedure XML_Parser is
                         Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Entry_Tag.Name & "_" & Entry_Tag.Name);
                      begin
                         Ada.Text_IO.Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & "; -- " & Entry_Tag.Summary);
-                        Ada.Text_IO.Put_Line (File, "");
                      end Generate_Code_For_Enum_Value;
 
                   begin
@@ -838,6 +888,7 @@ procedure XML_Parser is
                            when Child_Entry       => Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
                         end case;
                      end loop;
+                     Ada.Text_IO.Put_Line (File, "");
                   end Generate_Code;
 
                begin
@@ -855,11 +906,43 @@ procedure XML_Parser is
                procedure Generate_Code_For_Subprogram_Ptrs is
 
                   procedure Generate_Code_For_Subprogram (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+
+                     procedure Generate_Code_For_Argument (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
+                                                           Is_Last : Boolean)
+                     is
+                     begin
+                        if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
+                           declare
+                              Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                              Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                           begin
+                              if Is_Last then
+                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                              else
+                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                              end if;
+                           end;
+                        else
+                           Ada.Text_IO.Put_Line ("Cannot correctly handle " & Arg_Tag.Name);
+                        end if;
+                     end Generate_Code_For_Argument;
+
                      Subprogram_Name : String := Utils.Adaify_Name (Event_Tag.Name & "_Subprogram_Ptr");
                      Interface_Name : String := Utils.Adaify_Name (Interface_Tag.Name);
                   begin
                      Ada.Text_IO.Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
                      Ada.Text_IO.Put_Line (File, "     " & Interface_Name & " : " & Interface_Ptr_Name & ";");
+
+                     for Child of Event_Tag.Children loop
+                        case Child.Kind_Id is
+                           when Child_Dummy       => null;
+                           when Child_Description => null;
+                           when Child_Arg         => Generate_Code_For_Argument (Child.Arg_Tag.all, Event_Tag.Children.Last_Element = Child);
+                        end case;
+                     end loop;
+                     Ada.Text_IO.Put_Line (File, "     ) with");
+                     Ada.Text_IO.Put_Line (File, "Convention => C;");
+                     Ada.Text_IO.Put_Line (File, "");
                   end Generate_Code_For_Subprogram;
 
                begin
@@ -875,16 +958,52 @@ procedure XML_Parser is
                end Generate_Code_For_Subprogram_Ptrs;
 
                procedure Generate_Code_For_Listener_Type_Definition is
+
+                  procedure Generate_Code_For_Record_Component (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+                     Component_Name : String := Utils.Adaify_Name (Event_Tag.Name);
+                     Component_Type_Name : String := Utils.Adaify_Name (Event_Tag.Name & "_Subprogram_Ptr");
+                  begin
+                     Ada.Text_IO.Put_Line (File, "   " & Component_Name & " : " & Component_Type_Name & ";");
+                  end Generate_Code_For_Record_Component;
+
                   Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
                   Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
                begin
-                  Ada.Text_IO.Put_Line (File, "type " & Name & " is new Interfaces.Unsigned_32;");
+                  Ada.Text_IO.Put_Line (File, "type " & Name & " is record");
+
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Request     => null;
+                        when Child_Event       => Generate_Code_For_Record_Component (Child.Event_Tag.all);
+                        when Child_Enum        => null;
+                     end case;
+                  end loop;
+                  Ada.Text_IO.Put_Line (File, "end record with");
+                  Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
+                  Ada.Text_IO.Put_Line (File, "");
+                  Ada.Text_IO.Put_Line (File, "type " & Ptr_Name & " is access all " & Name & ";");
+                  Ada.Text_IO.Put_Line (File, "");
                end Generate_Code_For_Listener_Type_Definition;
+
+               procedure Generate_Code_For_Add_Listener_Subprogram_Declaration is
+                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+                  Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
+                  Ada.Text_IO.Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
+                  Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int;");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Add_Listener_Subprogram_Declaration;
 
             begin
                Generate_Code_For_Enums;
                Generate_Code_For_Interface_Ptr;
+               Generate_Code_For_Subprogram_Ptrs;
                Generate_Code_For_Listener_Type_Definition;
+               Generate_Code_For_Add_Listener_Subprogram_Declaration;
             end Handle_Interface;
 
          begin
@@ -903,7 +1022,78 @@ procedure XML_Parser is
 
    begin
       Create_File;
+      Create_Wl_Thin_Body_File;
    end Create_Wl_Thin_Spec_File;
+
+   procedure Create_Wl_Thin_Body_File is
+
+      File : Ada.Text_IO.File_Type;
+
+      procedure Write_To_File;
+
+      procedure Create_File is
+      begin
+         Ada.Text_IO.Create (File => File,
+                             Mode => Ada.Text_IO.Out_File,
+                             Name => "wl_thin.adb");
+
+         Write_To_File;
+
+         Ada.Text_IO.Close (File);
+      end Create_File;
+
+      pragma Unmodified (File);
+
+      procedure Generate_Code_For_Add_Listener_Subprogram_Implementations;
+
+      procedure Write_To_File is
+
+      begin
+         Ada.Text_IO.Put_Line (File, "-- Auto generated from Wayland.xml");
+         Ada.Text_IO.Put_Line (File, "package body Wl_Thin is");
+         Ada.Text_IO.Put_Line (File, "");
+
+         Generate_Code_For_Add_Listener_Subprogram_Implementations;
+
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "end Wl_Thin;");
+      end Write_To_File;
+
+      procedure Generate_Code_For_Add_Listener_Subprogram_Implementations is
+
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+
+            procedure Generate_Code_For_Add_Listener_Subprogram_Implementations is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int is");
+               Ada.Text_IO.Put_Line (File, "begin");
+               Ada.Text_IO.Put_Line (File, "wl_proxy_add_listener (" & Name &".all'Access, Listener.all'Access, Data);");
+               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Add_Listener_Subprogram_Implementations;
+
+         begin
+            Generate_Code_For_Add_Listener_Subprogram_Implementations;
+         end Handle_Interface;
+
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy     => null;
+               when Child_Copyright => null;
+               when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+      end Generate_Code_For_Add_Listener_Subprogram_Implementations;
+
+   begin
+      Create_File;
+   end Create_Wl_Thin_Body_File;
 
 begin
    Check_Wayland_XML_File_Exists;
