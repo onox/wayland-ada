@@ -27,6 +27,7 @@ procedure XML_Parser is
    use type Ada.Containers.Count_Type;
 
    use type Wayland_XML.Event_Tag.Child_T;
+   use type Wayland_XML.Request_Tag.Child_T;
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
 
@@ -39,6 +40,7 @@ procedure XML_Parser is
    use all type Wayland_XML.Enum_Tag.Child_Kind_Id_T;
    use all type Wayland_XML.Event_Tag.Child_Kind_Id_T;
    use all type Wayland_XML.Arg_Tag.Type_Attribute_T;
+   use all type Wayland_XML.Request_Tag.Child_Kind_Id_T;
 
    XML_Exception : exception;
 
@@ -65,6 +67,21 @@ procedure XML_Parser is
       function Make_Upper_Case (Source : String) return String;
 
       function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T) return String;
+
+      function Number_Of_Args (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Aida.Nat32_T;
+
+      function Is_New_Id_Argument_Present (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean;
+
+      function Is_Interface_Specified (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean with
+        Pre => Is_New_Id_Argument_Present (Request_Tag);
+
+      Interface_Not_Found_Exception : exception;
+
+      -- will raise Interface_Not_Found_Exception is pre-condition is not met.
+      function Find_Specified_Interface (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return String with
+        Pre => Is_Interface_Specified (Request_Tag);
+
+      function Interface_Ptr_Name (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return String;
 
    end Utils;
 
@@ -208,6 +225,69 @@ procedure XML_Parser is
          end case;
          return To_String (N);
       end Arg_Type_As_String;
+
+      function Number_Of_Args (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Aida.Nat32_T is
+         N : Aida.Nat32_T := 0;
+      begin
+         for Child of Request_Tag.Children loop
+            if Child.Kind_Id = Child_Arg then
+               N := N + 1;
+            end if;
+         end loop;
+         return N;
+      end Number_Of_Args;
+
+      function Is_New_Id_Argument_Present (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean is
+      begin
+         for Child of Request_Tag.Children loop
+            if
+              Child.Kind_Id = Child_Arg and then
+              Child.Arg_Tag.Exists_Type_Attribute and then
+              Child.Arg_Tag.Type_Attribute = Type_New_Id
+            then
+               return True;
+            end if;
+         end loop;
+
+         return False;
+      end Is_New_Id_Argument_Present;
+
+      function Is_Interface_Specified (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean is
+      begin
+         for Child of Request_Tag.Children loop
+            if
+              Child.Kind_Id = Child_Arg and then
+              Child.Arg_Tag.Exists_Type_Attribute and then
+              Child.Arg_Tag.Type_Attribute = Type_New_Id and then
+              Child.Arg_Tag.Exists_Interface_Attribute
+            then
+               return True;
+            end if;
+         end loop;
+
+         return False;
+      end Is_Interface_Specified;
+
+      function Find_Specified_Interface (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return String is
+      begin
+         for Child of Request_Tag.Children loop
+            if
+              Child.Kind_Id = Child_Arg and then
+              Child.Arg_Tag.Exists_Type_Attribute and then
+              Child.Arg_Tag.Type_Attribute = Type_New_Id and then
+              Child.Arg_Tag.Exists_Interface_Attribute
+            then
+               return Child.Arg_Tag.Interface_Attribute;
+            end if;
+         end loop;
+
+         raise Interface_Not_Found_Exception;
+      end Find_Specified_Interface;
+
+      function Interface_Ptr_Name (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return String is
+      begin
+         return Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+      end Interface_Ptr_Name;
 
    end Utils;
 
@@ -824,7 +904,7 @@ procedure XML_Parser is
             Generate_Code_For_Interface_Constants;
          end Generate_Code_For_Numeric_Constants;
 
-         procedure Generate_Code_For_Each_Interface;
+         procedure Generate_Code_For_Interface_Ptrs;
 
          procedure Generate_Code_For_Interface_Constants is
 
@@ -848,24 +928,41 @@ procedure XML_Parser is
                end case;
             end loop;
 
-            Generate_Code_For_Each_Interface;
+            Generate_Code_For_Interface_Ptrs;
          end Generate_Code_For_Interface_Constants;
 
-         procedure Generate_Code_For_Each_Interface is
+         procedure Generate_Code_For_Each_Interface;
+
+         procedure Generate_Code_For_Interface_Ptrs is
 
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
-               function Interface_Ptr_Name return String is
-               begin
-                  return Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               end Interface_Ptr_Name;
-
                procedure Generate_Code_For_Interface_Ptr is
-                  Name : String := Interface_Ptr_Name;
+                  Name : String := Utils.Interface_Ptr_Name (Interface_Tag);
                begin
                   Ada.Text_IO.Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
                   Ada.Text_IO.Put_Line (File, "");
                end Generate_Code_For_Interface_Ptr;
+
+            begin
+               Generate_Code_For_Interface_Ptr;
+            end Handle_Interface;
+
+         begin
+            for Child of Protocol_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy     => null;
+                  when Child_Copyright => null;
+                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+               end case;
+            end loop;
+
+            Generate_Code_For_Each_Interface;
+         end Generate_Code_For_Interface_Ptrs;
+
+         procedure Generate_Code_For_Each_Interface is
+
+            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
                procedure Generate_Code_For_Enums is
 
@@ -931,7 +1028,7 @@ procedure XML_Parser is
                      Interface_Name : String := Utils.Adaify_Name (Interface_Tag.Name);
                   begin
                      Ada.Text_IO.Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
-                     Ada.Text_IO.Put_Line (File, "     " & Interface_Name & " : " & Interface_Ptr_Name & ";");
+                     Ada.Text_IO.Put_Line (File, "     " & Interface_Name & " : " & Utils.Interface_Ptr_Name (Interface_Tag) & ";");
 
                      for Child of Event_Tag.Children loop
                         case Child.Kind_Id is
@@ -1031,9 +1128,77 @@ procedure XML_Parser is
                   Ada.Text_IO.Put_Line (File, "");
                end Generate_Code_For_Destroy_Subprogram_Declaration;
 
+               procedure Generate_Code_For_Requests is
+
+                  procedure Generate_Code_For_Subprogram_Declaration (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+
+                     procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
+                                                      Is_Last : Boolean) is
+                     begin
+                        if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
+                           declare
+                              Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                              Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                           begin
+                              if Is_Last then
+                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                              else
+                                 Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                              end if;
+                           end;
+                        else
+                           Ada.Text_IO.Put_Line ("2 Cannot correctly handle " & Arg_Tag.Name);
+                        end if;
+                     end Generate_Code_For_Arg;
+
+                     Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
+                     Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
+                     Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+                  begin
+                     if Utils.Is_New_Id_Argument_Present (Request_Tag) then
+                        if Utils.Is_Interface_Specified (Request_Tag) then
+                           declare
+                              Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                           begin
+                              if Utils.Number_Of_Args (Request_Tag) > 1 then
+                                 Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                                 for Child of Request_Tag.Children loop
+                                    case Child.Kind_Id is
+                                       when Child_Dummy       => null;
+                                       when Child_Description => null;
+                                       when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                                    end case;
+                                 end loop;
+
+                                 Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & ";");
+
+                              else
+                                 Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                              end if;
+                           end;
+                        else
+                           Ada.Text_IO.Put_Line ("3 Cannot correctly handle ");
+                        end if;
+                     else
+                        Ada.Text_IO.Put_Line ("4 Cannot correctly handle ");
+                     end if;
+                     Ada.Text_IO.Put_Line (File, "");
+                  end Generate_Code_For_Subprogram_Declaration;
+
+               begin
+                  for Child of Interface_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Request     => Generate_Code_For_Subprogram_Declaration (Child.Request_Tag.all);
+                        when Child_Event       => null;
+                        when Child_Enum        => null;
+                     end case;
+                  end loop;
+               end Generate_Code_For_Requests;
+
             begin
                Generate_Code_For_Enums;
-               Generate_Code_For_Interface_Ptr;
                Generate_Code_For_Subprogram_Ptrs;
                Generate_Code_For_Listener_Type_Definition;
                Generate_Code_For_Add_Listener_Subprogram_Declaration;
@@ -1041,6 +1206,7 @@ procedure XML_Parser is
                Generate_Code_For_Get_User_Data_Subprogram_Declaration;
                Generate_Code_For_Get_Version_Subprogram_Declaration;
                Generate_Code_For_Destroy_Subprogram_Declaration;
+               Generate_Code_For_Requests;
             end Handle_Interface;
 
          begin
@@ -1159,12 +1325,95 @@ procedure XML_Parser is
                Ada.Text_IO.Put_Line (File, "");
             end Generate_Code_For_Destroy_Subprogram_Implementations;
 
+            procedure Generate_Code_For_Requests is
+
+               procedure Generate_Code_For_Subprogram_Implementation (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+
+                  procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
+                                                   Is_Last : Boolean) is
+                  begin
+                     if Arg_Tag.Exists_Type_Attribute and then Arg_Tag.Type_Attribute /= Type_Object then
+                        declare
+                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        begin
+                           if Is_Last then
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                           else
+                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                           end if;
+                        end;
+                     else
+                        Ada.Text_IO.Put_Line ("2 Cannot correctly handle " & Arg_Tag.Name);
+                     end if;
+                  end Generate_Code_For_Arg;
+
+                  Opcode          : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  if Utils.Is_New_Id_Argument_Present (Request_Tag) then
+                     if Utils.Is_Interface_Specified (Request_Tag) then
+                        declare
+                           Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                        begin
+                           if Utils.Number_Of_Args (Request_Tag) > 1 then
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+
+                              for Child of Request_Tag.Children loop
+                                 case Child.Kind_Id is
+                                    when Child_Dummy       => null;
+                                    when Child_Description => null;
+                                    when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                                 end case;
+                              end loop;
+
+                              Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & " is");
+                              Ada.Text_IO.Put_Line (File, "begin");
+                              Ada.Text_IO.Put_Line (File, "wl_proxy_marshal_constructor_versioned (" & Name &".all'Access,");
+                              Ada.Text_IO.Put_Line (File, "    " & Opcode & ",");
+                              Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                           else
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & " is");
+                              Ada.Text_IO.Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name &".all'Access,");
+                              Ada.Text_IO.Put_Line (File, "    " & Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name) & ",");
+                              Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
+                              Ada.Text_IO.Put_Line (File, "    0);");
+                              Ada.Text_IO.Put_Line (File, "begin");
+                              Ada.Text_IO.Put_Line (File, "    return (if P /= null then P.all'Access else null);");
+                              Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                           end if;
+                        end;
+                     else
+                        Ada.Text_IO.Put_Line ("5 Cannot correctly handle ");
+                     end if;
+                  else
+                     Ada.Text_IO.Put_Line ("6 Cannot correctly handle ");
+                  end if;
+
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Subprogram_Implementation;
+
+            begin
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy       => null;
+                     when Child_Description => null;
+                     when Child_Request     => Generate_Code_For_Subprogram_Implementation (Child.Request_Tag.all);
+                     when Child_Event       => null;
+                     when Child_Enum        => null;
+                  end case;
+               end loop;
+            end Generate_Code_For_Requests;
+
          begin
             Generate_Code_For_Add_Listener_Subprogram_Implementations;
             Generate_Code_For_Set_User_Data_Subprogram_Implementations;
             Generate_Code_For_Get_User_Data_Subprogram_Implementations;
             Generate_Code_For_Get_Version_Subprogram_Implementations;
             Generate_Code_For_Destroy_Subprogram_Implementations;
+            Generate_Code_For_Requests;
          end Handle_Interface;
 
       begin
