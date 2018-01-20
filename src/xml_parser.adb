@@ -83,6 +83,10 @@ procedure XML_Parser is
 
       function Interface_Ptr_Name (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return String;
 
+      function Is_Request_Destructor (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean;
+
+      function Exists_Destructor (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean;
+
    end Utils;
 
    package body Utils is
@@ -288,6 +292,51 @@ procedure XML_Parser is
       begin
          return Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
       end Interface_Ptr_Name;
+
+      function Is_Request_Destructor (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) return Boolean is
+         Result : Boolean := False;
+
+         V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+      begin
+         for Child of Request_Tag.Children loop
+            if
+              Child.Kind_Id = Child_Arg
+            then
+               V.Append (Child);
+            end if;
+         end loop;
+
+         if
+           Request_Tag.Exists_Type_Attribute and then
+           Request_Tag.Type_Attribute = "destructor" and then
+           Request_Tag.Name = "destroy" and then
+           V.Length = 0
+         then
+            Result := True;
+         end if;
+
+         return Result;
+      end Is_Request_Destructor;
+
+      function Exists_Destructor (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean is
+         Result : Boolean := False;
+      begin
+         for Child of Interface_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy       => null;
+               when Child_Description => null;
+               when Child_Request     =>
+                  if Utils.Is_Request_Destructor (Child.Request_Tag.all) then
+                     Result := True;
+                     exit;
+                  end if;
+               when Child_Event       => null;
+               when Child_Enum        => null;
+            end case;
+         end loop;
+
+         return Result;
+      end Exists_Destructor;
 
    end Utils;
 
@@ -1207,6 +1256,8 @@ procedure XML_Parser is
                               Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
                            end if;
                         end if;
+                     elsif Utils.Is_Request_Destructor (Request_Tag) then
+                        null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
                      else
                         Ada.Text_IO.Put_Line ("4 Cannot correctly handle ");
                      end if;
@@ -1346,11 +1397,22 @@ procedure XML_Parser is
                Name : String := Utils.Adaify_Name (Interface_Tag.Name);
                Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
-               Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ") is");
-               Ada.Text_IO.Put_Line (File, "begin");
-               Ada.Text_IO.Put_Line (File, "wl_proxy_destroy (" & Name &".all'Access);");
-               Ada.Text_IO.Put_Line (File, "end " & Name & ";");
-               Ada.Text_IO.Put_Line (File, "");
+               if Utils.Exists_Destructor (Interface_Tag) then
+                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ") is");
+                  Ada.Text_IO.Put_Line (File, "begin");
+                  Ada.Text_IO.Put_Line (File, "Proxy_Marshal (" & Name &".all'Access,");
+                  Ada.Text_IO.Put_Line (File, "     " & Utils.Make_Upper_Case (Interface_Tag.Name & "_Destroy") &");");
+                  Ada.Text_IO.Put_Line (File, "");
+                  Ada.Text_IO.Put_Line (File, "wl_proxy_destroy (" & Name &".all'Access);");
+                  Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+                  Ada.Text_IO.Put_Line (File, "");
+               else
+                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ") is");
+                  Ada.Text_IO.Put_Line (File, "begin");
+                  Ada.Text_IO.Put_Line (File, "wl_proxy_destroy (" & Name &".all'Access);");
+                  Ada.Text_IO.Put_Line (File, "end " & Name & ";");
+                  Ada.Text_IO.Put_Line (File, "");
+               end if;
             end Generate_Code_For_Destroy_Subprogram_Implementations;
 
             procedure Generate_Code_For_Requests is
