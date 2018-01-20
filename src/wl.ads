@@ -31,7 +31,24 @@ package Wl is
 
    procedure Registry_Destroy (Registry : in out Registry_Ptr);
 
-   type Interface_T is limited private;
+--     type Message_T is limited record
+--        Name      : Interfaces.C.Strings.chars_ptr;
+--        Signature : Interfaces.C.Strings.chars_ptr;
+--        Interfaces : Void_Ptr; -- Can be improved upon.
+--     end record with
+--       Convention => C_Pass_By_Copy;
+
+   type
+
+   type Interface_T is limited record
+      Name         : Interfaces.C.Strings.chars_ptr;
+      Version      : Interfaces.C.int;
+      Method_Count : Interfaces.C.int;
+      Methods      : Void_Ptr; -- Can be improved upon.
+      Event_Count  : Interfaces.C.int;
+      Events       : Void_Ptr; -- Can be improved upon.
+   end record with
+     Convention => C_Pass_By_Copy;
 
    type Interface_Ptr is access all Interface_T;
 
@@ -80,6 +97,5 @@ private
 
    type Proxy_T is limited null record;
 
-   type Interface_T is limited null record;
 
 end Wl;

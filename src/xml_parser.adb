@@ -1162,22 +1162,50 @@ procedure XML_Parser is
                            begin
                               if Utils.Number_Of_Args (Request_Tag) > 1 then
                                  Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-                                 for Child of Request_Tag.Children loop
-                                    case Child.Kind_Id is
-                                       when Child_Dummy       => null;
-                                       when Child_Description => null;
-                                       when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
-                                    end case;
-                                 end loop;
+
+                                 declare
+                                    V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+                                 begin
+                                    for Child of Request_Tag.Children loop
+                                       case Child.Kind_Id is
+                                          when Child_Dummy       => null;
+                                          when Child_Description => null;
+                                          when Child_Arg         =>
+                                             if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
+                                                V.Append (Child);
+                                             end if;
+                                       end case;
+                                    end loop;
+
+                                    for Child of V loop
+                                       case Child.Kind_Id is
+                                          when Child_Dummy       => null;
+                                          when Child_Description => null;
+                                          when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                                       end case;
+                                    end loop;
+                                 end;
 
                                  Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & ";");
-
                               else
                                  Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
                               end if;
                            end;
                         else
-                           Ada.Text_IO.Put_Line ("3 Cannot correctly handle ");
+                           if Utils.Number_Of_Args (Request_Tag) > 1 then
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                              for Child of Request_Tag.Children loop
+                                 case Child.Kind_Id is
+                                    when Child_Dummy       => null;
+                                    when Child_Description => null;
+                                    when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, False);
+                                 end case;
+                              end loop;
+                              Ada.Text_IO.Put_Line (File, "   Interface_V : Interface_Ptr;");
+                              Ada.Text_IO.Put_Line (File, "   New_Id : Interfaces.Unsigned_32) return Proxy_Ptr;");
+                           else
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
+                           end if;
                         end if;
                      else
                         Ada.Text_IO.Put_Line ("4 Cannot correctly handle ");
@@ -1361,13 +1389,28 @@ procedure XML_Parser is
                            if Utils.Number_Of_Args (Request_Tag) > 1 then
                               Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
 
-                              for Child of Request_Tag.Children loop
-                                 case Child.Kind_Id is
-                                    when Child_Dummy       => null;
-                                    when Child_Description => null;
-                                    when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
-                                 end case;
-                              end loop;
+                              declare
+                                 V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+                              begin
+                                 for Child of Request_Tag.Children loop
+                                    case Child.Kind_Id is
+                                       when Child_Dummy       => null;
+                                       when Child_Description => null;
+                                       when Child_Arg         =>
+                                          if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
+                                             V.Append (Child);
+                                          end if;
+                                    end case;
+                                 end loop;
+
+                                 for Child of V loop
+                                    case Child.Kind_Id is
+                                       when Child_Dummy       => null;
+                                       when Child_Description => null;
+                                       when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                                    end case;
+                                 end loop;
+                              end;
 
                               Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & " is");
                               Ada.Text_IO.Put_Line (File, "begin");
@@ -1386,7 +1429,63 @@ procedure XML_Parser is
                            end if;
                         end;
                      else
-                        Ada.Text_IO.Put_Line ("5 Cannot correctly handle ");
+                        if Utils.Number_Of_Args (Request_Tag) > 1 then
+                           declare
+                              V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+                           begin
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+
+                              for Child of Request_Tag.Children loop
+                                 case Child.Kind_Id is
+                                    when Child_Dummy       => null;
+                                    when Child_Description => null;
+                                    when Child_Arg         =>
+                                       if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
+                                          V.Append (Child);
+                                       end if;
+                                 end case;
+                              end loop;
+
+                              for Child of V loop
+                                 case Child.Kind_Id is
+                                    when Child_Dummy       => null;
+                                    when Child_Description => null;
+                                    when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, False);
+                                 end case;
+                              end loop;
+
+                              Ada.Text_IO.Put_Line (File, "   Interface_V : Interface_Ptr;");
+                              Ada.Text_IO.Put_Line (File, "   New_Id : Interfaces.Unsigned_32) return Proxy_Ptr is");
+                              Ada.Text_IO.Put_Line (File, "begin");
+                              Ada.Text_IO.Put_Line (File, "    return Proxy_Marshal_Constructor_Versioned (" & Name &".all'Access,");
+                              Ada.Text_IO.Put_Line (File, "    " & Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name) & ",");
+                              Ada.Text_IO.Put_Line (File, "    Interface_V'Access,");
+                              Ada.Text_IO.Put_Line (File, "    New_Id,");
+
+                              for Child of V loop
+                                 case Child.Kind_Id is
+                                    when Child_Dummy       => null;
+                                    when Child_Description => null;
+                                    when Child_Arg         =>
+                                       Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Variable_Name (Child.Arg_Tag.Name) & ",");
+                                 end case;
+                              end loop;
+
+                              Ada.Text_IO.Put_Line (File, "    Interface_V.Name,");
+                              Ada.Text_IO.Put_Line (File, "    New_Id,");
+                              Ada.Text_IO.Put_Line (File, "    0);");
+                              Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                           end;
+                        else
+                           Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr is");
+                           Ada.Text_IO.Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name &".all'Access,");
+                           Ada.Text_IO.Put_Line (File, "    " & Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name) & ",");
+                           Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
+                           Ada.Text_IO.Put_Line (File, "    0);");
+                           Ada.Text_IO.Put_Line (File, "begin");
+                           Ada.Text_IO.Put_Line (File, "    return (if P /= null then P.all'Access else null);");
+                           Ada.Text_IO.Put_Line (File, "end " & Subprogram_Name & ";");
+                        end if;
                      end if;
                   else
                      Ada.Text_IO.Put_Line ("6 Cannot correctly handle ");
