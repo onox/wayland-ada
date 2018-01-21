@@ -79,10 +79,10 @@ procedure Example_6_4_Find_Compositor_Proxy is
          Global_Remove => Global_Registry_Remover'Unrestricted_Access
         );
    begin
-      I := Wl.Registry_Add_Listener (Registry, Listener'Unchecked_Access, System.Null_Address);
+      I := Registry.Add_Listener (Listener'Unchecked_Access, System.Null_Address);
 
-        Display.Display_Dispatch;
-        Display.Display_Roundtrip;
+      Display.Dispatch;
+      Display.Roundtrip;
    end Use_Register;
 
 begin

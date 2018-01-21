@@ -40,35 +40,35 @@ package body Wl is
       end if;
    end Finalize;
 
-   function Registry_Add_Listener (Registry : Registry_T;
-                                   Listener : Registry_Listener_Ptr;
-                                   Data     : Wl.Void_Ptr) return Interfaces.C.int is
+   function Add_Listener (Registry : Registry_T;
+                          Listener : Registry_Listener_Ptr;
+                          Data     : Wl.Void_Ptr) return Interfaces.C.int is
    begin
       return Wl_Thin.Registry_Add_Listener (Registry.My_Registry, Listener, Data);
-   end Registry_Add_Listener;
+   end Add_Listener;
 
-   function Display_Dispatch (Display : Display_T) return Interfaces.C.int is
+   function Dispatch (Display : Display_T) return Interfaces.C.int is
    begin
       return Wl_Thin.Display_Dispatch (Display.My_Display);
-   end Display_Dispatch;
+   end Dispatch;
 
-   procedure Display_Dispatch (Display : Display_T) is
+   procedure Dispatch (Display : Display_T) is
       I : Interfaces.C.int;
       pragma Unreferenced (I);
    begin
-      I := Display.Display_Dispatch;
-   end Display_Dispatch;
+      I := Display.Dispatch;
+   end Dispatch;
 
-   function Display_Roundtrip (Display : Display_T) return Interfaces.C.int is
+   function Roundtrip (Display : Display_T) return Interfaces.C.int is
    begin
       return Wl_Thin.Display_Roundtrip (Display.My_Display);
-   end Display_Roundtrip;
+   end Roundtrip;
 
-   procedure Display_Roundtrip (Display : Display_T) is
+   procedure Roundtrip (Display : Display_T) is
       I : Interfaces.C.int;
       pragma Unreferenced (I);
    begin
-      I := Display.Display_Roundtrip;
-   end Display_Roundtrip;
+      I := Display.Roundtrip;
+   end Roundtrip;
 
 end Wl;
