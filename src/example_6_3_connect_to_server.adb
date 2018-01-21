@@ -4,13 +4,23 @@ with Ada.Text_IO;
 -- See section 6.3 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_3_Connect_To_Server is
-   use type Wl.Display_Ptr;
 
-   Display : Wl.Display_Ptr := Wl.Display_Connect (Wl.Default_Display_Name'Access);
-begin
-   if Display /= null then
+   procedure Do_Something_With_Display (Display : Wl.Display_T);
+
+   procedure Connect_To_Display is
+   begin
+      Do_Something_With_Display (Wl.Display_Connect (Wl.Default_Display_Name));
+   exception
+      when Wl.Display_Connection_Exception =>
+         Ada.Text_IO.Put_Line ("Failure");
+   end Connect_To_Display;
+
+   procedure Do_Something_With_Display (Display : Wl.Display_T) is
+      pragma Unreferenced (Display);
+   begin
       Ada.Text_IO.Put_Line ("Success");
-   else
-      Ada.Text_IO.Put_Line ("Failure");
-   end if;
+   end Do_Something_With_Display;
+
+begin
+   Connect_To_Display;
 end Example_6_3_Connect_To_Server;

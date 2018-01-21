@@ -7,9 +7,6 @@ with System;
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
-   use type Wl.Display_Ptr;
-   use type Wl.Registry_Ptr;
-
    procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
                                       Registry    : Wl.Registry_Ptr;
                                       Id          : Interfaces.Unsigned_32;
@@ -35,69 +32,47 @@ procedure Example_6_4_Find_Compositor_Proxy is
 --  				      1);
    end Global_Registry_Handler;
 
-   procedure Global_Registry_Remover(Data     : Wl.Void_Ptr;
-                                     Registry : Wl.Registry_Ptr;
-                                     Id       : Interfaces.Unsigned_32) with
+   procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
+                                      Registry : Wl.Registry_Ptr;
+                                      Id       : Interfaces.Unsigned_32) with
      Convention => C;
 
-   procedure Global_Registry_Remover(Data : Wl.Void_Ptr;
-                                     Registry : Wl.Registry_Ptr;
-                                     Id : Interfaces.Unsigned_32) is
+   procedure Global_Registry_Remover (Data : Wl.Void_Ptr;
+                                      Registry : Wl.Registry_Ptr;
+                                      Id : Interfaces.Unsigned_32) is
    begin
       Ada.Text_IO.Put_Line ("Got a registry losing event for");
 --    printf("Got a registry losing event for %d\n", id);
    end;
 
-   procedure Get_Registry;
-
-   Display : Wl.Display_Ptr;
+   procedure Get_Registry (Display : Wl.Display_T);
 
    procedure Connect_To_Wayland_Server is
    begin
-      Display := Wl.Display_Connect (Wl.Default_Display_Name'Access);
-      if Display /= null then
-         Ada.Text_IO.Put_Line ("Success");
-         Get_Registry;
-         Wl.Display_Disconnect (Display);
-      else
+      Get_Registry (Wl.Display_Connect (Wl.Default_Display_Name));
+   exception
+      when Wl.Display_Connection_Exception =>
          Ada.Text_IO.Put_Line ("Failed to connect to wayland server");
-      end if;
    end Connect_To_Wayland_Server;
 
-   pragma Unmodified (Display);
+   procedure Use_Register (Display : Wl.Display_T;
+                           Registry : Wl.Registry_T);
 
-   procedure Use_Register;
-
-   Registry : Wl.Registry_Ptr;
-
-   procedure Get_Registry is
+   procedure Get_Registry (Display : Wl.Display_T) is
    begin
-      Registry := Wl.Display_Get_Registry (Display);
+      Ada.Text_IO.Put_Line ("Success");
 
-      if Registry /= null then
-         Use_Register;
-         Wl.Registry_Destroy (Registry);
-      else
-         Ada.Text_IO.Put_Line ("Registry is null!!!!");
-      end if;
+      Use_Register (Display, Wl.Display_Get_Registry (Display));
+   exception
+      when Wl.Registry_Exception =>
+         Ada.Text_IO.Put_Line ("Failed to retrieve Registry!!!!");
    end Get_Registry;
 
-   pragma Unmodified (Registry);
-
---      wl_registry_add_listener(registry, &registry_listener, NULL);
---
---      wl_display_dispatch(display);
---      wl_display_roundtrip(display);
---
---      if (compositor == NULL) {
---  	fprintf(stderr, "Can't find compositor\n");
---  	exit(1);
---      } else {
---  	fprintf(stderr, "Found compositor\n");
---      }
-   procedure Use_Register
+   procedure Use_Register (Display  : Wl.Display_T;
+                           Registry : Wl.Registry_T)
    is
       I : Interfaces.C.int;
+
       Listener : aliased Wl.Registry_Listener_T :=
         (
          Global        => Global_Registry_Handler'Unrestricted_Access,
@@ -106,8 +81,8 @@ procedure Example_6_4_Find_Compositor_Proxy is
    begin
       I := Wl.Registry_Add_Listener (Registry, Listener'Unchecked_Access, System.Null_Address);
 
-      I := Wl.Display_Dispatch (Display);
-      I := Wl.Display_Roundtrip (Display);
+        Display.Display_Dispatch;
+        Display.Display_Roundtrip;
    end Use_Register;
 
 begin
