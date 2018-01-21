@@ -1912,7 +1912,11 @@ procedure XML_Parser is
                                        when Child_Description => null;
                                        when Child_Arg         =>
                                           Ada.Text_IO.Put_Line (File, ",");
-                                          Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                                          if Child.Arg_Tag.Type_Attribute /= Type_Object then
+                                             Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                                          else
+                                             Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name) & ".all'Address");
+                                          end if;
                                     end case;
                                  end loop;
 
@@ -1972,7 +1976,11 @@ procedure XML_Parser is
                                     when Child_Dummy       => null;
                                     when Child_Description => null;
                                     when Child_Arg         =>
-                                       Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Variable_Name (Child.Arg_Tag.Name) & ",");
+                                       if Child.Arg_Tag.Type_Attribute /= Type_Object then
+                                          Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Variable_Name (Child.Arg_Tag.Name) & ",");
+                                       else
+                                          Ada.Text_IO.Put_Line (File, "    " & Utils.Adaify_Variable_Name (Child.Arg_Tag.Name) & ".all'Address,");
+                                       end if;
                                  end case;
                               end loop;
 
@@ -2030,7 +2038,11 @@ procedure XML_Parser is
                                  when Child_Description => null;
                                  when Child_Arg         =>
                                     Ada.Text_IO.Put_Line (File, ",");
-                                    Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                                    if Child.Arg_Tag.Type_Attribute /= Type_Object then
+                                       Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name));
+                                    else
+                                       Ada.Text_IO.Put (File, "    " & Utils.Adaify_Name (Child.Arg_Tag.Name) & ".all'Address");
+                                    end if;
                               end case;
                            end loop;
                            Ada.Text_IO.Put_Line (File, "    );");
