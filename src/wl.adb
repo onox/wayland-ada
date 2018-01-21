@@ -19,7 +19,6 @@ package body Wl is
    begin
       if This.My_Display /= null then
          Wl_Thin.Display_Disconnect (This.My_Display);
-         Ada.Text_IO.Put_Line ("Disconnect from server!");
       end if;
    end Finalize;
 
@@ -37,7 +36,6 @@ package body Wl is
    begin
       if This.My_Registry /= null then
          Wl_Thin.Registry_Destroy (This.My_Registry);
-         Ada.Text_IO.Put_Line ("Destroy registry!");
          This.My_Registry := null;
       end if;
    end Finalize;
@@ -63,7 +61,7 @@ package body Wl is
 
    function Display_Roundtrip (Display : Display_T) return Interfaces.C.int is
    begin
-      return Wl_Thin.Display_Dispatch (Display.My_Display);
+      return Wl_Thin.Display_Roundtrip (Display.My_Display);
    end Display_Roundtrip;
 
    procedure Display_Roundtrip (Display : Display_T) is
