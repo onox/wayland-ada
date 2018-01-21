@@ -81,6 +81,14 @@ package Wayland_XML.Request_Tag is
    function Exists_Since (This : Request_Tag_T) return Boolean with
      Global => null;
 
+   function Description (This : Request_Tag_T) return String with
+     Global => null,
+       Pre  => This.Exists_Description;
+
+   -- Returns true if there is one unique description.
+   function Exists_Description (This : Request_Tag_T) return Boolean with
+     Global => null;
+
    type Request_Tag_Ptr is access all Request_Tag_T with Storage_Pool => Default_Subpool;
 
 private

@@ -78,7 +78,15 @@ package Wl_Thin is
       Import        => True,
       External_Name => "wl_proxy_marshal";
 
-      --
+   function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with
+      Import        => True,
+      Convention    => C,
+      External_Name => "wl_display_dispatch";
+
+   function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with
+      Import        => True,
+      Convention    => C,
+      External_Name => "wl_display_roundtrip";
 
    function Proxy_Marshal_Constructor
      (Proxy       : Proxy_Ptr;
@@ -262,18 +270,6 @@ package Wl_Thin is
       Convention    => C,
       Import        => True,
       External_Name => "wl_proxy_marshal_constructor";
-
-      --
-
-   function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_display_dispatch";
-
-   function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_display_roundtrip";
 
       -- End core parts
 
@@ -807,10 +803,14 @@ package Wl_Thin is
    type Subsurface_Ptr is new Proxy_Ptr;
 
    type Display_Error_T is new Interfaces.Unsigned_32;
-   Display_Invalid_Object_Invalid_Object : constant Display_Error_T := 0; -- server couldn't find object
-   Display_Invalid_Method_Invalid_Method : constant Display_Error_T :=
-     1; -- method doesn't exist on the specified interface
-   Display_No_Memory_No_Memory : constant Display_Error_T := 2; -- server is out of memory
+-- server couldn't find object
+   Display_Invalid_Object_Invalid_Object : constant Display_Error_T := 0;
+
+-- method doesn't exist on the specified interface
+   Display_Invalid_Method_Invalid_Method : constant Display_Error_T := 1;
+
+-- server is out of memory
+   Display_No_Memory_No_Memory : constant Display_Error_T := 2;
 
    type Display_Error_Subprogram_Ptr is access procedure
      (Data      : Void_Ptr;
@@ -847,8 +847,28 @@ package Wl_Thin is
 
    procedure Display_Destroy (Display : Display_Ptr);
 
+-- The sync request asks the server to emit the 'done' event
+-- on the returned wl_callback object.  Since requests are
+-- handled in-order and events are delivered in-order, this can
+-- be used as a barrier to ensure all previous requests and the
+-- resulting events have been handled.
+--
+-- The object returned by this request will be destroyed by the
+-- compositor after the callback is fired and as such the client must not
+-- attempt to use it after that point.
+--
+-- The callback_data passed in the callback is the event serial.
    function Display_Sync (Display : Display_Ptr) return Callback_Ptr;
 
+-- This request creates a registry object that allows the client
+-- to list and bind the global objects available from the
+-- compositor.
+--
+-- It should be noted that the server side resources consumed in
+-- response to a get_registry request can only be released when the
+-- client disconnects, not when the client side proxy is destroyed.
+-- Therefore, clients should invoke get_registry as infrequently as
+-- possible to avoid wasting memory.
    function Display_Get_Registry (Display : Display_Ptr) return Registry_Ptr;
 
    type Registry_Global_Subprogram_Ptr is access procedure
@@ -886,6 +906,8 @@ package Wl_Thin is
 
    procedure Registry_Destroy (Registry : Registry_Ptr);
 
+-- Binds a new, client-created object to the server using the
+-- specified name as the identifier.
    function Registry_Bind
      (Registry    : Registry_Ptr;
       Name        : Interfaces.Unsigned_32;
@@ -926,8 +948,10 @@ package Wl_Thin is
 
    procedure Compositor_Destroy (Compositor : Compositor_Ptr);
 
+-- Ask the compositor to create a new surface.
    function Compositor_Create_Surface (Compositor : Compositor_Ptr) return Surface_Ptr;
 
+-- Ask the compositor to create a new region.
    function Compositor_Create_Region (Compositor : Compositor_Ptr) return Region_Ptr;
 
    procedure Shm_Pool_Set_User_Data (Shm_Pool : Shm_Pool_Ptr; Data : Void_Ptr);
@@ -938,6 +962,17 @@ package Wl_Thin is
 
    procedure Shm_Pool_Destroy (Shm_Pool : Shm_Pool_Ptr);
 
+-- Create a wl_buffer object from the pool.
+--
+-- The buffer is created offset bytes into the pool and has
+-- width and height as specified.  The stride argument specifies
+-- the number of bytes from the beginning of one row to the beginning
+-- of the next.  The format is the pixel format of the buffer and
+-- must be one of those advertised through the wl_shm.format event.
+--
+-- A buffer will keep a reference to the pool it was created from
+-- so it is valid to destroy the pool immediately after creating
+-- a buffer from it.
    function Shm_Pool_Create_Buffer
      (Shm_Pool : Shm_Pool_Ptr;
       Offset   : Integer;
@@ -949,114 +984,189 @@ package Wl_Thin is
    procedure Shm_Pool_Resize (Shm_Pool : Shm_Pool_Ptr; Size : Integer);
 
    type Shm_Error_T is new Interfaces.Unsigned_32;
-   Shm_Invalid_Format_Invalid_Format : constant Shm_Error_T := 0; -- buffer format is not known
-   Shm_Invalid_Stride_Invalid_Stride : constant Shm_Error_T :=
-     1; -- invalid size or stride during pool or buffer creation
-   Shm_Invalid_Fd_Invalid_Fd : constant Shm_Error_T := 2; -- mmapping the file descriptor failed
+-- buffer format is not known
+   Shm_Invalid_Format_Invalid_Format : constant Shm_Error_T := 0;
+
+-- invalid size or stride during pool or buffer creation
+   Shm_Invalid_Stride_Invalid_Stride : constant Shm_Error_T := 1;
+
+-- mmapping the file descriptor failed
+   Shm_Invalid_Fd_Invalid_Fd : constant Shm_Error_T := 2;
 
    type Shm_Format_T is new Interfaces.Unsigned_32;
-   Shm_Argb_8888_Argb_8888 : constant Shm_Format_T := 0; -- 32-bit ARGB format, [31:0] A:R:G:B 8:8:8:8 little endian
-   Shm_Xrgb_8888_Xrgb_8888 : constant Shm_Format_T := 1; -- 32-bit RGB format, [31:0] x:R:G:B 8:8:8:8 little endian
-   Shm_C_8_C_8             : constant Shm_Format_T := 538982467; -- 8-bit color index format, [7:0] C
-   Shm_Rgb_332_Rgb_332     : constant Shm_Format_T := 943867730; -- 8-bit RGB format, [7:0] R:G:B 3:3:2
-   Shm_Bgr_233_Bgr_233     : constant Shm_Format_T := 944916290; -- 8-bit BGR format, [7:0] B:G:R 2:3:3
-   Shm_Xrgb_4444_Xrgb_4444 : constant Shm_Format_T :=
-     842093144; -- 16-bit xRGB format, [15:0] x:R:G:B 4:4:4:4 little endian
-   Shm_Xbgr_4444_Xbgr_4444 : constant Shm_Format_T :=
-     842089048; -- 16-bit xBGR format, [15:0] x:B:G:R 4:4:4:4 little endian
-   Shm_Rgbx_4444_Rgbx_4444 : constant Shm_Format_T :=
-     842094674; -- 16-bit RGBx format, [15:0] R:G:B:x 4:4:4:4 little endian
-   Shm_Bgrx_4444_Bgrx_4444 : constant Shm_Format_T :=
-     842094658; -- 16-bit BGRx format, [15:0] B:G:R:x 4:4:4:4 little endian
-   Shm_Argb_4444_Argb_4444 : constant Shm_Format_T :=
-     842093121; -- 16-bit ARGB format, [15:0] A:R:G:B 4:4:4:4 little endian
-   Shm_Abgr_4444_Abgr_4444 : constant Shm_Format_T :=
-     842089025; -- 16-bit ABGR format, [15:0] A:B:G:R 4:4:4:4 little endian
-   Shm_Rgba_4444_Rgba_4444 : constant Shm_Format_T :=
-     842088786; -- 16-bit RBGA format, [15:0] R:G:B:A 4:4:4:4 little endian
-   Shm_Bgra_4444_Bgra_4444 : constant Shm_Format_T :=
-     842088770; -- 16-bit BGRA format, [15:0] B:G:R:A 4:4:4:4 little endian
-   Shm_Xrgb_1555_Xrgb_1555 : constant Shm_Format_T :=
-     892424792; -- 16-bit xRGB format, [15:0] x:R:G:B 1:5:5:5 little endian
-   Shm_Xbgr_1555_Xbgr_1555 : constant Shm_Format_T :=
-     892420696; -- 16-bit xBGR 1555 format, [15:0] x:B:G:R 1:5:5:5 little endian
-   Shm_Rgbx_5551_Rgbx_5551 : constant Shm_Format_T :=
-     892426322; -- 16-bit RGBx 5551 format, [15:0] R:G:B:x 5:5:5:1 little endian
-   Shm_Bgrx_5551_Bgrx_5551 : constant Shm_Format_T :=
-     892426306; -- 16-bit BGRx 5551 format, [15:0] B:G:R:x 5:5:5:1 little endian
-   Shm_Argb_1555_Argb_1555 : constant Shm_Format_T :=
-     892424769; -- 16-bit ARGB 1555 format, [15:0] A:R:G:B 1:5:5:5 little endian
-   Shm_Abgr_1555_Abgr_1555 : constant Shm_Format_T :=
-     892420673; -- 16-bit ABGR 1555 format, [15:0] A:B:G:R 1:5:5:5 little endian
-   Shm_Rgba_5551_Rgba_5551 : constant Shm_Format_T :=
-     892420434; -- 16-bit RGBA 5551 format, [15:0] R:G:B:A 5:5:5:1 little endian
-   Shm_Bgra_5551_Bgra_5551 : constant Shm_Format_T :=
-     892420418; -- 16-bit BGRA 5551 format, [15:0] B:G:R:A 5:5:5:1 little endian
-   Shm_Rgb_565_Rgb_565 : constant Shm_Format_T := 909199186; -- 16-bit RGB 565 format, [15:0] R:G:B 5:6:5 little endian
-   Shm_Bgr_565_Bgr_565 : constant Shm_Format_T := 909199170; -- 16-bit BGR 565 format, [15:0] B:G:R 5:6:5 little endian
-   Shm_Rgb_888_Rgb_888     : constant Shm_Format_T := 875710290; -- 24-bit RGB format, [23:0] R:G:B little endian
-   Shm_Bgr_888_Bgr_888     : constant Shm_Format_T := 875710274; -- 24-bit BGR format, [23:0] B:G:R little endian
-   Shm_Xbgr_8888_Xbgr_8888 : constant Shm_Format_T :=
-     875709016; -- 32-bit xBGR format, [31:0] x:B:G:R 8:8:8:8 little endian
-   Shm_Rgbx_8888_Rgbx_8888 : constant Shm_Format_T :=
-     875714642; -- 32-bit RGBx format, [31:0] R:G:B:x 8:8:8:8 little endian
-   Shm_Bgrx_8888_Bgrx_8888 : constant Shm_Format_T :=
-     875714626; -- 32-bit BGRx format, [31:0] B:G:R:x 8:8:8:8 little endian
-   Shm_Abgr_8888_Abgr_8888 : constant Shm_Format_T :=
-     875708993; -- 32-bit ABGR format, [31:0] A:B:G:R 8:8:8:8 little endian
-   Shm_Rgba_8888_Rgba_8888 : constant Shm_Format_T :=
-     875708754; -- 32-bit RGBA format, [31:0] R:G:B:A 8:8:8:8 little endian
-   Shm_Bgra_8888_Bgra_8888 : constant Shm_Format_T :=
-     875708738; -- 32-bit BGRA format, [31:0] B:G:R:A 8:8:8:8 little endian
-   Shm_Xrgb_2101010_Xrgb_2101010 : constant Shm_Format_T :=
-     808669784; -- 32-bit xRGB format, [31:0] x:R:G:B 2:10:10:10 little endian
-   Shm_Xbgr_2101010_Xbgr_2101010 : constant Shm_Format_T :=
-     808665688; -- 32-bit xBGR format, [31:0] x:B:G:R 2:10:10:10 little endian
-   Shm_Rgbx_1010102_Rgbx_1010102 : constant Shm_Format_T :=
-     808671314; -- 32-bit RGBx format, [31:0] R:G:B:x 10:10:10:2 little endian
-   Shm_Bgrx_1010102_Bgrx_1010102 : constant Shm_Format_T :=
-     808671298; -- 32-bit BGRx format, [31:0] B:G:R:x 10:10:10:2 little endian
-   Shm_Argb_2101010_Argb_2101010 : constant Shm_Format_T :=
-     808669761; -- 32-bit ARGB format, [31:0] A:R:G:B 2:10:10:10 little endian
-   Shm_Abgr_2101010_Abgr_2101010 : constant Shm_Format_T :=
-     808665665; -- 32-bit ABGR format, [31:0] A:B:G:R 2:10:10:10 little endian
-   Shm_Rgba_1010102_Rgba_1010102 : constant Shm_Format_T :=
-     808665426; -- 32-bit RGBA format, [31:0] R:G:B:A 10:10:10:2 little endian
-   Shm_Bgra_1010102_Bgra_1010102 : constant Shm_Format_T :=
-     808665410; -- 32-bit BGRA format, [31:0] B:G:R:A 10:10:10:2 little endian
-   Shm_Yuyv_Yuyv : constant Shm_Format_T :=
-     1448695129; -- packed YCbCr format, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian
-   Shm_Yvyu_Yvyu : constant Shm_Format_T :=
-     1431918169; -- packed YCbCr format, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian
-   Shm_Uyvy_Uyvy : constant Shm_Format_T :=
-     1498831189; -- packed YCbCr format, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian
-   Shm_Vyuy_Vyuy : constant Shm_Format_T :=
-     1498765654; -- packed YCbCr format, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian
-   Shm_Ayuv_Ayuv : constant Shm_Format_T := 1448433985; -- packed AYCbCr format, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian
-   Shm_Nv_12_Nv_12     : constant Shm_Format_T := 842094158; -- 2 plane YCbCr Cr:Cb format, 2x2 subsampled Cr:Cb plane
-   Shm_Nv_21_Nv_21     : constant Shm_Format_T := 825382478; -- 2 plane YCbCr Cb:Cr format, 2x2 subsampled Cb:Cr plane
-   Shm_Nv_16_Nv_16     : constant Shm_Format_T := 909203022; -- 2 plane YCbCr Cr:Cb format, 2x1 subsampled Cr:Cb plane
-   Shm_Nv_61_Nv_61     : constant Shm_Format_T := 825644622; -- 2 plane YCbCr Cb:Cr format, 2x1 subsampled Cb:Cr plane
-   Shm_Yuv_410_Yuv_410 : constant Shm_Format_T :=
-     961959257; -- 3 plane YCbCr format, 4x4 subsampled Cb (1) and Cr (2) planes
-   Shm_Yvu_410_Yvu_410 : constant Shm_Format_T :=
-     961893977; -- 3 plane YCbCr format, 4x4 subsampled Cr (1) and Cb (2) planes
-   Shm_Yuv_411_Yuv_411 : constant Shm_Format_T :=
-     825316697; -- 3 plane YCbCr format, 4x1 subsampled Cb (1) and Cr (2) planes
-   Shm_Yvu_411_Yvu_411 : constant Shm_Format_T :=
-     825316953; -- 3 plane YCbCr format, 4x1 subsampled Cr (1) and Cb (2) planes
-   Shm_Yuv_420_Yuv_420 : constant Shm_Format_T :=
-     842093913; -- 3 plane YCbCr format, 2x2 subsampled Cb (1) and Cr (2) planes
-   Shm_Yvu_420_Yvu_420 : constant Shm_Format_T :=
-     842094169; -- 3 plane YCbCr format, 2x2 subsampled Cr (1) and Cb (2) planes
-   Shm_Yuv_422_Yuv_422 : constant Shm_Format_T :=
-     909202777; -- 3 plane YCbCr format, 2x1 subsampled Cb (1) and Cr (2) planes
-   Shm_Yvu_422_Yvu_422 : constant Shm_Format_T :=
-     909203033; -- 3 plane YCbCr format, 2x1 subsampled Cr (1) and Cb (2) planes
-   Shm_Yuv_444_Yuv_444 : constant Shm_Format_T :=
-     875713881; -- 3 plane YCbCr format, non-subsampled Cb (1) and Cr (2) planes
-   Shm_Yvu_444_Yvu_444 : constant Shm_Format_T :=
-     875714137; -- 3 plane YCbCr format, non-subsampled Cr (1) and Cb (2) planes
+-- 32-bit ARGB format, [31:0] A:R:G:B 8:8:8:8 little endian
+   Shm_Argb_8888_Argb_8888 : constant Shm_Format_T := 0;
+
+-- 32-bit RGB format, [31:0] x:R:G:B 8:8:8:8 little endian
+   Shm_Xrgb_8888_Xrgb_8888 : constant Shm_Format_T := 1;
+
+-- 8-bit color index format, [7:0] C
+   Shm_C_8_C_8 : constant Shm_Format_T := 538982467;
+
+-- 8-bit RGB format, [7:0] R:G:B 3:3:2
+   Shm_Rgb_332_Rgb_332 : constant Shm_Format_T := 943867730;
+
+-- 8-bit BGR format, [7:0] B:G:R 2:3:3
+   Shm_Bgr_233_Bgr_233 : constant Shm_Format_T := 944916290;
+
+-- 16-bit xRGB format, [15:0] x:R:G:B 4:4:4:4 little endian
+   Shm_Xrgb_4444_Xrgb_4444 : constant Shm_Format_T := 842093144;
+
+-- 16-bit xBGR format, [15:0] x:B:G:R 4:4:4:4 little endian
+   Shm_Xbgr_4444_Xbgr_4444 : constant Shm_Format_T := 842089048;
+
+-- 16-bit RGBx format, [15:0] R:G:B:x 4:4:4:4 little endian
+   Shm_Rgbx_4444_Rgbx_4444 : constant Shm_Format_T := 842094674;
+
+-- 16-bit BGRx format, [15:0] B:G:R:x 4:4:4:4 little endian
+   Shm_Bgrx_4444_Bgrx_4444 : constant Shm_Format_T := 842094658;
+
+-- 16-bit ARGB format, [15:0] A:R:G:B 4:4:4:4 little endian
+   Shm_Argb_4444_Argb_4444 : constant Shm_Format_T := 842093121;
+
+-- 16-bit ABGR format, [15:0] A:B:G:R 4:4:4:4 little endian
+   Shm_Abgr_4444_Abgr_4444 : constant Shm_Format_T := 842089025;
+
+-- 16-bit RBGA format, [15:0] R:G:B:A 4:4:4:4 little endian
+   Shm_Rgba_4444_Rgba_4444 : constant Shm_Format_T := 842088786;
+
+-- 16-bit BGRA format, [15:0] B:G:R:A 4:4:4:4 little endian
+   Shm_Bgra_4444_Bgra_4444 : constant Shm_Format_T := 842088770;
+
+-- 16-bit xRGB format, [15:0] x:R:G:B 1:5:5:5 little endian
+   Shm_Xrgb_1555_Xrgb_1555 : constant Shm_Format_T := 892424792;
+
+-- 16-bit xBGR 1555 format, [15:0] x:B:G:R 1:5:5:5 little endian
+   Shm_Xbgr_1555_Xbgr_1555 : constant Shm_Format_T := 892420696;
+
+-- 16-bit RGBx 5551 format, [15:0] R:G:B:x 5:5:5:1 little endian
+   Shm_Rgbx_5551_Rgbx_5551 : constant Shm_Format_T := 892426322;
+
+-- 16-bit BGRx 5551 format, [15:0] B:G:R:x 5:5:5:1 little endian
+   Shm_Bgrx_5551_Bgrx_5551 : constant Shm_Format_T := 892426306;
+
+-- 16-bit ARGB 1555 format, [15:0] A:R:G:B 1:5:5:5 little endian
+   Shm_Argb_1555_Argb_1555 : constant Shm_Format_T := 892424769;
+
+-- 16-bit ABGR 1555 format, [15:0] A:B:G:R 1:5:5:5 little endian
+   Shm_Abgr_1555_Abgr_1555 : constant Shm_Format_T := 892420673;
+
+-- 16-bit RGBA 5551 format, [15:0] R:G:B:A 5:5:5:1 little endian
+   Shm_Rgba_5551_Rgba_5551 : constant Shm_Format_T := 892420434;
+
+-- 16-bit BGRA 5551 format, [15:0] B:G:R:A 5:5:5:1 little endian
+   Shm_Bgra_5551_Bgra_5551 : constant Shm_Format_T := 892420418;
+
+-- 16-bit RGB 565 format, [15:0] R:G:B 5:6:5 little endian
+   Shm_Rgb_565_Rgb_565 : constant Shm_Format_T := 909199186;
+
+-- 16-bit BGR 565 format, [15:0] B:G:R 5:6:5 little endian
+   Shm_Bgr_565_Bgr_565 : constant Shm_Format_T := 909199170;
+
+-- 24-bit RGB format, [23:0] R:G:B little endian
+   Shm_Rgb_888_Rgb_888 : constant Shm_Format_T := 875710290;
+
+-- 24-bit BGR format, [23:0] B:G:R little endian
+   Shm_Bgr_888_Bgr_888 : constant Shm_Format_T := 875710274;
+
+-- 32-bit xBGR format, [31:0] x:B:G:R 8:8:8:8 little endian
+   Shm_Xbgr_8888_Xbgr_8888 : constant Shm_Format_T := 875709016;
+
+-- 32-bit RGBx format, [31:0] R:G:B:x 8:8:8:8 little endian
+   Shm_Rgbx_8888_Rgbx_8888 : constant Shm_Format_T := 875714642;
+
+-- 32-bit BGRx format, [31:0] B:G:R:x 8:8:8:8 little endian
+   Shm_Bgrx_8888_Bgrx_8888 : constant Shm_Format_T := 875714626;
+
+-- 32-bit ABGR format, [31:0] A:B:G:R 8:8:8:8 little endian
+   Shm_Abgr_8888_Abgr_8888 : constant Shm_Format_T := 875708993;
+
+-- 32-bit RGBA format, [31:0] R:G:B:A 8:8:8:8 little endian
+   Shm_Rgba_8888_Rgba_8888 : constant Shm_Format_T := 875708754;
+
+-- 32-bit BGRA format, [31:0] B:G:R:A 8:8:8:8 little endian
+   Shm_Bgra_8888_Bgra_8888 : constant Shm_Format_T := 875708738;
+
+-- 32-bit xRGB format, [31:0] x:R:G:B 2:10:10:10 little endian
+   Shm_Xrgb_2101010_Xrgb_2101010 : constant Shm_Format_T := 808669784;
+
+-- 32-bit xBGR format, [31:0] x:B:G:R 2:10:10:10 little endian
+   Shm_Xbgr_2101010_Xbgr_2101010 : constant Shm_Format_T := 808665688;
+
+-- 32-bit RGBx format, [31:0] R:G:B:x 10:10:10:2 little endian
+   Shm_Rgbx_1010102_Rgbx_1010102 : constant Shm_Format_T := 808671314;
+
+-- 32-bit BGRx format, [31:0] B:G:R:x 10:10:10:2 little endian
+   Shm_Bgrx_1010102_Bgrx_1010102 : constant Shm_Format_T := 808671298;
+
+-- 32-bit ARGB format, [31:0] A:R:G:B 2:10:10:10 little endian
+   Shm_Argb_2101010_Argb_2101010 : constant Shm_Format_T := 808669761;
+
+-- 32-bit ABGR format, [31:0] A:B:G:R 2:10:10:10 little endian
+   Shm_Abgr_2101010_Abgr_2101010 : constant Shm_Format_T := 808665665;
+
+-- 32-bit RGBA format, [31:0] R:G:B:A 10:10:10:2 little endian
+   Shm_Rgba_1010102_Rgba_1010102 : constant Shm_Format_T := 808665426;
+
+-- 32-bit BGRA format, [31:0] B:G:R:A 10:10:10:2 little endian
+   Shm_Bgra_1010102_Bgra_1010102 : constant Shm_Format_T := 808665410;
+
+-- packed YCbCr format, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian
+   Shm_Yuyv_Yuyv : constant Shm_Format_T := 1448695129;
+
+-- packed YCbCr format, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian
+   Shm_Yvyu_Yvyu : constant Shm_Format_T := 1431918169;
+
+-- packed YCbCr format, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian
+   Shm_Uyvy_Uyvy : constant Shm_Format_T := 1498831189;
+
+-- packed YCbCr format, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian
+   Shm_Vyuy_Vyuy : constant Shm_Format_T := 1498765654;
+
+-- packed AYCbCr format, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian
+   Shm_Ayuv_Ayuv : constant Shm_Format_T := 1448433985;
+
+-- 2 plane YCbCr Cr:Cb format, 2x2 subsampled Cr:Cb plane
+   Shm_Nv_12_Nv_12 : constant Shm_Format_T := 842094158;
+
+-- 2 plane YCbCr Cb:Cr format, 2x2 subsampled Cb:Cr plane
+   Shm_Nv_21_Nv_21 : constant Shm_Format_T := 825382478;
+
+-- 2 plane YCbCr Cr:Cb format, 2x1 subsampled Cr:Cb plane
+   Shm_Nv_16_Nv_16 : constant Shm_Format_T := 909203022;
+
+-- 2 plane YCbCr Cb:Cr format, 2x1 subsampled Cb:Cr plane
+   Shm_Nv_61_Nv_61 : constant Shm_Format_T := 825644622;
+
+-- 3 plane YCbCr format, 4x4 subsampled Cb (1) and Cr (2) planes
+   Shm_Yuv_410_Yuv_410 : constant Shm_Format_T := 961959257;
+
+-- 3 plane YCbCr format, 4x4 subsampled Cr (1) and Cb (2) planes
+   Shm_Yvu_410_Yvu_410 : constant Shm_Format_T := 961893977;
+
+-- 3 plane YCbCr format, 4x1 subsampled Cb (1) and Cr (2) planes
+   Shm_Yuv_411_Yuv_411 : constant Shm_Format_T := 825316697;
+
+-- 3 plane YCbCr format, 4x1 subsampled Cr (1) and Cb (2) planes
+   Shm_Yvu_411_Yvu_411 : constant Shm_Format_T := 825316953;
+
+-- 3 plane YCbCr format, 2x2 subsampled Cb (1) and Cr (2) planes
+   Shm_Yuv_420_Yuv_420 : constant Shm_Format_T := 842093913;
+
+-- 3 plane YCbCr format, 2x2 subsampled Cr (1) and Cb (2) planes
+   Shm_Yvu_420_Yvu_420 : constant Shm_Format_T := 842094169;
+
+-- 3 plane YCbCr format, 2x1 subsampled Cb (1) and Cr (2) planes
+   Shm_Yuv_422_Yuv_422 : constant Shm_Format_T := 909202777;
+
+-- 3 plane YCbCr format, 2x1 subsampled Cr (1) and Cb (2) planes
+   Shm_Yvu_422_Yvu_422 : constant Shm_Format_T := 909203033;
+
+-- 3 plane YCbCr format, non-subsampled Cb (1) and Cr (2) planes
+   Shm_Yuv_444_Yuv_444 : constant Shm_Format_T := 875713881;
+
+-- 3 plane YCbCr format, non-subsampled Cr (1) and Cb (2) planes
+   Shm_Yvu_444_Yvu_444 : constant Shm_Format_T := 875714137;
 
    type Shm_Format_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
@@ -1081,6 +1191,11 @@ package Wl_Thin is
 
    procedure Shm_Destroy (Shm : Shm_Ptr);
 
+-- Create a new wl_shm_pool object.
+--
+-- The pool can be used to create shared memory based buffer
+-- objects.  The server will mmap size bytes of the passed file
+-- descriptor, to use as backing memory for the pool.
    function Shm_Create_Pool (Shm : Shm_Ptr; Fd : Integer; Size : Integer) return Shm_Pool_Ptr;
 
    type Buffer_Release_Subprogram_Ptr is access procedure (Data : Void_Ptr; Buffer : Buffer_Ptr) with
@@ -1107,11 +1222,17 @@ package Wl_Thin is
    procedure Buffer_Destroy (Buffer : Buffer_Ptr);
 
    type Data_Offer_Error_T is new Interfaces.Unsigned_32;
-   Data_Offer_Invalid_Finish_Invalid_Finish : constant Data_Offer_Error_T := 0; -- finish request was called untimely
-   Data_Offer_Invalid_Action_Mask_Invalid_Action_Mask : constant Data_Offer_Error_T :=
-     1; -- action mask contains invalid values
-   Data_Offer_Invalid_Action_Invalid_Action : constant Data_Offer_Error_T := 2; -- action argument has an invalid value
-   Data_Offer_Invalid_Offer_Invalid_Offer   : constant Data_Offer_Error_T := 3; -- offer doesn't accept this request
+-- finish request was called untimely
+   Data_Offer_Invalid_Finish_Invalid_Finish : constant Data_Offer_Error_T := 0;
+
+-- action mask contains invalid values
+   Data_Offer_Invalid_Action_Mask_Invalid_Action_Mask : constant Data_Offer_Error_T := 1;
+
+-- action argument has an invalid value
+   Data_Offer_Invalid_Action_Invalid_Action : constant Data_Offer_Error_T := 2;
+
+-- offer doesn't accept this request
+   Data_Offer_Invalid_Offer_Invalid_Offer : constant Data_Offer_Error_T := 3;
 
    type Data_Offer_Offer_Subprogram_Ptr is access procedure
      (Data       : Void_Ptr;
@@ -1168,9 +1289,11 @@ package Wl_Thin is
       Preferred_Action : Interfaces.Unsigned_32);
 
    type Data_Source_Error_T is new Interfaces.Unsigned_32;
-   Data_Source_Invalid_Action_Mask_Invalid_Action_Mask : constant Data_Source_Error_T :=
-     0; -- action mask contains invalid values
-   Data_Source_Invalid_Source_Invalid_Source : constant Data_Source_Error_T := 1; -- source doesn't accept this request
+-- action mask contains invalid values
+   Data_Source_Invalid_Action_Mask_Invalid_Action_Mask : constant Data_Source_Error_T := 0;
+
+-- source doesn't accept this request
+   Data_Source_Invalid_Source_Invalid_Source : constant Data_Source_Error_T := 1;
 
    type Data_Source_Target_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
@@ -1234,7 +1357,8 @@ package Wl_Thin is
    procedure Data_Source_Set_Actions (Data_Source : Data_Source_Ptr; Dnd_Actions : Interfaces.Unsigned_32);
 
    type Data_Device_Error_T is new Interfaces.Unsigned_32;
-   Data_Device_Role_Role : constant Data_Device_Error_T := 0; -- given wl_surface has another role
+-- given wl_surface has another role
+   Data_Device_Role_Role : constant Data_Device_Error_T := 0;
 
    type Data_Device_Data_Offer_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
@@ -1312,10 +1436,17 @@ package Wl_Thin is
    procedure Data_Device_Release (Data_Device : Data_Device_Ptr);
 
    type Data_Device_Manager_Dnd_Action_T is new Interfaces.Unsigned_32;
-   Data_Device_Manager_None_None : constant Data_Device_Manager_Dnd_Action_T := 0; -- no action
-   Data_Device_Manager_Copy_Copy : constant Data_Device_Manager_Dnd_Action_T := 1; -- copy action
-   Data_Device_Manager_Move_Move : constant Data_Device_Manager_Dnd_Action_T := 2; -- move action
-   Data_Device_Manager_Ask_Ask   : constant Data_Device_Manager_Dnd_Action_T := 4; -- ask action
+-- no action
+   Data_Device_Manager_None_None : constant Data_Device_Manager_Dnd_Action_T := 0;
+
+-- copy action
+   Data_Device_Manager_Copy_Copy : constant Data_Device_Manager_Dnd_Action_T := 1;
+
+-- move action
+   Data_Device_Manager_Move_Move : constant Data_Device_Manager_Dnd_Action_T := 2;
+
+-- ask action
+   Data_Device_Manager_Ask_Ask : constant Data_Device_Manager_Dnd_Action_T := 4;
 
    procedure Data_Device_Manager_Set_User_Data (Data_Device_Manager : Data_Device_Manager_Ptr; Data : Void_Ptr);
 
@@ -1326,15 +1457,18 @@ package Wl_Thin is
 
    procedure Data_Device_Manager_Destroy (Data_Device_Manager : Data_Device_Manager_Ptr);
 
+-- Create a new data source.
    function Data_Device_Manager_Create_Data_Source
      (Data_Device_Manager : Data_Device_Manager_Ptr) return Data_Source_Ptr;
 
+-- Create a new data device for a given seat.
    function Data_Device_Manager_Get_Data_Device
      (Data_Device_Manager : Data_Device_Manager_Ptr;
       Seat                : Seat_Ptr) return Data_Device_Ptr;
 
    type Shell_Error_T is new Interfaces.Unsigned_32;
-   Shell_Role_Role : constant Shell_Error_T := 0; -- given wl_surface has another role
+-- given wl_surface has another role
+   Shell_Role_Role : constant Shell_Error_T := 0;
 
    procedure Shell_Set_User_Data (Shell : Shell_Ptr; Data : Void_Ptr);
 
@@ -1344,31 +1478,57 @@ package Wl_Thin is
 
    procedure Shell_Destroy (Shell : Shell_Ptr);
 
+-- Create a shell surface for an existing surface. This gives
+-- the wl_surface the role of a shell surface. If the wl_surface
+-- already has another role, it raises a protocol error.
+--
+-- Only one shell surface can be associated with a given surface.
    function Shell_Get_Shell_Surface (Shell : Shell_Ptr; Surface : Surface_Ptr) return Shell_Surface_Ptr;
 
    type Shell_Surface_Resize_T is new Interfaces.Unsigned_32;
-   Shell_Surface_None_None                 : constant Shell_Surface_Resize_T := 0; -- no edge
-   Shell_Surface_Top_Top                   : constant Shell_Surface_Resize_T := 1; -- top edge
-   Shell_Surface_Bottom_Bottom             : constant Shell_Surface_Resize_T := 2; -- bottom edge
-   Shell_Surface_Left_Left                 : constant Shell_Surface_Resize_T := 4; -- left edge
-   Shell_Surface_Top_Left_Top_Left         : constant Shell_Surface_Resize_T := 5; -- top and left edges
-   Shell_Surface_Bottom_Left_Bottom_Left   : constant Shell_Surface_Resize_T := 6; -- bottom and left edges
-   Shell_Surface_Right_Right               : constant Shell_Surface_Resize_T := 8; -- right edge
-   Shell_Surface_Top_Right_Top_Right       : constant Shell_Surface_Resize_T := 9; -- top and right edges
-   Shell_Surface_Bottom_Right_Bottom_Right : constant Shell_Surface_Resize_T := 10; -- bottom and right edges
+-- no edge
+   Shell_Surface_None_None : constant Shell_Surface_Resize_T := 0;
+
+-- top edge
+   Shell_Surface_Top_Top : constant Shell_Surface_Resize_T := 1;
+
+-- bottom edge
+   Shell_Surface_Bottom_Bottom : constant Shell_Surface_Resize_T := 2;
+
+-- left edge
+   Shell_Surface_Left_Left : constant Shell_Surface_Resize_T := 4;
+
+-- top and left edges
+   Shell_Surface_Top_Left_Top_Left : constant Shell_Surface_Resize_T := 5;
+
+-- bottom and left edges
+   Shell_Surface_Bottom_Left_Bottom_Left : constant Shell_Surface_Resize_T := 6;
+
+-- right edge
+   Shell_Surface_Right_Right : constant Shell_Surface_Resize_T := 8;
+
+-- top and right edges
+   Shell_Surface_Top_Right_Top_Right : constant Shell_Surface_Resize_T := 9;
+
+-- bottom and right edges
+   Shell_Surface_Bottom_Right_Bottom_Right : constant Shell_Surface_Resize_T := 10;
 
    type Shell_Surface_Transient_T is new Interfaces.Unsigned_32;
-   Shell_Surface_Inactive_Inactive : constant Shell_Surface_Transient_T := 1; -- do not set keyboard focus
+-- do not set keyboard focus
+   Shell_Surface_Inactive_Inactive : constant Shell_Surface_Transient_T := 1;
 
    type Shell_Surface_Fullscreen_Method_T is new Interfaces.Unsigned_32;
-   Shell_Surface_Default_Default : constant Shell_Surface_Fullscreen_Method_T :=
-     0; -- no preference, apply default policy
-   Shell_Surface_Scale_Scale : constant Shell_Surface_Fullscreen_Method_T :=
-     1; -- scale, preserve the surface's aspect ratio and center on output
-   Shell_Surface_Driver_Driver : constant Shell_Surface_Fullscreen_Method_T :=
-     2; -- switch output mode to the smallest mode that can fit the surface, add black borders to compensate size mismatch
-   Shell_Surface_Fill_Fill : constant Shell_Surface_Fullscreen_Method_T :=
-     3; -- no upscaling, center on output and add black borders to compensate size mismatch
+-- no preference, apply default policy
+   Shell_Surface_Default_Default : constant Shell_Surface_Fullscreen_Method_T := 0;
+
+-- scale, preserve the surface's aspect ratio and center on output
+   Shell_Surface_Scale_Scale : constant Shell_Surface_Fullscreen_Method_T := 1;
+
+-- switch output mode to the smallest mode that can fit the surface, add black borders to compensate size mismatch
+   Shell_Surface_Driver_Driver : constant Shell_Surface_Fullscreen_Method_T := 2;
+
+-- no upscaling, center on output and add black borders to compensate size mismatch
+   Shell_Surface_Fill_Fill : constant Shell_Surface_Fullscreen_Method_T := 3;
 
    type Shell_Surface_Ping_Subprogram_Ptr is access procedure
      (Data          : Void_Ptr;
@@ -1452,8 +1612,11 @@ package Wl_Thin is
    procedure Shell_Surface_Set_Class (Shell_Surface : Shell_Surface_Ptr; Class_V : Interfaces.C.Strings.chars_ptr);
 
    type Surface_Error_T is new Interfaces.Unsigned_32;
-   Surface_Invalid_Scale_Invalid_Scale         : constant Surface_Error_T := 0; -- buffer scale value is invalid
-   Surface_Invalid_Transform_Invalid_Transform : constant Surface_Error_T := 1; -- buffer transform value is invalid
+-- buffer scale value is invalid
+   Surface_Invalid_Scale_Invalid_Scale : constant Surface_Error_T := 0;
+
+-- buffer transform value is invalid
+   Surface_Invalid_Transform_Invalid_Transform : constant Surface_Error_T := 1;
 
    type Surface_Enter_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
@@ -1492,6 +1655,38 @@ package Wl_Thin is
 
    procedure Surface_Damage (Surface : Surface_Ptr; X : Integer; Y : Integer; Width : Integer; Height : Integer);
 
+-- Request a notification when it is a good time to start drawing a new
+-- frame, by creating a frame callback. This is useful for throttling
+-- redrawing operations, and driving animations.
+--
+-- When a client is animating on a wl_surface, it can use the 'frame'
+-- request to get notified when it is a good time to draw and commit the
+-- next frame of animation. If the client commits an update earlier than
+-- that, it is likely that some updates will not make it to the display,
+-- and the client is wasting resources by drawing too often.
+--
+-- The frame request will take effect on the next wl_surface.commit.
+-- The notification will only be posted for one frame unless
+-- requested again. For a wl_surface, the notifications are posted in
+-- the order the frame requests were committed.
+--
+-- The server must send the notifications so that a client
+-- will not send excessive updates, while still allowing
+-- the highest possible update rate for clients that wait for the reply
+-- before drawing again. The server should give some time for the client
+-- to draw and commit after sending the frame callback events to let it
+-- hit the next output refresh.
+--
+-- A server should avoid signaling the frame callbacks if the
+-- surface is not visible in any way, e.g. the surface is off-screen,
+-- or completely obscured by other opaque surfaces.
+--
+-- The object returned by this request will be destroyed by the
+-- compositor after the callback is fired and as such the client must not
+-- attempt to use it after that point.
+--
+-- The callback_data passed in the callback is the current time, in
+-- milliseconds, with an undefined base.
    function Surface_Frame (Surface : Surface_Ptr) return Callback_Ptr;
 
    procedure Surface_Set_Opaque_Region (Surface : Surface_Ptr; Region : Region_Ptr);
@@ -1507,9 +1702,14 @@ package Wl_Thin is
    procedure Surface_Damage_Buffer (Surface : Surface_Ptr; X : Integer; Y : Integer; Width : Integer; Height : Integer);
 
    type Seat_Capability_T is new Interfaces.Unsigned_32;
-   Seat_Pointer_Pointer   : constant Seat_Capability_T := 1; -- the seat has pointer devices
-   Seat_Keyboard_Keyboard : constant Seat_Capability_T := 2; -- the seat has one or more keyboards
-   Seat_Touch_Touch       : constant Seat_Capability_T := 4; -- the seat has touch devices
+-- the seat has pointer devices
+   Seat_Pointer_Pointer : constant Seat_Capability_T := 1;
+
+-- the seat has one or more keyboards
+   Seat_Keyboard_Keyboard : constant Seat_Capability_T := 2;
+
+-- the seat has touch devices
+   Seat_Touch_Touch : constant Seat_Capability_T := 4;
 
    type Seat_Capabilities_Subprogram_Ptr is access procedure
      (Data         : Void_Ptr;
@@ -1541,30 +1741,65 @@ package Wl_Thin is
 
    procedure Seat_Destroy (Seat : Seat_Ptr);
 
+-- The ID provided will be initialized to the wl_pointer interface
+-- for this seat.
+--
+-- This request only takes effect if the seat has the pointer
+-- capability, or has had the pointer capability in the past.
+-- It is a protocol violation to issue this request on a seat that has
+-- never had the pointer capability.
    function Seat_Get_Pointer (Seat : Seat_Ptr) return Pointer_Ptr;
 
+-- The ID provided will be initialized to the wl_keyboard interface
+-- for this seat.
+--
+-- This request only takes effect if the seat has the keyboard
+-- capability, or has had the keyboard capability in the past.
+-- It is a protocol violation to issue this request on a seat that has
+-- never had the keyboard capability.
    function Seat_Get_Keyboard (Seat : Seat_Ptr) return Keyboard_Ptr;
 
+-- The ID provided will be initialized to the wl_touch interface
+-- for this seat.
+--
+-- This request only takes effect if the seat has the touch
+-- capability, or has had the touch capability in the past.
+-- It is a protocol violation to issue this request on a seat that has
+-- never had the touch capability.
    function Seat_Get_Touch (Seat : Seat_Ptr) return Touch_Ptr;
 
    procedure Seat_Release (Seat : Seat_Ptr);
 
    type Pointer_Error_T is new Interfaces.Unsigned_32;
-   Pointer_Role_Role : constant Pointer_Error_T := 0; -- given wl_surface has another role
+-- given wl_surface has another role
+   Pointer_Role_Role : constant Pointer_Error_T := 0;
 
    type Pointer_Button_State_T is new Interfaces.Unsigned_32;
-   Pointer_Released_Released : constant Pointer_Button_State_T := 0; -- the button is not pressed
-   Pointer_Pressed_Pressed   : constant Pointer_Button_State_T := 1; -- the button is pressed
+-- the button is not pressed
+   Pointer_Released_Released : constant Pointer_Button_State_T := 0;
+
+-- the button is pressed
+   Pointer_Pressed_Pressed : constant Pointer_Button_State_T := 1;
 
    type Pointer_Axis_T is new Interfaces.Unsigned_32;
-   Pointer_Vertical_Scroll_Vertical_Scroll     : constant Pointer_Axis_T := 0; -- vertical axis
-   Pointer_Horizontal_Scroll_Horizontal_Scroll : constant Pointer_Axis_T := 1; -- horizontal axis
+-- vertical axis
+   Pointer_Vertical_Scroll_Vertical_Scroll : constant Pointer_Axis_T := 0;
+
+-- horizontal axis
+   Pointer_Horizontal_Scroll_Horizontal_Scroll : constant Pointer_Axis_T := 1;
 
    type Pointer_Axis_Source_T is new Interfaces.Unsigned_32;
-   Pointer_Wheel_Wheel           : constant Pointer_Axis_Source_T := 0; -- a physical wheel rotation
-   Pointer_Finger_Finger         : constant Pointer_Axis_Source_T := 1; -- finger on a touch surface
-   Pointer_Continuous_Continuous : constant Pointer_Axis_Source_T := 2; -- continuous coordinate space
-   Pointer_Wheel_Tilt_Wheel_Tilt : constant Pointer_Axis_Source_T := 3; -- a physical wheel tilt
+-- a physical wheel rotation
+   Pointer_Wheel_Wheel : constant Pointer_Axis_Source_T := 0;
+
+-- finger on a touch surface
+   Pointer_Finger_Finger : constant Pointer_Axis_Source_T := 1;
+
+-- continuous coordinate space
+   Pointer_Continuous_Continuous : constant Pointer_Axis_Source_T := 2;
+
+-- a physical wheel tilt
+   Pointer_Wheel_Tilt_Wheel_Tilt : constant Pointer_Axis_Source_T := 3;
 
    type Pointer_Enter_Subprogram_Ptr is access procedure
      (Data      : Void_Ptr;
@@ -1668,14 +1903,18 @@ package Wl_Thin is
    procedure Pointer_Release (Pointer : Pointer_Ptr);
 
    type Keyboard_Keymap_Format_T is new Interfaces.Unsigned_32;
-   Keyboard_No_Keymap_No_Keymap : constant Keyboard_Keymap_Format_T :=
-     0; -- no keymap; client must understand how to interpret the raw keycode
-   Keyboard_Xkb_V_1_Xkb_V_1 : constant Keyboard_Keymap_Format_T :=
-     1; -- libxkbcommon compatible; to determine the xkb keycode, clients must add 8 to the key event keycode
+-- no keymap; client must understand how to interpret the raw keycode
+   Keyboard_No_Keymap_No_Keymap : constant Keyboard_Keymap_Format_T := 0;
+
+-- libxkbcommon compatible; to determine the xkb keycode, clients must add 8 to the key event keycode
+   Keyboard_Xkb_V_1_Xkb_V_1 : constant Keyboard_Keymap_Format_T := 1;
 
    type Keyboard_Key_State_T is new Interfaces.Unsigned_32;
-   Keyboard_Released_Released : constant Keyboard_Key_State_T := 0; -- key is not pressed
-   Keyboard_Pressed_Pressed   : constant Keyboard_Key_State_T := 1; -- key is pressed
+-- key is not pressed
+   Keyboard_Released_Released : constant Keyboard_Key_State_T := 0;
+
+-- key is pressed
+   Keyboard_Pressed_Pressed : constant Keyboard_Key_State_T := 1;
 
    type Keyboard_Keymap_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
@@ -1831,26 +2070,55 @@ package Wl_Thin is
    procedure Touch_Release (Touch : Touch_Ptr);
 
    type Output_Subpixel_T is new Interfaces.Unsigned_32;
-   Output_Unknown_Unknown               : constant Output_Subpixel_T := 0; -- unknown geometry
-   Output_None_None                     : constant Output_Subpixel_T := 1; -- no geometry
-   Output_Horizontal_Rgb_Horizontal_Rgb : constant Output_Subpixel_T := 2; -- horizontal RGB
-   Output_Horizontal_Bgr_Horizontal_Bgr : constant Output_Subpixel_T := 3; -- horizontal BGR
-   Output_Vertical_Rgb_Vertical_Rgb     : constant Output_Subpixel_T := 4; -- vertical RGB
-   Output_Vertical_Bgr_Vertical_Bgr     : constant Output_Subpixel_T := 5; -- vertical BGR
+-- unknown geometry
+   Output_Unknown_Unknown : constant Output_Subpixel_T := 0;
+
+-- no geometry
+   Output_None_None : constant Output_Subpixel_T := 1;
+
+-- horizontal RGB
+   Output_Horizontal_Rgb_Horizontal_Rgb : constant Output_Subpixel_T := 2;
+
+-- horizontal BGR
+   Output_Horizontal_Bgr_Horizontal_Bgr : constant Output_Subpixel_T := 3;
+
+-- vertical RGB
+   Output_Vertical_Rgb_Vertical_Rgb : constant Output_Subpixel_T := 4;
+
+-- vertical BGR
+   Output_Vertical_Bgr_Vertical_Bgr : constant Output_Subpixel_T := 5;
 
    type Output_Transform_T is new Interfaces.Unsigned_32;
-   Output_Normal_Normal           : constant Output_Transform_T := 0; -- no transform
-   Output_90_90                   : constant Output_Transform_T := 1; -- 90 degrees counter-clockwise
-   Output_180_180                 : constant Output_Transform_T := 2; -- 180 degrees counter-clockwise
-   Output_270_270                 : constant Output_Transform_T := 3; -- 270 degrees counter-clockwise
-   Output_Flipped_Flipped         : constant Output_Transform_T := 4; -- 180 degree flip around a vertical axis
-   Output_Flipped_90_Flipped_90   : constant Output_Transform_T := 5; -- flip and rotate 90 degrees counter-clockwise
-   Output_Flipped_180_Flipped_180 : constant Output_Transform_T := 6; -- flip and rotate 180 degrees counter-clockwise
-   Output_Flipped_270_Flipped_270 : constant Output_Transform_T := 7; -- flip and rotate 270 degrees counter-clockwise
+-- no transform
+   Output_Normal_Normal : constant Output_Transform_T := 0;
+
+-- 90 degrees counter-clockwise
+   Output_90_90 : constant Output_Transform_T := 1;
+
+-- 180 degrees counter-clockwise
+   Output_180_180 : constant Output_Transform_T := 2;
+
+-- 270 degrees counter-clockwise
+   Output_270_270 : constant Output_Transform_T := 3;
+
+-- 180 degree flip around a vertical axis
+   Output_Flipped_Flipped : constant Output_Transform_T := 4;
+
+-- flip and rotate 90 degrees counter-clockwise
+   Output_Flipped_90_Flipped_90 : constant Output_Transform_T := 5;
+
+-- flip and rotate 180 degrees counter-clockwise
+   Output_Flipped_180_Flipped_180 : constant Output_Transform_T := 6;
+
+-- flip and rotate 270 degrees counter-clockwise
+   Output_Flipped_270_Flipped_270 : constant Output_Transform_T := 7;
 
    type Output_Mode_T is new Interfaces.Unsigned_32;
-   Output_Current_Current     : constant Output_Mode_T := 1; -- indicates this is the current mode
-   Output_Preferred_Preferred : constant Output_Mode_T := 2; -- indicates this is the preferred mode
+-- indicates this is the current mode
+   Output_Current_Current : constant Output_Mode_T := 1;
+
+-- indicates this is the preferred mode
+   Output_Preferred_Preferred : constant Output_Mode_T := 2;
 
    type Output_Geometry_Subprogram_Ptr is access procedure
      (Data            : Void_Ptr;
@@ -1918,7 +2186,8 @@ package Wl_Thin is
    procedure Region_Subtract (Region : Region_Ptr; X : Integer; Y : Integer; Width : Integer; Height : Integer);
 
    type Subcompositor_Error_T is new Interfaces.Unsigned_32;
-   Subcompositor_Bad_Surface_Bad_Surface : constant Subcompositor_Error_T := 0; -- the to-be sub-surface is invalid
+-- the to-be sub-surface is invalid
+   Subcompositor_Bad_Surface_Bad_Surface : constant Subcompositor_Error_T := 0;
 
    procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr; Data : Void_Ptr);
 
@@ -1928,13 +2197,29 @@ package Wl_Thin is
 
    procedure Subcompositor_Destroy (Subcompositor : Subcompositor_Ptr);
 
+-- Create a sub-surface interface for the given surface, and
+-- associate it with the given parent surface. This turns a
+-- plain wl_surface into a sub-surface.
+--
+-- The to-be sub-surface must not already have another role, and it
+-- must not have an existing wl_subsurface object. Otherwise a protocol
+-- error is raised.
+--
+-- Adding sub-surfaces to a parent is a double-buffered operation on the
+-- parent (see wl_surface.commit). The effect of adding a sub-surface
+-- becomes visible on the next time the state of the parent surface is
+-- applied.
+--
+-- This request modifies the behaviour of wl_surface.commit request on
+-- the sub-surface, see the documentation on wl_subsurface interface.
    function Subcompositor_Get_Subsurface
      (Subcompositor : Subcompositor_Ptr;
       Surface       : Surface_Ptr;
       Parent        : Surface_Ptr) return Subsurface_Ptr;
 
    type Subsurface_Error_T is new Interfaces.Unsigned_32;
-   Subsurface_Bad_Surface_Bad_Surface : constant Subsurface_Error_T := 0; -- wl_surface is not a sibling or the parent
+-- wl_surface is not a sibling or the parent
+   Subsurface_Bad_Surface_Bad_Surface : constant Subsurface_Error_T := 0;
 
    procedure Subsurface_Set_User_Data (Subsurface : Subsurface_Ptr; Data : Void_Ptr);
 

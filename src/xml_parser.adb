@@ -8,9 +8,10 @@ with Ada.Directories;
 with Aida.Sequential_Stream_IO;
 with Aida.UTF8;
 with Aida.UTF8_Code_Point;
-with Ada.Containers;
+with Ada.Containers.Vectors;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
+with Ada.Strings.Fixed;
 
 with Wayland_XML.Protocol_Tag;
 with Wayland_XML.Copyright_Tag;
@@ -88,6 +89,36 @@ procedure XML_Parser is
       function Exists_Destructor (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean;
 
       function Exists_Any_Event_Tag (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) return Boolean;
+
+      function Remove_Tabs (Text : String) return String;
+
+      type Interval_T is record
+         First : Aida.Pos32_T;
+         Last  : Aida.Nat32_T;
+      end record;
+
+      package Interval_Vectors is new Ada.Containers.Vectors (Index_Type   => Positive,
+                                                              Element_Type => Interval_T,
+                                                              "="          => "=");
+
+      type Intervals_Ref (E : not null access constant  Interval_Vectors.Vector) is limited null record with
+        Implicit_Dereference => E;
+
+      type Interval_Identifier_T is tagged limited private;
+
+      function Intervals (This : aliased Interval_Identifier_T) return Intervals_Ref with
+        Global => null;
+
+      function Make (Text : String) return Interval_Identifier_T with
+        Global => null;
+
+   private
+
+      type Interval_Identifier_T is tagged limited record
+         My_Intervals : aliased Interval_Vectors.Vector;
+      end record;
+
+      function Intervals (This : aliased Interval_Identifier_T) return Intervals_Ref is ((E => This.My_Intervals'Access));
 
    end Utils;
 
@@ -382,6 +413,79 @@ procedure XML_Parser is
 
          return Result;
       end Exists_Any_Event_Tag;
+
+      function Make (Text : String) return Interval_Identifier_T is
+         Interval : Interval_T := (First => 1, Last => 0);
+
+         P           : Aida.Int32_T := Text'First;
+         Prev_P      : Aida.Int32_T := P;
+         Prev_Prev_P : Aida.Int32_T;
+         CP     : Aida.UTF8_Code_Point.T;
+
+         Is_Previous_New_Line : Boolean := False;
+      begin
+         return This : Interval_Identifier_T do
+            while
+              Aida.UTF8.Is_Valid_UTF8_Code_Point (Source  => Text,
+                                                  Pointer => P)
+            loop
+               Prev_Prev_P := Prev_P;
+
+               Prev_P := P;
+               Aida.UTF8.Get (Source  => Text,
+                              Pointer => P,
+                              Value   => CP);
+
+               if CP = 10 then
+                  if Prev_P > Text'First then
+                     if not Is_Previous_New_Line then
+                        Interval.Last := Prev_Prev_P;
+                        This.My_Intervals.Append (Interval);
+                     else
+                        Interval := (First => 1, Last => 0);
+                        This.My_Intervals.Append (Interval);
+                     end if;
+                  end if;
+
+                  Is_Previous_New_Line := True;
+               elsif CP = 13 then
+                  Is_Previous_New_Line := True;
+               else
+                  if Is_Previous_New_Line then
+                     Interval.First := Prev_P;
+                  end if;
+
+                  Is_Previous_New_Line := False;
+               end if;
+            end loop;
+         end return;
+      end Make;
+
+      function Remove_Tabs (Text : String) return String is
+         S : Ada.Strings.Unbounded.Unbounded_String;
+
+         P : Aida.Int32_T := Text'First;
+
+         CP : Aida.UTF8_Code_Point.T;
+      begin
+         while
+           Aida.UTF8.Is_Valid_UTF8_Code_Point (Source  => Text,
+                                               Pointer => P)
+         loop
+            Aida.UTF8.Get (Source  => Text,
+                           Pointer => P,
+                           Value   => CP);
+
+            if CP /= 9 then
+               Ada.Strings.Unbounded.Append (S, Aida.UTF8_Code_Point.Image (CP));
+            else
+               Ada.Strings.Unbounded.Append (S, "   ");
+            end if;
+
+         end loop;
+
+         return To_String (S);
+      end Remove_Tabs;
 
    end Utils;
 
@@ -719,7 +823,7 @@ procedure XML_Parser is
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
                Enum_Tag.Set_Name (A.Value,
-                                   Subpool);
+                                  Subpool);
             elsif A.Name = "bitfield" then
                if A.Value = "true" then
                   Enum_Tag.Set_Bitfield (True);
@@ -859,711 +963,700 @@ procedure XML_Parser is
 
       pragma Unmodified (File);
 
+      procedure Generate_Code_For_Numeric_Constants;
+
       procedure Write_To_File is
+      begin
+         Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
+         Ada.Text_IO.Put_Line (File, "with System;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "-- Auto generated from Wayland.xml except for the Wayland Core parts");
+         Ada.Text_IO.Put_Line (File, "package Wl_Thin is");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "-- Begin core parts");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " pragma Linker_Options (""-lwayland-client"");");
+         Ada.Text_IO.Put_Line (File, " -- Added this linker option here to avoid added it to each gpr file that with's");
+         Ada.Text_IO.Put_Line (File, " -- this Ada binding to Wayland. If the wayland client lib changes its name it");
+         Ada.Text_IO.Put_Line (File, " -- means there is only one place one needs to update.");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " subtype Void_Ptr is System.Address;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " Default_Display_Name : aliased Interfaces.C.char_array := Interfaces.C.To_C (""wayland-0"");");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " type Proxy_T is limited private;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " type Proxy_Ptr is access all Proxy_T;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " type Display_Ptr;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_Ptr;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " procedure Display_Disconnect (This : in out Display_Ptr);");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " type Interface_T is limited record");
+         Ada.Text_IO.Put_Line (File, "    Name         : Interfaces.C.Strings.chars_ptr;");
+         Ada.Text_IO.Put_Line (File, "    Version      : Interfaces.C.int;");
+         Ada.Text_IO.Put_Line (File, "    Method_Count : Interfaces.C.int;");
+         Ada.Text_IO.Put_Line (File, "    Methods      : Void_Ptr; -- Can be improved upon.");
+         Ada.Text_IO.Put_Line (File, "    Event_Count  : Interfaces.C.int;");
+         Ada.Text_IO.Put_Line (File, "    Events       : Void_Ptr; -- Can be improved upon.");
+         Ada.Text_IO.Put_Line (File, " end record with");
+         Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " type Interface_Ptr is access all Interface_T;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor (Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                     Opcode      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                     Interface_V : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                     New_Id      : Interfaces.Unsigned_32) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, "   Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "   Import        => True,");
+         Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal_constructor"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor (");
+         Ada.Text_IO.Put_Line (File, "                                     Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                     Opcode      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                     Interface_V : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                     New_Id      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                     Offset      : Integer;");
+         Ada.Text_IO.Put_Line (File, "                                     Width       : Integer;");
+         Ada.Text_IO.Put_Line (File, "                                     Height      : Integer;");
+         Ada.Text_IO.Put_Line (File, "                                     Stride      : Integer;");
+         Ada.Text_IO.Put_Line (File, "                                     Format      : Interfaces.Unsigned_32");
+         Ada.Text_IO.Put_Line (File, "                                    ) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, " Convention    => C,");
+         Ada.Text_IO.Put_Line (File, " Import        => True,");
+         Ada.Text_IO.Put_Line (File, " External_Name => ""wl_proxy_marshal_constructor"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor_Versioned (Proxy          : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                               Opcode         : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                               Interface_V    : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                                               New_Id_1       : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                               Name           : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                               Interface_Name : Interfaces.C.Strings.chars_ptr;");
+         Ada.Text_IO.Put_Line (File, "                                               New_Id_2       : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "                                               Version        : Interfaces.Unsigned_32) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, "   Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "   Import        => True,");
+         Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal_constructor_versioned"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "                            Opcode      : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "   Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "   Import        => True,");
+         Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with");
+         Ada.Text_IO.Put_Line (File, "   Import => True,");
+         Ada.Text_IO.Put_Line (File, "   Convention => C,");
+         Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_display_dispatch"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with");
+         Ada.Text_IO.Put_Line (File, "   Import => True,");
+         Ada.Text_IO.Put_Line (File, "   Convention => C,");
+         Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_display_roundtrip"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
+         Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Offset      : Void_Ptr) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.C.Strings.chars_ptr) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Integer; Arg_2 : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Void_Ptr) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
+         Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_5  : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_6  : Interfaces.Unsigned_32) with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
+         Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1       : Integer;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2       : Integer) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
+         Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "      Arg_1       : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "      Arg_2       : Void_Ptr) return Proxy_Ptr with");
+         Ada.Text_IO.Put_Line (File, "      Convention    => C,");
+         Ada.Text_IO.Put_Line (File, "      Import        => True,");
+         Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, " -- End core parts");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "type Fixed_T is new Interfaces.Integer_32;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "type Wayland_Array_T is record");
+         Ada.Text_IO.Put_Line (File, "Size  : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "Alloc : Interfaces.Unsigned_32;");
+         Ada.Text_IO.Put_Line (File, "Data : Void_Ptr;");
+         Ada.Text_IO.Put_Line (File, "end record with");
+         Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
+         Ada.Text_IO.Put_Line (File, "");
 
-         procedure Generate_Code_For_Numeric_Constants;
+         Generate_Code_For_Numeric_Constants;
 
-         procedure Start_Writing_To_File is
-         begin
-            Ada.Text_IO.Put_Line (File, "with Interfaces.C.Strings;");
-            Ada.Text_IO.Put_Line (File, "with System;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "-- Auto generated from Wayland.xml except for the Wayland Core parts");
-            Ada.Text_IO.Put_Line (File, "package Wl_Thin is");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "-- Begin core parts");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " pragma Linker_Options (""-lwayland-client"");");
-            Ada.Text_IO.Put_Line (File, " -- Added this linker option here to avoid added it to each gpr file that with's");
-            Ada.Text_IO.Put_Line (File, " -- this Ada binding to Wayland. If the wayland client lib changes its name it");
-            Ada.Text_IO.Put_Line (File, " -- means there is only one place one needs to update.");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " subtype Void_Ptr is System.Address;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " Default_Display_Name : aliased Interfaces.C.char_array := Interfaces.C.To_C (""wayland-0"");");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " type Proxy_T is limited private;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " type Proxy_Ptr is access all Proxy_T;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " type Display_Ptr;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_Ptr;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " procedure Display_Disconnect (This : in out Display_Ptr);");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " type Interface_T is limited record");
-            Ada.Text_IO.Put_Line (File, "    Name         : Interfaces.C.Strings.chars_ptr;");
-            Ada.Text_IO.Put_Line (File, "    Version      : Interfaces.C.int;");
-            Ada.Text_IO.Put_Line (File, "    Method_Count : Interfaces.C.int;");
-            Ada.Text_IO.Put_Line (File, "    Methods      : Void_Ptr; -- Can be improved upon.");
-            Ada.Text_IO.Put_Line (File, "    Event_Count  : Interfaces.C.int;");
-            Ada.Text_IO.Put_Line (File, "    Events       : Void_Ptr; -- Can be improved upon.");
-            Ada.Text_IO.Put_Line (File, " end record with");
-            Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " type Interface_Ptr is access all Interface_T;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor (Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                     Opcode      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                     Interface_V : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                     New_Id      : Interfaces.Unsigned_32) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, "   Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "   Import        => True,");
-            Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal_constructor"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor (");
-            Ada.Text_IO.Put_Line (File, "                                     Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                     Opcode      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                     Interface_V : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                     New_Id      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                     Offset      : Integer;");
-            Ada.Text_IO.Put_Line (File, "                                     Width       : Integer;");
-            Ada.Text_IO.Put_Line (File, "                                     Height      : Integer;");
-            Ada.Text_IO.Put_Line (File, "                                     Stride      : Integer;");
-            Ada.Text_IO.Put_Line (File, "                                     Format      : Interfaces.Unsigned_32");
-            Ada.Text_IO.Put_Line (File, "                                    ) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, " Convention    => C,");
-            Ada.Text_IO.Put_Line (File, " Import        => True,");
-            Ada.Text_IO.Put_Line (File, " External_Name => ""wl_proxy_marshal_constructor"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Proxy_Marshal_Constructor_Versioned (Proxy          : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                               Opcode         : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                               Interface_V    : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                                               New_Id_1       : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                               Name           : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                               Interface_Name : Interfaces.C.Strings.chars_ptr;");
-            Ada.Text_IO.Put_Line (File, "                                               New_Id_2       : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "                                               Version        : Interfaces.Unsigned_32) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, "   Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "   Import        => True,");
-            Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal_constructor_versioned"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "                            Opcode      : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "   Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "   Import        => True,");
-            Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with");
-            Ada.Text_IO.Put_Line (File, "   Import => True,");
-            Ada.Text_IO.Put_Line (File, "   Convention => C,");
-            Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_display_dispatch"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with");
-            Ada.Text_IO.Put_Line (File, "   Import => True,");
-            Ada.Text_IO.Put_Line (File, "   Convention => C,");
-            Ada.Text_IO.Put_Line (File, "   External_Name => ""wl_display_roundtrip"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Offset      : Void_Ptr) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.C.Strings.chars_ptr) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Integer; Arg_2 : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Interfaces.Unsigned_32; Arg_1 : Void_Ptr) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   procedure Proxy_Marshal");
-            Ada.Text_IO.Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_3  : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_4  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_5  : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_6  : Interfaces.Unsigned_32) with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1       : Integer;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2       : Integer) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Ada.Text_IO.Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Opcode      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      New_Id      : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "      Arg_1       : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "      Arg_2       : Void_Ptr) return Proxy_Ptr with");
-            Ada.Text_IO.Put_Line (File, "      Convention    => C,");
-            Ada.Text_IO.Put_Line (File, "      Import        => True,");
-            Ada.Text_IO.Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, " -- End core parts");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "type Fixed_T is new Interfaces.Integer_32;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "type Wayland_Array_T is record");
-            Ada.Text_IO.Put_Line (File, "Size  : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "Alloc : Interfaces.Unsigned_32;");
-            Ada.Text_IO.Put_Line (File, "Data : Void_Ptr;");
-            Ada.Text_IO.Put_Line (File, "end record with");
-            Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
-            Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "private");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "   type Proxy_T is limited null record;");
+         Ada.Text_IO.Put_Line (File, "");
+         Ada.Text_IO.Put_Line (File, "end Wl_Thin;");
+      end Write_To_File;
 
-            Generate_Code_For_Numeric_Constants;
+      procedure Generate_Code_For_Interface_Constants;
 
-            Ada.Text_IO.Put_Line (File, "private");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "   type Proxy_T is limited null record;");
-            Ada.Text_IO.Put_Line (File, "");
-            Ada.Text_IO.Put_Line (File, "end Wl_Thin;");
-         end Start_Writing_To_File;
+      procedure Generate_Code_For_Numeric_Constants is
 
-         procedure Generate_Code_For_Interface_Constants;
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
-         procedure Generate_Code_For_Numeric_Constants is
+            procedure Generate_Code_For_Opcodes is
 
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+               I : Aida.Int32_T := 0;
 
-               procedure Generate_Code_For_Opcodes is
-
-                  I : Aida.Int32_T := 0;
-
-                  procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
-                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
-                  begin
-                     Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
-                     Ada.Text_IO.Put_Line (File, ";");
-                     Ada.Text_IO.Put_Line (File, "");
-
-                     I := I + 1;
-                  end Generate_Code;
-
+               procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
                begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
+                  Ada.Text_IO.Put (File, Name);
+                  Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
+                  Ada.Text_IO.Put_Line (File, ";");
+                  Ada.Text_IO.Put_Line (File, "");
+
+                  I := I + 1;
+               end Generate_Code;
+
+            begin
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => Generate_Code (Child.Request_Tag.all);
                      when Child_Event       => null;
                      when Child_Enum        => null;
-                     end case;
-                  end loop;
-               end Generate_Code_For_Opcodes;
+                  end case;
+               end loop;
+            end Generate_Code_For_Opcodes;
 
-               procedure Generate_Code_For_Event_Since_Version is
+            procedure Generate_Code_For_Event_Since_Version is
 
-                  procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
-                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
-                  begin
-                     if Event_Tag.Exists_Since_Attribute then
-                        Ada.Text_IO.Put (File, Name);
-                        Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Event_Tag.Since_Attribute_As_Pos32));
-                        Ada.Text_IO.Put_Line (File, ";");
-                        Ada.Text_IO.Put_Line (File, "");
-                     else
-                        Ada.Text_IO.Put (File, Name);
-                        Ada.Text_IO.Put_Line (File, " : constant := 1;");
-                        Ada.Text_IO.Put_Line (File, "");
-                     end if;
-                  end Generate_Code;
-
+               procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
                begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
+                  if Event_Tag.Exists_Since_Attribute then
+                     Ada.Text_IO.Put (File, Name);
+                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Event_Tag.Since_Attribute_As_Pos32));
+                     Ada.Text_IO.Put_Line (File, ";");
+                     Ada.Text_IO.Put_Line (File, "");
+                  else
+                     Ada.Text_IO.Put (File, Name);
+                     Ada.Text_IO.Put_Line (File, " : constant := 1;");
+                     Ada.Text_IO.Put_Line (File, "");
+                  end if;
+               end Generate_Code;
+
+            begin
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => null;
                      when Child_Event       => Generate_Code (Child.Event_Tag.all);
                      when Child_Enum        => null;
-                     end case;
-                  end loop;
-               end Generate_Code_For_Event_Since_Version;
+                  end case;
+               end loop;
+            end Generate_Code_For_Event_Since_Version;
 
-               procedure Generate_Code_For_Opcodes_Since_Version is
+            procedure Generate_Code_For_Opcodes_Since_Version is
 
-                  procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
-                     Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
-                  begin
-                     if Request_Tag.Exists_Since then
-                        Ada.Text_IO.Put (File, Name);
-                        Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
-                        Ada.Text_IO.Put_Line (File, ";");
-                        Ada.Text_IO.Put_Line (File, "");
-                     else
-                        Ada.Text_IO.Put (File, Name);
-                        Ada.Text_IO.Put_Line (File, " : constant := 1;");
-                        Ada.Text_IO.Put_Line (File, "");
-                     end if;
-                  end Generate_Code;
-
+               procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
                begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
+                  if Request_Tag.Exists_Since then
+                     Ada.Text_IO.Put (File, Name);
+                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
+                     Ada.Text_IO.Put_Line (File, ";");
+                     Ada.Text_IO.Put_Line (File, "");
+                  else
+                     Ada.Text_IO.Put (File, Name);
+                     Ada.Text_IO.Put_Line (File, " : constant := 1;");
+                     Ada.Text_IO.Put_Line (File, "");
+                  end if;
+               end Generate_Code;
+
+            begin
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
                      when Child_Dummy       => null;
                      when Child_Description => null;
                      when Child_Request     => Generate_Code (Child.Request_Tag.all);
                      when Child_Event       => null;
                      when Child_Enum        => null;
-                     end case;
-                  end loop;
-               end Generate_Code_For_Opcodes_Since_Version;
-
-            begin
-               Generate_Code_For_Opcodes;
-               Generate_Code_For_Event_Since_Version;
-               Generate_Code_For_Opcodes_Since_Version;
-            end Handle_Interface;
+                  end case;
+               end loop;
+            end Generate_Code_For_Opcodes_Since_Version;
 
          begin
-            for Child of Protocol_Tag.Children loop
-               case Child.Kind_Id is
-                  when Child_Dummy     => null;
-                  when Child_Copyright => null;
-                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
-               end case;
-            end loop;
+            Generate_Code_For_Opcodes;
+            Generate_Code_For_Event_Since_Version;
+            Generate_Code_For_Opcodes_Since_Version;
+         end Handle_Interface;
 
-            Generate_Code_For_Interface_Constants;
-         end Generate_Code_For_Numeric_Constants;
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy     => null;
+               when Child_Copyright => null;
+               when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
 
-         procedure Generate_Code_For_Interface_Ptrs;
+         Generate_Code_For_Interface_Constants;
+      end Generate_Code_For_Numeric_Constants;
 
-         procedure Generate_Code_For_Interface_Constants is
+      procedure Generate_Code_For_Interface_Ptrs;
 
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
-               Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+      procedure Generate_Code_For_Interface_Constants is
+
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+            Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+         begin
+            Ada.Text_IO.Put (File, Name);
+            Ada.Text_IO.Put_Line (File, " : aliased Interface_T with");
+            Ada.Text_IO.Put_Line (File, "Import => True,");
+            Ada.Text_IO.Put_Line (File, "Convention => C,");
+            Ada.Text_IO.Put_Line (File, "External_Name => """ & Interface_Tag.Name & "_interface"";");
+            Ada.Text_IO.Put_Line (File, "");
+         end Handle_Interface;
+
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy     => null;
+               when Child_Copyright => null;
+               when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+
+         Generate_Code_For_Interface_Ptrs;
+      end Generate_Code_For_Interface_Constants;
+
+      procedure Generate_Code_For_Each_Interface;
+
+      procedure Generate_Code_For_Interface_Ptrs is
+
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+
+            procedure Generate_Code_For_Interface_Ptr is
+               Name : String := Utils.Interface_Ptr_Name (Interface_Tag);
             begin
-               Ada.Text_IO.Put (File, Name);
-               Ada.Text_IO.Put_Line (File, " : aliased Interface_T with");
-               Ada.Text_IO.Put_Line (File, "Import => True,");
-               Ada.Text_IO.Put_Line (File, "Convention => C,");
-               Ada.Text_IO.Put_Line (File, "External_Name => """ & Interface_Tag.Name & "_interface"";");
+               Ada.Text_IO.Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
                Ada.Text_IO.Put_Line (File, "");
-            end Handle_Interface;
+            end Generate_Code_For_Interface_Ptr;
 
          begin
-            for Child of Protocol_Tag.Children loop
-               case Child.Kind_Id is
-                  when Child_Dummy     => null;
-                  when Child_Copyright => null;
-                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
-               end case;
-            end loop;
+            Generate_Code_For_Interface_Ptr;
+         end Handle_Interface;
 
-            Generate_Code_For_Interface_Ptrs;
-         end Generate_Code_For_Interface_Constants;
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy     => null;
+               when Child_Copyright => null;
+               when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
 
-         procedure Generate_Code_For_Each_Interface;
+         Generate_Code_For_Each_Interface;
+      end Generate_Code_For_Interface_Ptrs;
 
-         procedure Generate_Code_For_Interface_Ptrs is
+      procedure Generate_Code_For_Each_Interface is
 
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
+         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
-               procedure Generate_Code_For_Interface_Ptr is
-                  Name : String := Utils.Interface_Ptr_Name (Interface_Tag);
+            procedure Generate_Code_For_Enums is
+
+               procedure Generate_Code (Enum_Tag : Wayland_XML.Enum_Tag.Enum_Tag_T) is
+                  Enum_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
+
+                  procedure Generate_Code_For_Enum_Value (Entry_Tag : Wayland_XML.Entry_Tag.Entry_Tag_T) is
+                     Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Entry_Tag.Name & "_" & Entry_Tag.Name);
+                  begin
+                     Ada.Text_IO.Put_Line (File, "-- " & Entry_Tag.Summary);
+                     Ada.Text_IO.Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & ";");
+                     Ada.Text_IO.Put_Line (File, "");
+                  end Generate_Code_For_Enum_Value;
+
                begin
-                  Ada.Text_IO.Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
+                  Ada.Text_IO.Put_Line (File, "type " & Enum_Type_Name & " is new Interfaces.Unsigned_32;");
+
+                  for Child of Enum_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Entry       => Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
+                     end case;
+                  end loop;
                   Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Interface_Ptr;
+               end Generate_Code;
 
             begin
-               Generate_Code_For_Interface_Ptr;
-            end Handle_Interface;
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy       => null;
+                     when Child_Description => null;
+                     when Child_Request     => null;
+                     when Child_Event       => null;
+                     when Child_Enum        => Generate_Code (Child.Enum_Tag.all);
+                  end case;
+               end loop;
+            end Generate_Code_For_Enums;
 
-         begin
-            for Child of Protocol_Tag.Children loop
-               case Child.Kind_Id is
-                  when Child_Dummy     => null;
-                  when Child_Copyright => null;
-                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
-               end case;
-            end loop;
+            procedure Generate_Code_For_Subprogram_Ptrs is
 
-            Generate_Code_For_Each_Interface;
-         end Generate_Code_For_Interface_Ptrs;
+               procedure Generate_Code_For_Subprogram (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
 
-         procedure Generate_Code_For_Each_Interface is
-
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
-
-               procedure Generate_Code_For_Enums is
-
-                  procedure Generate_Code (Enum_Tag : Wayland_XML.Enum_Tag.Enum_Tag_T) is
-                     Enum_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
-
-                     procedure Generate_Code_For_Enum_Value (Entry_Tag : Wayland_XML.Entry_Tag.Entry_Tag_T) is
-                        Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Entry_Tag.Name & "_" & Entry_Tag.Name);
+                  procedure Generate_Code_For_Argument (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
+                                                        Is_Last : Boolean)
+                  is
+                  begin
+                     declare
+                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
                      begin
-                        Ada.Text_IO.Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & "; -- " & Entry_Tag.Summary);
-                     end Generate_Code_For_Enum_Value;
-
-                  begin
-                     Ada.Text_IO.Put_Line (File, "type " & Enum_Type_Name & " is new Interfaces.Unsigned_32;");
-
-                     for Child of Enum_Tag.Children loop
-                        case Child.Kind_Id is
-                           when Child_Dummy       => null;
-                           when Child_Description => null;
-                           when Child_Entry       => Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
-                        end case;
-                     end loop;
-                     Ada.Text_IO.Put_Line (File, "");
-                  end Generate_Code;
-
-               begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
-                        when Child_Dummy       => null;
-                        when Child_Description => null;
-                        when Child_Request     => null;
-                        when Child_Event       => null;
-                        when Child_Enum        => Generate_Code (Child.Enum_Tag.all);
-                     end case;
-                  end loop;
-               end Generate_Code_For_Enums;
-
-               procedure Generate_Code_For_Subprogram_Ptrs is
-
-                  procedure Generate_Code_For_Subprogram (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
-
-                     procedure Generate_Code_For_Argument (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
-                                                           Is_Last : Boolean)
-                     is
-                     begin
-                        declare
-                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     end Generate_Code_For_Argument;
-
-                     V : Wayland_XML.Event_Tag.Child_Vectors.Vector;
-
-                     Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
-                     Interface_Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  begin
-                     for Child of Event_Tag.Children loop
-                        case Child.Kind_Id is
-                           when Child_Dummy       => null;
-                           when Child_Description => null;
-                           when Child_Arg         => V.Append (Child);
-                        end case;
-                     end loop;
-
-                     Ada.Text_IO.Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
-                     Ada.Text_IO.Put (File, "     " & Interface_Name & " : " & Utils.Interface_Ptr_Name (Interface_Tag));
-
-                     if V.Length = 0 then
-                        Ada.Text_IO.Put_Line (File, "");
-                     else
-                        Ada.Text_IO.Put_Line (File, ";");
-                     end if;
-
-                     for Child of V loop
-                        case Child.Kind_Id is
-                           when Child_Dummy       => null;
-                           when Child_Description => null;
-                           when Child_Arg         => Generate_Code_For_Argument (Child.Arg_Tag.all, Event_Tag.Children.Last_Element = Child);
-                        end case;
-                     end loop;
-                     Ada.Text_IO.Put_Line (File, "     ) with");
-                     Ada.Text_IO.Put_Line (File, "Convention => C;");
-                     Ada.Text_IO.Put_Line (File, "");
-                  end Generate_Code_For_Subprogram;
-
-               begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
-                        when Child_Dummy       => null;
-                        when Child_Description => null;
-                        when Child_Request     => null;
-                        when Child_Event       => Generate_Code_For_Subprogram (Child.Event_Tag.all);
-                        when Child_Enum        => null;
-                     end case;
-                  end loop;
-               end Generate_Code_For_Subprogram_Ptrs;
-
-               procedure Generate_Code_For_Listener_Type_Definition is
-
-                  procedure Generate_Code_For_Record_Component (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
-                     Component_Name : String := Utils.Adaify_Name (Event_Tag.Name);
-                     Component_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
-                  begin
-                     Ada.Text_IO.Put_Line (File, "   " & Component_Name & " : " & Component_Type_Name & ";");
-                  end Generate_Code_For_Record_Component;
-
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "type " & Name & " is record");
-
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
-                        when Child_Dummy       => null;
-                        when Child_Description => null;
-                        when Child_Request     => null;
-                        when Child_Event       => Generate_Code_For_Record_Component (Child.Event_Tag.all);
-                        when Child_Enum        => null;
-                     end case;
-                  end loop;
-                  Ada.Text_IO.Put_Line (File, "end record with");
-                  Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
-                  Ada.Text_IO.Put_Line (File, "");
-                  Ada.Text_IO.Put_Line (File, "type " & Ptr_Name & " is access all " & Name & ";");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Listener_Type_Definition;
-
-               procedure Generate_Code_For_Add_Listener_Subprogram_Declaration is
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-                  Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
-                  Ada.Text_IO.Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
-                  Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int;");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Add_Listener_Subprogram_Declaration;
-
-               procedure Generate_Code_For_Set_User_Data_Subprogram_Declaration is
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
-                  Ada.Text_IO.Put_Line (File, "Data : Void_Ptr);");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Set_User_Data_Subprogram_Declaration;
-
-               procedure Generate_Code_For_Get_User_Data_Subprogram_Declaration is
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
-
-               procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32;");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Get_Version_Subprogram_Declaration;
-
-               procedure Generate_Code_For_Destroy_Subprogram_Declaration is
-                  Name : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               begin
-                  Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
-                  Ada.Text_IO.Put_Line (File, "");
-               end Generate_Code_For_Destroy_Subprogram_Declaration;
-
-               procedure Generate_Code_For_Requests is
-
-                  procedure Generate_Code_For_Subprogram_Declaration (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
-
-                     procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
-                                                      Is_Last : Boolean) is
-                     begin
-                        declare
-                           Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                           Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     end Generate_Code_For_Arg;
-
-                     Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
-                     Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-                     Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-                  begin
-                     if Utils.Is_New_Id_Argument_Present (Request_Tag) then
-                        if Utils.Is_Interface_Specified (Request_Tag) then
-                           declare
-                              Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
-                           begin
-                              if Utils.Number_Of_Args (Request_Tag) > 1 then
-                                 Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-
-                                 declare
-                                    V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
-                                 begin
-                                    for Child of Request_Tag.Children loop
-                                       case Child.Kind_Id is
-                                          when Child_Dummy       => null;
-                                          when Child_Description => null;
-                                          when Child_Arg         =>
-                                             if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
-                                                V.Append (Child);
-                                             end if;
-                                       end case;
-                                    end loop;
-
-                                    for Child of V loop
-                                       case Child.Kind_Id is
-                                          when Child_Dummy       => null;
-                                          when Child_Description => null;
-                                          when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
-                                       end case;
-                                    end loop;
-                                 end;
-
-                                 Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & ";");
-                              else
-                                 Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
-                              end if;
-                           end;
+                        if Is_Last then
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
                         else
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                        end if;
+                     end;
+                  end Generate_Code_For_Argument;
+
+                  V : Wayland_XML.Event_Tag.Child_Vectors.Vector;
+
+                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
+                  Interface_Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               begin
+                  for Child of Event_Tag.Children loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Arg         => V.Append (Child);
+                     end case;
+                  end loop;
+
+                  Ada.Text_IO.Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
+                  Ada.Text_IO.Put (File, "     " & Interface_Name & " : " & Utils.Interface_Ptr_Name (Interface_Tag));
+
+                  if V.Length = 0 then
+                     Ada.Text_IO.Put_Line (File, "");
+                  else
+                     Ada.Text_IO.Put_Line (File, ";");
+                  end if;
+
+                  for Child of V loop
+                     case Child.Kind_Id is
+                        when Child_Dummy       => null;
+                        when Child_Description => null;
+                        when Child_Arg         => Generate_Code_For_Argument (Child.Arg_Tag.all, Event_Tag.Children.Last_Element = Child);
+                     end case;
+                  end loop;
+                  Ada.Text_IO.Put_Line (File, "     ) with");
+                  Ada.Text_IO.Put_Line (File, "Convention => C;");
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Subprogram;
+
+            begin
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy       => null;
+                     when Child_Description => null;
+                     when Child_Request     => null;
+                     when Child_Event       => Generate_Code_For_Subprogram (Child.Event_Tag.all);
+                     when Child_Enum        => null;
+                  end case;
+               end loop;
+            end Generate_Code_For_Subprogram_Ptrs;
+
+            procedure Generate_Code_For_Listener_Type_Definition is
+
+               procedure Generate_Code_For_Record_Component (Event_Tag : Wayland_XML.Event_Tag.Event_Tag_T) is
+                  Component_Name : String := Utils.Adaify_Name (Event_Tag.Name);
+                  Component_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
+               begin
+                  Ada.Text_IO.Put_Line (File, "   " & Component_Name & " : " & Component_Type_Name & ";");
+               end Generate_Code_For_Record_Component;
+
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "type " & Name & " is record");
+
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy       => null;
+                     when Child_Description => null;
+                     when Child_Request     => null;
+                     when Child_Event       => Generate_Code_For_Record_Component (Child.Event_Tag.all);
+                     when Child_Enum        => null;
+                  end case;
+               end loop;
+               Ada.Text_IO.Put_Line (File, "end record with");
+               Ada.Text_IO.Put_Line (File, "   Convention => C_Pass_By_Copy;");
+               Ada.Text_IO.Put_Line (File, "");
+               Ada.Text_IO.Put_Line (File, "type " & Ptr_Name & " is access all " & Name & ";");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Listener_Type_Definition;
+
+            procedure Generate_Code_For_Add_Listener_Subprogram_Declaration is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int;");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Add_Listener_Subprogram_Declaration;
+
+            procedure Generate_Code_For_Set_User_Data_Subprogram_Declaration is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
+               Ada.Text_IO.Put_Line (File, "Data : Void_Ptr);");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Set_User_Data_Subprogram_Declaration;
+
+            procedure Generate_Code_For_Get_User_Data_Subprogram_Declaration is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+
+            procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32;");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Get_Version_Subprogram_Declaration;
+
+            procedure Generate_Code_For_Destroy_Subprogram_Declaration is
+               Name : String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+            begin
+               Ada.Text_IO.Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
+               Ada.Text_IO.Put_Line (File, "");
+            end Generate_Code_For_Destroy_Subprogram_Declaration;
+
+            procedure Generate_Code_For_Requests is
+
+               procedure Generate_Code_For_Subprogram_Declaration (Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+
+                  procedure Generate_Code_For_Arg (Arg_Tag : Wayland_XML.Arg_Tag.Arg_Tag_T;
+                                                   Is_Last : Boolean) is
+                  begin
+                     declare
+                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                     begin
+                        if Is_Last then
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
+                        else
+                           Ada.Text_IO.Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
+                        end if;
+                     end;
+                  end Generate_Code_For_Arg;
+
+                  procedure Generate_Comment (Text : String;
+                                              Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                     Interval_Identifier : Utils.Interval_Identifier_T := Utils.Make (Text);
+                  begin
+                     if Request_Tag.Name = "create_buffer" then
+                        Ada.Text_IO.Put_Line (Interval_Identifier.Intervals.Length'Image);
+                     end if;
+                     for Interval of Interval_Identifier.Intervals loop
+                        Ada.Text_IO.Put_Line (File, "-- " & Ada.Strings.Fixed.Trim (Text (Interval.First..Interval.Last), Ada.Strings.Both));
+                        if Request_Tag.Name = "create_buffer" then
+                           Ada.Text_IO.Put_Line ("'" & Text (Interval.First..Interval.Last) & "'");
+                        end if;
+                     end loop;
+                  end Generate_Comment;
+
+                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               begin
+                  if Utils.Is_New_Id_Argument_Present (Request_Tag) then
+                     if Request_Tag.Exists_Description then
+                        if Request_Tag.Name = "create_buffer" then
+                           Ada.Text_IO.Put_Line (Request_Tag.Description);
+                        end if;
+                        Generate_Comment (Utils.Remove_Tabs (Request_Tag.Description), Request_Tag);
+                     end if;
+                     if Utils.Is_Interface_Specified (Request_Tag) then
+                        declare
+                           Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                        begin
                            if Utils.Number_Of_Args (Request_Tag) > 1 then
                               Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
 
@@ -1590,20 +1683,18 @@ procedure XML_Parser is
                                  end loop;
                               end;
 
-                              Ada.Text_IO.Put_Line (File, "   Interface_V : Interface_Ptr;");
-                              Ada.Text_IO.Put_Line (File, "   New_Id : Interfaces.Unsigned_32) return Proxy_Ptr;");
+                              Ada.Text_IO.Put_Line (File, "   ) return " & Return_Type & ";");
                            else
-                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
+                              Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
                            end if;
-                        end if;
-                     elsif Utils.Is_Request_Destructor (Request_Tag) then
-                        null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
+                        end;
                      else
-                        if Utils.Number_Of_Args (Request_Tag) > 0 then
+                        if Utils.Number_Of_Args (Request_Tag) > 1 then
+                           Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+
                            declare
                               V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
                            begin
-                              Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                               for Child of Request_Tag.Children loop
                                  case Child.Kind_Id is
                                     when Child_Dummy       => null;
@@ -1622,56 +1713,87 @@ procedure XML_Parser is
                                     when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
                                  end case;
                               end loop;
-                              Ada.Text_IO.Put_Line (File, "   );");
                            end;
+
+                           Ada.Text_IO.Put_Line (File, "   Interface_V : Interface_Ptr;");
+                           Ada.Text_IO.Put_Line (File, "   New_Id : Interfaces.Unsigned_32) return Proxy_Ptr;");
                         else
-                           Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ");");
+                           Ada.Text_IO.Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
                         end if;
                      end if;
-                     Ada.Text_IO.Put_Line (File, "");
-                  end Generate_Code_For_Subprogram_Declaration;
+                  elsif Utils.Is_Request_Destructor (Request_Tag) then
+                     null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
+                  else
+                     if Utils.Number_Of_Args (Request_Tag) > 0 then
+                        declare
+                           V : Wayland_XML.Request_Tag.Child_Vectors.Vector;
+                        begin
+                           Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                           for Child of Request_Tag.Children loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         =>
+                                    if Child.Arg_Tag.Type_Attribute /= Type_New_Id then
+                                       V.Append (Child);
+                                    end if;
+                              end case;
+                           end loop;
 
-               begin
-                  for Child of Interface_Tag.Children loop
-                     case Child.Kind_Id is
-                        when Child_Dummy       => null;
-                        when Child_Description => null;
-                        when Child_Request     => Generate_Code_For_Subprogram_Declaration (Child.Request_Tag.all);
-                        when Child_Event       => null;
-                        when Child_Enum        => null;
-                     end case;
-                  end loop;
-               end Generate_Code_For_Requests;
+                           for Child of V loop
+                              case Child.Kind_Id is
+                                 when Child_Dummy       => null;
+                                 when Child_Description => null;
+                                 when Child_Arg         => Generate_Code_For_Arg (Child.Arg_Tag.all, Child = Request_Tag.Children.Last_Element);
+                              end case;
+                           end loop;
+                           Ada.Text_IO.Put_Line (File, "   );");
+                        end;
+                     else
+                        Ada.Text_IO.Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ");");
+                     end if;
+                  end if;
+                  Ada.Text_IO.Put_Line (File, "");
+               end Generate_Code_For_Subprogram_Declaration;
 
             begin
-               Generate_Code_For_Enums;
-               Generate_Code_For_Subprogram_Ptrs;
-
-               if Utils.Exists_Any_Event_Tag (Interface_Tag) then
-                  Generate_Code_For_Listener_Type_Definition;
-                  Generate_Code_For_Add_Listener_Subprogram_Declaration;
-               end if;
-
-               Generate_Code_For_Set_User_Data_Subprogram_Declaration;
-               Generate_Code_For_Get_User_Data_Subprogram_Declaration;
-               Generate_Code_For_Get_Version_Subprogram_Declaration;
-               Generate_Code_For_Destroy_Subprogram_Declaration;
-               Generate_Code_For_Requests;
-            end Handle_Interface;
+               for Child of Interface_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy       => null;
+                     when Child_Description => null;
+                     when Child_Request     => Generate_Code_For_Subprogram_Declaration (Child.Request_Tag.all);
+                     when Child_Event       => null;
+                     when Child_Enum        => null;
+                  end case;
+               end loop;
+            end Generate_Code_For_Requests;
 
          begin
-            for Child of Protocol_Tag.Children loop
-               case Child.Kind_Id is
-                  when Child_Dummy     => null;
-                  when Child_Copyright => null;
-                  when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
-               end case;
-            end loop;
-         end Generate_Code_For_Each_Interface;
+            Generate_Code_For_Enums;
+            Generate_Code_For_Subprogram_Ptrs;
+
+            if Utils.Exists_Any_Event_Tag (Interface_Tag) then
+               Generate_Code_For_Listener_Type_Definition;
+               Generate_Code_For_Add_Listener_Subprogram_Declaration;
+            end if;
+
+            Generate_Code_For_Set_User_Data_Subprogram_Declaration;
+            Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+            Generate_Code_For_Get_Version_Subprogram_Declaration;
+            Generate_Code_For_Destroy_Subprogram_Declaration;
+            Generate_Code_For_Requests;
+         end Handle_Interface;
 
       begin
-         Start_Writing_To_File;
-      end Write_To_File;
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy     => null;
+               when Child_Copyright => null;
+               when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+      end Generate_Code_For_Each_Interface;
+
 
    begin
       Create_File;
@@ -1697,7 +1819,7 @@ procedure XML_Parser is
 
       pragma Unmodified (File);
 
-      procedure Generate_Code_For_Add_Listener_Subprogram_Implementations;
+      procedure Generate_Code_For_Protocol_Tag_Children;
 
       procedure Write_To_File is
 
@@ -1762,13 +1884,13 @@ procedure XML_Parser is
          Ada.Text_IO.Put_Line (File, "     External_Name => ""wl_proxy_get_version"";");
          Ada.Text_IO.Put_Line (File, "");
 
-         Generate_Code_For_Add_Listener_Subprogram_Implementations;
+         Generate_Code_For_Protocol_Tag_Children;
 
          Ada.Text_IO.Put_Line (File, "");
          Ada.Text_IO.Put_Line (File, "end Wl_Thin;");
       end Write_To_File;
 
-      procedure Generate_Code_For_Add_Listener_Subprogram_Implementations is
+      procedure Generate_Code_For_Protocol_Tag_Children is
 
          procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag.Interface_Tag_T) is
 
@@ -2090,7 +2212,7 @@ procedure XML_Parser is
                when Child_Interface => Handle_Interface (Child.Interface_Tag.all);
             end case;
          end loop;
-      end Generate_Code_For_Add_Listener_Subprogram_Implementations;
+      end Generate_Code_For_Protocol_Tag_Children;
 
    begin
       Create_File;

@@ -41,4 +41,29 @@ package body Wayland_XML.Request_Tag is
                         Value  => Value);
    end Set_Since;
 
+   function Exists_Description (This : Request_Tag_T) return Boolean is
+      N : Aida.Nat32_T := 0;
+   begin
+      for Child of This.Children loop
+         if Child.Kind_Id = Child_Description then
+            N := N + 1;
+         end if;
+      end loop;
+
+      return N = 1;
+   end Exists_Description;
+
+   function Description (This : Request_Tag_T) return String is
+      C : Child_T;
+   begin
+      for Child of This.Children loop
+         if Child.Kind_Id = Child_Description then
+            C := Child;
+            exit;
+         end if;
+      end loop;
+
+      return C.Description_Tag.Text;
+   end Description;
+
 end Wayland_XML.Request_Tag;
