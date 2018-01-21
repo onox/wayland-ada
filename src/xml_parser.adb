@@ -1627,18 +1627,11 @@ procedure XML_Parser is
                      end;
                   end Generate_Code_For_Arg;
 
-                  procedure Generate_Comment (Text : String;
-                                              Request_Tag : Wayland_XML.Request_Tag.Request_Tag_T) is
+                  procedure Generate_Comment (Text : String) is
                      Interval_Identifier : Utils.Interval_Identifier_T := Utils.Make (Text);
                   begin
-                     if Request_Tag.Name = "create_buffer" then
-                        Ada.Text_IO.Put_Line (Interval_Identifier.Intervals.Length'Image);
-                     end if;
                      for Interval of Interval_Identifier.Intervals loop
                         Ada.Text_IO.Put_Line (File, "-- " & Ada.Strings.Fixed.Trim (Text (Interval.First..Interval.Last), Ada.Strings.Both));
-                        if Request_Tag.Name = "create_buffer" then
-                           Ada.Text_IO.Put_Line ("'" & Text (Interval.First..Interval.Last) & "'");
-                        end if;
                      end loop;
                   end Generate_Comment;
 
@@ -1648,10 +1641,7 @@ procedure XML_Parser is
                begin
                   if Utils.Is_New_Id_Argument_Present (Request_Tag) then
                      if Request_Tag.Exists_Description then
-                        if Request_Tag.Name = "create_buffer" then
-                           Ada.Text_IO.Put_Line (Request_Tag.Description);
-                        end if;
-                        Generate_Comment (Utils.Remove_Tabs (Request_Tag.Description), Request_Tag);
+                        Generate_Comment (Utils.Remove_Tabs (Request_Tag.Description));
                      end if;
                      if Utils.Is_Interface_Specified (Request_Tag) then
                         declare
@@ -1724,6 +1714,9 @@ procedure XML_Parser is
                   elsif Utils.Is_Request_Destructor (Request_Tag) then
                      null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
                   else
+                     if Request_Tag.Exists_Description then
+                        Generate_Comment (Utils.Remove_Tabs (Request_Tag.Description));
+                     end if;
                      if Utils.Number_Of_Args (Request_Tag) > 0 then
                         declare
                            V : Wayland_XML.Request_Tag.Child_Vectors.Vector;

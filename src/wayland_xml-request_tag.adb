@@ -45,7 +45,10 @@ package body Wayland_XML.Request_Tag is
       N : Aida.Nat32_T := 0;
    begin
       for Child of This.Children loop
-         if Child.Kind_Id = Child_Description then
+         if
+           Child.Kind_Id = Child_Description and then
+           Child.Description_Tag.Exists_Text
+         then
             N := N + 1;
          end if;
       end loop;
