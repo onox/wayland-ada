@@ -1,7 +1,7 @@
 # Ada binding to the Wayland Client library
 The Wayland binding consists of two packages:
 - Thin binding in the "Wl_Thin" package. It is auto-generated from wayland.xml (programming language agnostic description of the API).
-This is part is complete but untested. To use the thin binding in your project with "wayland_client_thin.gpr".
+Complete but not properly tested. To use the thin binding in your project with "wayland_client_thin.gpr".
 - Thick binding in the "Wl" package, manually crafted and built on top of the thin binding.
   This part is under construction. To use the thick binding in your project with "wayland_client.gpr".
 
