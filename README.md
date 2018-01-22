@@ -16,6 +16,6 @@ The thin Ada binding Wl_Thin is auto-generated from wayland.xml by the applicati
 It can be compiled by GNAT FSF version 7.2 and GNAT Community Edition 2017.
 
 # Thanks to
-- Dmitry Kazakov for writing his Simple Components. They are used in the xproto.xml-file parser application for reading UTF8-characters.
+- Dmitry Kazakov for Simple Components. They are used in the wayland.xml-file parser application for reading UTF8-characters.
 
 - Brad Moore for providing Storage Pool (and Subpool) implementations available in the Deepend Open Source project.
