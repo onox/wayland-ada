@@ -1,16 +1,15 @@
 # Ada binding to the Wayland Client library
 The Wayland binding consists of two packages:
-- Thin binding in the Wl_Thin package auto-generated from wayland.xml (programming language agnostic description of the API).
+- Thin binding in the "Wl_Thin" package. It is auto-generated from wayland.xml (programming language agnostic description of the API).
 This is part is complete but untested.
-- Thick binding, manually crafted and built on top of the thin binding. This part is under construction.
+- Thick binding in the "Wl" package, manually crafted and built on top of the thin binding. This part is under construction.
 
 To build all executables execute "gprbuild -P all_executables.gpr".
 Alternatively open all_executables.gpr with the GPS and then select Build -> Project -> Build All.
 
-Examples of how to use the Wayland Client Ada binding can be found in gpr-files that start with "example"
-for example:
-example_6_3_connect_to_server.gpr,
-example_6_4_find_compositor_proxy.gpr"
+Examples of how to use the Wayland Client Ada binding can be found in gpr-files that start with "example":
+> example_6_3_connect_to_server.gpr,
+example_6_4_find_compositor_proxy.gpr
 
 The thin Ada binding Wl_Thin is auto-generated from wayland.xml by the application xml_parser.gpr.
 It can be compiled by GNAT FSF version 7.2 and GNAT Community Edition 2017.
