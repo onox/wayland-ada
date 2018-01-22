@@ -3,7 +3,7 @@ The Wayland binding consists of two packages:
 - Thin binding in the "Wl_Thin" package. It is auto-generated from wayland.xml (programming language agnostic description of the API).
 This is part is complete but untested. To use the thin binding in your project with "wayland_client_thin.gpr".
 - Thick binding in the "Wl" package, manually crafted and built on top of the thin binding.
-  This part is under construction. To use the thin binding in your project with "wayland_client.gpr".
+  This part is under construction. To use the thick binding in your project with "wayland_client.gpr".
 
 To build all executables "gprbuild -P all_executables.gpr".
 Alternatively open all_executables.gpr with the GPS and then select Build -> Project -> Build All.
