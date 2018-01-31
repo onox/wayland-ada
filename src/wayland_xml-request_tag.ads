@@ -1,7 +1,9 @@
 with Wayland_XML.Description_Tag;
 with Wayland_XML.Arg_Tag;
 
-with Ada.Containers.Vectors;
+with Ada.Finalization;
+
+with Conts.Vectors.Definite_Unbounded;
 
 package Wayland_XML.Request_Tag is
 
@@ -19,9 +21,9 @@ package Wayland_XML.Request_Tag is
       end case;
    end record;
 
-   package Child_Vectors is new Ada.Containers.Vectors (Index_Type   => Aida.Pos32_T,
-                                                        Element_Type => Child_T,
-                                                        "="          => "=");
+   package Child_Vectors is new Conts.Vectors.Definite_Unbounded (Index_Type          => Aida.Pos32_T,
+                                                                  Element_Type        => Child_T,
+                                                                  Container_Base_Type => Ada.Finalization.Limited_Controlled);
 
    type Children_Ref (E : not null access constant Child_Vectors.Vector) is limited null record with
      Implicit_Dereference => E;

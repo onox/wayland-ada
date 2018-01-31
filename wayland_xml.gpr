@@ -1,4 +1,5 @@
 with "aida_deepend.gpr";
+with "ada_traits_containers.gpr";
 
 library project Wayland_XML is
 

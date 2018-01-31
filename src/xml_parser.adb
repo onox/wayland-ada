@@ -23,9 +23,12 @@ with Wayland_XML.Event_Tag;
 with Wayland_XML.Enum_Tag;
 with Wayland_XML.Entry_Tag;
 
+with Conts;
+
 procedure XML_Parser is
 
    use type Ada.Containers.Count_Type;
+   use type Conts.Count_Type;
 
    use type Wayland_XML.Event_Tag.Child_T;
    use type Wayland_XML.Request_Tag.Child_T;
