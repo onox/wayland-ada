@@ -5,22 +5,31 @@ with Ada.Text_IO;
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_3_Connect_To_Server is
 
-   procedure Do_Something_With_Display (Display : Wl.Display_T);
+   Display : Wl.Display_T;
 
-   procedure Connect_To_Display is
+   procedure Do_Something;
+
+   procedure Connect_To_Wayland_Server is
    begin
-      Do_Something_With_Display (Wl.Display_Connect (Wl.Default_Display_Name));
-   exception
-      when Wl.Display_Connection_Exception =>
+      Display.Connect (Wl.Default_Display_Name);
+      if Display.Is_Connected then
+         Ada.Text_IO.Put_Line ("Success");
+         Do_Something;
+         Display.Disconnect;
+      else
          Ada.Text_IO.Put_Line ("Failure");
-   end Connect_To_Display;
+      end if;
 
-   procedure Do_Something_With_Display (Display : Wl.Display_T) is
-      pragma Unreferenced (Display);
+      pragma Assert (not Display.Is_Connected);
+   end Connect_To_Wayland_Server;
+
+   pragma Unmodified (Display);
+
+   procedure Do_Something is
    begin
-      Ada.Text_IO.Put_Line ("Success");
-   end Do_Something_With_Display;
+      null;
+   end Do_Something;
 
 begin
-   Connect_To_Display;
+   Connect_To_Wayland_Server;
 end Example_6_3_Connect_To_Server;

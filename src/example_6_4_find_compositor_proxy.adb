@@ -45,32 +45,44 @@ procedure Example_6_4_Find_Compositor_Proxy is
 --    printf("Got a registry losing event for %d\n", id);
    end;
 
-   procedure Get_Registry (Display : Wl.Display_T);
+   Display : Wl.Display_T;
+
+   procedure Get_Registry;
 
    procedure Connect_To_Wayland_Server is
    begin
-      Get_Registry (Wl.Display_Connect (Wl.Default_Display_Name));
-   exception
-      when Wl.Display_Connection_Exception =>
+      Display.Connect (Wl.Default_Display_Name);
+      if Display.Is_Connected then
+         Ada.Text_IO.Put_Line ("Success");
+         Get_Registry;
+         Display.Disconnect;
+      else
          Ada.Text_IO.Put_Line ("Failed to connect to wayland server");
+      end if;
+
+      pragma Assert (not Display.Is_Connected);
    end Connect_To_Wayland_Server;
 
-   procedure Use_Register (Display : Wl.Display_T;
-                           Registry : Wl.Registry_T);
+   pragma Unmodified (Display);
 
-   procedure Get_Registry (Display : Wl.Display_T) is
+   Registry : Wl.Registry_T;
+
+   procedure Use_Register;
+
+   procedure Get_Registry is
    begin
-      Ada.Text_IO.Put_Line ("Success");
-
-      Use_Register (Display, Wl.Display_Get_Registry (Display));
-   exception
-      when Wl.Registry_Exception =>
+      Registry.Get (Display);
+      if Registry.Has_Registry_Object then
+         Use_Register;
+         Registry.Destroy;
+      else
          Ada.Text_IO.Put_Line ("Failed to retrieve Registry!!!!");
+      end if;
+
+      pragma Assert (not Registry.Has_Registry_Object);
    end Get_Registry;
 
-   procedure Use_Register (Display  : Wl.Display_T;
-                           Registry : Wl.Registry_T)
-   is
+   procedure Use_Register is
       I : Interfaces.C.int;
 
       Listener : aliased Wl.Registry_Listener_T :=

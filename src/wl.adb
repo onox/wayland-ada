@@ -5,40 +5,32 @@ package body Wl is
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
 
-   function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_T is
+   procedure Connect (Display : in out Display_T;
+                      Name    : Interfaces.C.Strings.char_array_access) is
    begin
-      return This : Display_T do
-         This.My_Display := Wl_Thin.Display_Connect (Name);
-         if This.My_Display = null then
-            raise Display_Connection_Exception;
-         end if;
-      end return;
-   end Display_Connect;
+      Display.My_Display := Wl_Thin.Display_Connect (Name);
+   end Connect;
 
-   procedure Finalize (This : in out Display_T) is
+   procedure Disconnect (Display : in out Display_T) is
    begin
-      if This.My_Display /= null then
-         Wl_Thin.Display_Disconnect (This.My_Display);
+      if Display.My_Display /= null then
+         Wl_Thin.Display_Disconnect (Display.My_Display);
       end if;
-   end Finalize;
+   end Disconnect;
 
-   function Display_Get_Registry (Display : Display_T) return Registry_T is
+   procedure Get (Registry : in out Registry_T;
+                  Display  : Display_T) is
    begin
-      return This : Registry_T do
-         This.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
-         if This.My_Registry = null then
-            raise Registry_Exception;
-         end if;
-      end return;
-   end Display_Get_Registry;
+      Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
+   end Get;
 
-   procedure Finalize (This : in out Registry_T) is
+   procedure Destroy (Registry : in out Registry_T) is
    begin
-      if This.My_Registry /= null then
-         Wl_Thin.Registry_Destroy (This.My_Registry);
-         This.My_Registry := null;
+      if Registry.My_Registry /= null then
+         Wl_Thin.Registry_Destroy (Registry.My_Registry);
+         Registry.My_Registry := null;
       end if;
-   end Finalize;
+   end Destroy;
 
    function Add_Listener (Registry : Registry_T;
                           Listener : Registry_Listener_Ptr;

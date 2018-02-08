@@ -1,8 +1,6 @@
 with Interfaces.C.Strings;
 with System;
 
-private with Ada.Finalization;
-
 with Wl_Thin;
 
 package Wl is
@@ -14,10 +12,6 @@ package Wl is
    -- Constructors
    --
 
-   function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_T;
-
-   function Display_Get_Registry (Display : Display_T) return Registry_T;
-
    --
    -- Type and subprogram declarations
    --
@@ -25,10 +19,6 @@ package Wl is
    subtype Void_Ptr is Wl_Thin.Void_Ptr;
 
    Default_Display_Name : Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
-
-   Display_Connection_Exception : exception;
-
-   Registry_Exception : exception;
 
    subtype Registry_Ptr is Wl_Thin.Registry_Ptr;
 
@@ -42,19 +32,55 @@ package Wl is
 
    type Registry_T is tagged limited private;
 
+   function Has_Registry_Object (Registry : Registry_T) return Boolean with
+     Global => null;
+
+   procedure Get (Registry : in out Registry_T;
+                  Display  : Display_T) with
+     Global => null,
+     Pre    => Is_Connected (Display) and not Registry.Has_Registry_Object;
+
    function Add_Listener (Registry : Registry_T;
                           Listener : Registry_Listener_Ptr;
                           Data     : Wl.Void_Ptr) return Interfaces.C.int;
 
-   type Display_T is tagged limited private;
+   procedure Destroy (Registry : in out Registry_T) with
+     Global => null,
+     Pre    => Registry.Has_Registry_Object,
+     Post   => not Registry.Has_Registry_Object;
 
-   function Dispatch (Display : Display_T) return Interfaces.C.int;
+   type Display_T is tagged limited private with
+     Default_Initial_Condition => not Display_T.Is_Connected;
 
-   procedure Dispatch (Display : Display_T);
+   function Is_Connected (Display : Display_T) return Boolean with
+     Global => null;
 
-   function Roundtrip (Display : Display_T) return Interfaces.C.int;
+   procedure Connect (Display : in out Display_T;
+                      Name    : Interfaces.C.Strings.char_array_access) with
+     Global => null,
+     Pre    => not Display.Is_Connected;
+   -- Attempts connecting with the Wayland server.
 
-   procedure Roundtrip (Display : Display_T);
+   function Dispatch (Display : Display_T) return Interfaces.C.int with
+     Global => null,
+     Pre    => Display.Is_Connected;
+
+   procedure Dispatch (Display : Display_T) with
+     Global => null,
+     Pre    => Display.Is_Connected;
+
+   function Roundtrip (Display : Display_T) return Interfaces.C.int with
+     Global => null,
+     Pre    => Display.Is_Connected;
+
+   procedure Roundtrip (Display : Display_T) with
+     Global => null,
+     Pre    => Display.Is_Connected;
+
+   procedure Disconnect (Display : in out Display_T) with
+     Global => null,
+     Pre    => Display.Is_Connected,
+     Post   => not Display.Is_Connected;
 
 --     type Message_T is limited record
 --        Name      : Interfaces.C.Strings.chars_ptr;
@@ -77,18 +103,19 @@ package Wl is
 
 private
 
-   type Display_T is new Ada.Finalization.Limited_Controlled with record
+   use type Wl_Thin.Display_Ptr;
+   use type Wl_Thin.Registry_Ptr;
+
+   type Display_T is tagged limited record
       My_Display : Wl_Thin.Display_Ptr;
    end record;
 
-   overriding
-   procedure Finalize (This : in out Display_T);
+   function Is_Connected (Display : Display_T) return Boolean is (Display.My_Display /= null);
 
-   type Registry_T is new Ada.Finalization.Limited_Controlled with record
+   type Registry_T is tagged limited record
       My_Registry : Wl_Thin.Registry_Ptr;
    end record;
 
-   overriding
-   procedure Finalize (This : in out Registry_T);
+   function Has_Registry_Object (Registry : Registry_T) return Boolean is (Registry.My_Registry /= null);
 
 end Wl;
