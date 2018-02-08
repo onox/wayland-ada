@@ -1,7 +1,5 @@
 with Wl;
 with Ada.Text_IO;
-with Interfaces.C.Strings;
-with System;
 
 -- See section 6.4 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
@@ -9,19 +7,19 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
                                       Registry    : Wl.Registry_Ptr;
-                                      Id          : Interfaces.Unsigned_32;
-                                      Interface_V : Interfaces.C.Strings.chars_ptr;
-                                      Version     : Interfaces.Unsigned_32) with
+                                      Id          : Wl.Unsigned_32;
+                                      Interface_V : Wl.chars_ptr;
+                                      Version     : Wl.Unsigned_32) with
      Convention => C;
 
    procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
                                       Registry    : Wl.Registry_Ptr;
-                                      Id          : Interfaces.Unsigned_32;
-                                      Interface_V : Interfaces.C.Strings.chars_ptr;
-                                      Version     : Interfaces.Unsigned_32)
+                                      Id          : Wl.Unsigned_32;
+                                      Interface_V : Wl.chars_ptr;
+                                      Version     : Wl.Unsigned_32)
    is
-      Temp : Interfaces.C.char_array := Interfaces.C.Strings.Value (Interface_V);
-      Interface_Name : String := Interfaces.C.To_Ada (Temp);
+      Temp : Wl.char_array := Wl.Value (Interface_V);
+      Interface_Name : String := Wl.To_Ada (Temp);
    begin
       Ada.Text_IO.Put_Line ("Got a registry event for " & Interface_Name & "id" & Id'Image);
       --    printf("Got a registry event for %s id %d\n", interface, id);
@@ -34,12 +32,12 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
                                       Registry : Wl.Registry_Ptr;
-                                      Id       : Interfaces.Unsigned_32) with
+                                      Id       : Wl.Unsigned_32) with
      Convention => C;
 
-   procedure Global_Registry_Remover (Data : Wl.Void_Ptr;
+   procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
                                       Registry : Wl.Registry_Ptr;
-                                      Id : Interfaces.Unsigned_32) is
+                                      Id       : Wl.Unsigned_32) is
    begin
       Ada.Text_IO.Put_Line ("Got a registry losing event for");
 --    printf("Got a registry losing event for %d\n", id);
@@ -82,8 +80,10 @@ procedure Example_6_4_Find_Compositor_Proxy is
       pragma Assert (not Registry.Has_Registry_Object);
    end Get_Registry;
 
+   pragma Unmodified (Registry);
+
    procedure Use_Register is
-      I : Interfaces.C.int;
+      I : Wl.int;
 
       Listener : aliased Wl.Registry_Listener_T :=
         (
@@ -91,7 +91,7 @@ procedure Example_6_4_Find_Compositor_Proxy is
          Global_Remove => Global_Registry_Remover'Unrestricted_Access
         );
    begin
-      I := Registry.Add_Listener (Listener'Unchecked_Access, System.Null_Address);
+      I := Registry.Add_Listener (Listener'Unchecked_Access, Wl.Null_Address);
 
       Display.Dispatch;
       Display.Roundtrip;

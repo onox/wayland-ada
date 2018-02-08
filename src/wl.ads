@@ -8,15 +8,22 @@ package Wl is
    type Display_T;
    type Registry_T;
 
-   --
-   -- Constructors
-   --
+   subtype int is Interfaces.C.int;
 
-   --
-   -- Type and subprogram declarations
-   --
+   subtype char_array is Interfaces.C.char_array;
+
+   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
+
+   subtype Unsigned_32 is Interfaces.Unsigned_32;
+
+   function Value (Item : chars_ptr) return char_array renames Interfaces.C.Strings.Value;
+
+   function To_Ada (Item     : char_array;
+                    Trim_Nul : Boolean := True) return String renames Interfaces.C.To_Ada;
 
    subtype Void_Ptr is Wl_Thin.Void_Ptr;
+
+   Null_Address : Void_Ptr renames System.Null_Address;
 
    Default_Display_Name : Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
 
