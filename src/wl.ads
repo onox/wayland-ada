@@ -37,6 +37,18 @@ package Wl is
 
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
+   type Compositor_T is tagged limited private;
+
+   function Is_Bound (Compositor : Compositor_T) return Boolean with
+     Global => null;
+
+   procedure Bind (Compositor  : in out Compositor_T;
+                   Registry    : Registry_Ptr;
+                   Id          : Wl.Unsigned_32;
+                   Version     : Wl.Unsigned_32) with
+     Global => null;--,
+--     Pre    => Is_Connected (Display) and not Registry.Has_Registry_Object;
+
    type Registry_T is tagged limited private;
 
    function Has_Registry_Object (Registry : Registry_T) return Boolean with
@@ -112,6 +124,7 @@ private
 
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
+   use type Wl_Thin.Compositor_Ptr;
 
    type Display_T is tagged limited record
       My_Display : Wl_Thin.Display_Ptr;
@@ -124,5 +137,11 @@ private
    end record;
 
    function Has_Registry_Object (Registry : Registry_T) return Boolean is (Registry.My_Registry /= null);
+
+   type Compositor_T is tagged limited record
+      My_Compositor : Wl_Thin.Compositor_Ptr;
+   end record;
+
+   function Is_Bound (Compositor : Compositor_T) return Boolean is (Compositor.My_Compositor /= null);
 
 end Wl;

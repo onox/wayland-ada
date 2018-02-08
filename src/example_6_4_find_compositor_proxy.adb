@@ -5,6 +5,8 @@ with Ada.Text_IO;
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
+   Compositor : Wl.Compositor_T;
+
    procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
                                       Registry    : Wl.Registry_Ptr;
                                       Id          : Wl.Unsigned_32;
@@ -22,6 +24,9 @@ procedure Example_6_4_Find_Compositor_Proxy is
       Interface_Name : String := Wl.To_Ada (Temp);
    begin
       Ada.Text_IO.Put_Line ("Got a registry event for " & Interface_Name & "id" & Id'Image);
+      if Interface_Name = "wl_compositor" then
+         Compositor.Bind (Registry, Id, 1);
+      end if;
       --    printf("Got a registry event for %s id %d\n", interface, id);
 --      if (strcmp(interface, "wl_compositor") == 0)
 --          compositor = wl_registry_bind(registry,
@@ -51,9 +56,10 @@ procedure Example_6_4_Find_Compositor_Proxy is
    begin
       Display.Connect (Wl.Default_Display_Name);
       if Display.Is_Connected then
-         Ada.Text_IO.Put_Line ("Success");
+         Ada.Text_IO.Put_Line ("Successfully connected to wayland server");
          Get_Registry;
          Display.Disconnect;
+         Ada.Text_IO.Put_Line ("Disconnected from wayland server");
       else
          Ada.Text_IO.Put_Line ("Failed to connect to wayland server");
       end if;
@@ -65,13 +71,13 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    Registry : Wl.Registry_T;
 
-   procedure Use_Register;
+   procedure List_Global_Objects_Available_In_Registry;
 
    procedure Get_Registry is
    begin
       Registry.Get (Display);
       if Registry.Has_Registry_Object then
-         Use_Register;
+         List_Global_Objects_Available_In_Registry;
          Registry.Destroy;
       else
          Ada.Text_IO.Put_Line ("Failed to retrieve Registry!!!!");
@@ -82,7 +88,9 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    pragma Unmodified (Registry);
 
-   procedure Use_Register is
+   procedure Check_If_Compositor_Found;
+
+   procedure List_Global_Objects_Available_In_Registry is
       I : Wl.int;
 
       Listener : aliased Wl.Registry_Listener_T :=
@@ -95,7 +103,18 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
       Display.Dispatch;
       Display.Roundtrip;
-   end Use_Register;
+
+      Check_If_Compositor_Found;
+   end List_Global_Objects_Available_In_Registry;
+
+   procedure Check_If_Compositor_Found is
+   begin
+      if Compositor.Is_Bound then
+         Ada.Text_IO.Put_Line ("Found compositor");
+      else
+         Ada.Text_IO.Put_Line ("Can't find compositor");
+      end if;
+   end Check_If_Compositor_Found;
 
 begin
    Connect_To_Wayland_Server;

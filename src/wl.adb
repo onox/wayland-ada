@@ -2,6 +2,7 @@ with Ada.Text_IO;
 
 package body Wl is
 
+   use type Wl_Thin.Proxy_Ptr;
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
 
@@ -62,5 +63,22 @@ package body Wl is
    begin
       I := Display.Roundtrip;
    end Roundtrip;
+
+   procedure Bind (Compositor  : in out Compositor_T;
+                   Registry    : Registry_Ptr;
+                   Id          : Wl.Unsigned_32;
+                   Version     : Wl.Unsigned_32)
+   is
+      P : Wl_Thin.Proxy_Ptr :=
+        Wl_Thin.Registry_Bind (Registry    => Registry,
+                               Name        => Id,
+                               Interface_V => Wl_Thin.Compositor_Interface'Access,
+                               New_Id      => Version);
+
+   begin
+      if P /= null then
+         Compositor.My_Compositor := P.all'Access;
+      end if;
+   end Bind;
 
 end Wl;
