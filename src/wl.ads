@@ -2,6 +2,8 @@ with Interfaces.C.Strings;
 with System;
 
 with Wl_Thin;
+with Ada.Strings.Unbounded;
+with Ada.Containers.Vectors;
 
 package Wl is
 
@@ -27,15 +29,57 @@ package Wl is
 
    Default_Display_Name : Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
 
-   subtype Registry_Ptr is Wl_Thin.Registry_Ptr;
+   package Global_Object is
 
-   subtype Registry_Global_Subprogram_Ptr is Wl_Thin.Registry_Global_Subprogram_Ptr;
+      type Global_Object_T is tagged private;
 
-   subtype Registry_Global_Remove_Subprogram_Ptr is Wl_Thin.Registry_Global_Remove_Subprogram_Ptr;
+      function Data (Global_Object : Global_Object_T) return Wl.Void_Ptr;
 
-   subtype Registry_Listener_T is Wl_Thin.Registry_Listener_T;
+      function Id (Global_Object : Global_Object_T) return Wl.Unsigned_32;
 
-   subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
+      function Interface_Name (Global_Object : Global_Object_T) return String;
+
+      function Version (Global_Object : Global_Object_T) return Wl.Unsigned_32;
+
+      function Make (
+                     Data        : Wl.Void_Ptr;
+                     Id          : Wl.Unsigned_32;
+                     Interface_V : String;
+                     Version     : Wl.Unsigned_32
+                    )
+                     return Global_Object_T;
+
+   private
+
+      type Global_Object_T is tagged record
+         My_Data        : Wl.Void_Ptr;
+         My_Id          : Wl.Unsigned_32;
+         My_Interface_V : Ada.Strings.Unbounded.Unbounded_String;
+         My_Version     : Wl.Unsigned_32;
+      end record;
+
+      function Data (Global_Object : Global_Object_T) return Wl.Void_Ptr is (Global_Object.My_Data);
+
+      function Id (Global_Object : Global_Object_T) return Wl.Unsigned_32 is (Global_Object.My_Id);
+
+      function Interface_Name (Global_Object : Global_Object_T) return String is (Ada.Strings.Unbounded.To_String (Global_Object.My_Interface_V));
+
+      function Version (Global_Object : Global_Object_T) return Wl.Unsigned_32 is (Global_Object.My_Version);
+
+   end Global_Object;
+
+   subtype Global_Object_T is Global_Object.Global_Object_T;
+
+   package Global_Object_Vectors is new Ada.Containers.Vectors (Index_Type   => Positive,
+                                                                Element_Type => Global_Object_T,
+                                                                "="          => Global_Object."=");
+
+   type Global_Objects_Ref (E : not null access constant Global_Object_Vectors.Vector) is limited null record with
+     Implicit_Dereference => E;
+
+   function Global_Objects (Registry : Registry_T) return Global_Objects_Ref;
+
+   procedure Clear_Global_Objects;
 
    type Compositor_T is tagged limited private;
 
@@ -43,11 +87,11 @@ package Wl is
      Global => null;
 
    procedure Bind (Compositor  : in out Compositor_T;
-                   Registry    : Registry_Ptr;
+                   Registry    : Registry_T;
                    Id          : Wl.Unsigned_32;
                    Version     : Wl.Unsigned_32) with
-     Global => null;--,
---     Pre    => Is_Connected (Display) and not Registry.Has_Registry_Object;
+     Global => null,
+     Pre    => Has_Registry_Object (Registry);
 
    type Registry_T is tagged limited private;
 
@@ -59,9 +103,14 @@ package Wl is
      Global => null,
      Pre    => Is_Connected (Display) and not Registry.Has_Registry_Object;
 
-   function Add_Listener (Registry : Registry_T;
-                          Listener : Registry_Listener_Ptr;
-                          Data     : Wl.Void_Ptr) return Interfaces.C.int;
+   function Has_Started_Subscription (Registry : Registry_T) return Boolean with
+     Global => null;
+
+   procedure Start_Subscription (Registry : in out Registry_T;
+                                 Display  : in     Display_T) with
+     Global => null,
+     Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
+     Post   => Registry.Has_Started_Subscription;
 
    procedure Destroy (Registry : in out Registry_T) with
      Global => null,
@@ -133,10 +182,13 @@ private
    function Is_Connected (Display : Display_T) return Boolean is (Display.My_Display /= null);
 
    type Registry_T is tagged limited record
-      My_Registry : Wl_Thin.Registry_Ptr;
+      My_Registry                 : Wl_Thin.Registry_Ptr;
+      My_Has_Started_Subscription : Boolean := False;
    end record;
 
    function Has_Registry_Object (Registry : Registry_T) return Boolean is (Registry.My_Registry /= null);
+
+   function Has_Started_Subscription (Registry : Registry_T) return Boolean is (Registry.My_Has_Started_Subscription);
 
    type Compositor_T is tagged limited record
       My_Compositor : Wl_Thin.Compositor_Ptr;
