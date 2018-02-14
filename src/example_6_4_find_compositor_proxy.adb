@@ -5,6 +5,8 @@ with Ada.Text_IO;
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
+   package Subscriber is new Wl.Global_Objects_Subscriber;
+
    Compositor : Wl.Compositor_T;
 
    Display : Wl.Display_T;
@@ -33,13 +35,13 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    Registry : Wl.Registry_T;
 
-   procedure List_Global_Objects_Available_In_Registry;
+   procedure Get_Global_Objects_Available_In_Registry;
 
    procedure Get_Registry is
    begin
       Registry.Get (Display);
       if Registry.Has_Registry_Object then
-         List_Global_Objects_Available_In_Registry;
+         Get_Global_Objects_Available_In_Registry;
          Registry.Destroy;
       else
          Ada.Text_IO.Put_Line ("Failed to retrieve Registry!!!!");
@@ -50,25 +52,23 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    procedure Check_If_Compositor_Found;
 
-   procedure List_Global_Objects_Available_In_Registry is
+   procedure Get_Global_Objects_Available_In_Registry is
    begin
-      Registry.Start_Subscription (Display);
+      Subscriber.Start_Subscription (Registry, Display);
 
       Check_If_Compositor_Found;
-   end List_Global_Objects_Available_In_Registry;
+   end Get_Global_Objects_Available_In_Registry;
 
    pragma Unmodified (Registry);
 
    procedure Check_If_Compositor_Found is
-      V : Wl.Global_Object_Vectors.Vector := Wl.Global_Objects (Registry).E.all;
    begin
---        for Global_Object of V loop
---           null;
---           --           if Global_Object.Interface_Name = "wl_compositor" then
---  --              Compositor.Bind (Registry, Global_Object.Id, 1);
---  --              exit;
---  --           end if;
---        end loop;
+      for Global_Object of Subscriber.Global_Objects loop
+         if Global_Object.Interface_Name = "wl_compositor" then
+            Compositor.Bind (Registry, Global_Object.Id, 1);
+            exit;
+         end if;
+      end loop;
 
       if Compositor.Is_Bound then
          Ada.Text_IO.Put_Line ("Found compositor");

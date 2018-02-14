@@ -1,7 +1,7 @@
 with Interfaces.C.Strings;
 with System;
 
-with Wl_Thin;
+private with Wl_Thin;
 with Ada.Strings.Unbounded;
 with Ada.Containers.Vectors;
 
@@ -23,11 +23,11 @@ package Wl is
    function To_Ada (Item     : char_array;
                     Trim_Nul : Boolean := True) return String renames Interfaces.C.To_Ada;
 
-   subtype Void_Ptr is Wl_Thin.Void_Ptr;
+   subtype Void_Ptr is System.Address;
 
    Null_Address : Void_Ptr renames System.Null_Address;
 
-   Default_Display_Name : Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
+   Default_Display_Name : constant Interfaces.C.Strings.char_array_access;
 
    package Global_Object is
 
@@ -77,9 +77,18 @@ package Wl is
    type Global_Objects_Ref (E : not null access constant Global_Object_Vectors.Vector) is limited null record with
      Implicit_Dereference => E;
 
-   function Global_Objects (Registry : Registry_T) return Global_Objects_Ref;
+   generic
+   package Global_Objects_Subscriber is
 
-   procedure Clear_Global_Objects;
+      function Global_Objects return Global_Objects_Ref;
+
+      procedure Start_Subscription (Registry : in out Registry_T;
+                                    Display  : in     Display_T);-- with
+--       Global => null,
+--       Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
+--       Post   => Registry.Has_Started_Subscription;
+
+   end Global_Objects_Subscriber;
 
    type Compositor_T is tagged limited private;
 
@@ -106,11 +115,11 @@ package Wl is
    function Has_Started_Subscription (Registry : Registry_T) return Boolean with
      Global => null;
 
-   procedure Start_Subscription (Registry : in out Registry_T;
-                                 Display  : in     Display_T) with
-     Global => null,
-     Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
-     Post   => Registry.Has_Started_Subscription;
+--     procedure Start_Subscription (Registry : in out Registry_T;
+--                                   Display  : in     Display_T) with
+--       Global => null,
+--       Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
+--       Post   => Registry.Has_Started_Subscription;
 
    procedure Destroy (Registry : in out Registry_T) with
      Global => null,
@@ -174,6 +183,8 @@ private
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
    use type Wl_Thin.Compositor_Ptr;
+
+   Default_Display_Name : constant Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
 
    type Display_T is tagged limited record
       My_Display : Wl_Thin.Display_Ptr;

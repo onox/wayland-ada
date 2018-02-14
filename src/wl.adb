@@ -1,4 +1,4 @@
-with Ada.Text_IO;
+--with Ada.Text_IO;
 with Ada.Containers.Hashed_Maps;
 with System.Storage_Elements;
 
@@ -31,16 +31,88 @@ package body Wl is
                      return Global_Object_T
       is
          This : Global_Object_T := (
-                     My_Data        => Data,
-                     My_Id          => Id,
-                     My_Interface_V => To_Unbounded_String (Interface_V),
-                     My_Version     => Version
-                                    );
+                                    My_Data        => Data,
+                                    My_Id          => Id,
+                                    My_Interface_V => To_Unbounded_String (Interface_V),
+                                    My_Version     => Version
+                                   );
       begin
          return This;
       end Make;
 
    end Global_Object;
+
+   package body Global_Objects_Subscriber is
+
+      My_Global_Objects : aliased Global_Object_Vectors.Vector;
+
+      procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
+                                         Registry    : Wl.Registry_Ptr;
+                                         Id          : Wl.Unsigned_32;
+                                         Interface_V : Wl.chars_ptr;
+                                         Version     : Wl.Unsigned_32) with
+        Convention => C,
+        Global     => My_Global_Objects;
+
+      procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
+                                         Registry    : Wl.Registry_Ptr;
+                                         Id          : Wl.Unsigned_32;
+                                         Interface_V : Wl.chars_ptr;
+                                         Version     : Wl.Unsigned_32)
+      is
+         Temp : Wl.char_array := Wl.Value (Interface_V);
+         Interface_Name : String := Wl.To_Ada (Temp);
+
+         GO : Global_Object_T := Global_Object.Make (Data, Id, Interface_Name, Version);
+      begin
+--         Ada.Text_IO.Put_Line ("Got a registry event for " & Interface_Name & " id" & Id'Image);
+         My_Global_Objects.Append (GO);
+      end Global_Registry_Handler;
+
+      procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
+                                         Registry : Wl.Registry_Ptr;
+                                         Id       : Wl.Unsigned_32) with
+        Convention => C;
+
+      procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
+                                         Registry : Wl.Registry_Ptr;
+                                         Id       : Wl.Unsigned_32) is
+      begin
+         null;
+--         Ada.Text_IO.Put_Line ("Got a registry losing event for");
+      end;
+
+      function Add_Listener (Registry : Registry_T;
+                             Listener : Registry_Listener_Ptr;
+                             Data     : Wl.Void_Ptr) return Interfaces.C.int;
+
+      function Add_Listener (Registry : Registry_T;
+                             Listener : Registry_Listener_Ptr;
+                             Data     : Wl.Void_Ptr) return Interfaces.C.int is
+      begin
+         return Wl_Thin.Registry_Add_Listener (Registry.My_Registry, Listener, Data);
+      end Add_Listener;
+
+      procedure Start_Subscription (Registry : in out Registry_T;
+                                    Display  : in     Display_T) is
+         I : Wl.int;
+
+         Listener : aliased Wl.Registry_Listener_T :=
+           (
+            Global        => Global_Registry_Handler'Unrestricted_Access,
+            Global_Remove => Global_Registry_Remover'Unrestricted_Access
+           );
+      begin
+         I := Add_Listener (Registry, Listener'Unchecked_Access, Wl.Null_Address);
+
+         Display.Dispatch;
+         Display.Roundtrip;
+      end Start_Subscription;
+
+      function Global_Objects return Global_Objects_Ref is
+        ((E => My_Global_Objects'Access));
+
+   end Global_Objects_Subscriber;
 
    procedure Connect (Display : in out Display_T;
                       Name    : Interfaces.C.Strings.char_array_access) is
@@ -68,17 +140,6 @@ package body Wl is
          Registry.My_Registry := null;
       end if;
    end Destroy;
-
-   function Add_Listener (Registry : Registry_T;
-                          Listener : Registry_Listener_Ptr;
-                          Data     : Wl.Void_Ptr) return Interfaces.C.int;
-
-   function Add_Listener (Registry : Registry_T;
-                          Listener : Registry_Listener_Ptr;
-                          Data     : Wl.Void_Ptr) return Interfaces.C.int is
-   begin
-      return Wl_Thin.Registry_Add_Listener (Registry.My_Registry, Listener, Data);
-   end Add_Listener;
 
    function Dispatch (Display : Display_T) return Interfaces.C.int is
    begin
@@ -120,85 +181,5 @@ package body Wl is
          Compositor.My_Compositor := P.all'Access;
       end if;
    end Bind;
-
-   function Hash (Registry : Registry_Ptr) return Ada.Containers.Hash_Type is
-     (Ada.Containers.Hash_Type'Mod (System.Storage_Elements.To_Integer (Registry.all'Address)));
-
-   package Registry_To_Global_Objects_Maps is new
-     Ada.Containers.Hashed_Maps (Key_Type        => Registry_Ptr,
-                                 Element_Type    => Global_Object_Vectors.Vector,
-                                 Hash            => Hash,
-                                 Equivalent_Keys => "=",
-                                 "="             => Global_Object_Vectors."=");
-
-   Registry_To_Global_Objects_Map : Registry_To_Global_Objects_Maps.Map;
-
-   function Global_Objects (Registry : Registry_T) return Global_Objects_Ref is
-     ((E => Registry_To_Global_Objects_Map.Constant_Reference (Registry.My_Registry).Element));
-
-   procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
-                                      Registry    : Wl.Registry_Ptr;
-                                      Id          : Wl.Unsigned_32;
-                                      Interface_V : Wl.chars_ptr;
-                                      Version     : Wl.Unsigned_32) with
-     Convention => C,
-     Global     => Registry_To_Global_Objects_Map;
-
-   procedure Global_Registry_Handler (Data        : Wl.Void_Ptr;
-                                      Registry    : Wl.Registry_Ptr;
-                                      Id          : Wl.Unsigned_32;
-                                      Interface_V : Wl.chars_ptr;
-                                      Version     : Wl.Unsigned_32)
-   is
-      Temp : Wl.char_array := Wl.Value (Interface_V);
-      Interface_Name : String := Wl.To_Ada (Temp);
-
-      GO : Global_Object_T := Global_Object.Make (Data, Id, Interface_Name, Version);
-   begin
-
-      Ada.Text_IO.Put_Line ("Got a registry event for " & Interface_Name & " id" & Id'Image);
-      if not Registry_To_Global_Objects_Map.Contains (Registry) then
-         Registry_To_Global_Objects_Map.Include (Registry, Global_Object_Vectors.Empty_Vector);
-      end if;
-      Registry_To_Global_Objects_Map.Reference (Registry).Append (GO);
-
---        if Interface_Name = "wl_compositor" then
---           Compositor.Bind (Registry, Id, 1);
---        end if;
-   end Global_Registry_Handler;
-
-   procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
-                                      Registry : Wl.Registry_Ptr;
-                                      Id       : Wl.Unsigned_32) with
-     Convention => C;
-
-   procedure Global_Registry_Remover (Data     : Wl.Void_Ptr;
-                                      Registry : Wl.Registry_Ptr;
-                                      Id       : Wl.Unsigned_32) is
-   begin
-      Ada.Text_IO.Put_Line ("Got a registry losing event for");
---    printf("Got a registry losing event for %d\n", id);
-   end;
-
-   procedure Start_Subscription (Registry : in out Registry_T;
-                                 Display  : in     Display_T) is
-      I : Wl.int;
-
-      Listener : aliased Wl.Registry_Listener_T :=
-        (
-         Global        => Global_Registry_Handler'Unrestricted_Access,
-         Global_Remove => Global_Registry_Remover'Unrestricted_Access
-        );
-   begin
-      I := Registry.Add_Listener (Listener'Unchecked_Access, Wl.Null_Address);
-
-      Display.Dispatch;
-      Display.Roundtrip;
-   end Start_Subscription;
-
-   procedure Clear_Global_Objects is
-   begin
-      Registry_To_Global_Objects_Map.Clear;
-   end Clear_Global_Objects;
 
 end Wl;
