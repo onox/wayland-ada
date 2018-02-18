@@ -5,6 +5,9 @@ with Px_Thin;
 
 package Px is
 
+   type File_T;
+   type File_Status_T;
+
    use type Interfaces.Unsigned_32;
 
    subtype unsigned_long is Px_Thin.unsigned_long;
@@ -159,6 +162,8 @@ package Px is
 
    subtype Size_T is Px_Thin.Size_T;
 
+   subtype SSize_T is Px_Thin.SSize_T;
+
    subtype Block_Size_T is Px_Thin.Block_Size_T;
 
    subtype Number_Of_Blocks_T is Px_Thin.Number_Of_Blocks_T;
@@ -175,10 +180,11 @@ package Px is
 
    Nul : Character renames Px_Thin.Nul;
 
-   subtype C_String is String with Dynamic_Predicate =>
-     C_String'Length > 0 and then C_String (C_String'Last) = Nul;
+   subtype C_String is Px_Thin.C_String;
 
-   type File_Status_T;
+   subtype Byte_T is Px_Thin.Byte_T;
+
+   subtype Byte_Array_T is Px_Thin.Byte_Array_T;
 
    type File_T is tagged limited private;
 
@@ -187,20 +193,22 @@ package Px is
                    Flags     : in     O_FLag_T;
                    S_Flags   : in     S_FLag_T) with
      Global => null,
-     Pre    => (File.Is_Closed and Flags > 0 and S_Flags > 0) and then
-     (
-        (((Flags and O_RDONLY) > 0) and then
-             ((Flags and O_WRONLY) = 0 and ((Flags and O_RDWR) = 0))) or
-        (((Flags and O_WRONLY) > 0) and then
-             ((Flags and O_RDONLY) = 0 and ((Flags and O_RDWR) = 0))) or
-        (((Flags and O_RDWR) > 0) and then
-             ((Flags and O_WRONLY) = 0 and ((Flags and O_RDONLY) = 0)))
-     );
+     Pre    => File.Is_Closed;
 
    procedure Close (File : in out File_T) with
      Global => null,
      Pre    => File.Is_Open,
      Post   => File.Is_Closed;
+
+   procedure Write (File  : File_T;
+                    Bytes : Byte_Array_T) with
+     Global => null,
+     Pre    => File.Is_Open;
+
+   function Read (File  : File_T;
+                  Bytes : Byte_Array_T) return SSize_T with
+     Global => null,
+     Pre    => File.Is_Open;
 
    procedure Get_File_Status (File        : in     File_T;
                               File_Status : in out File_Status_T) with
@@ -219,73 +227,86 @@ package Px is
      Global => null;
 
    function Device_Id (File_Status : File_Status_T) return Device_Id_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Inode_Number
      (
       File_Status : File_Status_T
      )
       return Inode_Number_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Number_Of_Hard_Links
      (
       File_Status : File_Status_T
      )
       return Number_Of_Hard_Links_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Mode (File_Status : File_Status_T) return Mode_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Owner_User_Id
      (
       File_Status : File_Status_T
      )
       return Owner_User_Id_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Owner_Group_Id
      (
       File_Status : File_Status_T
      )
       return Owner_Groud_Id_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Special_Device_Id
      (
       File_Status : File_Status_T
      )
       return Device_Id_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Size (File_Status : File_Status_T) return Size_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Block_Size (File_Status : File_Status_T) return Block_Size_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    -- Number of 512B blocks allocated
    function Number_Of_Blocks
      (
       File_Status : File_Status_T
      ) return Block_Size_T with
-       Global => null;
+       Global => null,
+       Pre    => File_Status.Is_Valid;
 
    function Last_Access_Time (File_Status : File_Status_T) return Time_T with
-     Global => null;
+     Global => null,
+     Pre    => File_Status.Is_Valid;
 
    function Modification_Time
      (
       File_Status : File_Status_T
      ) return Time_T with
-       Global => null;
+       Global => null,
+       Pre    => File_Status.Is_Valid;
 
    function Last_Status_Change_Time
      (
       File_Status : File_Status_T
      ) return Time_T with
-       Global => null;
+       Global => null,
+       Pre    => File_Status.Is_Valid;
 
 private
 
@@ -299,8 +320,8 @@ private
    function Is_Closed (File : File_T) return Boolean is (not File.My_Is_Open);
 
    type File_Status_T is tagged limited record
-      My_File_Status : aliased Px_Thin.File_Status_T;
-      My_Is_Valid    : Boolean := False;
+      My_Status   : aliased Px_Thin.File_Status_T;
+      My_Is_Valid : Boolean := False;
    end record;
 
    function Is_Valid
@@ -315,7 +336,7 @@ private
      (
       File_Status : File_Status_T
      )
-      return Device_Id_T is (File_Status.My_File_Status.Device_Id);
+      return Device_Id_T is (File_Status.My_Status.Device_Id);
 
    function Inode_Number
      (
@@ -323,7 +344,7 @@ private
      )
       return Inode_Number_T
    is
-     (File_Status.My_File_Status.Inode_Number);
+     (File_Status.My_Status.Inode_Number);
 
    function Number_Of_Hard_Links
      (
@@ -331,7 +352,7 @@ private
      )
       return Number_Of_Hard_Links_T
    is
-     (File_Status.My_File_Status.Number_Of_Hard_Links);
+     (File_Status.My_Status.Number_Of_Hard_Links);
 
    function Mode
      (
@@ -339,7 +360,7 @@ private
      )
       return Mode_T
    is
-     (File_Status.My_File_Status.Mode);
+     (File_Status.My_Status.Mode);
 
    function Owner_User_Id
      (
@@ -347,7 +368,7 @@ private
      )
       return Owner_User_Id_T
    is
-     (File_Status.My_File_Status.Owner_User_Id);
+     (File_Status.My_Status.Owner_User_Id);
 
    function Owner_Group_Id
      (
@@ -355,7 +376,7 @@ private
      )
       return Owner_Groud_Id_T
    is
-     (File_Status.My_File_Status.Owner_Groud_Id);
+     (File_Status.My_Status.Owner_Groud_Id);
 
    function Special_Device_Id
      (
@@ -363,7 +384,7 @@ private
      )
       return Device_Id_T
    is
-     (File_Status.My_File_Status.Special_Device_Id);
+     (File_Status.My_Status.Special_Device_Id);
 
    function Size
      (
@@ -371,7 +392,7 @@ private
      )
       return Size_T
    is
-     (File_Status.My_File_Status.Size);
+     (File_Status.My_Status.Size);
 
    function Block_Size
      (
@@ -379,7 +400,7 @@ private
      )
       return Block_Size_T
    is
-     (File_Status.My_File_Status.Block_Size);
+     (File_Status.My_Status.Block_Size);
 
    function Number_Of_Blocks
      (
@@ -387,7 +408,7 @@ private
      )
       return Block_Size_T
    is
-     (File_Status.My_File_Status.Number_Of_Blocks);
+     (File_Status.My_Status.Number_Of_Blocks);
 
    function Last_Access_Time
      (
@@ -395,7 +416,7 @@ private
      )
       return Time_T
    is
-     (File_Status.My_File_Status.Last_Access_Time);
+     (File_Status.My_Status.Last_Access_Time);
 
    function Modification_Time
      (
@@ -403,7 +424,7 @@ private
      )
       return Time_T
    is
-     (File_Status.My_File_Status.Modification_Time);
+     (File_Status.My_Status.Modification_Time);
 
    function Last_Status_Change_Time
      (
@@ -411,6 +432,6 @@ private
      )
       return Time_T
    is
-     (File_Status.My_File_Status.Last_Status_Change_Time);
+     (File_Status.My_Status.Last_Status_Change_Time);
 
 end Px;

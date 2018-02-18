@@ -1,5 +1,5 @@
 with Interfaces.C.Strings;
-with System;
+with System.Storage_Elements;
 
 package Px_Thin is
 
@@ -27,7 +27,9 @@ package Px_Thin is
 
    subtype Owner_Groud_Id_T is unsigned;
 
-   subtype Size_T is long;
+   subtype Size_T is unsigned_long;
+
+   subtype SSize_T is long;
 
    subtype Block_Size_T is long;
 
@@ -45,6 +47,10 @@ package Px_Thin is
 
    subtype C_String is String with Dynamic_Predicate =>
      C_String'Length > 0 and then C_String (C_String'Last) = Nul;
+
+   subtype Byte_T is System.Storage_Elements.Storage_Element;
+
+   subtype Byte_Array_T is System.Storage_Elements.Storage_Array;
 
    type Time_T is record
       Sec      : aliased Time_Sec_T;
@@ -113,10 +119,24 @@ package Px_Thin is
      Convention    => C,
      External_Name => "open";
 
-   procedure Close (Fd : int) with
+   procedure Close (File_Descriptor : int) with
      Import        => True,
      Convention    => C,
      External_Name => "close";
+
+   function Write (File_Descriptor : int;
+                   Buffer          : Byte_Array_T;
+                   Count           : Size_T) return SSize_T with
+     Import        => True,
+     Convention    => C,
+     External_Name => "write";
+
+   function Read (File_Descriptor : int;
+                  Buffer          : Byte_Array_T;
+                  Count           : Size_T) return SSize_T with
+     Import        => True,
+     Convention    => C,
+     External_Name => "read";
 
    function Mmap (Addr   : Void_Ptr;
                   Len    : Size_T;

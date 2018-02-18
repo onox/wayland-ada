@@ -27,9 +27,25 @@ package body Px is
    is
       Result : constant int := Px_Thin.Get_File_Status
         (Fd     => File.My_File_Descriptor,
-         Status => File_Status.My_File_Status'Access);
+         Status => File_Status.My_Status'Access);
    begin
       File_Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
+
+   procedure Write (File  : File_T;
+                    Bytes : Byte_Array_T)
+   is
+      SSize : SSize_T;
+   begin
+      SSize := Px_Thin.Write (File_Descriptor => File.My_File_Descriptor,
+                              Buffer          => Bytes,
+                              Count           => Bytes'Length);
+   end Write;
+
+   function Read (File  : File_T;
+                  Bytes : Byte_Array_T) return SSize_T is
+   begin
+      return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
+   end Read;
 
 end Px;
