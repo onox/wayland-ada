@@ -23,7 +23,7 @@ package body Px is
    end Close;
 
    procedure Get_File_Status (File        : in     File_T;
-                              File_Status : in out File_Status_T)
+                              File_Status : in out Status_T)
    is
       Result : constant int := Px_Thin.Get_File_Status
         (Fd     => File.My_File_Descriptor,

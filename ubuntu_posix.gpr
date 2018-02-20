@@ -4,8 +4,7 @@ project Ubuntu_Posix is
 
    for Source_Files use (
 	                 "px.ads",
-			 "px.adb",
-                         "px_thin.ads"
+			 "px.adb"
                         );
 
    for Object_Dir use "obj";
