@@ -1,5 +1,3 @@
-with Px_Thin;
-
 package body Px is
 
    use type Interfaces.C.int;
@@ -74,6 +72,12 @@ package body Px is
          Map.My_Mapping := MAP_FAILED;
       end if;
       return R;
+   end Memory_Unmap;
+
+   function Memory_Unmap (Address : Void_Ptr;
+                          Length  : Size_T) return int is
+   begin
+      return Px_Thin.Munmap (Address, Length);
    end Memory_Unmap;
 
 end Px;

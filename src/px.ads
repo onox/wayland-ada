@@ -231,7 +231,8 @@ package Px is
    end record with
       Convention => C_Pass_By_Copy;
 
-   type File_T is tagged limited private;
+   type File_T is tagged limited private with
+     Default_Initial_Condition => Is_Closed (File_T);
 
    procedure Open
      (File      : in out File_T;
@@ -251,6 +252,10 @@ package Px is
       Pre    => File.Is_Open;
 
    function Read (File : File_T; Bytes : Byte_Array_T) return SSize_T with
+      Global => null,
+      Pre    => File.Is_Open;
+
+   function File_Descriptor (File : File_T) return int with
       Global => null,
       Pre    => File.Is_Open;
 
@@ -349,6 +354,11 @@ package Px is
    function Memory_Unmap (Map : in out Memory_Map_T) return int with
      Global => null,
      Post   => (if Memory_Unmap'Result = 0 then not Map.Has_Mapping);
+
+   -- Returns 0 on success, otherwise -1.
+   function Memory_Unmap (Address : Void_Ptr;
+                          Length  : Size_T) return int with
+     Global => null;
 
 private
 
@@ -469,6 +479,8 @@ private
       My_Status   : aliased Px_Thin.File_Status_T;
       My_Is_Valid : Boolean := False;
    end record;
+
+   function File_Descriptor (File : File_T) return int is (File.My_File_Descriptor);
 
    function Is_Valid
      (Status : Status_T) return Boolean is

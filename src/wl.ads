@@ -3,7 +3,6 @@ with System;
 
 private with Wl_Thin;
 with Ada.Strings.Unbounded;
-with Ada.Containers.Vectors;
 
 package Wl is
 
@@ -20,6 +19,8 @@ package Wl is
 
    function Value (Item : chars_ptr) return char_array renames Interfaces.C.Strings.Value;
 
+   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
+
    function To_Ada (Item     : char_array;
                     Trim_Nul : Boolean := True) return String renames Interfaces.C.To_Ada;
 
@@ -28,67 +29,6 @@ package Wl is
    Null_Address : Void_Ptr renames System.Null_Address;
 
    Default_Display_Name : constant Interfaces.C.Strings.char_array_access;
-
-   package Global_Object is
-
-      type Global_Object_T is tagged private;
-
-      function Data (Global_Object : Global_Object_T) return Wl.Void_Ptr;
-
-      function Id (Global_Object : Global_Object_T) return Wl.Unsigned_32;
-
-      function Interface_Name (Global_Object : Global_Object_T) return String;
-
-      function Version (Global_Object : Global_Object_T) return Wl.Unsigned_32;
-
-      function Make (
-                     Data        : Wl.Void_Ptr;
-                     Id          : Wl.Unsigned_32;
-                     Interface_V : String;
-                     Version     : Wl.Unsigned_32
-                    )
-                     return Global_Object_T;
-
-   private
-
-      type Global_Object_T is tagged record
-         My_Data        : Wl.Void_Ptr;
-         My_Id          : Wl.Unsigned_32;
-         My_Interface_V : Ada.Strings.Unbounded.Unbounded_String;
-         My_Version     : Wl.Unsigned_32;
-      end record;
-
-      function Data (Global_Object : Global_Object_T) return Wl.Void_Ptr is (Global_Object.My_Data);
-
-      function Id (Global_Object : Global_Object_T) return Wl.Unsigned_32 is (Global_Object.My_Id);
-
-      function Interface_Name (Global_Object : Global_Object_T) return String is (Ada.Strings.Unbounded.To_String (Global_Object.My_Interface_V));
-
-      function Version (Global_Object : Global_Object_T) return Wl.Unsigned_32 is (Global_Object.My_Version);
-
-   end Global_Object;
-
-   subtype Global_Object_T is Global_Object.Global_Object_T;
-
-   package Global_Object_Vectors is new Ada.Containers.Vectors (Index_Type   => Positive,
-                                                                Element_Type => Global_Object_T,
-                                                                "="          => Global_Object."=");
-
-   type Global_Objects_Ref (E : not null access constant Global_Object_Vectors.Vector) is limited null record with
-     Implicit_Dereference => E;
-
-   generic
-   package Global_Objects_Subscriber is
-
-      function Global_Objects return Global_Objects_Ref;
-
-      procedure Start_Subscription (Registry : in out Registry_T;
-                                    Display  : in     Display_T);-- with
---       Global => null,
---       Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
---       Post   => Registry.Has_Started_Subscription;
-
-   end Global_Objects_Subscriber;
 
    type Compositor_T is tagged limited private;
 
@@ -114,12 +54,6 @@ package Wl is
 
    function Has_Started_Subscription (Registry : Registry_T) return Boolean with
      Global => null;
-
---     procedure Start_Subscription (Registry : in out Registry_T;
---                                   Display  : in     Display_T) with
---       Global => null,
---       Pre    => not Registry.Has_Started_Subscription and Registry.Has_Registry_Object,
---       Post   => Registry.Has_Started_Subscription;
 
    procedure Destroy (Registry : in out Registry_T) with
      Global => null,
@@ -158,6 +92,26 @@ package Wl is
      Global => null,
      Pre    => Display.Is_Connected,
      Post   => not Display.Is_Connected;
+
+   generic
+      type Data_T is private;
+      Data : Data_T;
+      with procedure Global_Object_Added (Data     : Data_T;
+                                          Registry : Registry_T;
+                                          Id       : Unsigned_32;
+                                          Name     : String;
+                                          Version  : Unsigned_32);
+
+      with procedure Global_Object_Removed (Data     : Data_T;
+                                            Registry : Registry_T;
+                                            Id       : Unsigned_32);
+   package Registry_Objects_Subscriber is
+
+      -- Starts subcription to global objects addded and removed events.
+      -- To stop subscription, call Registry.Destroy.
+      procedure Start_Subscription (Registry : in out Registry_T);
+
+   end Registry_Objects_Subscriber;
 
 --     type Message_T is limited record
 --        Name      : Interfaces.C.Strings.chars_ptr;

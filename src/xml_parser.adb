@@ -1439,7 +1439,7 @@ procedure XML_Parser is
                   Enum_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
 
                   procedure Generate_Code_For_Enum_Value (Entry_Tag : Wayland_XML.Entry_Tag.Entry_Tag_T) is
-                     Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Entry_Tag.Name & "_" & Entry_Tag.Name);
+                     Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_" & Entry_Tag.Name);
                   begin
                      Ada.Text_IO.Put_Line (File, "-- " & Entry_Tag.Summary);
                      Ada.Text_IO.Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & ";");
