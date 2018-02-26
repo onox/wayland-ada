@@ -80,4 +80,27 @@ package body Px is
       return Px_Thin.Munmap (Address, Length);
    end Memory_Unmap;
 
+   New_Line : constant String := (1 => Character'Val (10));
+
+   procedure Put_Line (Text : String) is
+      SSize : SSize_T;
+      pragma Unreferenced (SSize);
+   begin
+      SSize := Px_Thin.Write (File_Descriptor => Px_Thin.STDOUT_FILENO,
+                              Buffer          => Text,
+                              Count           => Text'Length);
+      SSize := Px_Thin.Write (File_Descriptor => Px_Thin.STDOUT_FILENO,
+                              Buffer          => New_Line,
+                              Count           => 1);
+   end Put_Line;
+
+   procedure Put (Text : String) is
+      SSize : SSize_T;
+      pragma Unreferenced (SSize);
+   begin
+      SSize := Px_Thin.Write (File_Descriptor => Px_Thin.STDOUT_FILENO,
+                              Buffer          => Text,
+                              Count           => Text'Length);
+   end Put;
+
 end Px;

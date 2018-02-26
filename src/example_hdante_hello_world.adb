@@ -1,4 +1,3 @@
-with Ada.Text_IO;
 with Px;
 with Wl;
 
@@ -22,22 +21,26 @@ procedure Example_Hdante_Hello_World is
    Shm        : aliased Wl.Shm_T;
 
    type Data_T is limited record
-      Compositor : access Wl.Compositor_T;
-      Pointer    : access Wl.Pointer_T;
-      Seat       : access Wl.Seat_T;
-      Shell      : access Wl.Shell_T;
-      Shm        : access Wl.Shm_T;
+      Compositor : not null access Wl.Compositor_T;
+      Pointer    : not null access Wl.Pointer_T;
+      Seat       : not null access Wl.Seat_T;
+      Shell      : not null access Wl.Shell_T;
+      Shm        : not null access Wl.Shm_T;
    end record;
 
    type Data_Ptr is access all Data_T;
 
-   Data : aliased Data_T := (
-                             Compositor => Compositor'Unchecked_Access,
-                             Pointer    => Pointer'Unchecked_Access,
-                             Seat       => Seat'Unchecked_Access,
-                             Shell      => Shell'Unchecked_Access,
-                             Shm        => Shm'Unchecked_Access
-                            );
+   Data : aliased Data_T :=
+     (
+      Compositor => Compositor'Unchecked_Access,
+      Pointer    => Pointer'Unchecked_Access,
+      Seat       => Seat'Unchecked_Access,
+      Shell      => Shell'Unchecked_Access,
+      Shm        => Shm'Unchecked_Access
+     );
+
+   function Min (L, R : Wl.Unsigned_32) return Wl.Unsigned_32 renames
+     Wl.Unsigned_32'Min;
 
    procedure Global_Registry_Handler (Data     : not null Data_Ptr;
                                       Registry : Wl.Registry_T;
@@ -46,14 +49,22 @@ procedure Example_Hdante_Hello_World is
                                       Version  : Wl.Unsigned_32) is
    begin
       if Name = Wl.Compositor_Interface.Name then
-         Compositor.Bind (Registry, Id, Wl.Unsigned_32'Min (Version, 4));
+         Compositor.Bind (Registry,
+                          Id,
+                          Min (Version, 4));
       elsif Name = Wl.Shm_Interface.Name then
-         Shm.Bind (Registry, Id, Wl.Unsigned_32'Min (Version, 1));
+         Shm.Bind (Registry,
+                   Id,
+                   Min (Version, 1));
       elsif Name = Wl.Shell_Interface.Name then
-         Shell.Bind (Registry, Id, Wl.Unsigned_32'Min (Version, 1));
+         Shell.Bind (Registry,
+                     Id,
+                     Min (Version, 1));
       elsif Name = Wl.Seat_Interface.Name then
-         Ada.Text_IO.Put_Line ("Pointer listener is setup " & Wl.Seat_Interface.Name);
-         Seat.Bind (Registry, Id, Wl.Unsigned_32'Min (Version, 2));
+         Px.Put_Line ("Pointer listener is setup " & Wl.Seat_Interface.Name);
+         Seat.Bind (Registry,
+                    Id,
+                    Min (Version, 2));
          Seat.Get_Pointer (Pointer);
 --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
       end if;
@@ -63,7 +74,7 @@ procedure Example_Hdante_Hello_World is
                                       Registry : Wl.Registry_T;
                                       Id       : Wl.Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line ("Got a registry losing event for" & Id'Image);
+      Px.Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
    package Subscriber is new Wl.Registry_Objects_Subscriber
@@ -97,6 +108,7 @@ procedure Example_Hdante_Hello_World is
    Stat          : Px.Status_T;
 
    use type Px.int;
+   use type Px.C_String;
 
    File_Name : Px.C_String := "hello_world_image.bin" & Px.Nul;
 
@@ -105,14 +117,14 @@ procedure Example_Hdante_Hello_World is
 begin
    Display.Connect (Wl.Default_Display_Name);
    if not Display.Is_Connected then
-      Ada.Text_IO.Put_Line ("Can't connect to display");
+      Px.Put_Line ("Can't connect to display");
       return;
    end if;
-   Ada.Text_IO.Put_Line ("Connected to display");
+   Px.Put_Line ("Connected to display");
 
    Registry.Get (Display);
    if not Registry.Has_Registry_Object then
-      Ada.Text_IO.Put_Line ("Can't get global registry object");
+      Px.Put_Line ("Can't get global registry object");
       return;
    end if;
 
@@ -126,14 +138,14 @@ begin
                Px.S_IRUSR or Px.S_IRGRP or Px.S_IROTH);
 
    if Image.Is_Closed then
-      Ada.Text_IO.Put_Line ("Error opening surface image");
+      Px.Put_Line ("Error opening surface image");
       return;
    end if;
 
    Image.Get_File_Status (Stat);
 
    if not Stat.Is_Valid then
-      Ada.Text_IO.Put_Line ("File does not exist?");
+      Px.Put_Line ("File does not exist?");
       return;
    end if;
 
@@ -150,12 +162,12 @@ begin
    if Memory_Map.Has_Mapping then
       Shm.Create_Pool (Integer (Image.File_Descriptor), Integer (Stat.Size), Pool);
    else
-      Ada.Text_IO.Put_Line ("Failed to map file");
+      Px.Put_Line ("Failed to map file");
       return;
    end if;
 
    if not Pool.Exists then
-      Ada.Text_IO.Put_Line ("Failed to create pool");
+      Px.Put_Line ("Failed to create pool");
       return;
    end if;
 
@@ -163,7 +175,7 @@ begin
    Compositor.Create_Surface (Surface);
 
    if not Surface.Exists then
-      Ada.Text_IO.Put_Line ("Failed to create surface");
+      Px.Put_Line ("Failed to create surface");
       return;
    end if;
 
@@ -171,7 +183,7 @@ begin
 
    if not Shell_Surface.Exists then
 --      Surface.Destroy;
-      Ada.Text_IO.Put_Line ("Failed to create shell surface");
+      Px.Put_Line ("Failed to create shell surface");
       return;
    end if;
 
@@ -186,7 +198,7 @@ begin
                        Buffer);
 
    if not Buffer.Exists then
-      Ada.Text_IO.Put_Line ("Failed to create buffer");
+      Px.Put_Line ("Failed to create buffer");
       return;
    end if;
 
@@ -196,7 +208,7 @@ begin
 
    while not Done loop
       if Display.Dispatch < 0 then
-         Ada.Text_IO.Put_Line ("Main loop error");
+         Px.Put_Line ("Main loop error");
          Done := true;
       end if;
    end loop;

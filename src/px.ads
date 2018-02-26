@@ -34,12 +34,29 @@ package Px is
       Amount : Natural) return S_FLag_T is
      (S_FLag_T (Shift_Right (Unsigned_32 (Value), Amount)));
 
+   Nul : constant Character := Character'Val (0);
+
+   type C_String is new String with
+        Dynamic_Predicate => C_String'Length > 0
+        and then C_String (C_String'Last) = Nul;
+
    use type S_FLag_T;
    use type O_FLag_T;
-
    use type int;
    use type long;
    use type Void_Ptr;
+
+   --
+   -- Non-primitive subprograms
+   --
+
+   -- Write to standard out. May be used instead of Ada.Text_IO.Put ().
+   procedure Put (Text : String) with
+     Global => null;
+
+   -- Write to standard out. May be used instead of Ada.Text_IO.Put_Line ().
+   procedure Put_Line (Text : String) with
+     Global => null;
 
    --
    -- Encoding of the file mode.
@@ -215,12 +232,6 @@ package Px is
 
    subtype Offset_T is long;
 
-   Nul : constant Character := Character'Val (0);
-
-   subtype C_String is String with
-        Dynamic_Predicate => C_String'Length > 0
-        and then C_String (C_String'Last) = Nul;
-
    subtype Byte_T is System.Storage_Elements.Storage_Element;
 
    subtype Byte_Array_T is System.Storage_Elements.Storage_Array;
@@ -360,9 +371,21 @@ package Px is
                           Length  : Size_T) return int with
      Global => null;
 
+   --
+   -- Standard file descriptors.
+   --
+   STDIN  : constant File_T; -- Standard input.
+   STDOUT : constant File_T; -- Standard output.
+   STDERR : constant File_T; -- Standard error output.
+
 private
 
    package Px_Thin is
+
+      -- Standard file descriptors.
+      STDIN_FILENO  : constant := 0; -- Standard input.
+      STDOUT_FILENO : constant := 1; -- Standard output.
+      STDERR_FILENO : constant := 2; -- Standard error output.
 
       type File_Status_T is record
          -- ID of device containing file
@@ -435,6 +458,14 @@ private
       function Write
         (File_Descriptor : int;
          Buffer          : Byte_Array_T;
+         Count           : Size_T) return SSize_T with
+         Import        => True,
+         Convention    => C,
+         External_Name => "write";
+
+      function Write
+        (File_Descriptor : int;
+         Buffer          : String;
          Count           : Size_T) return SSize_T with
          Import        => True,
          Convention    => C,
@@ -550,5 +581,23 @@ private
    function Has_Mapping (Map : Memory_Map_T) return Boolean is (Map.My_Mapping /= MAP_FAILED);
 
    function Mapping (Map : Memory_Map_T) return Void_Ptr is (Map.My_Mapping);
+
+   STDIN  : constant File_T :=
+     (
+      My_File_Descriptor => Px_Thin.STDIN_FILENO,
+      My_Is_Open         => True
+     );
+
+   STDOUT : constant File_T :=
+     (
+      My_File_Descriptor => Px_Thin.STDOUT_FILENO,
+      My_Is_Open         => True
+     );
+
+   STDERR : constant File_T :=
+     (
+      My_File_Descriptor => Px_Thin.STDERR_FILENO,
+      My_Is_Open         => True
+     );
 
 end Px;

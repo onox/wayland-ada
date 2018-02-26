@@ -1,4 +1,5 @@
 with "wayland_client.gpr";
+with "ubuntu_posix.gpr";
 
 project Example_Hdante_Hello_World is
 
