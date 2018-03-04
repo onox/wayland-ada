@@ -13,24 +13,7 @@ library project Wayland_XML is
 
    for Source_Files use (
                          "wayland_xml.ads",
-                         "wayland_xml-copyright_tag.ads",
-                         "wayland_xml-copyright_tag.adb",
-                         "wayland_xml-interface_tag.ads",
-                         "wayland_xml-interface_tag.adb",
-                         "wayland_xml-description_tag.ads",
-                         "wayland_xml-description_tag.adb",
-                         "wayland_xml-request_tag.ads",
-                         "wayland_xml-request_tag.adb",
-                         "wayland_xml-arg_tag.ads",
-                         "wayland_xml-arg_tag.adb",
-                         "wayland_xml-event_tag.ads",
-                         "wayland_xml-event_tag.adb",
-                         "wayland_xml-enum_tag.ads",
-                         "wayland_xml-enum_tag.adb",
-                         "wayland_xml-entry_tag.ads",
-                         "wayland_xml-entry_tag.adb",
-                         "wayland_xml-protocol_tag.ads",
-                         "wayland_xml-protocol_tag.adb"
+                         "wayland_xml.adb"
                          );
 
    package Check is
