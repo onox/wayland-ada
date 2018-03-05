@@ -16,7 +16,7 @@ package Wayland_XML is
 
    Empty_String : aliased String := "";
 
-   type Version_T is new Aida.Pos32_T;
+   type Version_Number is new Aida.Pos32_T;
 
    type Arg_Type_Attribute is
      (Type_Integer,
@@ -226,12 +226,12 @@ package Wayland_XML is
    function Exists_Value (This : Entry_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Since (This : in out Entry_Tag; Value : Version_T) with
+   procedure Set_Since (This : in out Entry_Tag; Value : Version_Number) with
       Global => null,
       Pre    => not This.Exists_Since,
       Post   => This.Exists_Since and This.Since = Value;
 
-   function Since (This : Entry_Tag) return Version_T with
+   function Since (This : Entry_Tag) return Version_Number with
       Global => null,
       Pre    => This.Exists_Since;
 
@@ -303,12 +303,12 @@ package Wayland_XML is
    function Exists_Bitfield (This : Enum_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Since (This : in out Enum_Tag; Value : Version_T) with
+   procedure Set_Since (This : in out Enum_Tag; Value : Version_Number) with
       Global => null,
       Pre    => not This.Exists_Since,
       Post   => This.Exists_Since and This.Since = Value;
 
-   function Since (This : Enum_Tag) return Version_T with
+   function Since (This : Enum_Tag) return Version_Number with
       Global => null,
       Pre    => This.Exists_Since;
 
@@ -370,12 +370,12 @@ package Wayland_XML is
 
    procedure Set_Since_Attribute
      (This  : in out Event_Tag;
-      Value :        Version_T) with
+      Value :        Version_Number) with
       Global => null,
       Pre    => not This.Exists_Since_Attribute,
       Post   => This.Exists_Since_Attribute and This.Since_Attribute = Value;
 
-   function Since_Attribute (This : Event_Tag) return Version_T with
+   function Since_Attribute (This : Event_Tag) return Version_Number with
       Global => null,
       Pre    => This.Exists_Since_Attribute;
 
@@ -457,12 +457,12 @@ package Wayland_XML is
    function Exists_Type_Attribute (This : Request_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Since (This : in out Request_Tag; Value : Version_T) with
+   procedure Set_Since (This : in out Request_Tag; Value : Version_Number) with
       Global => null,
       Pre    => not This.Exists_Since,
       Post   => This.Exists_Since and This.Since = Value;
 
-   function Since (This : Request_Tag) return Version_T with
+   function Since (This : Request_Tag) return Version_Number with
       Global => null,
       Pre    => This.Exists_Since;
 
@@ -531,12 +531,12 @@ package Wayland_XML is
    function Exists_Name (This : Interface_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Version (This : in out Interface_Tag; Value : Version_T) with
+   procedure Set_Version (This : in out Interface_Tag; Value : Version_Number) with
       Global => null,
       Pre    => not This.Exists_Version,
       Post   => This.Exists_Version and This.Version = Value;
 
-   function Version (This : Interface_Tag) return Version_T with
+   function Version (This : Interface_Tag) return Version_Number with
       Global => null,
       Pre    => This.Exists_Version;
 
@@ -633,7 +633,7 @@ private
       end case;
    end record;
 
-   type Nullable_Boolean_T (Exists : Boolean := False) is record
+   type Nullable_Boolean (Exists : Boolean := False) is record
       case Exists is
          when True =>
             Value : Boolean;
@@ -642,16 +642,16 @@ private
       end case;
    end record;
 
-   type Nullable_Version_T (Exists : Boolean := False) is record
+   type Nullable_Version (Exists : Boolean := False) is record
       case Exists is
          when True =>
-            Value : Version_T;
+            Value : Version_Number;
          when False =>
             null;
       end case;
    end record;
 
-   type Nullable_Allow_Null_T (Exists : Boolean := False) is record
+   type Nullable_Allow_Null (Exists : Boolean := False) is record
       case Exists is
          when True =>
             Value : Boolean;
@@ -660,7 +660,7 @@ private
       end case;
    end record;
 
-   type Nullable_Type_Attribute_T (Exists : Boolean := False) is record
+   type Nullable_Type_Attribute (Exists : Boolean := False) is record
       case Exists is
          when True =>
             Value : Arg_Type_Attribute;
@@ -671,10 +671,10 @@ private
 
    type Arg_Tag is tagged limited record
       My_Name                : Nullable_String_Ptr;
-      My_Type_Attribute      : Nullable_Type_Attribute_T;
+      My_Type_Attribute      : Nullable_Type_Attribute;
       My_Interface_Attribute : Nullable_String_Ptr;
       My_Summary             : Nullable_String_Ptr;
-      My_Allow_Null          : Nullable_Allow_Null_T;
+      My_Allow_Null          : Nullable_Allow_Null;
       My_Enum                : Nullable_String_Ptr;
    end record;
 
@@ -768,7 +768,7 @@ private
       My_Name    : Nullable_String_Ptr;
       My_Value   : Nullable_Entry_Value;
       My_Summary : Nullable_String_Ptr;
-      My_Since   : Nullable_Version_T;
+      My_Since   : Nullable_Version;
    end record;
 
    function Name (This : Entry_Tag) return String is (This.My_Name.Value.all);
@@ -797,7 +797,7 @@ private
      (This : Entry_Tag) return Boolean is
      (This.My_Summary.Exists);
 
-   function Since (This : Entry_Tag) return Version_T is (This.My_Since.Value);
+   function Since (This : Entry_Tag) return Version_Number is (This.My_Since.Value);
 
    function Exists_Since
      (This : Entry_Tag) return Boolean is
@@ -805,8 +805,8 @@ private
 
    type Enum_Tag is tagged limited record
       My_Name     : Nullable_String_Ptr;
-      My_Bitfield : Nullable_Boolean_T;
-      My_Since    : Nullable_Version_T;
+      My_Bitfield : Nullable_Boolean;
+      My_Since    : Nullable_Version;
       My_Children : aliased Enum_Child_Vectors.Vector;
    end record;
 
@@ -824,7 +824,7 @@ private
      (This : Enum_Tag) return Boolean is
      (This.My_Bitfield.Exists);
 
-   function Since (This : Enum_Tag) return Version_T is (This.My_Since.Value);
+   function Since (This : Enum_Tag) return Version_Number is (This.My_Since.Value);
 
    function Exists_Since
      (This : Enum_Tag) return Boolean is
@@ -834,10 +834,10 @@ private
      (This : aliased Enum_Tag) return Enum_Children_Ref is
      ((E => This.My_Children'Access));
 
-   type Nullable_Since_Attribute_T (Exists : Boolean := False) is record
+   type Nullable_Since_Attribute (Exists : Boolean := False) is record
       case Exists is
          when True =>
-            Value : Version_T;
+            Value : Version_Number;
          when False =>
             null;
       end case;
@@ -845,7 +845,7 @@ private
 
    type Event_Tag is tagged limited record
       My_Name            : Nullable_String_Ptr;
-      My_Since_Attribute : Nullable_Since_Attribute_T;
+      My_Since_Attribute : Nullable_Since_Attribute;
       My_Children        : aliased Event_Child_Vectors.Vector;
    end record;
 
@@ -856,7 +856,7 @@ private
      (This.My_Name.Exists);
 
    function Since_Attribute
-     (This : Event_Tag) return Version_T is
+     (This : Event_Tag) return Version_Number is
      (This.My_Since_Attribute.Value);
 
    function Since_Attribute_As_Pos32
@@ -874,7 +874,7 @@ private
    type Nullable_Since_T (Exists : Boolean := False) is record
       case Exists is
          when True =>
-            Value : Version_T;
+            Value : Version_Number;
          when False =>
             null;
       end case;
@@ -908,7 +908,7 @@ private
      (This.My_Type_Attribute.Exists);
 
    function Since
-     (This : Request_Tag) return Version_T is
+     (This : Request_Tag) return Version_Number is
      (This.My_Since.Value);
 
    function Since_As_Pos32
@@ -921,7 +921,7 @@ private
 
    type Interface_Tag is tagged limited record
       My_Name     : Nullable_String_Ptr;
-      My_Version  : Nullable_Version_T;
+      My_Version  : Nullable_Version;
       My_Children : aliased Interface_Child_Vectors.Vector;
    end record;
 
@@ -934,7 +934,7 @@ private
      (This.My_Name.Exists);
 
    function Version
-     (This : Interface_Tag) return Version_T is
+     (This : Interface_Tag) return Version_Number is
      (This.My_Version.Value);
 
    function Exists_Version

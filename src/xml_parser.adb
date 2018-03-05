@@ -90,31 +90,31 @@ procedure XML_Parser is
 
       function Remove_Tabs (Text : String) return String;
 
-      type Interval_T is record
+      type Interval is record
          First : Aida.Pos32_T;
          Last  : Aida.Nat32_T;
       end record;
 
-      package Interval_Vectors is new Ada.Containers.Vectors (Index_Type => Positive, Element_Type => Interval_T, "=" => "=");
+      package Interval_Vectors is new Ada.Containers.Vectors (Index_Type => Positive, Element_Type => Interval, "=" => "=");
 
       type Intervals_Ref (E : not null access constant Interval_Vectors.Vector) is limited null record with
          Implicit_Dereference => E;
 
-      type Interval_Identifier_T is tagged limited private;
+      type Interval_Identifier is tagged limited private;
 
-      function Intervals (This : aliased Interval_Identifier_T) return Intervals_Ref with
+      function Intervals (This : aliased Interval_Identifier) return Intervals_Ref with
          Global => null;
 
-      function Make (Text : String) return Interval_Identifier_T with
+      function Make (Text : String) return Interval_Identifier with
          Global => null;
 
    private
 
-      type Interval_Identifier_T is tagged limited record
+      type Interval_Identifier is tagged limited record
          My_Intervals : aliased Interval_Vectors.Vector;
       end record;
 
-      function Intervals (This : aliased Interval_Identifier_T) return Intervals_Ref is ((E => This.My_Intervals'Access));
+      function Intervals (This : aliased Interval_Identifier) return Intervals_Ref is ((E => This.My_Intervals'Access));
 
    end Utils;
 
@@ -410,8 +410,8 @@ procedure XML_Parser is
          return Result;
       end Exists_Any_Event_Tag;
 
-      function Make (Text : String) return Interval_Identifier_T is
-         Interval : Interval_T := (First => 1, Last => 0);
+      function Make (Text : String) return Interval_Identifier is
+         Interval : Utils.Interval := (First => 1, Last => 0);
 
          P           : Aida.Int32_T := Text'First;
          Prev_P      : Aida.Int32_T := P;
@@ -420,7 +420,7 @@ procedure XML_Parser is
 
          Is_Previous_New_Line : Boolean := False;
       begin
-         return This : Interval_Identifier_T do
+         return This : Interval_Identifier do
             while Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P) loop
                Prev_Prev_P := Prev_P;
 
@@ -664,7 +664,7 @@ procedure XML_Parser is
                   if Has_Failed then
                      raise XML_Exception;
                   else
-                     Request_Tag.Set_Since (Wx.Version_T (Value));
+                     Request_Tag.Set_Since (Wx.Version_Number (Value));
                   end if;
                end;
             else
@@ -705,7 +705,7 @@ procedure XML_Parser is
                   if Has_Failed then
                      raise XML_Exception;
                   else
-                     Event_Tag.Set_Since_Attribute (Wx.Version_T (Value));
+                     Event_Tag.Set_Since_Attribute (Wx.Version_Number (Value));
                   end if;
                end;
             else
@@ -767,7 +767,7 @@ procedure XML_Parser is
                   if Has_Failed then
                      raise XML_Exception;
                   else
-                     Entry_Tag.Set_Since (Wx.Version_T (Value));
+                     Entry_Tag.Set_Since (Wx.Version_Number (Value));
                   end if;
                end;
             else
@@ -806,7 +806,7 @@ procedure XML_Parser is
                   if Has_Failed then
                      raise XML_Exception;
                   else
-                     Enum_Tag.Set_Since (Wx.Version_T (Value));
+                     Enum_Tag.Set_Since (Wx.Version_Number (Value));
                   end if;
                end;
             else
@@ -851,7 +851,7 @@ procedure XML_Parser is
                   if Has_Failed then
                      raise XML_Exception;
                   else
-                     Interface_Tag.Set_Version (Wx.Version_T (Value));
+                     Interface_Tag.Set_Version (Wx.Version_Number (Value));
 
                      for Child of Node.Tag.Child_Nodes loop
                         if Child.Id = XML_Tag then
@@ -1645,7 +1645,7 @@ procedure XML_Parser is
                   end Generate_Code_For_Arg;
 
                   procedure Generate_Comment (Text : String) is
-                     Interval_Identifier : Utils.Interval_Identifier_T := Utils.Make (Text);
+                     Interval_Identifier : Utils.Interval_Identifier := Utils.Make (Text);
                   begin
                      for Interval of Interval_Identifier.Intervals loop
                         Put_Line (File, "-- " & Ada.Strings.Fixed.Trim (Text (Interval.First .. Interval.Last), Ada.Strings.Both));

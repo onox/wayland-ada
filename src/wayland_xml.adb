@@ -131,7 +131,7 @@ package body Wayland_XML is
    end Set_Name;
 
    procedure Set_Since (This  : in out Entry_Tag;
-                        Value : Version_T) is
+                        Value : Version_Number) is
    begin
       This.My_Since := (Exists => True,
                         Value  => Value);
@@ -154,7 +154,7 @@ package body Wayland_XML is
    end Set_Bitfield;
 
    procedure Set_Since (This  : in out Enum_Tag;
-                        Value : Version_T)
+                        Value : Version_Number)
    is
    begin
       This.My_Since := (Exists => True,
@@ -187,7 +187,7 @@ package body Wayland_XML is
    end Set_Name;
 
    procedure Set_Since_Attribute (This  : in out Event_Tag;
-                                  Value : Version_T)
+                                  Value : Version_Number)
    is
    begin
       This.My_Since_Attribute := (Exists => True,
@@ -245,7 +245,7 @@ package body Wayland_XML is
    end Set_Type_Attribute;
 
    procedure Set_Since (This  : in out Request_Tag;
-                        Value : Version_T) is
+                        Value : Version_Number) is
    begin
       This.My_Since := (Exists => True,
                         Value  => Value);
@@ -289,7 +289,7 @@ package body Wayland_XML is
    end Set_Name;
 
    procedure Set_Version (This  : in out Interface_Tag;
-                          Value : Version_T)
+                          Value : Version_Number)
    is
    begin
       This.My_Version := (Exists => True,
