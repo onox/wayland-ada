@@ -16,7 +16,6 @@ package Px is
    subtype int is Interfaces.C.int;
    subtype long is Interfaces.C.long;
    subtype Unsigned_32 is Interfaces.Unsigned_32;
-   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
    subtype Void_Ptr is System.Address;
 

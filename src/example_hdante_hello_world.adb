@@ -14,6 +14,8 @@ procedure Example_Hdante_Hello_World is
 
    use type Px.S_FLag_T;
 
+   use type Wl.Seat_Capability_T;
+
    Compositor : aliased Wl.Compositor_T;
    Pointer    : aliased Wl.Pointer_T;
    Seat       : aliased Wl.Seat_T;
@@ -42,6 +44,42 @@ procedure Example_Hdante_Hello_World is
    function Min (L, R : Wl.Unsigned_32) return Wl.Unsigned_32 renames
      Wl.Unsigned_32'Min;
 
+   Exists_Mouse    : Boolean := False;
+   Exists_Keyboard : Boolean := False;
+
+   procedure Seat_Capabilities
+     (Data         : not null Data_Ptr;
+      Seat         : Wl.Seat_T;
+      Capabilities : Wl.Seat_Capability_T) is
+   begin
+      if (Capabilities and Wl.Seat_Capability_Pointer) > 0 then
+         Px.Put_Line ("Display has a pointer");
+         Exists_Mouse := True;
+      end if;
+
+      if (Capabilities and Wl.Seat_Capability_Keyboard) > 0 then
+         Px.Put_Line ("Display has a keyboard");
+         Exists_Keyboard := True;
+      end if;
+
+      if (Capabilities and Wl.Seat_Capability_Touch) > 0 then
+         Px.Put_Line ("Display has a touch screen");
+      end if;
+   end Seat_Capabilities;
+
+   procedure Seat_Name
+     (Data : not null Data_Ptr;
+      Seat : Wl.Seat_T;
+      Name : String) is
+   begin
+      null;
+   end Seat_Name;
+
+   package Seat_Subscriber is new Wl.Seat_Capability_Subscriber (Data_Type         => Data_Ptr,
+                                                                 Data              => Data'Unchecked_Access,
+                                                                 Seat_Capabilities => Seat_Capabilities,
+                                                                 Seat_Name         => Seat_Name);
+
    procedure Global_Registry_Handler (Data     : not null Data_Ptr;
                                       Registry : Wl.Registry_T;
                                       Id       : Wl.Unsigned_32;
@@ -66,6 +104,7 @@ procedure Example_Hdante_Hello_World is
                     Id,
                     Min (Version, 2));
          Seat.Get_Pointer (Pointer);
+         Seat_Subscriber.Start_Subscription (Seat);
 --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
       end if;
    end Global_Registry_Handler;
@@ -149,12 +188,6 @@ begin
       return;
    end if;
 
---     Data := new Pool_Data_T;
---
---     Data.Capacity := Interfaces.C.unsigned_long (Stat.Size);
---     Data.Size := 0;
---     Data.Fd := File.File_Descriptor;
-
    Image.Memory_Map (Px.Nil,
                      Px.unsigned_long (Stat.Size),
                      Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
@@ -182,13 +215,12 @@ begin
    Shell.Get_Shell_Surface (Surface, Shell_Surface);
 
    if not Shell_Surface.Exists then
---      Surface.Destroy;
+      Surface.Destroy;
       Px.Put_Line ("Failed to create shell surface");
       return;
    end if;
 
    Shell_Surface.Set_Toplevel;
-
 
    Pool.Create_Buffer (0,
                        Integer (Width),

@@ -1173,6 +1173,61 @@ package body Wl is
 
    end Registry_Objects_Subscriber;
 
+   package body Seat_Capability_Subscriber is
+
+      procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
+                                   Seat         : Wl_Thin.Seat_Ptr;
+                                   Capabilities : Interfaces.Unsigned_32) with
+        Convention => C;
+
+
+      procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
+                                   Seat         : Wl_Thin.Seat_Ptr;
+                                   Capabilities : Interfaces.Unsigned_32)
+      is
+         S : Seat_T := (
+                        My_Seat                     => Seat,
+                        My_Has_Started_Subscription => True
+                       );
+      begin
+         Seat_Capabilities (Data, S, Wl.Seat_Capability_T (Capabilities));
+      end Internal_Seat_Capabilities;
+
+      procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
+                           Seat        : Wl_Thin.Seat_Ptr;
+                           Name        : Interfaces.C.Strings.chars_ptr) with
+        Convention => C;
+
+      procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
+                                    Seat        : Wl_Thin.Seat_Ptr;
+                                    Name        : Interfaces.C.Strings.chars_ptr)
+      is
+         N : String := Interfaces.C.Strings.Value (Name);
+
+         S : Seat_T := (
+                        My_Seat                     => Seat,
+                        My_Has_Started_Subscription => True
+                       );
+      begin
+         Seat_Name (Data, S, N);
+      end Internal_Seat_Name;
+
+      Seat_Listener : aliased Wl_Thin.Seat_Listener_T :=
+        (
+         Capabilities => Internal_Seat_Capabilities'Unrestricted_Access,
+         Name         => Internal_Seat_Name'Unrestricted_Access
+        );
+
+      procedure Start_Subscription (S : in out Seat_T) is
+         I : Wl.int;
+      begin
+         I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,
+                                         Listener => Seat_Listener'Unchecked_Access,
+                                         Data     => Wl.Null_Address);
+      end Start_Subscription;
+
+   end Seat_Capability_Subscriber;
+
    procedure Connect (Display : in out Display_T;
                       Name    : Interfaces.C.Strings.char_array_access) is
    begin
@@ -1354,5 +1409,13 @@ package body Wl is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
    end Commit;
+
+   procedure Destroy (Surface : in out Surface_T) is
+   begin
+      if Surface.My_Surface /= null then
+         Wl_Thin.Surface_Destroy (Surface.My_Surface);
+         Surface.My_Surface := null;
+      end if;
+   end Destroy;
 
 end Wl;

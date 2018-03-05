@@ -76,6 +76,16 @@ package Wl is
    -- 32-bit ARGB format, [31:0] A:R:G:B 8:8:8:8 little endian
    Shm_Format_Argb_8888 : constant Shm_Format_T := 0;
 
+   type Seat_Capability_T is new Interfaces.Unsigned_32;
+   -- the seat has pointer devices
+   Seat_Capability_Pointer : constant Seat_Capability_T := 1;
+
+   -- the seat has one or more keyboards
+   Seat_Capability_Keyboard : constant Seat_Capability_T := 2;
+
+   -- the seat has touch devices
+   Seat_Capability_Touch : constant Seat_Capability_T := 4;
+
    function Value (Item : chars_ptr) return char_array renames Interfaces.C.Strings.Value;
 
    function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
@@ -185,6 +195,11 @@ package Wl is
    procedure Commit (Surface : Surface_T) with
      Global => null;
 
+   procedure Destroy (Surface : in out Surface_T) with
+     Global => null,
+     Pre    => Surface.Exists,
+     Post   => not Surface.Exists;
+
    type Buffer_T is tagged limited private;
 
    function Exists (Buffer : Buffer_T) return Boolean with
@@ -268,6 +283,25 @@ package Wl is
       procedure Start_Subscription (Registry : in out Registry_T);
 
    end Registry_Objects_Subscriber;
+
+   generic
+      type Data_Type is private;
+      Data : Data_Type;
+
+      with procedure Seat_Capabilities
+        (Data         : Data_Type;
+         Seat         : Seat_T;
+         Capabilities : Seat_Capability_T);
+
+      with procedure Seat_Name
+        (Data : Data_Type;
+         Seat : Seat_T;
+         Name : String);
+   package Seat_Capability_Subscriber is
+
+      procedure Start_Subscription (S : in out Seat_T);
+
+   end Seat_Capability_Subscriber;
 
    --     type Message_T is limited record
    --        Name      : Interfaces.C.Strings.chars_ptr;
@@ -2420,16 +2454,6 @@ private
       -- after receiving the wl_surface.commit.
       procedure Surface_Damage_Buffer (Surface : Surface_Ptr; X : Integer; Y : Integer; Width : Integer; Height : Integer);
 
-      type Seat_Capability_T is new Interfaces.Unsigned_32;
-      -- the seat has pointer devices
-      Seat_Capability_Pointer : constant Seat_Capability_T := 1;
-
-      -- the seat has one or more keyboards
-      Seat_Capability_Keyboard : constant Seat_Capability_T := 2;
-
-      -- the seat has touch devices
-      Seat_Capability_Touch : constant Seat_Capability_T := 4;
-
       type Seat_Capabilities_Subprogram_Ptr is access procedure
         (Data         : Void_Ptr;
          Seat         : Seat_Ptr;
@@ -3111,6 +3135,7 @@ private
 
    type Seat_T is tagged limited record
       My_Seat : Wl_Thin.Seat_Ptr;
+      My_Has_Started_Subscription : Boolean := False;
    end record;
 
    function Is_Bound (Seat : Seat_T) return Boolean is (Seat.My_Seat /= null);
