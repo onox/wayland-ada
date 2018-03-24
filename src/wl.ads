@@ -72,6 +72,8 @@ package Wl is
 
    Subsurface_Interface : constant Interface_T;
 
+   type Fixed_T is new Interfaces.Integer_32;
+
    type Shm_Format_T is new Interfaces.Unsigned_32;
    -- 32-bit ARGB format, [31:0] A:R:G:B 8:8:8:8 little endian
    Shm_Format_Argb_8888 : constant Shm_Format_T := 0;
@@ -213,6 +215,10 @@ package Wl is
    procedure Set_Toplevel (Surface : Shell_Surface_T) with
      Global => null;
 
+   procedure Pong (Surface : Shell_Surface_T;
+                   Serial  : Unsigned_32) with
+     Global => null;
+
    type Registry_T is tagged limited private;
 
    function Has_Registry_Object (Registry : Registry_T) return Boolean with
@@ -288,6 +294,32 @@ package Wl is
       type Data_Type is private;
       Data : Data_Type;
 
+      with procedure Shell_Surface_Ping
+        (Data    : Data_Type;
+         Surface : Shell_Surface_T;
+         Serial  : Unsigned_32);
+
+      with procedure Shell_Surface_Configure
+        (Data    : Data_Type;
+         Surface : Shell_Surface_T;
+         Edges   : Unsigned_32;
+         Width   : Integer;
+         Height  : Integer);
+
+      with procedure Shell_Surface_Popup_Done
+        (Data    : Data_Type;
+         Surface : Shell_Surface_T);
+
+   package Shell_Surface_Subscriber is
+
+      procedure Start_Subscription (Surface : in out Shell_Surface_T);
+
+   end Shell_Surface_Subscriber;
+
+   generic
+      type Data_Type is private;
+      Data : Data_Type;
+
       with procedure Seat_Capabilities
         (Data         : Data_Type;
          Seat         : Seat_T;
@@ -302,6 +334,72 @@ package Wl is
       procedure Start_Subscription (S : in out Seat_T);
 
    end Seat_Capability_Subscriber;
+
+   generic
+      type Data_Type is private;
+      Data : Data_Type;
+
+      with procedure Pointer_Enter
+        (Data      : Data_Type;
+         Pointer   : Pointer_T;
+         Serial    : Interfaces.Unsigned_32;
+         Surface   : Surface_T;
+         Surface_X : Fixed_T;
+         Surface_Y : Fixed_T);
+
+      with procedure Pointer_Leave
+        (Data    : Data_Type;
+         Pointer : Pointer_T;
+         Serial  : Interfaces.Unsigned_32;
+         Surface : Surface_T);
+
+      with procedure Pointer_Motion
+        (Data      : Data_Type;
+         Pointer   : Pointer_T;
+         Time      : Interfaces.Unsigned_32;
+         Surface_X : Fixed_T;
+         Surface_Y : Fixed_T);
+
+      with procedure Pointer_Button
+        (Data    : Data_Type;
+         Pointer : Pointer_T;
+         Serial  : Interfaces.Unsigned_32;
+         Time    : Interfaces.Unsigned_32;
+         Button  : Interfaces.Unsigned_32;
+         State   : Interfaces.Unsigned_32);
+
+      with procedure Pointer_Axis
+        (Data    : Data_Type;
+         Pointer : Pointer_T;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32;
+         Value   : Fixed_T);
+
+      with procedure Pointer_Frame (Data    : Data_Type;
+                                    Pointer : Pointer_T);
+
+      with procedure Pointer_Axis_Source
+        (Data        : Data_Type;
+         Pointer     : Pointer_T;
+         Axis_Source : Interfaces.Unsigned_32);
+
+      with procedure Pointer_Axis_Stop
+        (Data    : Data_Type;
+         Pointer : Pointer_T;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32);
+
+      with procedure Pointer_Axis_Discrete
+        (Data     : Data_Type;
+         Pointer  : Pointer_T;
+         Axis     : Interfaces.Unsigned_32;
+         Discrete : Integer);
+
+   package Pointer_Subscriber is
+
+      procedure Start_Subscription (P : in out Pointer_T);
+
+   end Pointer_Subscriber;
 
    --     type Message_T is limited record
    --        Name      : Interfaces.C.Strings.chars_ptr;
@@ -594,8 +692,6 @@ private
         External_Name => "wl_proxy_marshal_constructor";
 
       -- End core parts
-
-      type Fixed_T is new Interfaces.Integer_32;
 
       type Wayland_Array_T is record
          Size  : Interfaces.Unsigned_32;

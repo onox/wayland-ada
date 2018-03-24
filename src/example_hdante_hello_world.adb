@@ -1,6 +1,6 @@
 with Px;
 with Wl;
-
+with Ada.Text_IO;
 -- This is a wayland hello world application. It uses the wayland
 -- client library and the wayland protocol to display a window.
 --
@@ -90,22 +90,24 @@ procedure Example_Hdante_Hello_World is
          Compositor.Bind (Registry,
                           Id,
                           Min (Version, 4));
+         Ada.Text_IO.Put_Line ("Bind compositor");
       elsif Name = Wl.Shm_Interface.Name then
          Shm.Bind (Registry,
                    Id,
                    Min (Version, 1));
+         Ada.Text_IO.Put_Line ("Bind shm");
       elsif Name = Wl.Shell_Interface.Name then
          Shell.Bind (Registry,
                      Id,
                      Min (Version, 1));
+         Ada.Text_IO.Put_Line ("Bind shell");
       elsif Name = Wl.Seat_Interface.Name then
          Px.Put_Line ("Pointer listener is setup " & Wl.Seat_Interface.Name);
          Seat.Bind (Registry,
                     Id,
                     Min (Version, 2));
-         Seat.Get_Pointer (Pointer);
          Seat_Subscriber.Start_Subscription (Seat);
---         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
+         --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
       end if;
    end Global_Registry_Handler;
 
@@ -122,23 +124,151 @@ procedure Example_Hdante_Hello_World is
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
+   procedure Shell_Surface_Ping
+     (Data    : not null Data_Ptr;
+      Surface : Wl.Shell_Surface_T;
+      Serial  : Wl.Unsigned_32) is
+   begin
+      Surface.Pong (Serial);
+   end Shell_Surface_Ping;
+
+   procedure Shell_Surface_Configure
+     (Data    : not null Data_Ptr;
+      Surface : Wl.Shell_Surface_T;
+      Edges   : Wl.Unsigned_32;
+      Width   : Integer;
+      Height  : Integer) is
+   begin
+      null;
+   end Shell_Surface_Configure;
+
+   procedure Shell_Surface_Popup_Done
+     (Data    : not null Data_Ptr;
+      Surface : Wl.Shell_Surface_T) is
+   begin
+      null;
+   end Shell_Surface_Popup_Done;
+
+   package Shell_Surface_Subscriber is new Wl.Shell_Surface_Subscriber
+     (Data_Type                => Data_Ptr,
+      Data                     => Data'Unchecked_Access,
+      Shell_Surface_Ping       => Shell_Surface_Ping,
+      Shell_Surface_Configure  => Shell_Surface_Configure,
+      Shell_Surface_Popup_Done => Shell_Surface_Popup_Done);
+
+   procedure Mouse_Enter
+     (Data      : not null Data_Ptr;
+      Pointer   : Wl.Pointer_T;
+      Serial    : Wl.Unsigned_32;
+      Surface   : Wl.Surface_T;
+      Surface_X : Wl.Fixed_T;
+      Surface_Y : Wl.Fixed_T) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer enter");
+   end Mouse_Enter;
+
+   procedure Pointer_Leave
+     (Data    : not null Data_Ptr;
+      Pointer : Wl.Pointer_T;
+      Serial  : Wl.Unsigned_32;
+      Surface : Wl.Surface_T) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer leave");
+   end Pointer_Leave;
+
+   procedure Pointer_Motion
+     (Data      : not null Data_Ptr;
+      Pointer   : Wl.Pointer_T;
+      Time      : Wl.Unsigned_32;
+      Surface_X : Wl.Fixed_T;
+      Surface_Y : Wl.Fixed_T) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer motion");
+   end Pointer_Motion;
+
+   procedure Pointer_Button
+     (Data    : not null Data_Ptr;
+      Pointer : Wl.Pointer_T;
+      Serial  : Wl.Unsigned_32;
+      Time    : Wl.Unsigned_32;
+      Button  : Wl.Unsigned_32;
+      State   : Wl.Unsigned_32) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer button");
+   end Pointer_Button;
+
+   procedure Pointer_Axis
+     (Data    : not null Data_Ptr;
+      Pointer : Wl.Pointer_T;
+      Time    : Wl.Unsigned_32;
+      Axis    : Wl.Unsigned_32;
+      Value   : Wl.Fixed_T) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer axis");
+   end Pointer_Axis;
+
+   procedure Pointer_Frame (Data    : not null Data_Ptr;
+                            Pointer : Wl.Pointer_T) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer frame");
+   end Pointer_Frame;
+
+   procedure Pointer_Axis_Source
+     (Data        : not null Data_Ptr;
+      Pointer     : Wl.Pointer_T;
+      Axis_Source : Wl.Unsigned_32) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer axis source");
+   end Pointer_Axis_Source;
+
+   procedure Pointer_Axis_Stop
+     (Data    : not null Data_Ptr;
+      Pointer : Wl.Pointer_T;
+      Time    : Wl.Unsigned_32;
+      Axis    : Wl.Unsigned_32) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer axis stop");
+   end Pointer_Axis_Stop;
+
+   procedure Pointer_Axis_Discrete
+     (Data     : not null Data_Ptr;
+      Pointer  : Wl.Pointer_T;
+      Axis     : Wl.Unsigned_32;
+      Discrete : Integer) is
+   begin
+      Ada.Text_IO.Put_Line ("Pointer axis discrete");
+   end Pointer_Axis_Discrete;
+
+   package Mouse_Subscriber is new Wl.Pointer_Subscriber
+     (Data_Type             => Data_Ptr,
+      Data                  => Data'Unchecked_Access,
+      Pointer_Enter         => Mouse_Enter,
+      Pointer_Leave         => Pointer_Leave,
+      Pointer_Motion        => Pointer_Motion,
+      Pointer_Button        => Pointer_Button,
+      Pointer_Axis          => Pointer_Axis,
+      Pointer_Frame         => Pointer_Frame,
+      Pointer_Axis_Source   => Pointer_Axis_Source,
+      Pointer_Axis_Stop     => Pointer_Axis_Stop,
+      Pointer_Axis_Discrete => Pointer_Axis_Discrete);
+
    Display    : Wl.Display_T;
    Registry   : Wl.Registry_T;
 
    WIDTH : constant := 320;
    HEIGHT : constant := 200;
---     CURSOR_WIDTH : constant := 100;
---     CURSOR_HEIGHT : constant := 59;
---     CURSOR_HOT_SPOT_X : constant := 10;
---     CURSOR_HOT_SPOT_Y : constant := 35;
---
-     Done : Boolean := false;
---
---     --  void on_button(uint32_t button)
---     --  {
---     --      done = true;
---     --  }
---
+   --     CURSOR_WIDTH : constant := 100;
+   --     CURSOR_HEIGHT : constant := 59;
+   --     CURSOR_HOT_SPOT_X : constant := 10;
+   --     CURSOR_HOT_SPOT_Y : constant := 35;
+   --
+   Done : Boolean := false;
+   --
+   --     --  void on_button(uint32_t button)
+   --     --  {
+   --     --      done = true;
+   --     --  }
+   --
    Buffer        : Wl.Buffer_T;
    Pool          : Wl.Shm_Pool_T;
    Surface       : Wl.Surface_T;
@@ -171,6 +301,12 @@ begin
    Display.Dispatch;
    Display.Roundtrip;
    Registry.Destroy;
+
+   if Exists_Mouse then
+      Ada.Text_IO.Put_Line ("Start mosue subscription");
+      Seat.Get_Pointer (Pointer);
+      Mouse_Subscriber.Start_Subscription (Pointer);
+   end if;
 
    Image.Open (File_Name,
                Px.O_RDWR,
@@ -220,6 +356,8 @@ begin
       return;
    end if;
 
+   Shell_Surface_Subscriber.Start_Subscription (Shell_Surface);
+
    Shell_Surface.Set_Toplevel;
 
    Pool.Create_Buffer (0,
@@ -243,5 +381,7 @@ begin
          Px.Put_Line ("Main loop error");
          Done := true;
       end if;
+--      delay 0.5;
+      Ada.Text_IO.Put_Line ("Loop " & Done'Image);
    end loop;
 end Example_Hdante_Hello_World;

@@ -1,6 +1,7 @@
 --with Ada.Text_IO;
 with Ada.Containers.Hashed_Maps;
 with System.Storage_Elements;
+with Ada.Text_IO;
 
 package body Wl is
 
@@ -1173,13 +1174,82 @@ package body Wl is
 
    end Registry_Objects_Subscriber;
 
+   package body Shell_Surface_Subscriber is
+
+      procedure Internal_Shell_Surface_Ping
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr;
+         Serial      : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Shell_Surface_Configure
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr;
+         Edges       : Unsigned_32;
+         Width       : Integer;
+         Height      : Integer) with
+        Convention => C;
+
+      procedure Internal_Shell_Surface_Popup_Done
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr) with
+        Convention => C;
+
+      procedure Internal_Shell_Surface_Ping
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr;
+         Serial      : Unsigned_32)
+      is
+         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+      begin
+         Shell_Surface_Ping (Data, S, Serial);
+      end Internal_Shell_Surface_Ping;
+
+      procedure Internal_Shell_Surface_Configure
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr;
+         Edges       : Unsigned_32;
+         Width       : Integer;
+         Height      : Integer)
+      is
+         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+      begin
+         Shell_Surface_Configure (Data, S, Edges, Width, Height);
+      end Internal_Shell_Surface_Configure;
+
+      procedure Internal_Shell_Surface_Popup_Done
+        (Unused_Data : Void_Ptr;
+         Surface     : Wl_Thin.Shell_Surface_Ptr)
+      is
+         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+      begin
+         Shell_Surface_Popup_Done (Data, S);
+      end Internal_Shell_Surface_Popup_Done;
+
+      Listener : aliased Wl_Thin.Shell_Surface_Listener_T :=
+        (
+         Ping       => Internal_Shell_Surface_Ping'Unrestricted_Access,
+         Configure  => Internal_Shell_Surface_Configure'Unrestricted_Access,
+         Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
+        );
+
+      procedure Start_Subscription (Surface : in out Shell_Surface_T) is
+         I : Wl.int;
+      begin
+         I := Wl_Thin.Shell_Surface_Add_Listener
+           (Surface.My_Shell_Surface,
+            Listener'Unchecked_Access,
+            Wl.Null_Address);
+      end Start_Subscription;
+
+   end Shell_Surface_Subscriber;
+
    package body Seat_Capability_Subscriber is
 
       procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
                                    Seat         : Wl_Thin.Seat_Ptr;
                                    Capabilities : Interfaces.Unsigned_32) with
         Convention => C;
-
 
       procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
                                    Seat         : Wl_Thin.Seat_Ptr;
@@ -1194,8 +1264,8 @@ package body Wl is
       end Internal_Seat_Capabilities;
 
       procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
-                           Seat        : Wl_Thin.Seat_Ptr;
-                           Name        : Interfaces.C.Strings.chars_ptr) with
+                                    Seat        : Wl_Thin.Seat_Ptr;
+                                    Name        : Interfaces.C.Strings.chars_ptr) with
         Convention => C;
 
       procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
@@ -1227,6 +1297,190 @@ package body Wl is
       end Start_Subscription;
 
    end Seat_Capability_Subscriber;
+
+   package body Pointer_Subscriber is
+
+      procedure Internal_Pointer_Enter
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Surface     : Wl_Thin.Surface_Ptr;
+         Surface_X   : Fixed_T;
+         Surface_Y   : Fixed_T) with
+        Convention => C;
+
+      procedure Internal_Pointer_Leave
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Surface     : Wl_Thin.Surface_Ptr) with
+        Convention => C;
+
+      procedure Internal_Pointer_Motion
+        (Data      : Void_Ptr;
+         Pointer   : Wl_Thin.Pointer_Ptr;
+         Time      : Interfaces.Unsigned_32;
+         Surface_X : Fixed_T;
+         Surface_Y : Fixed_T) with
+        Convention => C;
+
+      procedure Internal_Pointer_Button
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Time        : Interfaces.Unsigned_32;
+         Button      : Interfaces.Unsigned_32;
+         State       : Interfaces.Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Pointer_Axis
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32;
+         Value   : Fixed_T) with
+        Convention => C;
+
+      procedure Internal_Pointer_Frame (Data    : Void_Ptr;
+                                        Pointer : Wl_Thin.Pointer_Ptr) with
+        Convention => C;
+
+      procedure Internal_Pointer_Axis_Source
+        (Data        : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Axis_Source : Interfaces.Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Pointer_Axis_Stop
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Pointer_Axis_Discrete
+        (Data     : Void_Ptr;
+         Pointer  : Wl_Thin.Pointer_Ptr;
+         Axis     : Interfaces.Unsigned_32;
+         Discrete : Integer) with
+        Convention => C;
+
+      procedure Internal_Pointer_Enter
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Surface     : Wl_Thin.Surface_Ptr;
+         Surface_X   : Fixed_T;
+         Surface_Y   : Fixed_T)
+      is
+         P : Pointer_T := (My_Pointer => Pointer);
+         S : Surface_T := (My_Surface => Surface);
+      begin
+         Ada.Text_IO.Put_Line ("P");
+         Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);
+      end Internal_Pointer_Enter;
+
+      procedure Internal_Pointer_Leave
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Surface     : Wl_Thin.Surface_Ptr)
+      is
+         P : Pointer_T := (My_Pointer => Pointer);
+         S : Surface_T := (My_Surface => Surface);
+      begin
+         Ada.Text_IO.Put_Line ("P");
+         Pointer_Leave (Data, P, Serial, S);
+      end Internal_Pointer_Leave;
+
+      procedure Internal_Pointer_Motion
+        (Data      : Void_Ptr;
+         Pointer   : Wl_Thin.Pointer_Ptr;
+         Time      : Interfaces.Unsigned_32;
+         Surface_X : Fixed_T;
+         Surface_Y : Fixed_T) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Motion;
+
+      procedure Internal_Pointer_Button
+        (Unused_Data : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Serial      : Interfaces.Unsigned_32;
+         Time        : Interfaces.Unsigned_32;
+         Button      : Interfaces.Unsigned_32;
+         State       : Interfaces.Unsigned_32)
+      is
+         P : Pointer_T := (My_Pointer => Pointer);
+      begin
+         Pointer_Button (Data, P, Serial, Time, Button, State);
+      end Internal_Pointer_Button;
+
+      procedure Internal_Pointer_Axis
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32;
+         Value   : Fixed_T) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Axis;
+
+      procedure Internal_Pointer_Frame (Data    : Void_Ptr;
+                                        Pointer : Wl_Thin.Pointer_Ptr) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Frame;
+
+      procedure Internal_Pointer_Axis_Source
+        (Data        : Void_Ptr;
+         Pointer     : Wl_Thin.Pointer_Ptr;
+         Axis_Source : Interfaces.Unsigned_32) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Axis_Source;
+
+      procedure Internal_Pointer_Axis_Stop
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Time    : Interfaces.Unsigned_32;
+         Axis    : Interfaces.Unsigned_32) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Axis_Stop;
+
+      procedure Internal_Pointer_Axis_Discrete
+        (Data     : Void_Ptr;
+         Pointer  : Wl_Thin.Pointer_Ptr;
+         Axis     : Interfaces.Unsigned_32;
+         Discrete : Integer) is
+      begin
+         Ada.Text_IO.Put_Line ("P");
+      end Internal_Pointer_Axis_Discrete;
+
+      Pointer_Listener : aliased Wl_Thin.Pointer_Listener_T :=
+        (
+         Enter         => Internal_Pointer_Enter'Unrestricted_Access,
+         Leave         => Internal_Pointer_Leave'Unrestricted_Access,
+         Motion        => Internal_Pointer_Motion'Unrestricted_Access,
+         Button        => Internal_Pointer_Button'Unrestricted_Access,
+         Axis          => Internal_Pointer_Axis'Unrestricted_Access,
+         Frame         => Internal_Pointer_Frame'Unrestricted_Access,
+         Axis_Source   => Internal_Pointer_Axis_Source'Unrestricted_Access,
+         Axis_Stop     => Internal_Pointer_Axis_Stop'Unrestricted_Access,
+         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
+        );
+
+      procedure Start_Subscription (P : in out Pointer_T) is
+         I : Wl.int;
+      begin
+         I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
+                                            Listener => Pointer_Listener'Unrestricted_Access,
+                                            Data     => Wl.Null_Address);
+         Ada.Text_IO.Put_Line ("Mouse subscription: " & I'Img);
+      end Start_Subscription;
+
+   end Pointer_Subscriber;
 
    procedure Connect (Display : in out Display_T;
                       Name    : Interfaces.C.Strings.char_array_access) is
@@ -1396,6 +1650,12 @@ package body Wl is
    begin
       Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
    end Set_Toplevel;
+
+   procedure Pong (Surface : Shell_Surface_T;
+                   Serial  : Unsigned_32) is
+   begin
+      Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
+   end Pong;
 
    procedure Attach (Surface : Surface_T;
                      Buffer  : Buffer_T;
