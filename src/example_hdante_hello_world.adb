@@ -1,6 +1,8 @@
 with Px;
 with Wl;
 with Ada.Text_IO;
+-- sudo apt install libwayland-dev
+
 -- This is a wayland hello world application. It uses the wayland
 -- client library and the wayland protocol to display a window.
 --
@@ -21,6 +23,8 @@ procedure Example_Hdante_Hello_World is
    Seat       : aliased Wl.Seat_T;
    Shell      : aliased Wl.Shell_T;
    Shm        : aliased Wl.Shm_T;
+
+   Done : Boolean := false;
 
    type Data_T is limited record
       Compositor : not null access Wl.Compositor_T;
@@ -195,6 +199,7 @@ procedure Example_Hdante_Hello_World is
       State   : Wl.Unsigned_32) is
    begin
       Ada.Text_IO.Put_Line ("Pointer button");
+      Done := True;
    end Pointer_Button;
 
    procedure Pointer_Axis
@@ -262,7 +267,6 @@ procedure Example_Hdante_Hello_World is
    --     CURSOR_HOT_SPOT_X : constant := 10;
    --     CURSOR_HOT_SPOT_Y : constant := 35;
    --
-   Done : Boolean := false;
    --
    --     --  void on_button(uint32_t button)
    --     --  {
@@ -381,7 +385,5 @@ begin
          Px.Put_Line ("Main loop error");
          Done := true;
       end if;
---      delay 0.5;
-      Ada.Text_IO.Put_Line ("Loop " & Done'Image);
    end loop;
 end Example_Hdante_Hello_World;

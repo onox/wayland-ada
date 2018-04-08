@@ -1,7 +1,6 @@
 --with Ada.Text_IO;
 with Ada.Containers.Hashed_Maps;
 with System.Storage_Elements;
-with Ada.Text_IO;
 
 package body Wl is
 
@@ -1376,7 +1375,6 @@ package body Wl is
          P : Pointer_T := (My_Pointer => Pointer);
          S : Surface_T := (My_Surface => Surface);
       begin
-         Ada.Text_IO.Put_Line ("P");
          Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);
       end Internal_Pointer_Enter;
 
@@ -1389,7 +1387,6 @@ package body Wl is
          P : Pointer_T := (My_Pointer => Pointer);
          S : Surface_T := (My_Surface => Surface);
       begin
-         Ada.Text_IO.Put_Line ("P");
          Pointer_Leave (Data, P, Serial, S);
       end Internal_Pointer_Leave;
 
@@ -1400,7 +1397,7 @@ package body Wl is
          Surface_X : Fixed_T;
          Surface_Y : Fixed_T) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Motion;
 
       procedure Internal_Pointer_Button
@@ -1423,13 +1420,13 @@ package body Wl is
          Axis    : Interfaces.Unsigned_32;
          Value   : Fixed_T) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Axis;
 
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
                                         Pointer : Wl_Thin.Pointer_Ptr) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Frame;
 
       procedure Internal_Pointer_Axis_Source
@@ -1437,7 +1434,7 @@ package body Wl is
          Pointer     : Wl_Thin.Pointer_Ptr;
          Axis_Source : Interfaces.Unsigned_32) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Axis_Source;
 
       procedure Internal_Pointer_Axis_Stop
@@ -1446,7 +1443,7 @@ package body Wl is
          Time    : Interfaces.Unsigned_32;
          Axis    : Interfaces.Unsigned_32) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Axis_Stop;
 
       procedure Internal_Pointer_Axis_Discrete
@@ -1455,7 +1452,7 @@ package body Wl is
          Axis     : Interfaces.Unsigned_32;
          Discrete : Integer) is
       begin
-         Ada.Text_IO.Put_Line ("P");
+         null;
       end Internal_Pointer_Axis_Discrete;
 
       Pointer_Listener : aliased Wl_Thin.Pointer_Listener_T :=
@@ -1477,7 +1474,6 @@ package body Wl is
          I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
                                             Listener => Pointer_Listener'Unrestricted_Access,
                                             Data     => Wl.Null_Address);
-         Ada.Text_IO.Put_Line ("Mouse subscription: " & I'Img);
       end Start_Subscription;
 
    end Pointer_Subscriber;
