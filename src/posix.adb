@@ -1,27 +1,27 @@
-package body Px is
+package body Posix is
 
    use type Interfaces.C.int;
 
    procedure Open
-     (File      : in out File_T;
+     (File      : in out Px.File;
       File_Name : in     C_String;
-      Flags     : in     O_FLag_T;
-      S_Flags   : in     S_FLag_T)
+      Flags     : in     O_FLag;
+      S_Flags   : in     S_FLag)
    is
    begin
       File.My_File_Descriptor := Px_Thin.Open (File_Name, Flags, S_Flags);
       File.My_Is_Open         := File.My_File_Descriptor /= 0;
    end Open;
 
-   procedure Close (File : in out File_T) is
+   procedure Close (File : in out Px.File) is
    begin
       Px_Thin.Close (File.My_File_Descriptor);
       File.My_Is_Open := False;
    end Close;
 
    procedure Get_File_Status
-     (File        : in     File_T;
-      File_Status : in out Status_T)
+     (File        : in     Px.File;
+      File_Status : in out Px.Status)
    is
       Result : constant int :=
         Px_Thin.Get_File_Status
@@ -31,8 +31,8 @@ package body Px is
       File_Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
 
-   procedure Write (File : File_T; Bytes : Byte_Array_T) is
-      SSize : SSize_T;
+   procedure Write (File : Px.File; Bytes : Byte_Array) is
+      SSize : SSize_Type;
    begin
       SSize :=
         Px_Thin.Write
@@ -41,19 +41,19 @@ package body Px is
            Count           => Bytes'Length);
    end Write;
 
-   function Read (File : File_T; Bytes : Byte_Array_T) return SSize_T is
+   function Read (File : Px.File; Bytes : Byte_Array) return SSize_Type is
    begin
       return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
    end Read;
 
-   procedure Memory_Map
-     (File    : in File_T;
+   procedure Map_Memory
+     (File    : in Px.File;
       Address : Void_Ptr;
-      Len     : Size_T;
-      Prot    : Prot_FLag_T;
+      Len     : Size_Type;
+      Prot    : Prot_FLag;
       Flags   : int;
-      Offset  : Offset_T;
-      Memory_Map : in out Memory_Map_T) is
+      Offset  : Px.Offset;
+      Memory_Map : in out Px.Memory_Map) is
    begin
       Memory_Map.My_Mapping := Px_Thin.Mmap (Address,
                                              Len,
@@ -62,9 +62,9 @@ package body Px is
                                              File.My_File_Descriptor,
                                              Offset);
       Memory_Map.My_Length := Len;
-   end Memory_Map;
+   end Map_Memory;
 
-   function Memory_Unmap (Map : in out Memory_Map_T) return int is
+   function Unmap_Memory (Map : in out Px.Memory_Map) return int is
       R : int;
    begin
       R := Px_Thin.Munmap (Map.My_Mapping, Map.My_Length);
@@ -72,10 +72,10 @@ package body Px is
          Map.My_Mapping := MAP_FAILED;
       end if;
       return R;
-   end Memory_Unmap;
+   end Unmap_Memory;
 
    function Memory_Unmap (Address : Void_Ptr;
-                          Length  : Size_T) return int is
+                          Length  : Size_Type) return int is
    begin
       return Px_Thin.Munmap (Address, Length);
    end Memory_Unmap;
@@ -83,7 +83,7 @@ package body Px is
    New_Line : constant String := (1 => Character'Val (10));
 
    procedure Put_Line (Text : String) is
-      SSize : SSize_T;
+      SSize : SSize_Type;
       pragma Unreferenced (SSize);
    begin
       SSize := Px_Thin.Write (File_Descriptor => Px_Thin.STDOUT_FILENO,
@@ -95,7 +95,7 @@ package body Px is
    end Put_Line;
 
    procedure Put (Text : String) is
-      SSize : SSize_T;
+      SSize : SSize_Type;
       pragma Unreferenced (SSize);
    begin
       SSize := Px_Thin.Write (File_Descriptor => Px_Thin.STDOUT_FILENO,
@@ -103,4 +103,4 @@ package body Px is
                               Count           => Text'Length);
    end Put;
 
-end Px;
+end Posix;

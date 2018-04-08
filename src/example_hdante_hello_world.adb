@@ -1,4 +1,4 @@
-with Px;
+with Posix;
 with Wl;
 with Ada.Text_IO;
 -- sudo apt install libwayland-dev
@@ -14,7 +14,9 @@ with Ada.Text_IO;
 -- and execute the executable from there.
 procedure Example_Hdante_Hello_World is
 
-   use type Px.S_FLag_T;
+   package Px renames Posix;
+
+   use type Px.S_FLag;
 
    use type Wl.Seat_Capability_T;
 
@@ -268,24 +270,20 @@ procedure Example_Hdante_Hello_World is
    --     CURSOR_HOT_SPOT_Y : constant := 35;
    --
    --
-   --     --  void on_button(uint32_t button)
-   --     --  {
-   --     --      done = true;
-   --     --  }
-   --
+
    Buffer        : Wl.Buffer_T;
    Pool          : Wl.Shm_Pool_T;
    Surface       : Wl.Surface_T;
    Shell_Surface : Wl.Shell_Surface_T;
-   Image         : Px.File_T;
-   Stat          : Px.Status_T;
+   Image         : Px.File;
+   Stat          : Px.Status;
 
    use type Px.int;
    use type Px.C_String;
 
    File_Name : Px.C_String := "hello_world_image.bin" & Px.Nul;
 
-   Memory_Map : Px.Memory_Map_T;
+   Memory_Map : Px.Memory_Map;
 
 begin
    Display.Connect (Wl.Default_Display_Name);
@@ -328,7 +326,7 @@ begin
       return;
    end if;
 
-   Image.Memory_Map (Px.Nil,
+   Image.Map_Memory (Px.Nil,
                      Px.unsigned_long (Stat.Size),
                      Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
 
