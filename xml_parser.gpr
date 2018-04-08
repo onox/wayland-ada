@@ -6,11 +6,13 @@ project Xml_Parser is
    for Main use ("xml_parser.adb");
 
    for Source_Files use (
-                         "xml_parser.adb"
+                         "xml_parser.adb",
+                         "xml_parser_utils.ads",
+                         "xml_parser_utils.adb"
                          );
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-g");
+      for Default_Switches ("Ada") use ("-g", "-Wall");
    end Compiler;
 
    package Binder is

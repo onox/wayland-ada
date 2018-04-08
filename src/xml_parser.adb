@@ -6,14 +6,13 @@ with Aida.Subprogram_Call_Result;
 with Dynamic_Pools;
 with Ada.Directories;
 with Aida.Sequential_Stream_IO;
-with Aida.UTF8;
 with Aida.UTF8_Code_Point;
-with Ada.Containers.Vectors;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
-with Ada.Strings.Fixed;
+with Ada.Containers;
 
 with Wayland_XML;
+with Xml_Parser_Utils;
 
 -- Pretty print this file with "gnatpp -M140"
 procedure XML_Parser is
@@ -54,426 +53,7 @@ procedure XML_Parser is
 
    Subpool : Dynamic_Pools.Subpool_Handle := Scoped_Subpool.Handle;
 
-   package Utils is
-
-      function Adaify_Name (Old_Name : String) return String;
-
-      -- If the variable name is "Interface" then it will be recognized as
-      -- a reserved word in Ada and it will be suffixed with "_V" resulting
-      -- in "Interface_V".
-      function Adaify_Variable_Name (Old_Name : String) return String;
-
-      function Make_Upper_Case (Source : String) return String;
-
-      function Arg_Type_As_String (Arg_Tag : Wx.Arg_Tag) return String;
-
-      function Number_Of_Args (Request_Tag : Wx.Request_Tag) return Aida.Nat32_T;
-
-      function Is_New_Id_Argument_Present (Request_Tag : Wx.Request_Tag) return Boolean;
-
-      function Is_Interface_Specified (Request_Tag : Wx.Request_Tag) return Boolean with
-         Pre => Is_New_Id_Argument_Present (Request_Tag);
-
-      Interface_Not_Found_Exception : exception;
-
-      -- will raise Interface_Not_Found_Exception is pre-condition is not met.
-      function Find_Specified_Interface (Request_Tag : Wx.Request_Tag) return String with
-         Pre => Is_Interface_Specified (Request_Tag);
-
-      function Interface_Ptr_Name (Interface_Tag : Wx.Interface_Tag) return String;
-
-      function Is_Request_Destructor (Request_Tag : Wx.Request_Tag) return Boolean;
-
-      function Exists_Destructor (Interface_Tag : Wx.Interface_Tag) return Boolean;
-
-      function Exists_Any_Event_Tag (Interface_Tag : Wx.Interface_Tag) return Boolean;
-
-      function Remove_Tabs (Text : String) return String;
-
-      type Interval is record
-         First : Aida.Pos32_T;
-         Last  : Aida.Nat32_T;
-      end record;
-
-      package Interval_Vectors is new Ada.Containers.Vectors (Index_Type => Positive, Element_Type => Interval, "=" => "=");
-
-      type Intervals_Ref (E : not null access constant Interval_Vectors.Vector) is limited null record with
-         Implicit_Dereference => E;
-
-      type Interval_Identifier is tagged limited private;
-
-      function Intervals (This : aliased Interval_Identifier) return Intervals_Ref with
-         Global => null;
-
-      function Make (Text : String) return Interval_Identifier with
-         Global => null;
-
-   private
-
-      type Interval_Identifier is tagged limited record
-         My_Intervals : aliased Interval_Vectors.Vector;
-      end record;
-
-      function Intervals (This : aliased Interval_Identifier) return Intervals_Ref is ((E => This.My_Intervals'Access));
-
-   end Utils;
-
-   package body Utils is
-
-      -- If input is "wl_hello" then output is "hello".
-      -- This procedure strips away the first
-      -- three characters if they are "wl_".
-      procedure Remove_Initial_Wl (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
-      begin
-         if Length (New_Name) = 3 and then New_Name = "Wl_" then
-            Set_Unbounded_String (New_Name, "");
-         end if;
-      end Remove_Initial_Wl;
-
-      function Adaify_Variable_Name (Old_Name : String) return String is
-         Result : String := Adaify_Name (Old_Name);
-      begin
-         if Result = "Interface" then
-            return Result & "_V";
-         else
-            return Result;
-         end if;
-      end Adaify_Variable_Name;
-
-      function Adaify_Name (Old_Name : String) return String is
-         New_Name : Ada.Strings.Unbounded.Unbounded_String;
-
-         P : Aida.Int32_T := Old_Name'First;
-
-         CP : Aida.UTF8_Code_Point.T := 0;
-
-         Is_Previous_Lowercase    : Boolean := False;
-         Is_Previous_A_Number     : Boolean := False;
-         Is_Previous_An_Undercase : Boolean := False;
-      begin
-         Aida.UTF8.Get (Source => Old_Name, Pointer => P, Value => CP);
-
-         if Is_Uppercase (CP) then
-            Append (New_Name, Image (CP));
-         else
-            Append (New_Name, Image (To_Uppercase (CP)));
-         end if;
-
-         while P <= Old_Name'Last loop
-            Aida.UTF8.Get (Source => Old_Name, Pointer => P, Value => CP);
-
-            if Image (CP) = "_" then
-               Append (New_Name, "_");
-               Remove_Initial_Wl (New_Name);
-               Is_Previous_An_Undercase := True;
-            else
-               if Is_Digit (CP) then
-                  if Is_Previous_A_Number then
-                     Append (New_Name, Image (CP));
-                  elsif Is_Previous_An_Undercase then
-                     Append (New_Name, Image (CP));
-                  else
-                     Append (New_Name, "_");
-                     Remove_Initial_Wl (New_Name);
-                     Append (New_Name, Image (CP));
-                  end if;
-
-                  Is_Previous_A_Number := True;
-               else
-                  if Is_Uppercase (CP) then
-                     if Is_Previous_An_Undercase then
-                        Append (New_Name, Image (CP));
-                     elsif Is_Previous_Lowercase then
-                        Append (New_Name, "_");
-                        Remove_Initial_Wl (New_Name);
-                        Append (New_Name, Image (CP));
-                        Is_Previous_Lowercase := False;
-                     else
-                        Append (New_Name, Image (To_Lowercase (CP)));
-                     end if;
-                  else
-                     if Is_Previous_An_Undercase then
-                        Append (New_Name, Image (To_Uppercase (CP)));
-                     else
-                        Append (New_Name, Image (CP));
-                     end if;
-                     Is_Previous_Lowercase := True;
-                  end if;
-
-                  Is_Previous_A_Number := False;
-               end if;
-
-               Is_Previous_An_Undercase := False;
-            end if;
-
-         end loop;
-
-         if To_String (New_Name) = "Class_" then
-            Set_Unbounded_String (New_Name, "Class_V");
---          To handle the following case:
---          <request name="set_class">
---            ...
---            <arg name="class_" type="string" summary="surface class"/>
---          </request>
---          Identifiers in Ada cannot end with underscore "_".
-         end if;
-
-         if To_String (New_Name) = "Delay" then
-            Set_Unbounded_String (New_Name, "Delay_V");
---          To handle:
---          <arg name="delay" type="int" summary="delay in ..."/>
---          "delay" is a reserved word in Ada.
-         end if;
-
-         return To_String (New_Name);
-      end Adaify_Name;
-
-      function Make_Upper_Case (Source : String) return String is
-         Target : Ada.Strings.Unbounded.Unbounded_String;
-
-         P : Aida.Int32_T := Source'First;
-
-         CP : Aida.UTF8_Code_Point.T := 0;
-      begin
-         Set_Unbounded_String (Target, "");
-         while P <= Source'Last loop
-            Aida.UTF8.Get (Source => Source, Pointer => P, Value => CP);
-
-            if Image (CP) = "_" then
-               Append (Target, "_");
-            elsif Is_Digit (CP) then
-               Append (Target, Image (CP));
-            elsif Is_Lowercase (CP) then
-               Append (Target, Image (To_Uppercase (CP)));
-            else
-               Append (Target, Image (CP));
-            end if;
-
-         end loop;
-
-         return To_String (Target);
-      end Make_Upper_Case;
-
-      function Arg_Type_As_String (Arg_Tag : Wx.Arg_Tag) return String is
-         N : Ada.Strings.Unbounded.Unbounded_String;
-      begin
-         case Arg_Tag.Type_Attribute is
-            when Type_Integer =>
-               Set_Unbounded_String (N, "Integer");
-            when Type_Unsigned_Integer =>
-               Set_Unbounded_String (N, "Interfaces.Unsigned_32");
-            when Type_String =>
-               Set_Unbounded_String (N, "Interfaces.C.Strings.chars_ptr");
-            when Type_FD =>
-               Set_Unbounded_String (N, "Integer");
-            when Type_New_Id =>
-               Set_Unbounded_String (N, "Interfaces.Unsigned_32");
-            when Type_Object =>
-               if Arg_Tag.Exists_Interface_Attribute then
-                  Set_Unbounded_String (N, Utils.Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
-               else
-                  Set_Unbounded_String (N, "Void_Ptr");
-               end if;
-            when Type_Fixed =>
-               Set_Unbounded_String (N, "Fixed_T");
-            when Type_Array =>
-               Set_Unbounded_String (N, "Wayland_Array_T");
-         end case;
-         return To_String (N);
-      end Arg_Type_As_String;
-
-      function Number_Of_Args (Request_Tag : Wx.Request_Tag) return Aida.Nat32_T is
-         N : Aida.Nat32_T := 0;
-      begin
-         for Child of Request_Tag.Children loop
-            if Child.Kind_Id = Child_Arg then
-               N := N + 1;
-            end if;
-         end loop;
-         return N;
-      end Number_Of_Args;
-
-      function Is_New_Id_Argument_Present (Request_Tag : Wx.Request_Tag) return Boolean is
-      begin
-         for Child of Request_Tag.Children loop
-            if Child.Kind_Id = Child_Arg
-              and then Child.Arg_Tag.Exists_Type_Attribute
-              and then Child.Arg_Tag.Type_Attribute = Type_New_Id
-            then
-               return True;
-            end if;
-         end loop;
-
-         return False;
-      end Is_New_Id_Argument_Present;
-
-      function Is_Interface_Specified (Request_Tag : Wx.Request_Tag) return Boolean is
-      begin
-         for Child of Request_Tag.Children loop
-            if Child.Kind_Id = Child_Arg
-              and then Child.Arg_Tag.Exists_Type_Attribute
-              and then Child.Arg_Tag.Type_Attribute = Type_New_Id
-              and then Child.Arg_Tag.Exists_Interface_Attribute
-            then
-               return True;
-            end if;
-         end loop;
-
-         return False;
-      end Is_Interface_Specified;
-
-      function Find_Specified_Interface (Request_Tag : Wx.Request_Tag) return String is
-      begin
-         for Child of Request_Tag.Children loop
-            if Child.Kind_Id = Child_Arg
-              and then Child.Arg_Tag.Exists_Type_Attribute
-              and then Child.Arg_Tag.Type_Attribute = Type_New_Id
-              and then Child.Arg_Tag.Exists_Interface_Attribute
-            then
-               return Child.Arg_Tag.Interface_Attribute;
-            end if;
-         end loop;
-
-         raise Interface_Not_Found_Exception;
-      end Find_Specified_Interface;
-
-      function Interface_Ptr_Name (Interface_Tag : Wx.Interface_Tag) return String is
-      begin
-         return Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-      end Interface_Ptr_Name;
-
-      function Is_Request_Destructor (Request_Tag : Wx.Request_Tag) return Boolean is
-         Result : Boolean := False;
-
-         V : Wx.Request_Child_Vectors.Vector;
-      begin
-         for Child of Request_Tag.Children loop
-            if Child.Kind_Id = Child_Arg then
-               V.Append (Child);
-            end if;
-         end loop;
-
-         if Request_Tag.Exists_Type_Attribute
-           and then Request_Tag.Type_Attribute = "destructor"
-           and then Request_Tag.Name = "destroy"
-           and then V.Length = 0
-         then
-            Result := True;
-         end if;
-
-         return Result;
-      end Is_Request_Destructor;
-
-      function Exists_Destructor (Interface_Tag : Wx.Interface_Tag) return Boolean is
-         Result : Boolean := False;
-      begin
-         for Child of Interface_Tag.Children loop
-            case Child.Kind_Id is
-               when Child_Dummy =>
-                  null;
-               when Child_Description =>
-                  null;
-               when Child_Request =>
-                  if Utils.Is_Request_Destructor (Child.Request_Tag.all) then
-                     Result := True;
-                     exit;
-                  end if;
-               when Child_Event =>
-                  null;
-               when Child_Enum =>
-                  null;
-            end case;
-         end loop;
-
-         return Result;
-      end Exists_Destructor;
-
-      function Exists_Any_Event_Tag (Interface_Tag : Wx.Interface_Tag) return Boolean is
-         Result : Boolean := False;
-      begin
-         for Child of Interface_Tag.Children loop
-            case Child.Kind_Id is
-               when Child_Dummy =>
-                  null;
-               when Child_Description =>
-                  null;
-               when Child_Request =>
-                  null;
-               when Child_Event =>
-                  Result := True;
-                  exit;
-               when Child_Enum =>
-                  null;
-            end case;
-         end loop;
-
-         return Result;
-      end Exists_Any_Event_Tag;
-
-      function Make (Text : String) return Interval_Identifier is
-         Interval : Utils.Interval := (First => 1, Last => 0);
-
-         P           : Aida.Int32_T := Text'First;
-         Prev_P      : Aida.Int32_T := P;
-         Prev_Prev_P : Aida.Int32_T;
-         CP          : Aida.UTF8_Code_Point.T;
-
-         Is_Previous_New_Line : Boolean := False;
-      begin
-         return This : Interval_Identifier do
-            while Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P) loop
-               Prev_Prev_P := Prev_P;
-
-               Prev_P := P;
-               Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
-
-               if CP = 10 then
-                  if Prev_P > Text'First then
-                     if not Is_Previous_New_Line then
-                        Interval.Last := Prev_Prev_P;
-                        This.My_Intervals.Append (Interval);
-                     else
-                        Interval := (First => 1, Last => 0);
-                        This.My_Intervals.Append (Interval);
-                     end if;
-                  end if;
-
-                  Is_Previous_New_Line := True;
-               elsif CP = 13 then
-                  Is_Previous_New_Line := True;
-               else
-                  if Is_Previous_New_Line then
-                     Interval.First := Prev_P;
-                  end if;
-
-                  Is_Previous_New_Line := False;
-               end if;
-            end loop;
-         end return;
-      end Make;
-
-      function Remove_Tabs (Text : String) return String is
-         S : Ada.Strings.Unbounded.Unbounded_String;
-
-         P : Aida.Int32_T := Text'First;
-
-         CP : Aida.UTF8_Code_Point.T;
-      begin
-         while Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P) loop
-            Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
-
-            if CP /= 9 then
-               Ada.Strings.Unbounded.Append (S, Aida.UTF8_Code_Point.Image (CP));
-            else
-               Ada.Strings.Unbounded.Append (S, "   ");
-            end if;
-
-         end loop;
-
-         return To_String (S);
-      end Remove_Tabs;
-
-   end Utils;
+   package Utils renames Xml_Parser_Utils;
 
    procedure Allocate_Space_For_Wayland_XML_Contents;
 
@@ -576,7 +156,7 @@ procedure XML_Parser is
    procedure Identify_Protocol_Children is
 
       function Identify_Copyright (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Copyright_Ptr is
-         Copyright_Tag : not null Wx.Copyright_Ptr := new (Subpool) Wx.Copyright_Tag;
+         Copyright_Tag : constant not null Wx.Copyright_Ptr := new (Subpool) Wx.Copyright_Tag;
       begin
          if Node.Tag.Child_Nodes.Length = 1 then
             if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
@@ -591,7 +171,7 @@ procedure XML_Parser is
       end Identify_Copyright;
 
       function Identify_Description (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Description_Tag_Ptr is
-         Description_Tag : not null Wx.Description_Tag_Ptr := new (Subpool) Wx.Description_Tag;
+         Description_Tag : constant not null Wx.Description_Tag_Ptr := new (Subpool) Wx.Description_Tag;
       begin
          if Node.Tag.Attributes.Length = 1 then
             if Node.Tag.Attributes.Element (1).Name = "summary" then
@@ -617,7 +197,7 @@ procedure XML_Parser is
       end Identify_Description;
 
       function Identify_Arg (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Arg_Tag_Ptr is
-         Arg_Tag : not null Wx.Arg_Tag_Ptr := new (Subpool) Wx.Arg_Tag;
+         Arg_Tag : constant not null Wx.Arg_Tag_Ptr := new (Subpool) Wx.Arg_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -647,7 +227,7 @@ procedure XML_Parser is
       end Identify_Arg;
 
       function Identify_Request (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Request_Tag_Ptr is
-         Request_Tag : not null Wx.Request_Tag_Ptr := new (Subpool) Wx.Request_Tag;
+         Request_Tag : constant not null Wx.Request_Tag_Ptr := new (Subpool) Wx.Request_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -690,7 +270,7 @@ procedure XML_Parser is
       end Identify_Request;
 
       function Identify_Event (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Event_Tag_Ptr is
-         Event_Tag : not null Wx.Event_Tag_Ptr := new (Subpool) Wx.Event_Tag;
+         Event_Tag : constant not null Wx.Event_Tag_Ptr := new (Subpool) Wx.Event_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -731,7 +311,7 @@ procedure XML_Parser is
       end Identify_Event;
 
       function Identify_Entry (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Entry_Tag_Ptr is
-         Entry_Tag : not null Wx.Entry_Tag_Ptr := new (Subpool) Wx.Entry_Tag;
+         Entry_Tag : constant not null Wx.Entry_Tag_Ptr := new (Subpool) Wx.Entry_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -783,7 +363,7 @@ procedure XML_Parser is
       end Identify_Entry;
 
       function Identify_Enum (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Enum_Tag_Ptr is
-         Enum_Tag : not null Wx.Enum_Tag_Ptr := new (Subpool) Wx.Enum_Tag;
+         Enum_Tag : constant not null Wx.Enum_Tag_Ptr := new (Subpool) Wx.Enum_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -832,7 +412,7 @@ procedure XML_Parser is
       end Identify_Enum;
 
       function Identify_Interface (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Interface_Tag_Ptr is
-         Interface_Tag : not null Wx.Interface_Tag_Ptr := new (Subpool) Wx.Interface_Tag;
+         Interface_Tag : constant not null Wx.Interface_Tag_Ptr := new (Subpool) Wx.Interface_Tag;
       begin
          if Node.Tag.Attributes.Length = 2 then
             if Node.Tag.Attributes.Element (1).Name = "name" then
@@ -1244,7 +824,7 @@ procedure XML_Parser is
                I : Aida.Int32_T := 0;
 
                procedure Generate_Code (Request_Tag : Wx.Request_Tag) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Name : constant String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
                begin
                   Ada.Text_IO.Put (File, Name);
                   Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
@@ -1274,7 +854,7 @@ procedure XML_Parser is
             procedure Generate_Code_For_Event_Since_Version is
 
                procedure Generate_Code (Event_Tag : Wx.Event_Tag) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
+                  Name : constant String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
                begin
                   if Event_Tag.Exists_Since_Attribute then
                      Ada.Text_IO.Put (File, Name);
@@ -1308,7 +888,7 @@ procedure XML_Parser is
             procedure Generate_Code_For_Opcodes_Since_Version is
 
                procedure Generate_Code (Request_Tag : Wx.Request_Tag) is
-                  Name : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
+                  Name : constant String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
                begin
                   if Request_Tag.Exists_Since then
                      Ada.Text_IO.Put (File, Name);
@@ -1365,7 +945,7 @@ procedure XML_Parser is
       procedure Generate_Code_For_Interface_Constants is
 
          procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
-            Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+            Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
          begin
             Ada.Text_IO.Put (File, Name);
             Put_Line (File, " : aliased Interface_T with");
@@ -1397,7 +977,7 @@ procedure XML_Parser is
          procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
 
             procedure Generate_Code_For_Interface_Ptr is
-               Name : String := Utils.Interface_Ptr_Name (Interface_Tag);
+               Name : constant String := Utils.Interface_Ptr_Name (Interface_Tag);
             begin
                Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
                Put_Line (File, "");
@@ -1429,10 +1009,10 @@ procedure XML_Parser is
             procedure Generate_Code_For_Enums is
 
                procedure Generate_Code (Enum_Tag : Wx.Enum_Tag) is
-                  Enum_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
+                  Enum_Type_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
 
                   procedure Generate_Code_For_Enum_Value (Entry_Tag : Wx.Entry_Tag) is
-                     Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_" & Entry_Tag.Name);
+                     Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_" & Entry_Tag.Name);
                   begin
                      Put_Line (File, "-- " & Entry_Tag.Summary);
                      Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & ";");
@@ -1479,8 +1059,8 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Argument (Arg_Tag : Wx.Arg_Tag; Is_Last : Boolean) is
                   begin
                      declare
-                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        Arg_Name      : constant String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : constant String := Utils.Arg_Type_As_String (Arg_Tag);
                      begin
                         if Is_Last then
                            Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
@@ -1492,8 +1072,8 @@ procedure XML_Parser is
 
                   V : Wx.Event_Child_Vectors.Vector;
 
-                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
-                  Interface_Name  : String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Subprogram_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
+                  Interface_Name  : constant String := Utils.Adaify_Name (Interface_Tag.Name);
                begin
                   for Child of Event_Tag.Children loop
                      case Child.Kind_Id is
@@ -1550,14 +1130,14 @@ procedure XML_Parser is
             procedure Generate_Code_For_Listener_Type_Definition is
 
                procedure Generate_Code_For_Record_Component (Event_Tag : Wx.Event_Tag) is
-                  Component_Name      : String := Utils.Adaify_Name (Event_Tag.Name);
-                  Component_Type_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
+                  Component_Name      : constant String := Utils.Adaify_Name (Event_Tag.Name);
+                  Component_Type_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Event_Tag.Name & "_Subprogram_Ptr");
                begin
                   Put_Line (File, "   " & Component_Name & " : " & Component_Type_Name & ";");
                end Generate_Code_For_Record_Component;
 
-               Name     : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
-               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+               Name     : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_T");
+               Ptr_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
             begin
                Put_Line (File, "type " & Name & " is record");
 
@@ -1583,9 +1163,9 @@ procedure XML_Parser is
             end Generate_Code_For_Listener_Type_Definition;
 
             procedure Generate_Code_For_Add_Listener_Subprogram_Declaration is
-               Name              : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Ptr_Name          : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+               Name              : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name          : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Ptr_Listener_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
             begin
                Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
                Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
@@ -1594,8 +1174,8 @@ procedure XML_Parser is
             end Generate_Code_For_Add_Listener_Subprogram_Declaration;
 
             procedure Generate_Code_For_Set_User_Data_Subprogram_Declaration is
-               Name     : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name     : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
                Put_Line (File, "Data : Void_Ptr);");
@@ -1603,24 +1183,24 @@ procedure XML_Parser is
             end Generate_Code_For_Set_User_Data_Subprogram_Declaration;
 
             procedure Generate_Code_For_Get_User_Data_Subprogram_Declaration is
-               Name     : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name     : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
                Put_Line (File, "");
             end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
 
             procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
-               Name     : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name     : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32;");
                Put_Line (File, "");
             end Generate_Code_For_Get_Version_Subprogram_Declaration;
 
             procedure Generate_Code_For_Destroy_Subprogram_Declaration is
-               Name     : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Ptr_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name     : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Ptr_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
                Put_Line (File, "");
@@ -1633,8 +1213,8 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Arg (Arg_Tag : Wx.Arg_Tag; Is_Last : Boolean) is
                   begin
                      declare
-                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        Arg_Name      : constant String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : constant String := Utils.Arg_Type_As_String (Arg_Tag);
                      begin
                         if Is_Last then
                            Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
@@ -1645,16 +1225,16 @@ procedure XML_Parser is
                   end Generate_Code_For_Arg;
 
                   procedure Generate_Comment (Text : String) is
-                     Interval_Identifier : Utils.Interval_Identifier := Utils.Make (Text);
+                     Interval_Identifier : constant Utils.Interval_Identifier := Utils.Make (Text);
                   begin
                      for Interval of Interval_Identifier.Intervals loop
                         Put_Line (File, "-- " & Ada.Strings.Fixed.Trim (Text (Interval.First .. Interval.Last), Ada.Strings.Both));
                      end loop;
                   end Generate_Comment;
 
-                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
-                  Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+                  Subprogram_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
                begin
                   if Utils.Is_New_Id_Argument_Present (Request_Tag) then
                      if Request_Tag.Exists_Description then
@@ -1662,7 +1242,7 @@ procedure XML_Parser is
                      end if;
                      if Utils.Is_Interface_Specified (Request_Tag) then
                         declare
-                           Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                           Return_Type : constant String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
                         begin
                            if Utils.Number_Of_Args (Request_Tag) > 1 then
                               Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
@@ -1927,10 +1507,10 @@ procedure XML_Parser is
          procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
 
             procedure Generate_Code_For_Add_Listener_Subprogram_Implementations is
-               Name              : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Function_Name     : String := Name & "_Add_Listener";
-               Ptr_Name          : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
-               Ptr_Listener_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
+               Name              : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Function_Name     : constant String := Name & "_Add_Listener";
+               Ptr_Name          : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Ptr_Listener_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Listener_Ptr");
             begin
                Put_Line (File, "function " & Function_Name & " (" & Name & " : " & Ptr_Name & ";");
                Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
@@ -1942,9 +1522,9 @@ procedure XML_Parser is
             end Generate_Code_For_Add_Listener_Subprogram_Implementations;
 
             procedure Generate_Code_For_Set_User_Data_Subprogram_Implementations is
-               Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Subprogram_Name : String := Name & "_Set_User_Data";
-               Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Subprogram_Name : constant String := Name & "_Set_User_Data";
+               Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                Put_Line (File, "Data : Void_Ptr) is");
@@ -1955,9 +1535,9 @@ procedure XML_Parser is
             end Generate_Code_For_Set_User_Data_Subprogram_Implementations;
 
             procedure Generate_Code_For_Get_User_Data_Subprogram_Implementations is
-               Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Subprogram_Name : String := Name & "_Get_User_Data";
-               Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Subprogram_Name : constant String := Name & "_Get_User_Data";
+               Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Void_Ptr is");
                Put_Line (File, "begin");
@@ -1967,9 +1547,9 @@ procedure XML_Parser is
             end Generate_Code_For_Get_User_Data_Subprogram_Implementations;
 
             procedure Generate_Code_For_Get_Version_Subprogram_Implementations is
-               Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Subprogram_Name : String := Name & "_Get_Version";
-               Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Subprogram_Name : constant String := Name & "_Get_Version";
+               Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Interfaces.Unsigned_32 is");
                Put_Line (File, "begin");
@@ -1979,9 +1559,9 @@ procedure XML_Parser is
             end Generate_Code_For_Get_Version_Subprogram_Implementations;
 
             procedure Generate_Code_For_Destroy_Subprogram_Implementations is
-               Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-               Subprogram_Name : String := Name & "_Destroy";
-               Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+               Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+               Subprogram_Name : constant String := Name & "_Destroy";
+               Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
             begin
                if Utils.Exists_Destructor (Interface_Tag) then
                   Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
@@ -2008,8 +1588,8 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Arg (Arg_Tag : Wx.Arg_Tag; Is_Last : Boolean) is
                   begin
                      declare
-                        Arg_Name      : String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
-                        Arg_Type_Name : String := Utils.Arg_Type_As_String (Arg_Tag);
+                        Arg_Name      : constant String := Utils.Adaify_Variable_Name (Arg_Tag.Name);
+                        Arg_Type_Name : constant String := Utils.Arg_Type_As_String (Arg_Tag);
                      begin
                         if Is_Last then
                            Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
@@ -2019,15 +1599,15 @@ procedure XML_Parser is
                      end;
                   end Generate_Code_For_Arg;
 
-                  Opcode          : String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
-                  Subprogram_Name : String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
-                  Name            : String := Utils.Adaify_Name (Interface_Tag.Name);
-                  Ptr_Name        : String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
+                  Opcode          : constant String := Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Subprogram_Name : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_" & Request_Tag.Name);
+                  Name            : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+                  Ptr_Name        : constant String := Utils.Adaify_Name (Interface_Tag.Name & "_Ptr");
                begin
                   if Utils.Is_New_Id_Argument_Present (Request_Tag) then
                      if Utils.Is_Interface_Specified (Request_Tag) then
                         declare
-                           Return_Type : String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                           Return_Type : constant String := Utils.Adaify_Name (Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
                         begin
                            if Utils.Number_Of_Args (Request_Tag) > 1 then
                               declare
