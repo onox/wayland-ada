@@ -19,7 +19,24 @@ procedure XML_Parser is
 
    package Wx renames Wayland_XML;
 
-   procedure Put_Line (File : Ada.Text_IO.File_Type; Item : String) renames Ada.Text_IO.Put_Line;
+   subtype File_Type is Ada.Text_IO.File_Type;
+
+   subtype Node_Ptr is Aida.Deepend_XML_DOM_Parser.Node_Ptr;
+
+   function Trim (Source : String) return String is
+                  (Ada.Strings.Fixed.Trim (Source, Ada.Strings.Both));
+
+   procedure Put (File : File_Type;
+                  Item : String) renames Ada.Text_IO.Put;
+
+   procedure Put_Line (File : File_Type;
+                       Item : String) renames Ada.Text_IO.Put_Line;
+
+   procedure New_Line (
+                       File    : File_Type;
+                       Spacing : Ada.Text_IO.Positive_Count := 1
+                      )
+                       renames Ada.Text_IO.New_Line;
 
    procedure Put_Line (Item : String) renames Ada.Text_IO.Put_Line;
 
@@ -43,13 +60,15 @@ procedure XML_Parser is
 
    XML_Exception : exception;
 
-   Default_Subpool : Dynamic_Pools.Dynamic_Pool renames Aida.Deepend_XML_DOM_Parser.Default_Subpool;
+   Default_Subpool : Dynamic_Pools.Dynamic_Pool renames
+     Aida.Deepend_XML_DOM_Parser.Default_Subpool;
 
    File_Name : constant String := "wayland.xml";
 
    Allocation_Block_Size : constant := 1_000_000;
 
-   Scoped_Subpool : constant Dynamic_Pools.Scoped_Subpool := Dynamic_Pools.Create_Subpool (Default_Subpool, Allocation_Block_Size);
+   Scoped_Subpool : constant Dynamic_Pools.Scoped_Subpool
+     := Dynamic_Pools.Create_Subpool (Default_Subpool, Allocation_Block_Size);
 
    Subpool : Dynamic_Pools.Subpool_Handle := Scoped_Subpool.Handle;
 
@@ -95,7 +114,9 @@ procedure XML_Parser is
          File : Aida.Sequential_Stream_IO.File_Type;
          SE   : Aida.Sequential_Stream_IO.Stream_Element;
       begin
-         Aida.Sequential_Stream_IO.Open (File => File, Mode => Aida.Sequential_Stream_IO.In_File, Name => File_Name);
+         Aida.Sequential_Stream_IO.Open (File,
+                                         Aida.Sequential_Stream_IO.In_File,
+                                         File_Name);
 
          for I in File_Contents.all'First .. File_Contents.all'Last loop
             Aida.Sequential_Stream_IO.Read (File, SE);
@@ -138,29 +159,37 @@ procedure XML_Parser is
    begin
       if Root_Node.Id = XML_Tag and then Root_Node.Tag.Name = "protocol" then
          Protocol_Tag := new (Subpool) Wx.Protocol_Tag;
-         if Root_Node.Tag.Attributes.Length = 1 and then Root_Node.Tag.Attributes.Element (1).all.Name = "name" then
-            Protocol_Tag.Set_Name (Root_Node.Tag.Attributes.Element (1).all.Value, Subpool);
+         if
+           Root_Node.Tag.Attributes.Length = 1 and then
+           Root_Node.Tag.Attributes.Element (1).all.Name = "name"
+         then
+            Protocol_Tag.Set_Name
+              (Root_Node.Tag.Attributes.Element (1).all.Value, Subpool);
             Identify_Protocol_Children;
          else
-            Aida.Text_IO.Put_Line ("<protocol> node does not have name attribute?");
+            Put_Line ("<protocol> node does not have name attribute?");
          end if;
       else
-         Aida.Text_IO.Put_Line ("Root node is not <protocol> ???");
+         Put_Line ("Root node is not <protocol> ???");
       end if;
    end Identify_Protocol_Tag;
 
    pragma Unmodified (Protocol_Tag);
 
-   procedure Create_Wl_Thin_Spec_File;
+   procedure Create_Wayland_Spec_File;
 
    procedure Identify_Protocol_Children is
 
-      function Identify_Copyright (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Copyright_Ptr is
-         Copyright_Tag : constant not null Wx.Copyright_Ptr := new (Subpool) Wx.Copyright_Tag;
+      function Identify_Copyright (Node : not null Node_Ptr)
+                                   return not null Wx.Copyright_Ptr
+      is
+         Copyright_Tag : constant not null Wx.Copyright_Ptr
+           := new (Subpool) Wx.Copyright_Tag;
       begin
          if Node.Tag.Child_Nodes.Length = 1 then
             if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
-               Copyright_Tag.Set_Text (Ada.Strings.Fixed.Trim (Node.Tag.Child_Nodes.Element (1).Text, Ada.Strings.Both), Subpool);
+               Copyright_Tag.Set_Text
+                 (Trim (Node.Tag.Child_Nodes.Element (1).Text), Subpool);
             else
                raise XML_Exception;
             end if;
@@ -170,12 +199,16 @@ procedure XML_Parser is
          return Copyright_Tag;
       end Identify_Copyright;
 
-      function Identify_Description (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Description_Tag_Ptr is
-         Description_Tag : constant not null Wx.Description_Tag_Ptr := new (Subpool) Wx.Description_Tag;
+      function Identify_Description
+        (Node : not null Node_Ptr) return not null Wx.Description_Tag_Ptr
+      is
+         Description_Tag : constant not null Wx.Description_Tag_Ptr
+           := new (Subpool) Wx.Description_Tag;
       begin
          if Node.Tag.Attributes.Length = 1 then
             if Node.Tag.Attributes.Element (1).Name = "summary" then
-               Description_Tag.Set_Summary (Node.Tag.Attributes.Element (1).Value, Subpool);
+               Description_Tag.Set_Summary
+                 (Node.Tag.Attributes.Element (1).Value, Subpool);
             else
                raise XML_Exception;
             end if;
@@ -185,7 +218,8 @@ procedure XML_Parser is
 
          if Node.Tag.Child_Nodes.Length = 1 then
             if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
-               Description_Tag.Set_Text (Ada.Strings.Fixed.Trim (Node.Tag.Child_Nodes.Element (1).Text, Ada.Strings.Both), Subpool);
+               Description_Tag.Set_Text
+                 (Trim (Node.Tag.Child_Nodes.Element (1).Text), Subpool);
             else
                raise XML_Exception;
             end if;
@@ -196,7 +230,9 @@ procedure XML_Parser is
          return Description_Tag;
       end Identify_Description;
 
-      function Identify_Arg (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Arg_Tag_Ptr is
+      function Identify_Arg
+        (Node : not null Node_Ptr) return not null Wx.Arg_Tag_Ptr
+      is
          Arg_Tag : constant not null Wx.Arg_Tag_Ptr := new (Subpool) Wx.Arg_Tag;
       begin
          for A of Node.Tag.Attributes loop
@@ -226,8 +262,11 @@ procedure XML_Parser is
          return Arg_Tag;
       end Identify_Arg;
 
-      function Identify_Request (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Request_Tag_Ptr is
-         Request_Tag : constant not null Wx.Request_Tag_Ptr := new (Subpool) Wx.Request_Tag;
+      function Identify_Request
+        (Node : not null Node_Ptr) return not null Wx.Request_Tag_Ptr
+      is
+         Request_Tag : constant not null Wx.Request_Tag_Ptr
+           := new (Subpool) Wx.Request_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -269,8 +308,11 @@ procedure XML_Parser is
          return Request_Tag;
       end Identify_Request;
 
-      function Identify_Event (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Event_Tag_Ptr is
-         Event_Tag : constant not null Wx.Event_Tag_Ptr := new (Subpool) Wx.Event_Tag;
+      function Identify_Event
+        (Node : not null Node_Ptr) return not null Wx.Event_Tag_Ptr
+      is
+         Event_Tag : constant not null Wx.Event_Tag_Ptr
+           := new (Subpool) Wx.Event_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -310,8 +352,11 @@ procedure XML_Parser is
          return Event_Tag;
       end Identify_Event;
 
-      function Identify_Entry (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Entry_Tag_Ptr is
-         Entry_Tag : constant not null Wx.Entry_Tag_Ptr := new (Subpool) Wx.Entry_Tag;
+      function Identify_Entry
+        (Node : not null Node_Ptr) return not null Wx.Entry_Tag_Ptr
+      is
+         Entry_Tag : constant not null Wx.Entry_Tag_Ptr
+           := new (Subpool) Wx.Entry_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -325,7 +370,10 @@ procedure XML_Parser is
 
                   if Has_Failed then
                      if A.Value (A.Value'First .. A.Value'First + 1) = "0x" then
-                        Value := Aida.Int32_T'Value ("16#" & String (A.Value (A.Value'First + 2 .. A.Value'Last)) & "#");
+                        Value := Aida.Int32_T'Value
+                          (
+                           "16#" & String (A.Value (A.Value'First + 2 .. A.Value'Last)) & "#"
+                          );
 
                         Entry_Tag.Set_Value (Wx.Entry_Value (Value));
                      else
@@ -362,8 +410,11 @@ procedure XML_Parser is
          return Entry_Tag;
       end Identify_Entry;
 
-      function Identify_Enum (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Enum_Tag_Ptr is
-         Enum_Tag : constant not null Wx.Enum_Tag_Ptr := new (Subpool) Wx.Enum_Tag;
+      function Identify_Enum
+        (Node : not null Node_Ptr) return not null Wx.Enum_Tag_Ptr
+      is
+         Enum_Tag : constant not null Wx.Enum_Tag_Ptr
+           := new (Subpool) Wx.Enum_Tag;
       begin
          for A of Node.Tag.Attributes loop
             if A.Name = "name" then
@@ -411,12 +462,16 @@ procedure XML_Parser is
          return Enum_Tag;
       end Identify_Enum;
 
-      function Identify_Interface (Node : not null Aida.Deepend_XML_DOM_Parser.Node_Ptr) return not null Wx.Interface_Tag_Ptr is
-         Interface_Tag : constant not null Wx.Interface_Tag_Ptr := new (Subpool) Wx.Interface_Tag;
+      function Identify_Interface
+        (Node : not null Node_Ptr) return not null Wx.Interface_Tag_Ptr
+      is
+         Interface_Tag : constant not null Wx.Interface_Tag_Ptr
+           := new (Subpool) Wx.Interface_Tag;
       begin
          if Node.Tag.Attributes.Length = 2 then
             if Node.Tag.Attributes.Element (1).Name = "name" then
-               Interface_Tag.Set_Name (Node.Tag.Attributes.Element (1).Value, Subpool);
+               Interface_Tag.Set_Name
+                 (Node.Tag.Attributes.Element (1).Value, Subpool);
             else
                raise XML_Exception;
             end if;
@@ -426,7 +481,8 @@ procedure XML_Parser is
                   Value      : Aida.Int32_T;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (Node.Tag.Attributes.Element (2).Value, Value, Has_Failed);
+                  Aida.String.To_Int32
+                    (Node.Tag.Attributes.Element (2).Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -436,13 +492,25 @@ procedure XML_Parser is
                      for Child of Node.Tag.Child_Nodes loop
                         if Child.Id = XML_Tag then
                            if Child.Tag.Name = "description" then
-                              Interface_Tag.Append_Child (Identify_Description (Child));
+                              Interface_Tag.Append_Child
+                                (
+                                 Identify_Description (Child)
+                                );
                            elsif Child.Tag.Name = "request" then
-                              Interface_Tag.Append_Child (Identify_Request (Child));
+                              Interface_Tag.Append_Child
+                                (
+                                 Identify_Request (Child)
+                                );
                            elsif Child.Tag.Name = "event" then
-                              Interface_Tag.Append_Child (Identify_Event (Child));
+                              Interface_Tag.Append_Child
+                                (
+                                 Identify_Event (Child)
+                                );
                            elsif Child.Tag.Name = "enum" then
-                              Interface_Tag.Append_Child (Identify_Enum (Child));
+                              Interface_Tag.Append_Child
+                                (
+                                 Identify_Enum (Child)
+                                );
                            else
                               raise XML_Exception;
                            end if;
@@ -479,8 +547,266 @@ procedure XML_Parser is
          end if;
       end loop;
 
-      Create_Wl_Thin_Spec_File;
+      Create_Wayland_Spec_File;
    end Identify_Protocol_Children;
+
+   procedure Create_Wl_Thin_Spec_File;
+
+   -- This procedure creates the posix-wayland.ads file.
+   procedure Create_Wayland_Spec_File is
+
+      File : Ada.Text_IO.File_Type;
+
+      procedure Generate_Code_For_Header;
+
+      procedure Create_File is
+      begin
+         Ada.Text_IO.Create (File, Ada.Text_IO.Out_File, "posix-wayland.ads");
+
+         Generate_Code_For_Header;
+
+         Ada.Text_IO.Close (File);
+      end Create_File;
+
+      pragma Unmodified (File);
+
+      procedure Generate_Code_For_Type_Declarations;
+
+      procedure Generate_Code_For_Header is
+      begin
+         Put_Line (File, "with Interfaces.C.Strings;");
+         Put_Line (File, "with System;");
+         New_Line (File);
+         Put_Line (File, "private with Interfaces.C.Strings;");
+         New_Line (File);
+         Put_Line (File, "-- Auto-generated from Wayland.xml");
+         Put_Line (File, "package Posix.Wayland is");
+         New_Line (File);
+         Put_Line (File, "pragma Linker_Options (""-lwayland-client"");");
+         Put_Line
+           (File, "-- Added this linker option here to avoid adding it");
+         Put_Line
+           (File, "-- to each gpr file that with's this Wayland Ada binding.");
+         New_Line (File);
+
+         Generate_Code_For_Type_Declarations;
+      end Generate_Code_For_Header;
+
+      procedure Generate_Code_For_The_Interface_Type;
+
+      procedure Generate_Code_For_Type_Declarations is
+
+         procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+            Name : constant String := Utils.Adaify_Name (Interface_Tag.Name);
+         begin
+            Put (File, "type ");
+            Put (File, Name);
+            Put_Line (File, ";");
+         end Handle_Interface;
+
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy =>
+                  null;
+               when Child_Copyright =>
+                  null;
+               when Child_Interface =>
+                  Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+
+         New_Line (File);
+
+         Generate_Code_For_The_Interface_Type;
+      end Generate_Code_For_Type_Declarations;
+
+      procedure Generate_Code_For_The_Interface_Constants;
+
+      procedure Generate_Code_For_The_Interface_Type is
+      begin
+         Put_Line (File, "subtype Unsigned_32 is Interfaces.Unsigned_32;");
+         New_Line (File);
+         Put_Line (File, "type Fixed is new Integer;");
+         New_Line (File);
+         Put_Line (File, "type Interface_Type is tagged limited private;");
+         Put_Line
+           (File, "-- This type name ends with _Type because 'interface'");
+         Put_Line
+           (File, "-- is a reserved keyword in the Ada programming language.");
+         New_Line (File);
+         Put_Line
+           (File, "function Name (I : Interface_Type) return String with");
+         Put_Line (File, "  Global => null;");
+         New_Line (File);
+
+         Generate_Code_For_The_Interface_Constants;
+      end Generate_Code_For_The_Interface_Type;
+
+      procedure Generate_Code_For_Enum_Constants;
+
+      procedure Generate_Code_For_The_Interface_Constants is
+
+         procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+            Name : constant String
+              := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+         begin
+            Ada.Text_IO.Put (File, Name);
+            Put_Line (File, " : constant Interface_Type;");
+            New_Line (File);
+         end Handle_Interface;
+
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy =>
+                  null;
+               when Child_Copyright =>
+                  null;
+               when Child_Interface =>
+                  Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+
+         Put_Line
+           (File,
+            "Default_Display_Name : constant C_String := ""wayland-0"" & Nul;");
+         New_Line (File);
+
+         Generate_Code_For_Enum_Constants;
+      end Generate_Code_For_The_Interface_Constants;
+
+      procedure Generate_Code_For_The_Private_Part;
+
+      procedure Generate_Code_For_Enum_Constants is
+
+         procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+
+            procedure Generate_Code (Enum_Tag : Wx.Enum_Tag) is
+               Enum_Type_Name : constant String := Utils.Adaify_Name
+                 (Interface_Tag.Name & "_" & Enum_Tag.Name);
+
+               procedure Generate_Code_For_Enum_Value
+                 (Entry_Tag : Wx.Entry_Tag)
+               is
+                  Name : constant String := Utils.Adaify_Name
+                    (Interface_Tag.Name & "_" & Enum_Tag.Name & "_" &
+                       Entry_Tag.Name);
+               begin
+                  Put_Line (File, "-- " & Entry_Tag.Summary);
+                  Put (File, Name & " : constant " & Enum_Type_Name);
+                  Put_Line (File, " := " & Entry_Tag.Value_As_String & ";");
+                  New_Line (File);
+               end Generate_Code_For_Enum_Value;
+
+            begin
+               Put_Line
+                 (File, "type " & Enum_Type_Name & " is new Unsigned_32;");
+
+               for Child of Enum_Tag.Children loop
+                  case Child.Kind_Id is
+                     when Child_Dummy =>
+                        null;
+                     when Child_Description =>
+                        null;
+                     when Child_Entry =>
+                        Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
+                  end case;
+               end loop;
+               Put_Line (File, "");
+            end Generate_Code;
+
+         begin
+            for Child of Interface_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy =>
+                     null;
+                  when Child_Description =>
+                     null;
+                  when Child_Request =>
+                     null;
+                  when Child_Event =>
+                     null;
+                  when Child_Enum =>
+                     Generate_Code (Child.Enum_Tag.all);
+               end case;
+            end loop;
+         end Handle_Interface;
+
+      begin
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy =>
+                  null;
+               when Child_Copyright =>
+                  null;
+               when Child_Interface =>
+                  Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+
+         Generate_Code_For_The_Private_Part;
+      end Generate_Code_For_Enum_Constants;
+
+      procedure Generate_Private_Code_For_The_Interface_Constants;
+
+      procedure Generate_Code_For_The_Private_Part is
+      begin
+         New_Line (File);
+         Put_Line (File, "private");
+         New_Line (File);
+
+         Generate_Private_Code_For_The_Interface_Constants;
+      end Generate_Code_For_The_Private_Part;
+
+      procedure Generate_Code_For_Footer;
+
+      procedure Generate_Private_Code_For_The_Interface_Constants is
+
+         procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+            Name : constant String
+              := Utils.Adaify_Name (Interface_Tag.Name & "_Interface");
+         begin
+            Ada.Text_IO.Put (File, Name);
+            Put_Line (File, " : constant Interface_Type :=");
+            Put (File, "(My_Interface => Wl_Thin.");
+            Put_Line (File, Name & "'Access);");
+            New_Line (File);
+         end Handle_Interface;
+
+      begin
+         Put_Line (File, " type Interface_Type is tagged limited record");
+         Put_Line (File, "    My_Interface : not null Wl_Thin.Interface_Ptr;");
+         Put_Line (File, " end record;");
+         New_Line (File);
+         Put_Line (File, "function Name (I : Interface_Type) return String is");
+         Put_Line (File, "   (Value (I.My_Interface.Name));");
+         New_Line (File);
+
+         for Child of Protocol_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy =>
+                  null;
+               when Child_Copyright =>
+                  null;
+               when Child_Interface =>
+                  Handle_Interface (Child.Interface_Tag.all);
+            end case;
+         end loop;
+
+         Generate_Code_For_Footer;
+      end Generate_Private_Code_For_The_Interface_Constants;
+
+      procedure Generate_Code_For_Footer is
+      begin
+         New_Line (File);
+         Put_Line (File, "end Posix.Wayland;");
+      end Generate_Code_For_Footer;
+
+   begin
+      Create_File;
+      Create_Wl_Thin_Spec_File;
+   end Create_Wayland_Spec_File;
 
    procedure Create_Wl_Thin_Body_File;
 
@@ -492,7 +818,7 @@ procedure XML_Parser is
 
       procedure Create_File is
       begin
-         Ada.Text_IO.Create (File => File, Mode => Ada.Text_IO.Out_File, Name => "wl_thin.ads");
+         Ada.Text_IO.Create (File, Ada.Text_IO.Out_File, Name => "wl_thin.ads");
 
          Write_To_File;
 

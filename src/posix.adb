@@ -20,15 +20,15 @@ package body Posix is
    end Close;
 
    procedure Get_File_Status
-     (File        : in     Px.File;
-      File_Status : in out Px.Status)
+     (File   : in     Px.File;
+      Status : in out File_Status)
    is
       Result : constant int :=
         Px_Thin.Get_File_Status
           (Fd     => File.My_File_Descriptor,
-           Status => File_Status.My_Status'Access);
+           Status => Status.My_Status'Access);
    begin
-      File_Status.My_Is_Valid := Result = 0;
+      Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
 
    procedure Write (File : Px.File; Bytes : Byte_Array) is

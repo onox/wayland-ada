@@ -8,10 +8,8 @@ package Posix is
    package Px renames Posix;
 
    type File;
-   type Status;
+   type File_Status;
    type Memory_Map;
-
-   use type Interfaces.Unsigned_32;
 
    subtype unsigned_long is Interfaces.C.unsigned_long;
    subtype unsigned is Interfaces.C.unsigned;
@@ -24,6 +22,13 @@ package Posix is
    type S_FLag is new Unsigned_32;
    type O_FLag is new Unsigned_32;
    type Prot_FLag is new Unsigned_32;
+
+   use type Unsigned_32;
+   use type S_FLag;
+   use type O_FLag;
+   use type int;
+   use type long;
+   use type Void_Ptr;
 
    function Shift_Right
      (Value  : Unsigned_32;
@@ -38,14 +43,8 @@ package Posix is
    Nul : constant Character := Character'Val (0);
 
    type C_String is new String with
-        Dynamic_Predicate => C_String'Length > 0
-        and then C_String (C_String'Last) = Nul;
-
-   use type S_FLag;
-   use type O_FLag;
-   use type int;
-   use type long;
-   use type Void_Ptr;
+     Dynamic_Predicate => C_String'Length > 0
+     and then C_String (C_String'Last) = Nul;
 
    --
    -- Non-primitive subprograms
@@ -241,7 +240,7 @@ package Posix is
       Sec      : aliased Time_Sec;
       Nano_Sec : aliased Time_Nano_Sec;
    end record with
-      Convention => C_Pass_By_Copy;
+     Convention => C_Pass_By_Copy;
 
    type File is tagged limited private with
      Default_Initial_Condition => Is_Closed (File);
@@ -251,31 +250,31 @@ package Posix is
       File_Name : in     C_String;
       Flags     : in     O_FLag;
       S_Flags   : in     S_FLag) with
-      Global => null,
-      Pre    => File.Is_Closed;
+     Global => null,
+     Pre    => File.Is_Closed;
 
    procedure Close (File : in out Px.File) with
-      Global => null,
-      Pre    => File.Is_Open,
-      Post   => File.Is_Closed;
+     Global => null,
+     Pre    => File.Is_Open,
+     Post   => File.Is_Closed;
 
    procedure Write (File : Px.File; Bytes : Byte_Array) with
-      Global => null,
-      Pre    => File.Is_Open;
+     Global => null,
+     Pre    => File.Is_Open;
 
    function Read (File : Px.File; Bytes : Byte_Array) return SSize_Type with
-      Global => null,
-      Pre    => File.Is_Open;
+     Global => null,
+     Pre    => File.Is_Open;
 
    function File_Descriptor (File : Px.File) return int with
-      Global => null,
-      Pre    => File.Is_Open;
+     Global => null,
+     Pre    => File.Is_Open;
 
    procedure Get_File_Status
-     (File        : in     Px.File;
-      File_Status : in out Px.Status) with
-      Global => null,
-      Pre    => File.Is_Open;
+     (File   : in     Px.File;
+      Status : in out File_Status) with
+     Global => null,
+     Pre    => File.Is_Open;
 
    procedure Map_Memory
      (File    : in Px.File;
@@ -289,69 +288,70 @@ package Posix is
      Pre    => not Has_Mapping (Memory_Map);
 
    function Is_Open (File : Px.File) return Boolean with
-      Global => null;
+     Global => null;
 
    function Is_Closed (File : Px.File) return Boolean with
-      Global => null;
+     Global => null;
 
-   type Status is tagged limited private;
+   type File_Status is tagged limited private;
 
-   function Is_Valid (Status : Px.Status) return Boolean with
-      Global => null;
+   function Is_Valid (Status : File_Status) return Boolean with
+     Global => null;
 
-   function Device_Id (Status : Px.Status) return Device_Id_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Device_Id (Status : File_Status) return Device_Id_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Inode_Number (Status : Px.Status) return Inode_Number_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Inode_Number (Status : File_Status) return Inode_Number_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Hard_Link_Count (Status : Px.Status) return Hard_Link_Count_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Hard_Link_Count
+     (Status : File_Status) return Hard_Link_Count_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Mode (Status : Px.Status) return Mode_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Mode (Status : File_Status) return Mode_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function User_Id (Status : Px.Status) return User_Id_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function User_Id (Status : File_Status) return User_Id_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Group_Id (Status : Px.Status) return Group_Id_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Group_Id (Status : File_Status) return Group_Id_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Special_Device_Id (Status : Px.Status) return Device_Id_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Special_Device_Id (Status : File_Status) return Device_Id_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Size (Status : Px.Status) return Offset with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Size (Status : File_Status) return Offset with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Block_Size (Status : Px.Status) return Block_Size_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Block_Size (Status : File_Status) return Block_Size_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-      -- Number of 512B blocks allocated
-   function Block_Count (Status : Px.Status) return Block_Size_Type with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   -- Number of 512B blocks allocated
+   function Block_Count (Status : File_Status) return Block_Size_Type with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Last_Access_Time (Status : Px.Status) return Time with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Last_Access_Time (Status : File_Status) return Time with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-   function Modification_Time (Status : Px.Status) return Time with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   function Modification_Time (Status : File_Status) return Time with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
-      -- Last status change time
-   function Change_Time (Status : Px.Status) return Time with
-      Global => null,
-      Pre    => Status.Is_Valid;
+   -- Last status change time
+   function Change_Time (Status : File_Status) return Time with
+     Global => null,
+     Pre    => Status.Is_Valid;
 
    type Memory_Map is tagged limited private;
 
@@ -426,19 +426,19 @@ private
          Padding_2   : long;
          Padding_3   : long;
       end record with
-         Convention => C_Pass_By_Copy;
+        Convention => C_Pass_By_Copy;
 
       function Get_File_Status
         (Fd     : int;
          Status : access File_Status_T) return int with
-         Import        => True,
-         Convention    => C,
-         External_Name => "fstat";
+        Import        => True,
+        Convention    => C,
+        External_Name => "fstat";
 
-         -- Establishes a connection between a file and a file descriptor.
-         -- The file descriptor handle (a non-negative number)
-         -- is returned upon success, otherwise -1.
-         --
+      -- Establishes a connection between a file and a file descriptor.
+      -- The file descriptor handle (a non-negative number)
+      -- is returned upon success, otherwise -1.
+      --
       -- Applications shall specify exactly one of the first three flags:
       -- O_RDONLY, O_WRONLY and O_RDWR. And then any combination of O_APPEND,
       -- O_CREAT, O_DSYNC, O_EXCL, O_NOCTTY, O_NONBLOCK, O_RSYNC,
@@ -447,38 +447,38 @@ private
         (File_Name : C_String;
          Flags     : O_FLag;
          S_Flags   : S_FLag) return int with
-         Import        => True,
-         Convention    => C,
-         External_Name => "open";
+        Import        => True,
+        Convention    => C,
+        External_Name => "open";
 
       procedure Close (File_Descriptor : int) with
-         Import        => True,
-         Convention    => C,
-         External_Name => "close";
+        Import        => True,
+        Convention    => C,
+        External_Name => "close";
 
       function Write
         (File_Descriptor : int;
          Buffer          : Byte_Array;
          Count           : Size_Type) return SSize_Type with
-         Import        => True,
-         Convention    => C,
-         External_Name => "write";
+        Import        => True,
+        Convention    => C,
+        External_Name => "write";
 
       function Write
         (File_Descriptor : int;
          Buffer          : String;
          Count           : Size_Type) return SSize_Type with
-         Import        => True,
-         Convention    => C,
-         External_Name => "write";
+        Import        => True,
+        Convention    => C,
+        External_Name => "write";
 
       function Read
         (File_Descriptor : int;
          Buffer          : Byte_Array;
          Count           : Size_Type) return SSize_Type with
-         Import        => True,
-         Convention    => C,
-         External_Name => "read";
+        Import        => True,
+        Convention    => C,
+        External_Name => "read";
 
       function Mmap
         (Addr   : Void_Ptr;
@@ -487,14 +487,14 @@ private
          Flags  : int;
          Fd     : int;
          Offset : Px.Offset) return Void_Ptr with
-         Import        => True,
-         Convention    => C,
-         External_Name => "mmap";
+        Import        => True,
+        Convention    => C,
+        External_Name => "mmap";
 
       function Munmap (Addr : Void_Ptr; Length : Size_Type) return int with
-         Import        => True,
-         Convention    => C,
-         External_Name => "munmap";
+        Import        => True,
+        Convention    => C,
+        External_Name => "munmap";
 
    end Px_Thin;
 
@@ -507,7 +507,7 @@ private
 
    function Is_Closed (File : Px.File) return Boolean is (not File.My_Is_Open);
 
-   type Status is tagged limited record
+   type File_Status is tagged limited record
       My_Status   : aliased Px_Thin.File_Status_T;
       My_Is_Valid : Boolean := False;
    end record;
@@ -516,57 +516,58 @@ private
      (File.My_File_Descriptor);
 
    function Is_Valid
-     (Status : Px.Status) return Boolean is
+     (Status : File_Status) return Boolean is
      (Status.My_Is_Valid);
 
    function Device_Id
-     (Status : Px.Status) return Device_Id_Type is
+     (Status : File_Status) return Device_Id_Type is
      (Status.My_Status.Device_Id);
 
    function Inode_Number
-     (Status : Px.Status) return Inode_Number_Type is
+     (Status : File_Status) return Inode_Number_Type is
      (Status.My_Status.Inode_Number);
 
    function Hard_Link_Count
-     (Status : Px.Status) return Hard_Link_Count_Type is
+     (Status : File_Status) return Hard_Link_Count_Type is
      (Status.My_Status.Hard_Link_Count);
 
-   function Mode (Status : Px.Status) return Mode_Type is (Status.My_Status.Mode);
+   function Mode
+     (Status : File_Status) return Mode_Type is (Status.My_Status.Mode);
 
    function User_Id
-     (Status : Px.Status) return User_Id_Type is
+     (Status : File_Status) return User_Id_Type is
      (Status.My_Status.User_Id);
 
    function Group_Id
-     (Status : Px.Status) return Group_Id_Type is
+     (Status : File_Status) return Group_Id_Type is
      (Status.My_Status.Group_Id);
 
    function Special_Device_Id
-     (Status : Px.Status) return Device_Id_Type is
+     (Status : File_Status) return Device_Id_Type is
      (Status.My_Status.Special_Device_Id);
 
    function Size
-     (Status : Px.Status) return Offset is
+     (Status : File_Status) return Offset is
      (Status.My_Status.Size);
 
    function Block_Size
-     (Status : Px.Status) return Block_Size_Type is
+     (Status : File_Status) return Block_Size_Type is
      (Status.My_Status.Block_Size);
 
    function Block_Count
-     (Status : Px.Status) return Block_Size_Type is
+     (Status : File_Status) return Block_Size_Type is
      (Status.My_Status.Block_Count);
 
    function Last_Access_Time
-     (Status : Px.Status) return Time is
+     (Status : File_Status) return Time is
      (Status.My_Status.Access_Time);
 
    function Modification_Time
-     (Status : Px.Status) return Time is
+     (Status : File_Status) return Time is
      (Status.My_Status.Modification_Time);
 
    function Change_Time
-     (Status : Px.Status) return Time is
+     (Status : File_Status) return Time is
      (Status.My_Status.Change_Time);
 
    function Conv is new Ada.Unchecked_Conversion (Source => long,
@@ -580,7 +581,8 @@ private
       My_Length  : Size_Type;
    end record;
 
-   function Has_Mapping (Map : Px.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
+   function Has_Mapping
+     (Map : Px.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
 
    function Mapping (Map : Px.Memory_Map) return Void_Ptr is (Map.My_Mapping);
 
