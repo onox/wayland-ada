@@ -9,6 +9,7 @@ package body Xml_Parser_Utils is
    use all type Wx.Arg_Type_Attribute;
    use all type Wx.Request_Child_Kind_Id;
    use all type Wx.Interface_Child_Kind_Id;
+   use all type Wx.Protocol_Child_Kind_Id;
 
    use type Ada.Containers.Count_Type;
 
@@ -351,7 +352,7 @@ package body Xml_Parser_Utils is
 
       CP : Aida.UTF8_Code_Point.T;
    begin
-      while Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P) loop
+      while Aida.UTF8.Is_Valid_UTF8_Code_Point (Text, P) loop
          Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
 
          if CP /= 9 then
@@ -364,5 +365,79 @@ package body Xml_Parser_Utils is
 
       return To_String (S);
    end Remove_Tabs;
+
+   function Exists_Reference_To_Enum (Protocol_Tag   : Wx.Protocol_Tag;
+                                      Interface_Name : String;
+                                      Enum_Name      : String) return Boolean
+   is
+      Exists : Boolean := False;
+
+      Searched_For : constant String := Interface_Name & "." & Enum_Name;
+
+      procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+
+         procedure Handle_Request (Request_Tag : Wx.Request_Tag) is
+
+            procedure Handle_Arg (Arg_Tag : Wx.Arg_Tag) is
+            begin
+               if
+                 Arg_Tag.Exists_Type_Attribute and then
+                 Arg_Tag.Type_Attribute = Type_Unsigned_Integer and then
+                 Arg_Tag.Exists_Enum and then
+                 Arg_Tag.Enum = Searched_For
+               then
+                  Exists := True;
+               end if;
+            end Handle_Arg;
+
+         begin
+            for Child of Request_Tag.Children loop
+               case Child.Kind_Id is
+                  when Child_Dummy       => null;
+                  when Child_Description => null;
+                  when Child_Arg         =>
+                     Handle_Arg (Child.Arg_Tag.all);
+               end case;
+
+               if Exists then
+                  exit;
+               end if;
+            end loop;
+         end Handle_Request;
+
+      begin
+         for Child of Interface_Tag.Children loop
+            case Child.Kind_Id is
+               when Child_Dummy       => null;
+               when Child_Description => null;
+               when Child_Request     => Handle_Request (Child.Request_Tag.all);
+               when Child_Event       => null;
+               when Child_Enum        => null;
+            end case;
+
+            if Exists then
+               exit;
+            end if;
+         end loop;
+      end Handle_Interface;
+
+   begin
+      for Child of Protocol_Tag.Children loop
+         case Child.Kind_Id is
+            when Child_Dummy =>
+               null;
+            when Child_Copyright =>
+               null;
+            when Child_Interface =>
+               Handle_Interface (Child.Interface_Tag.all);
+         end case;
+
+         if Exists then
+            exit;
+         end if;
+      end loop;
+
+      return Exists;
+   end Exists_Reference_To_Enum;
 
 end Xml_Parser_Utils;

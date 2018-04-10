@@ -34,6 +34,10 @@ package Xml_Parser_Utils is
 
    function Is_Request_Destructor (Request_Tag : Wx.Request_Tag) return Boolean;
 
+   function Exists_Reference_To_Enum (Protocol_Tag   : Wx.Protocol_Tag;
+                                      Interface_Name : String;
+                                      Enum_Name      : String) return Boolean;
+
    function Exists_Destructor (Interface_Tag : Wx.Interface_Tag) return Boolean;
 
    function Exists_Any_Event_Tag (Interface_Tag : Wx.Interface_Tag) return Boolean;
