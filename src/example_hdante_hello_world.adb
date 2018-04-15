@@ -1,5 +1,4 @@
-with Posix;
-with Wl;
+with Posix.Wayland;
 with Ada.Text_IO;
 -- sudo apt install libwayland-dev
 
@@ -16,24 +15,26 @@ procedure Example_Hdante_Hello_World is
 
    package Px renames Posix;
 
+   package Wl renames Posix.Wayland;
+
    use type Px.S_FLag;
 
-   use type Wl.Seat_Capability_T;
+   use type Wl.Unsigned_32;
 
-   Compositor : aliased Wl.Compositor_T;
-   Pointer    : aliased Wl.Pointer_T;
-   Seat       : aliased Wl.Seat_T;
-   Shell      : aliased Wl.Shell_T;
-   Shm        : aliased Wl.Shm_T;
+   Compositor : aliased Wl.Compositor;
+   Pointer    : aliased Wl.Pointer;
+   Seat       : aliased Wl.Seat;
+   Shell      : aliased Wl.Shell;
+   Shm        : aliased Wl.Shm;
 
    Done : Boolean := false;
 
    type Data_T is limited record
-      Compositor : not null access Wl.Compositor_T;
-      Pointer    : not null access Wl.Pointer_T;
-      Seat       : not null access Wl.Seat_T;
-      Shell      : not null access Wl.Shell_T;
-      Shm        : not null access Wl.Shm_T;
+      Compositor : not null access Wl.Compositor;
+      Pointer    : not null access Wl.Pointer;
+      Seat       : not null access Wl.Seat;
+      Shell      : not null access Wl.Shell;
+      Shm        : not null access Wl.Shm;
    end record;
 
    type Data_Ptr is access all Data_T;
@@ -55,8 +56,8 @@ procedure Example_Hdante_Hello_World is
 
    procedure Seat_Capabilities
      (Data         : not null Data_Ptr;
-      Seat         : Wl.Seat_T;
-      Capabilities : Wl.Seat_Capability_T) is
+      Seat         : Wl.Seat;
+      Capabilities : Wl.Unsigned_32) is
    begin
       if (Capabilities and Wl.Seat_Capability_Pointer) > 0 then
          Px.Put_Line ("Display has a pointer");
@@ -75,7 +76,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Seat_Name
      (Data : not null Data_Ptr;
-      Seat : Wl.Seat_T;
+      Seat : Wl.Seat;
       Name : String) is
    begin
       null;
@@ -87,7 +88,7 @@ procedure Example_Hdante_Hello_World is
                                                                  Seat_Name         => Seat_Name);
 
    procedure Global_Registry_Handler (Data     : not null Data_Ptr;
-                                      Registry : Wl.Registry_T;
+                                      Registry : Wl.Registry;
                                       Id       : Wl.Unsigned_32;
                                       Name     : String;
                                       Version  : Wl.Unsigned_32) is
@@ -118,7 +119,7 @@ procedure Example_Hdante_Hello_World is
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover (Data     : not null Data_Ptr;
-                                      Registry : Wl.Registry_T;
+                                      Registry : Wl.Registry;
                                       Id       : Wl.Unsigned_32) is
    begin
       Px.Put_Line ("Got a registry losing event for" & Id'Image);
@@ -132,7 +133,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Shell_Surface_Ping
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface_T;
+      Surface : Wl.Shell_Surface;
       Serial  : Wl.Unsigned_32) is
    begin
       Surface.Pong (Serial);
@@ -140,7 +141,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Shell_Surface_Configure
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface_T;
+      Surface : Wl.Shell_Surface;
       Edges   : Wl.Unsigned_32;
       Width   : Integer;
       Height  : Integer) is
@@ -150,7 +151,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Shell_Surface_Popup_Done
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface_T) is
+      Surface : Wl.Shell_Surface) is
    begin
       null;
    end Shell_Surface_Popup_Done;
@@ -164,37 +165,37 @@ procedure Example_Hdante_Hello_World is
 
    procedure Mouse_Enter
      (Data      : not null Data_Ptr;
-      Pointer   : Wl.Pointer_T;
+      Pointer   : Wl.Pointer;
       Serial    : Wl.Unsigned_32;
-      Surface   : Wl.Surface_T;
-      Surface_X : Wl.Fixed_T;
-      Surface_Y : Wl.Fixed_T) is
+      Surface   : Wl.Surface;
+      Surface_X : Wl.Fixed;
+      Surface_Y : Wl.Fixed) is
    begin
       Ada.Text_IO.Put_Line ("Pointer enter");
    end Mouse_Enter;
 
    procedure Pointer_Leave
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer_T;
+      Pointer : Wl.Pointer;
       Serial  : Wl.Unsigned_32;
-      Surface : Wl.Surface_T) is
+      Surface : Wl.Surface) is
    begin
       Ada.Text_IO.Put_Line ("Pointer leave");
    end Pointer_Leave;
 
    procedure Pointer_Motion
      (Data      : not null Data_Ptr;
-      Pointer   : Wl.Pointer_T;
+      Pointer   : Wl.Pointer;
       Time      : Wl.Unsigned_32;
-      Surface_X : Wl.Fixed_T;
-      Surface_Y : Wl.Fixed_T) is
+      Surface_X : Wl.Fixed;
+      Surface_Y : Wl.Fixed) is
    begin
       Ada.Text_IO.Put_Line ("Pointer motion");
    end Pointer_Motion;
 
    procedure Pointer_Button
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer_T;
+      Pointer : Wl.Pointer;
       Serial  : Wl.Unsigned_32;
       Time    : Wl.Unsigned_32;
       Button  : Wl.Unsigned_32;
@@ -206,23 +207,23 @@ procedure Example_Hdante_Hello_World is
 
    procedure Pointer_Axis
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer_T;
+      Pointer : Wl.Pointer;
       Time    : Wl.Unsigned_32;
       Axis    : Wl.Unsigned_32;
-      Value   : Wl.Fixed_T) is
+      Value   : Wl.Fixed) is
    begin
       Ada.Text_IO.Put_Line ("Pointer axis");
    end Pointer_Axis;
 
    procedure Pointer_Frame (Data    : not null Data_Ptr;
-                            Pointer : Wl.Pointer_T) is
+                            Pointer : Wl.Pointer) is
    begin
       Ada.Text_IO.Put_Line ("Pointer frame");
    end Pointer_Frame;
 
    procedure Pointer_Axis_Source
      (Data        : not null Data_Ptr;
-      Pointer     : Wl.Pointer_T;
+      Pointer     : Wl.Pointer;
       Axis_Source : Wl.Unsigned_32) is
    begin
       Ada.Text_IO.Put_Line ("Pointer axis source");
@@ -230,7 +231,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Pointer_Axis_Stop
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer_T;
+      Pointer : Wl.Pointer;
       Time    : Wl.Unsigned_32;
       Axis    : Wl.Unsigned_32) is
    begin
@@ -239,7 +240,7 @@ procedure Example_Hdante_Hello_World is
 
    procedure Pointer_Axis_Discrete
      (Data     : not null Data_Ptr;
-      Pointer  : Wl.Pointer_T;
+      Pointer  : Wl.Pointer;
       Axis     : Wl.Unsigned_32;
       Discrete : Integer) is
    begin
@@ -259,8 +260,8 @@ procedure Example_Hdante_Hello_World is
       Pointer_Axis_Stop     => Pointer_Axis_Stop,
       Pointer_Axis_Discrete => Pointer_Axis_Discrete);
 
-   Display    : Wl.Display_T;
-   Registry   : Wl.Registry_T;
+   Display    : Wl.Display;
+   Registry   : Wl.Registry;
 
    WIDTH : constant := 320;
    HEIGHT : constant := 200;
@@ -271,12 +272,12 @@ procedure Example_Hdante_Hello_World is
    --
    --
 
-   Buffer        : Wl.Buffer_T;
-   Pool          : Wl.Shm_Pool_T;
-   Surface       : Wl.Surface_T;
-   Shell_Surface : Wl.Shell_Surface_T;
+   Buffer        : Wl.Buffer;
+   Pool          : Wl.Shm_Pool;
+   Surface       : Wl.Surface;
+   Shell_Surface : Wl.Shell_Surface;
    Image         : Px.File;
-   Stat          : Px.Status;
+   Stat          : Px.File_Status;
 
    use type Px.int;
    use type Px.C_String;
@@ -293,7 +294,7 @@ begin
    end if;
    Px.Put_Line ("Connected to display");
 
-   Registry.Get (Display);
+   Display.Get_Registry (Registry);
    if not Registry.Has_Registry_Object then
       Px.Put_Line ("Can't get global registry object");
       return;
@@ -341,7 +342,6 @@ begin
       Px.Put_Line ("Failed to create pool");
       return;
    end if;
-
 
    Compositor.Create_Surface (Surface);
 

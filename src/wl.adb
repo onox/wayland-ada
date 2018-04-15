@@ -1,8 +1,12 @@
 --with Ada.Text_IO;
-with Ada.Containers.Hashed_Maps;
-with System.Storage_Elements;
+--  with Ada.Containers.Hashed_Maps;
+--  with System.Storage_Elements;
+--  with Interfaces.C.Strings;
 
 package body Wl is
+
+--     function To_Ada (Item     : char_array;
+--                      Trim_Nul : Boolean := True) return String renames Interfaces.C.To_Ada;
 
    -- Auto generated from Wayland.xml
    package body Wl_Thin is
@@ -12,15 +16,15 @@ package body Wl is
         Import        => True,
         External_Name => "wl_proxy_destroy";
 
-      function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_Ptr is
+      function Display_Connect (Name : Px.C_String) return Display_Ptr is
 
-         function wl_display_connect (Name : in Interfaces.C.Strings.chars_ptr) return Display_Ptr with
+         function wl_display_connect (Name : in Px.C_String) return Display_Ptr with
            Convention    => C,
            Import        => True,
            External_Name => "wl_display_connect";
 
       begin
-         return wl_display_connect (Interfaces.C.Strings.To_Chars_Ptr (Name));
+         return wl_display_connect (Name);
       end Display_Connect;
 
       procedure Display_Disconnect (This : in out Display_Ptr) is
@@ -36,7 +40,7 @@ package body Wl is
          end if;
       end Display_Disconnect;
 
-      function wl_proxy_add_listener (arg1 : Proxy_Ptr; arg2 : Void_Ptr; arg3 : Void_Ptr) return Interfaces.C.int with
+      function wl_proxy_add_listener (arg1 : Proxy_Ptr; arg2 : Void_Ptr; arg3 : Void_Ptr) return Int with
         Import        => True,
         Convention    => C,
         External_Name => "wl_proxy_add_listener";
@@ -59,7 +63,7 @@ package body Wl is
       function Display_Add_Listener
         (Display  : Display_Ptr;
          Listener : Display_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Display.all'Access, Listener.all'Address, Data);
@@ -101,7 +105,7 @@ package body Wl is
       function Registry_Add_Listener
         (Registry : Registry_Ptr;
          Listener : Registry_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Registry.all'Access, Listener.all'Address, Data);
@@ -148,7 +152,7 @@ package body Wl is
       function Callback_Add_Listener
         (Callback : Callback_Ptr;
          Listener : Callback_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Callback.all'Access, Listener.all'Address, Data);
@@ -258,7 +262,7 @@ package body Wl is
          Proxy_Marshal (Proxy_Ptr'(Shm_Pool.all'Access), WL_SHM_POOL_RESIZE, Size);
       end Shm_Pool_Resize;
 
-      function Shm_Add_Listener (Shm : Shm_Ptr; Listener : Shm_Listener_Ptr; Data : Void_Ptr) return Interfaces.C.int is
+      function Shm_Add_Listener (Shm : Shm_Ptr; Listener : Shm_Listener_Ptr; Data : Void_Ptr) return Int is
       begin
          return wl_proxy_add_listener (Shm.all'Access, Listener.all'Address, Data);
       end Shm_Add_Listener;
@@ -293,7 +297,7 @@ package body Wl is
       function Buffer_Add_Listener
         (Buffer   : Buffer_Ptr;
          Listener : Buffer_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Buffer.all'Access, Listener.all'Address, Data);
@@ -324,7 +328,7 @@ package body Wl is
       function Data_Offer_Add_Listener
         (Data_Offer : Data_Offer_Ptr;
          Listener   : Data_Offer_Listener_Ptr;
-         Data       : Void_Ptr) return Interfaces.C.int
+         Data       : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Data_Offer.all'Access, Listener.all'Address, Data);
@@ -387,7 +391,7 @@ package body Wl is
       function Data_Source_Add_Listener
         (Data_Source : Data_Source_Ptr;
          Listener    : Data_Source_Listener_Ptr;
-         Data        : Void_Ptr) return Interfaces.C.int
+         Data        : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Data_Source.all'Access, Listener.all'Address, Data);
@@ -428,7 +432,7 @@ package body Wl is
       function Data_Device_Add_Listener
         (Data_Device : Data_Device_Ptr;
          Listener    : Data_Device_Listener_Ptr;
-         Data        : Void_Ptr) return Interfaces.C.int
+         Data        : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Data_Device.all'Access, Listener.all'Address, Data);
@@ -570,7 +574,7 @@ package body Wl is
       function Shell_Surface_Add_Listener
         (Shell_Surface : Shell_Surface_Ptr;
          Listener      : Shell_Surface_Listener_Ptr;
-         Data          : Void_Ptr) return Interfaces.C.int
+         Data          : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Shell_Surface.all'Access, Listener.all'Address, Data);
@@ -692,7 +696,7 @@ package body Wl is
       function Surface_Add_Listener
         (Surface  : Surface_Ptr;
          Listener : Surface_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Surface.all'Access, Listener.all'Address, Data);
@@ -775,7 +779,7 @@ package body Wl is
       function Seat_Add_Listener
         (Seat     : Seat_Ptr;
          Listener : Seat_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Seat.all'Access, Listener.all'Address, Data);
@@ -827,7 +831,7 @@ package body Wl is
       function Pointer_Add_Listener
         (Pointer  : Pointer_Ptr;
          Listener : Pointer_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Pointer.all'Access, Listener.all'Address, Data);
@@ -878,7 +882,7 @@ package body Wl is
       function Keyboard_Add_Listener
         (Keyboard : Keyboard_Ptr;
          Listener : Keyboard_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Keyboard.all'Access, Listener.all'Address, Data);
@@ -912,7 +916,7 @@ package body Wl is
       function Touch_Add_Listener
         (Touch    : Touch_Ptr;
          Listener : Touch_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Touch.all'Access, Listener.all'Address, Data);
@@ -946,7 +950,7 @@ package body Wl is
       function Output_Add_Listener
         (Output   : Output_Ptr;
          Listener : Output_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int
+         Data     : Void_Ptr) return Int
       is
       begin
          return wl_proxy_add_listener (Output.all'Access, Listener.all'Address, Data);
@@ -1097,12 +1101,7 @@ package body Wl is
 
    end Wl_Thin;
 
-
    use type Wl_Thin.Proxy_Ptr;
-   use type Wl_Thin.Display_Ptr;
-   use type Wl_Thin.Registry_Ptr;
-
-   use all type Ada.Strings.Unbounded.Unbounded_String;
 
    subtype Registry_Ptr is Wl_Thin.Registry_Ptr;
 
@@ -1132,7 +1131,7 @@ package body Wl is
       is
          pragma Unreferenced (Unused_Data);
 
-         R : Registry_T := (
+         R : Wl.Registry := (
                             My_Registry                 => Registry,
                             My_Has_Started_Subscription => True
                            );
@@ -1149,7 +1148,7 @@ package body Wl is
                                          Registry    : Wl.Registry_Ptr;
                                          Id          : Wl.Unsigned_32)
       is
-         R : Registry_T := (
+         R : Wl.Registry := (
                             My_Registry                 => Registry,
                             My_Has_Started_Subscription => True
                            );
@@ -1163,7 +1162,7 @@ package body Wl is
          Global_Remove => Internal_Object_Removed'Unrestricted_Access
         );
 
-      procedure Start_Subscription (Registry : in out Registry_T) is
+      procedure Start_Subscription (Registry : in out Wl.Registry) is
          I : Wl.int;
       begin
          I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
@@ -1199,7 +1198,7 @@ package body Wl is
          Surface     : Wl_Thin.Shell_Surface_Ptr;
          Serial      : Unsigned_32)
       is
-         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Ping (Data, S, Serial);
       end Internal_Shell_Surface_Ping;
@@ -1211,7 +1210,7 @@ package body Wl is
          Width       : Integer;
          Height      : Integer)
       is
-         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Configure (Data, S, Edges, Width, Height);
       end Internal_Shell_Surface_Configure;
@@ -1220,7 +1219,7 @@ package body Wl is
         (Unused_Data : Void_Ptr;
          Surface     : Wl_Thin.Shell_Surface_Ptr)
       is
-         S : Shell_Surface_T := (My_Shell_Surface => Surface);
+         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Popup_Done (Data, S);
       end Internal_Shell_Surface_Popup_Done;
@@ -1232,7 +1231,7 @@ package body Wl is
          Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
         );
 
-      procedure Start_Subscription (Surface : in out Shell_Surface_T) is
+      procedure Start_Subscription (Surface : in out Wl.Shell_Surface) is
          I : Wl.int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
@@ -1254,7 +1253,7 @@ package body Wl is
                                    Seat         : Wl_Thin.Seat_Ptr;
                                    Capabilities : Interfaces.Unsigned_32)
       is
-         S : Seat_T := (
+         S : Wl.Seat := (
                         My_Seat                     => Seat,
                         My_Has_Started_Subscription => True
                        );
@@ -1273,7 +1272,7 @@ package body Wl is
       is
          N : String := Interfaces.C.Strings.Value (Name);
 
-         S : Seat_T := (
+         S : Wl.Seat := (
                         My_Seat                     => Seat,
                         My_Has_Started_Subscription => True
                        );
@@ -1287,7 +1286,7 @@ package body Wl is
          Name         => Internal_Seat_Name'Unrestricted_Access
         );
 
-      procedure Start_Subscription (S : in out Seat_T) is
+      procedure Start_Subscription (S : in out Wl.Seat) is
          I : Wl.int;
       begin
          I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,
@@ -1372,8 +1371,8 @@ package body Wl is
          Surface_X   : Fixed_T;
          Surface_Y   : Fixed_T)
       is
-         P : Pointer_T := (My_Pointer => Pointer);
-         S : Surface_T := (My_Surface => Surface);
+         P : Wl.Pointer := (My_Pointer => Pointer);
+         S : Wl.Surface := (My_Surface => Surface);
       begin
          Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);
       end Internal_Pointer_Enter;
@@ -1384,8 +1383,8 @@ package body Wl is
          Serial      : Interfaces.Unsigned_32;
          Surface     : Wl_Thin.Surface_Ptr)
       is
-         P : Pointer_T := (My_Pointer => Pointer);
-         S : Surface_T := (My_Surface => Surface);
+         P : Wl.Pointer := (My_Pointer => Pointer);
+         S : Wl.Surface := (My_Surface => Surface);
       begin
          Pointer_Leave (Data, P, Serial, S);
       end Internal_Pointer_Leave;
@@ -1408,7 +1407,7 @@ package body Wl is
          Button      : Interfaces.Unsigned_32;
          State       : Interfaces.Unsigned_32)
       is
-         P : Pointer_T := (My_Pointer => Pointer);
+         P : Wl.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Button (Data, P, Serial, Time, Button, State);
       end Internal_Pointer_Button;
@@ -1468,7 +1467,7 @@ package body Wl is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
         );
 
-      procedure Start_Subscription (P : in out Pointer_T) is
+      procedure Start_Subscription (P : in out Wl.Pointer) is
          I : Wl.int;
       begin
          I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
@@ -1478,26 +1477,26 @@ package body Wl is
 
    end Pointer_Subscriber;
 
-   procedure Connect (Display : in out Display_T;
-                      Name    : Interfaces.C.Strings.char_array_access) is
+   procedure Connect (Display : in out Wl.Display;
+                      Name    : Px.C_String) is
    begin
       Display.My_Display := Wl_Thin.Display_Connect (Name);
    end Connect;
 
-   procedure Disconnect (Display : in out Display_T) is
+   procedure Disconnect (Display : in out Wl.Display) is
    begin
       if Display.My_Display /= null then
          Wl_Thin.Display_Disconnect (Display.My_Display);
       end if;
    end Disconnect;
 
-   procedure Get (Registry : in out Registry_T;
-                  Display  : Display_T) is
+   procedure Get_Registry (Display  : Wl.Display;
+                           Registry : in out Wl.Registry) is
    begin
       Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
-   end Get;
+   end Get_Registry;
 
-   procedure Destroy (Registry : in out Registry_T) is
+   procedure Destroy (Registry : in out Wl.Registry) is
    begin
       if Registry.My_Registry /= null then
          Wl_Thin.Registry_Destroy (Registry.My_Registry);
@@ -1505,32 +1504,32 @@ package body Wl is
       end if;
    end Destroy;
 
-   function Dispatch (Display : Display_T) return Interfaces.C.int is
+   function Dispatch (Display : Wl.Display) return Int is
    begin
       return Wl_Thin.Display_Dispatch (Display.My_Display);
    end Dispatch;
 
-   procedure Dispatch (Display : Display_T) is
-      I : Interfaces.C.int;
+   procedure Dispatch (Display : Wl.Display) is
+      I : Int;
       pragma Unreferenced (I);
    begin
       I := Display.Dispatch;
    end Dispatch;
 
-   function Roundtrip (Display : Display_T) return Interfaces.C.int is
+   function Roundtrip (Display : Wl.Display) return Int is
    begin
       return Wl_Thin.Display_Roundtrip (Display.My_Display);
    end Roundtrip;
 
-   procedure Roundtrip (Display : Display_T) is
-      I : Interfaces.C.int;
+   procedure Roundtrip (Display : Wl.Display) is
+      I : Int;
       pragma Unreferenced (I);
    begin
       I := Display.Roundtrip;
    end Roundtrip;
 
-   procedure Bind (Compositor  : in out Compositor_T;
-                   Registry    : Registry_T;
+   procedure Bind (Compositor  : in out Wl.Compositor;
+                   Registry    : Wl.Registry;
                    Id          : Unsigned_32;
                    Version     : Unsigned_32)
    is
@@ -1546,15 +1545,15 @@ package body Wl is
       end if;
    end Bind;
 
-   procedure Create_Surface (Compositor : Compositor_T;
-                             Surface    : in out Surface_T) is
+   procedure Create_Surface (Compositor : Wl.Compositor;
+                             Surface    : in out Wl.Surface) is
    begin
       Surface.My_Surface :=
         Wl_Thin.Compositor_Create_Surface (Compositor.My_Compositor);
    end Create_Surface;
 
-   procedure Bind (Seat     : in out Seat_T;
-                   Registry : Registry_T;
+   procedure Bind (Seat     : in out Wl.Seat;
+                   Registry : Wl.Registry;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
    is
@@ -1570,14 +1569,14 @@ package body Wl is
       end if;
    end Bind;
 
-   procedure Get_Pointer (Seat    : Seat_T;
-                          Pointer : in out Pointer_T) is
+   procedure Get_Pointer (Seat    : Wl.Seat;
+                          Pointer : in out Wl.Pointer) is
    begin
       Pointer.My_Pointer := Wl_Thin.Seat_Get_Pointer (Seat.My_Seat);
    end Get_Pointer;
 
-   procedure Bind (Shell    : in out Shell_T;
-                   Registry : Registry_T;
+   procedure Bind (Shell    : in out Wl.Shell;
+                   Registry : Wl.Registry;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
    is
@@ -1593,16 +1592,16 @@ package body Wl is
       end if;
    end Bind;
 
-   procedure Get_Shell_Surface (Shell         : Shell_T;
-                                Surface       : Surface_T;
-                                Shell_Surface : in out Shell_Surface_T) is
+   procedure Get_Shell_Surface (Shell         : Wl.Shell;
+                                Surface       : Wl.Surface;
+                                Shell_Surface : in out Wl.Shell_Surface) is
    begin
       Shell_Surface.My_Shell_Surface :=
         Wl_Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);
    end Get_Shell_Surface;
 
-   procedure Bind (Shm      : in out Shm_T;
-                   Registry : Registry_T;
+   procedure Bind (Shm      : in out Wl.Shm;
+                   Registry : Wl.Registry;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
    is
@@ -1618,21 +1617,21 @@ package body Wl is
       end if;
    end Bind;
 
-   procedure Create_Pool (Shm             : Shm_T;
+   procedure Create_Pool (Shm             : Wl.Shm;
                           File_Descriptor : Integer;
                           Size            : Integer;
-                          Pool            : in out Shm_Pool_T) is
+                          Pool            : in out Wl.Shm_Pool) is
    begin
       Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool (Shm.My_Shm, File_Descriptor, Size);
    end Create_Pool;
 
-   procedure Create_Buffer (Pool   : Shm_Pool_T;
+   procedure Create_Buffer (Pool   : Wl.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
                             Height   : Integer;
                             Stride   : Integer;
                             Format   : Unsigned_32;
-                            Buffer : in out Buffer_T) is
+                            Buffer : in out Wl.Buffer) is
    begin
       Buffer.My_Buffer := Wl_Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,
                                                           Offset,
@@ -1642,31 +1641,31 @@ package body Wl is
                                                           Format);
    end Create_Buffer;
 
-   procedure Set_Toplevel (Surface : Shell_Surface_T) is
+   procedure Set_Toplevel (Surface : Wl.Shell_Surface) is
    begin
       Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
    end Set_Toplevel;
 
-   procedure Pong (Surface : Shell_Surface_T;
+   procedure Pong (Surface : Wl.Shell_Surface;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
    end Pong;
 
-   procedure Attach (Surface : Surface_T;
-                     Buffer  : Buffer_T;
+   procedure Attach (Surface : Wl.Surface;
+                     Buffer  : Wl.Buffer;
                      X       : Integer;
                      Y       : Integer) is
    begin
       Wl_Thin.Surface_Attach (Surface.My_Surface, Buffer.My_Buffer, X, Y);
    end Attach;
 
-   procedure Commit (Surface : Surface_T) is
+   procedure Commit (Surface : Wl.Surface) is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
    end Commit;
 
-   procedure Destroy (Surface : in out Surface_T) is
+   procedure Destroy (Surface : in out Wl.Surface) is
    begin
       if Surface.My_Surface /= null then
          Wl_Thin.Surface_Destroy (Surface.My_Surface);

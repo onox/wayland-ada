@@ -1,76 +1,100 @@
-with Interfaces.C.Strings;
+with Interfaces.C;
 with System;
+with Posix;
 
-with Ada.Strings.Unbounded;
+private with Interfaces.C.Strings;
 
 package Wl is
 
-   type Display_T;
-   type Registry_T;
-   type Pointer_T;
-   type Shm_Pool_T;
-   type Surface_T;
-   type Shell_Surface_T;
-   type Buffer_T;
+   pragma Linker_Options ("-lwayland-client");
+   -- Added this linker option here to avoid added it to each gpr file that with's
+   -- this Wayland Ada binding. If the wayland client lib changes its name it
+   -- means there is only one place one needs to update.
 
-   subtype int is Interfaces.C.int;
+   package Px renames Posix;
 
-   subtype char_array is Interfaces.C.char_array;
+   use type Px.C_String;
 
-   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
+   subtype int is Integer;
+--   subtype int is Int;
+
+   type Display;
+   type Registry;
+   type Callback;
+   type Compositor;
+   type Shm_Pool;
+   type Shm;
+   type Buffer;
+   type Data_Offer;
+   type Data_Source;
+   type Data_Device;
+   type Data_Device_Manager;
+   type Shell;
+   type Shell_Surface;
+   type Surface;
+   type Seat;
+   type Pointer;
+   type Keyboard;
+   type Touch;
+   type Output;
+   type Region;
+   type Subcompositor;
+   type Subsurface;
 
    subtype Unsigned_32 is Interfaces.Unsigned_32;
 
-   subtype unsigned is Interfaces.C.unsigned;
+   type Interface_Type is tagged limited private;
+   -- This type name ends with _Type because 'interface'
+   -- is a reserved keyword in the Ada programming language.
 
-   type Interface_T is tagged limited private;
-
-   function Name (I : Interface_T) return String with
+   function Name (I : Interface_Type) return String with
      Global => null;
 
-   Display_Interface : constant Interface_T;
+   Display_Interface : constant Interface_Type;
 
-   Registry_Interface : constant Interface_T;
+   Registry_Interface : constant Interface_Type;
 
-   Callback_Interface : constant Interface_T;
+   Callback_Interface : constant Interface_Type;
 
-   Compositor_Interface : constant Interface_T;
+   Compositor_Interface : constant Interface_Type;
 
-   Shm_Pool_Interface : constant Interface_T;
+   Shm_Pool_Interface : constant Interface_Type;
 
-   Shm_Interface : constant Interface_T;
+   Shm_Interface : constant Interface_Type;
 
-   Buffer_Interface : constant Interface_T;
+   Buffer_Interface : constant Interface_Type;
 
-   Data_Offer_Interface : constant Interface_T;
+   Data_Offer_Interface : constant Interface_Type;
 
-   Data_Source_Interface : constant Interface_T;
+   Data_Source_Interface : constant Interface_Type;
 
-   Data_Device_Interface : constant Interface_T;
+   Data_Device_Interface : constant Interface_Type;
 
-   Data_Device_Manager_Interface : constant Interface_T;
+   Data_Device_Manager_Interface : constant Interface_Type;
 
-   Shell_Interface : constant Interface_T;
+   Shell_Interface : constant Interface_Type;
 
-   Shell_Surface_Interface : constant Interface_T;
+   Shell_Surface_Interface : constant Interface_Type;
 
-   Surface_Interface : constant Interface_T;
+   Surface_Interface : constant Interface_Type;
 
-   Seat_Interface : constant Interface_T;
+   Seat_Interface : constant Interface_Type;
 
-   Pointer_Interface : constant Interface_T;
+   Pointer_Interface : constant Interface_Type;
 
-   Keyboard_Interface : constant Interface_T;
+   Keyboard_Interface : constant Interface_Type;
 
-   Touch_Interface : constant Interface_T;
+   Touch_Interface : constant Interface_Type;
 
-   Output_Interface : constant Interface_T;
+   Output_Interface : constant Interface_Type;
 
-   Region_Interface : constant Interface_T;
+   Region_Interface : constant Interface_Type;
 
-   Subcompositor_Interface : constant Interface_T;
+   Subcompositor_Interface : constant Interface_Type;
 
-   Subsurface_Interface : constant Interface_T;
+   Subsurface_Interface : constant Interface_Type;
+
+   Default_Display_Name : constant Px.C_String := "wayland-0" & Px.Nul;
 
    type Fixed_T is new Interfaces.Integer_32;
 
@@ -88,205 +112,218 @@ package Wl is
    -- the seat has touch devices
    Seat_Capability_Touch : constant Seat_Capability_T := 4;
 
-   function Value (Item : chars_ptr) return char_array renames Interfaces.C.Strings.Value;
-
-   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
-
-   function To_Ada (Item     : char_array;
-                    Trim_Nul : Boolean := True) return String renames Interfaces.C.To_Ada;
-
    subtype Void_Ptr is System.Address;
 
    Null_Address : Void_Ptr renames System.Null_Address;
 
-   Default_Display_Name : constant Interfaces.C.Strings.char_array_access;
+   type Compositor is tagged limited private;
 
-   type Compositor_T is tagged limited private;
-
-   function Is_Bound (Compositor : Compositor_T) return Boolean with
+   function Is_Bound (Compositor : Wl.Compositor) return Boolean with
      Global => null;
 
-   procedure Bind (Compositor  : in out Compositor_T;
-                   Registry    : Registry_T;
+   procedure Bind (Compositor  : in out Wl.Compositor;
+                   Registry    : Wl.Registry;
                    Id          : Wl.Unsigned_32;
                    Version     : Wl.Unsigned_32) with
      Global => null,
      Pre    => Has_Registry_Object (Registry);
 
-   procedure Create_Surface (Compositor : Compositor_T;
-                             Surface    : in out Surface_T) with
+   procedure Create_Surface (Compositor : Wl.Compositor;
+                             Surface    : in out Wl.Surface) with
      Global => null;
 
-   type Seat_T is tagged limited private;
+   type Seat is tagged limited private;
 
-   function Is_Bound (Seat : Seat_T) return Boolean with
+   function Is_Bound (Seat : Wl.Seat) return Boolean with
      Global => null;
 
-   procedure Bind (Seat     : in out Seat_T;
-                   Registry : Registry_T;
+   procedure Bind (Seat     : in out Wl.Seat;
+                   Registry : Wl.Registry;
                    Id       : Wl.Unsigned_32;
                    Version  : Wl.Unsigned_32) with
      Global => null,
      Pre    => Has_Registry_Object (Registry);
 
-   procedure Get_Pointer (Seat    : Seat_T;
-                          Pointer : in out Pointer_T) with
+   procedure Get_Pointer (Seat    : Wl.Seat;
+                          Pointer : in out Wl.Pointer) with
      Global => null;
 
-   type Pointer_T is tagged limited private;
+   type Pointer is tagged limited private;
 
-   type Shell_T is tagged limited private;
+   type Shell is tagged limited private;
 
-   function Is_Bound (Shell : Shell_T) return Boolean with
+   function Is_Bound (Shell : Wl.Shell) return Boolean with
      Global => null;
 
-   procedure Bind (Shell    : in out Shell_T;
-                   Registry : Registry_T;
+   procedure Bind (Shell    : in out Wl.Shell;
+                   Registry : Wl.Registry;
                    Id       : Wl.Unsigned_32;
                    Version  : Wl.Unsigned_32) with
      Global => null,
      Pre    => Has_Registry_Object (Registry);
 
-   procedure Get_Shell_Surface (Shell         : Shell_T;
-                                Surface       : Surface_T;
-                                Shell_Surface : in out Shell_Surface_T) with
+   procedure Get_Shell_Surface (Shell         : Wl.Shell;
+                                Surface       : Wl.Surface;
+                                Shell_Surface : in out Wl.Shell_Surface) with
      Global => null;
 
-   type Shm_T is tagged limited private;
+   type Shm is tagged limited private;
 
-   function Is_Bound (Shm : Shm_T) return Boolean with
+   function Is_Bound (Shm : Wl.Shm) return Boolean with
      Global => null;
 
-   procedure Bind (Shm      : in out Shm_T;
-                   Registry : Registry_T;
+   procedure Bind (Shm      : in out Wl.Shm;
+                   Registry : Wl.Registry;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32) with
      Global => null,
      Pre    => Has_Registry_Object (Registry);
 
-   procedure Create_Pool (Shm             : Shm_T;
+   procedure Create_Pool (Shm             : Wl.Shm;
                           File_Descriptor : Integer;
                           Size            : Integer;
-                          Pool            : in out Shm_Pool_T);
+                          Pool            : in out Shm_Pool);
 
-   type Shm_Pool_T is tagged limited private;
+   type Shm_Pool is tagged limited private;
 
-   function Exists (Pool : Shm_Pool_T) return Boolean with
+   function Exists (Pool : Wl.Shm_Pool) return Boolean with
      Global => null;
 
-   procedure Create_Buffer (Pool   : Shm_Pool_T;
+   procedure Create_Buffer (Pool     : Wl.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
                             Height   : Integer;
                             Stride   : Integer;
                             Format   : Unsigned_32;
-                            Buffer : in out Buffer_T) with
+                            Buffer : in out Wl.Buffer) with
      Global => null;
 
-   type Surface_T is tagged limited private;
+   type Surface is tagged limited private;
 
-   function Exists (Surface : Surface_T) return Boolean with
+   function Exists (Surface : Wl.Surface) return Boolean with
      Global => null;
 
-   procedure Attach (Surface : Surface_T;
-                     Buffer  : Buffer_T;
+   procedure Attach (Surface : Wl.Surface;
+                     Buffer  : Wl.Buffer;
                      X       : Integer;
                      Y       : Integer) with
      Global => null;
 
-   procedure Commit (Surface : Surface_T) with
+   procedure Commit (Surface : Wl.Surface) with
      Global => null;
 
-   procedure Destroy (Surface : in out Surface_T) with
+   procedure Destroy (Surface : in out Wl.Surface) with
      Global => null,
      Pre    => Surface.Exists,
      Post   => not Surface.Exists;
 
-   type Buffer_T is tagged limited private;
+   type Buffer is tagged limited private;
 
-   function Exists (Buffer : Buffer_T) return Boolean with
+   function Exists (Buffer : Wl.Buffer) return Boolean with
      Global => null;
 
-   type Shell_Surface_T is tagged limited private;
+   type Shell_Surface is tagged limited private;
 
-   function Exists (Surface : Shell_Surface_T) return Boolean with
+   function Exists (Surface : Shell_Surface) return Boolean with
      Global => null;
 
-   procedure Set_Toplevel (Surface : Shell_Surface_T) with
+   procedure Set_Toplevel (Surface : Shell_Surface) with
      Global => null;
 
-   procedure Pong (Surface : Shell_Surface_T;
+   procedure Pong (Surface : Shell_Surface;
                    Serial  : Unsigned_32) with
      Global => null;
 
-   type Registry_T is tagged limited private;
+   type Display is tagged limited private with
+     Default_Initial_Condition => not Display.Is_Connected;
 
-   function Has_Registry_Object (Registry : Registry_T) return Boolean with
+   function Is_Connected (Display : Wl.Display) return Boolean with
      Global => null;
 
-   procedure Get (Registry : in out Registry_T;
-                  Display  : Display_T) with
-     Global => null,
-     Pre    => Is_Connected (Display) and not Registry.Has_Registry_Object;
-
-   function Has_Started_Subscription (Registry : Registry_T) return Boolean with
-     Global => null;
-
-   procedure Destroy (Registry : in out Registry_T) with
-     Global => null,
-     Pre    => Registry.Has_Registry_Object,
-     Post   => not Registry.Has_Registry_Object;
-
-   type Display_T is tagged limited private with
-     Default_Initial_Condition => not Display_T.Is_Connected;
-
-   function Is_Connected (Display : Display_T) return Boolean with
-     Global => null;
-
-   procedure Connect (Display : in out Display_T;
-                      Name    : Interfaces.C.Strings.char_array_access) with
+   procedure Connect (Display : in out Wl.Display;
+                      Name    : Px.C_String) with
      Global => null,
      Pre    => not Display.Is_Connected;
    -- Attempts connecting with the Wayland server.
 
-   function Dispatch (Display : Display_T) return Interfaces.C.int with
+   function Dispatch (Display : Wl.Display) return Int with
      Global => null,
      Pre    => Display.Is_Connected;
 
-   procedure Dispatch (Display : Display_T) with
+   procedure Dispatch (Display : Wl.Display) with
      Global => null,
      Pre    => Display.Is_Connected;
 
-   function Roundtrip (Display : Display_T) return Interfaces.C.int with
+   function Roundtrip (Display : Wl.Display) return Int with
      Global => null,
      Pre    => Display.Is_Connected;
 
-   procedure Roundtrip (Display : Display_T) with
+   procedure Roundtrip (Display : Wl.Display) with
      Global => null,
      Pre    => Display.Is_Connected;
 
-   procedure Disconnect (Display : in out Display_T) with
+   procedure Disconnect (Display : in out Wl.Display) with
      Global => null,
      Pre    => Display.Is_Connected,
      Post   => not Display.Is_Connected;
+
+   procedure Get_Registry (Display  : Wl.Display;
+                           Registry : in out Wl.Registry) with
+     Global => null,
+     Pre    => Display.Is_Connected and not Has_Registry_Object (Registry);
+
+   type Registry is tagged limited private;
+
+   function Has_Registry_Object (Registry : Wl.Registry) return Boolean with
+     Global => null;
+
+   function Has_Started_Subscription (Registry : Wl.Registry) return Boolean with
+     Global => null;
+
+   procedure Destroy (Registry : in out Wl.Registry) with
+     Global => null,
+     Pre    => Registry.Has_Registry_Object,
+     Post   => not Registry.Has_Registry_Object;
+
+   type Callback is tagged limited private;
+
+   type Data_Offer is tagged limited private;
+
+   type Data_Source is tagged limited private;
+
+   type Data_Device is tagged limited private;
+
+   type Data_Device_Manager is tagged limited private;
+
+   type Keyboard is tagged limited private;
+
+   type Touch is tagged limited private;
+
+   type Output is tagged limited private;
+
+   type Region is tagged limited private;
+
+   type Subcompositor is tagged limited private;
+
+   type Subsurface is tagged limited private;
 
    generic
       type Data_T is private;
       Data : Data_T;
       with procedure Global_Object_Added (Data     : Data_T;
-                                          Registry : Registry_T;
+                                          Registry : Wl.Registry;
                                           Id       : Unsigned_32;
                                           Name     : String;
                                           Version  : Unsigned_32);
 
       with procedure Global_Object_Removed (Data     : Data_T;
-                                            Registry : Registry_T;
+                                            Registry : Wl.Registry;
                                             Id       : Unsigned_32);
    package Registry_Objects_Subscriber is
 
       -- Starts subcription to global objects addded and removed events.
       -- To stop subscription, call Registry.Destroy.
-      procedure Start_Subscription (Registry : in out Registry_T);
+      procedure Start_Subscription (Registry : in out Wl.Registry);
 
    end Registry_Objects_Subscriber;
 
@@ -296,23 +333,23 @@ package Wl is
 
       with procedure Shell_Surface_Ping
         (Data    : Data_Type;
-         Surface : Shell_Surface_T;
+         Surface : Shell_Surface;
          Serial  : Unsigned_32);
 
       with procedure Shell_Surface_Configure
         (Data    : Data_Type;
-         Surface : Shell_Surface_T;
+         Surface : Shell_Surface;
          Edges   : Unsigned_32;
          Width   : Integer;
          Height  : Integer);
 
       with procedure Shell_Surface_Popup_Done
         (Data    : Data_Type;
-         Surface : Shell_Surface_T);
+         Surface : Shell_Surface);
 
    package Shell_Surface_Subscriber is
 
-      procedure Start_Subscription (Surface : in out Shell_Surface_T);
+      procedure Start_Subscription (Surface : in out Shell_Surface);
 
    end Shell_Surface_Subscriber;
 
@@ -322,16 +359,16 @@ package Wl is
 
       with procedure Seat_Capabilities
         (Data         : Data_Type;
-         Seat         : Seat_T;
+         Seat         : Wl.Seat;
          Capabilities : Seat_Capability_T);
 
       with procedure Seat_Name
         (Data : Data_Type;
-         Seat : Seat_T;
+         Seat : Wl.Seat;
          Name : String);
    package Seat_Capability_Subscriber is
 
-      procedure Start_Subscription (S : in out Seat_T);
+      procedure Start_Subscription (S : in out Seat);
 
    end Seat_Capability_Subscriber;
 
@@ -341,28 +378,28 @@ package Wl is
 
       with procedure Pointer_Enter
         (Data      : Data_Type;
-         Pointer   : Pointer_T;
+         Pointer   : Wl.Pointer;
          Serial    : Interfaces.Unsigned_32;
-         Surface   : Surface_T;
+         Surface   : Wl.Surface;
          Surface_X : Fixed_T;
          Surface_Y : Fixed_T);
 
       with procedure Pointer_Leave
         (Data    : Data_Type;
-         Pointer : Pointer_T;
+         Pointer : Wl.Pointer;
          Serial  : Interfaces.Unsigned_32;
-         Surface : Surface_T);
+         Surface : Wl.Surface);
 
       with procedure Pointer_Motion
         (Data      : Data_Type;
-         Pointer   : Pointer_T;
+         Pointer   : Wl.Pointer;
          Time      : Interfaces.Unsigned_32;
          Surface_X : Fixed_T;
          Surface_Y : Fixed_T);
 
       with procedure Pointer_Button
         (Data    : Data_Type;
-         Pointer : Pointer_T;
+         Pointer : Wl.Pointer;
          Serial  : Interfaces.Unsigned_32;
          Time    : Interfaces.Unsigned_32;
          Button  : Interfaces.Unsigned_32;
@@ -370,34 +407,34 @@ package Wl is
 
       with procedure Pointer_Axis
         (Data    : Data_Type;
-         Pointer : Pointer_T;
+         Pointer : Wl.Pointer;
          Time    : Interfaces.Unsigned_32;
          Axis    : Interfaces.Unsigned_32;
          Value   : Fixed_T);
 
       with procedure Pointer_Frame (Data    : Data_Type;
-                                    Pointer : Pointer_T);
+                                    Pointer : Wl.Pointer);
 
       with procedure Pointer_Axis_Source
         (Data        : Data_Type;
-         Pointer     : Pointer_T;
+         Pointer     : Wl.Pointer;
          Axis_Source : Interfaces.Unsigned_32);
 
       with procedure Pointer_Axis_Stop
         (Data    : Data_Type;
-         Pointer : Pointer_T;
+         Pointer : Wl.Pointer;
          Time    : Interfaces.Unsigned_32;
          Axis    : Interfaces.Unsigned_32);
 
       with procedure Pointer_Axis_Discrete
         (Data     : Data_Type;
-         Pointer  : Pointer_T;
+         Pointer  : Wl.Pointer;
          Axis     : Interfaces.Unsigned_32;
          Discrete : Integer);
 
    package Pointer_Subscriber is
 
-      procedure Start_Subscription (P : in out Pointer_T);
+      procedure Start_Subscription (P : in out Pointer);
 
    end Pointer_Subscriber;
 
@@ -412,28 +449,29 @@ package Wl is
 
    --     type Interface_T is limited record
    --        Name         : Interfaces.C.Strings.chars_ptr;
-   --        Version      : Interfaces.C.int;
-   --        Method_Count : Interfaces.C.int;
+   --        Version      : Int;
+   --        Method_Count : Int;
    --        Methods      : Void_Ptr; -- Can be improved upon.
-   --        Event_Count  : Interfaces.C.int;
+   --        Event_Count  : Int;
    --        Events       : Void_Ptr; -- Can be improved upon.
    --     end record with
    --       Convention => C_Pass_By_Copy;
 
 private
 
+   subtype char_array is Interfaces.C.char_array;
+
+   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
+
+   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
+
    package Wl_Thin is
 
       -- Begin core parts
 
-      pragma Linker_Options ("-lwayland-client");
-      -- Added this linker option here to avoid added it to each gpr file that with's
-      -- this Ada binding to Wayland. If the wayland client lib changes its name it
-      -- means there is only one place one needs to update.
-
       subtype Void_Ptr is System.Address;
 
-      Default_Display_Name : aliased Interfaces.C.char_array := Interfaces.C.To_C ("wayland-0");
+--      Default_Display_Name : aliased Interfaces.C.char_array := Interfaces.C.To_C ("wayland-0");
 
       type Proxy_T is limited private;
 
@@ -441,16 +479,16 @@ private
 
       type Display_Ptr;
 
-      function Display_Connect (Name : Interfaces.C.Strings.char_array_access) return Display_Ptr;
+      function Display_Connect (Name : Px.C_String) return Display_Ptr;
 
       procedure Display_Disconnect (This : in out Display_Ptr);
 
       type Interface_T is limited record
-         Name         : Interfaces.C.Strings.chars_ptr;
-         Version      : Interfaces.C.int;
-         Method_Count : Interfaces.C.int;
+         Name         : chars_ptr;
+         Version      : int;
+         Method_Count : int;
          Methods      : Void_Ptr; -- Can be improved upon.
-         Event_Count  : Interfaces.C.int;
+         Event_Count  : int;
          Events       : Void_Ptr; -- Can be improved upon.
       end record with
         Convention => C_Pass_By_Copy;
@@ -498,12 +536,12 @@ private
         Import        => True,
         External_Name => "wl_proxy_marshal";
 
-      function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with
+      function Display_Dispatch (Display : Display_Ptr) return Int with
         Import        => True,
         Convention    => C,
         External_Name => "wl_display_dispatch";
 
-      function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with
+      function Display_Roundtrip (Display : Display_Ptr) return Int with
         Import        => True,
         Convention    => C,
         External_Name => "wl_display_roundtrip";
@@ -1255,7 +1293,7 @@ private
       function Display_Add_Listener
         (Display  : Display_Ptr;
          Listener : Display_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Display_Set_User_Data (Display : Display_Ptr; Data : Void_Ptr);
 
@@ -1314,7 +1352,7 @@ private
       function Registry_Add_Listener
         (Registry : Registry_Ptr;
          Listener : Registry_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Registry_Set_User_Data (Registry : Registry_Ptr; Data : Void_Ptr);
 
@@ -1348,7 +1386,7 @@ private
       function Callback_Add_Listener
         (Callback : Callback_Ptr;
          Listener : Callback_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Callback_Set_User_Data (Callback : Callback_Ptr; Data : Void_Ptr);
 
@@ -1599,7 +1637,7 @@ private
 
       type Shm_Listener_Ptr is access all Shm_Listener_T;
 
-      function Shm_Add_Listener (Shm : Shm_Ptr; Listener : Shm_Listener_Ptr; Data : Void_Ptr) return Interfaces.C.int;
+      function Shm_Add_Listener (Shm : Shm_Ptr; Listener : Shm_Listener_Ptr; Data : Void_Ptr) return Int;
 
       procedure Shm_Set_User_Data (Shm : Shm_Ptr; Data : Void_Ptr);
 
@@ -1629,7 +1667,7 @@ private
       function Buffer_Add_Listener
         (Buffer   : Buffer_Ptr;
          Listener : Buffer_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Buffer_Set_User_Data (Buffer : Buffer_Ptr; Data : Void_Ptr);
 
@@ -1682,7 +1720,7 @@ private
       function Data_Offer_Add_Listener
         (Data_Offer : Data_Offer_Ptr;
          Listener   : Data_Offer_Listener_Ptr;
-         Data       : Void_Ptr) return Interfaces.C.int;
+         Data       : Void_Ptr) return Int;
 
       procedure Data_Offer_Set_User_Data (Data_Offer : Data_Offer_Ptr; Data : Void_Ptr);
 
@@ -1831,7 +1869,7 @@ private
       function Data_Source_Add_Listener
         (Data_Source : Data_Source_Ptr;
          Listener    : Data_Source_Listener_Ptr;
-         Data        : Void_Ptr) return Interfaces.C.int;
+         Data        : Void_Ptr) return Int;
 
       procedure Data_Source_Set_User_Data (Data_Source : Data_Source_Ptr; Data : Void_Ptr);
 
@@ -1916,7 +1954,7 @@ private
       function Data_Device_Add_Listener
         (Data_Device : Data_Device_Ptr;
          Listener    : Data_Device_Listener_Ptr;
-         Data        : Void_Ptr) return Interfaces.C.int;
+         Data        : Void_Ptr) return Int;
 
       procedure Data_Device_Set_User_Data (Data_Device : Data_Device_Ptr; Data : Void_Ptr);
 
@@ -2098,7 +2136,7 @@ private
       function Shell_Surface_Add_Listener
         (Shell_Surface : Shell_Surface_Ptr;
          Listener      : Shell_Surface_Listener_Ptr;
-         Data          : Void_Ptr) return Interfaces.C.int;
+         Data          : Void_Ptr) return Int;
 
       procedure Shell_Surface_Set_User_Data (Shell_Surface : Shell_Surface_Ptr; Data : Void_Ptr);
 
@@ -2283,7 +2321,7 @@ private
       function Surface_Add_Listener
         (Surface  : Surface_Ptr;
          Listener : Surface_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Surface_Set_User_Data (Surface : Surface_Ptr; Data : Void_Ptr);
 
@@ -2570,7 +2608,7 @@ private
 
       type Seat_Listener_Ptr is access all Seat_Listener_T;
 
-      function Seat_Add_Listener (Seat : Seat_Ptr; Listener : Seat_Listener_Ptr; Data : Void_Ptr) return Interfaces.C.int;
+      function Seat_Add_Listener (Seat : Seat_Ptr; Listener : Seat_Listener_Ptr; Data : Void_Ptr) return Int;
 
       procedure Seat_Set_User_Data (Seat : Seat_Ptr; Data : Void_Ptr);
 
@@ -2724,7 +2762,7 @@ private
       function Pointer_Add_Listener
         (Pointer  : Pointer_Ptr;
          Listener : Pointer_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Pointer_Set_User_Data (Pointer : Pointer_Ptr; Data : Void_Ptr);
 
@@ -2857,7 +2895,7 @@ private
       function Keyboard_Add_Listener
         (Keyboard : Keyboard_Ptr;
          Listener : Keyboard_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Keyboard_Set_User_Data (Keyboard : Keyboard_Ptr; Data : Void_Ptr);
 
@@ -2934,7 +2972,7 @@ private
       function Touch_Add_Listener
         (Touch    : Touch_Ptr;
          Listener : Touch_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Touch_Set_User_Data (Touch : Touch_Ptr; Data : Void_Ptr);
 
@@ -3038,7 +3076,7 @@ private
       function Output_Add_Listener
         (Output   : Output_Ptr;
          Listener : Output_Listener_Ptr;
-         Data     : Void_Ptr) return Interfaces.C.int;
+         Data     : Void_Ptr) return Int;
 
       procedure Output_Set_User_Data (Output : Output_Ptr; Data : Void_Ptr);
 
@@ -3193,156 +3231,210 @@ private
 
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
+   use type Wl_Thin.Callback_Ptr;
    use type Wl_Thin.Compositor_Ptr;
-   use type Wl_Thin.Seat_Ptr;
-   use type Wl_Thin.Shell_Ptr;
-   use type Wl_Thin.Shm_Ptr;
    use type Wl_Thin.Shm_Pool_Ptr;
-   use type Wl_Thin.Surface_Ptr;
-   use type Wl_Thin.Shell_Surface_Ptr;
+   use type Wl_Thin.Shm_Ptr;
    use type Wl_Thin.Buffer_Ptr;
+   use type Wl_Thin.Data_Offer_Ptr;
+   use type Wl_Thin.Data_Source_Ptr;
+   use type Wl_Thin.Data_Device_Ptr;
+   use type Wl_Thin.Data_Device_Manager_Ptr;
+   use type Wl_Thin.Shell_Ptr;
+   use type Wl_Thin.Shell_Surface_Ptr;
+   use type Wl_Thin.Surface_Ptr;
+   use type Wl_Thin.Seat_Ptr;
+   use type Wl_Thin.Pointer_Ptr;
+   use type Wl_Thin.Keyboard_Ptr;
+   use type Wl_Thin.Touch_Ptr;
+   use type Wl_Thin.Output_Ptr;
+   use type Wl_Thin.Region_Ptr;
+   use type Wl_Thin.Subcompositor_Ptr;
+   use type Wl_Thin.Subsurface_Ptr;
 
-   Default_Display_Name : constant Interfaces.C.Strings.char_array_access := Wl_Thin.Default_Display_Name'Access;
-
-   type Display_T is tagged limited record
+   type Display is tagged limited record
       My_Display : Wl_Thin.Display_Ptr;
    end record;
 
-   function Is_Connected (Display : Display_T) return Boolean is (Display.My_Display /= null);
+   function Is_Connected (Display : Wl.Display) return Boolean is (Display.My_Display /= null);
 
-   type Registry_T is tagged limited record
+   type Registry is tagged limited record
       My_Registry                 : Wl_Thin.Registry_Ptr;
       My_Has_Started_Subscription : Boolean := False;
    end record;
 
-   function Has_Registry_Object (Registry : Registry_T) return Boolean is (Registry.My_Registry /= null);
+   function Has_Registry_Object (Registry : Wl.Registry) return Boolean is (Registry.My_Registry /= null);
 
-   function Has_Started_Subscription (Registry : Registry_T) return Boolean is (Registry.My_Has_Started_Subscription);
+   function Has_Started_Subscription (Registry : Wl.Registry) return Boolean is (Registry.My_Has_Started_Subscription);
 
-   type Compositor_T is tagged limited record
+   type Compositor is tagged limited record
       My_Compositor : Wl_Thin.Compositor_Ptr;
    end record;
 
-   function Is_Bound (Compositor : Compositor_T) return Boolean is (Compositor.My_Compositor /= null);
+   function Is_Bound (Compositor : Wl.Compositor) return Boolean is (Compositor.My_Compositor /= null);
 
-   type Pointer_T is tagged limited record
+   type Pointer is tagged limited record
       My_Pointer : Wl_Thin.Pointer_Ptr;
    end record;
 
-   type Seat_T is tagged limited record
+   type Seat is tagged limited record
       My_Seat : Wl_Thin.Seat_Ptr;
       My_Has_Started_Subscription : Boolean := False;
    end record;
 
-   function Is_Bound (Seat : Seat_T) return Boolean is (Seat.My_Seat /= null);
+   function Is_Bound (Seat : Wl.Seat) return Boolean is (Seat.My_Seat /= null);
 
-   type Shell_T is tagged limited record
+   type Shell is tagged limited record
       My_Shell : Wl_Thin.Shell_Ptr;
    end record;
 
-   function Is_Bound (Shell : Shell_T) return Boolean is (Shell.My_Shell /= null);
+   function Is_Bound (Shell : Wl.Shell) return Boolean is (Shell.My_Shell /= null);
 
-   type Shm_T is tagged limited record
+   type Shm is tagged limited record
       My_Shm : Wl_Thin.Shm_Ptr;
    end record;
 
-   function Is_Bound (Shm : Shm_T) return Boolean is (Shm.My_Shm /= null);
+   function Is_Bound (Shm : Wl.Shm) return Boolean is (Shm.My_Shm /= null);
 
-   type Shm_Pool_T is tagged limited record
+   type Shm_Pool is tagged limited record
       My_Shm_Pool : Wl_Thin.Shm_Pool_Ptr;
    end record;
 
-   function Exists (Pool : Shm_Pool_T) return Boolean is (Pool.My_Shm_Pool /= null);
+   function Exists (Pool : Shm_Pool) return Boolean is (Pool.My_Shm_Pool /= null);
 
-   type Buffer_T is tagged limited record
+   type Buffer is tagged limited record
       My_Buffer : Wl_Thin.Buffer_Ptr;
    end record;
 
-   function Exists (Buffer : Buffer_T) return Boolean is (Buffer.My_Buffer /= null);
+   function Exists (Buffer : Wl.Buffer) return Boolean is (Buffer.My_Buffer /= null);
 
-   type Surface_T is tagged limited record
+   type Surface is tagged limited record
       My_Surface : Wl_Thin.Surface_Ptr;
    end record;
 
-   function Exists (Surface : Surface_T) return Boolean is (Surface.My_Surface /= null);
+   function Exists (Surface : Wl.Surface) return Boolean is (Surface.My_Surface /= null);
 
-   type Shell_Surface_T is tagged limited record
+   type Shell_Surface is tagged limited record
       My_Shell_Surface : Wl_Thin.Shell_Surface_Ptr;
    end record;
 
-   function Exists (Surface : Shell_Surface_T) return Boolean is (Surface.My_Shell_Surface /= null);
+   function Exists (Surface : Shell_Surface) return Boolean is (Surface.My_Shell_Surface /= null);
 
-   type Interface_T is tagged limited record
+   type Callback is tagged limited record
+      My_Callback : Wl_Thin.Callback_Ptr;
+   end record;
+
+   type Data_Offer is tagged limited record
+      My_Data_Offer : Wl_Thin.Data_Offer_Ptr;
+   end record;
+
+   type Data_Source is tagged limited record
+      My_Data_Source : Wl_Thin.Data_Source_Ptr;
+   end record;
+
+   type Data_Device is tagged limited record
+      My_Data_Device : Wl_Thin.Data_Device_Ptr;
+   end record;
+
+   type Data_Device_Manager is tagged limited record
+      My_Data_Device_Manager : Wl_Thin.Data_Device_Manager_Ptr;
+   end record;
+
+   type Keyboard is tagged limited record
+      My_Keyboard : Wl_Thin.Keyboard_Ptr;
+   end record;
+
+   type Touch is tagged limited record
+      My_Touch : Wl_Thin.Touch_Ptr;
+   end record;
+
+   type Output is tagged limited record
+      My_Output : Wl_Thin.Output_Ptr;
+   end record;
+
+   type Region is tagged limited record
+      My_Region : Wl_Thin.Region_Ptr;
+   end record;
+
+   type Subcompositor is tagged limited record
+      My_Subcompositor : Wl_Thin.Subcompositor_Ptr;
+   end record;
+
+   type Subsurface is tagged limited record
+      My_Subsurface : Wl_Thin.Subsurface_Ptr;
+   end record;
+
+   type Interface_Type is tagged limited record
       My_Interface : not null Wl_Thin.Interface_Ptr;
    end record;
 
-   function Name (I : Interface_T) return String is
+   function Name (I : Interface_Type) return String is
      (Value (I.My_Interface.Name));
 
-   Display_Interface : constant Interface_T :=
+   Display_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Display_Interface'Access);
 
-   Registry_Interface : constant Interface_T :=
+   Registry_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Registry_Interface'Access);
 
-   Callback_Interface : constant Interface_T :=
+   Callback_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Callback_Interface'Access);
 
-   Compositor_Interface : constant Interface_T :=
+   Compositor_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Compositor_Interface'Access);
 
-   Shm_Pool_Interface : constant Interface_T :=
+   Shm_Pool_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Shm_Pool_Interface'Access);
 
-   Shm_Interface : constant Interface_T :=
+   Shm_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Shm_Interface'Access);
 
-   Buffer_Interface : constant Interface_T :=
+   Buffer_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Buffer_Interface'Access);
 
-   Data_Offer_Interface : constant Interface_T :=
+   Data_Offer_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Data_Offer_Interface'Access);
 
-   Data_Source_Interface : constant Interface_T :=
+   Data_Source_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Data_Source_Interface'Access);
 
-   Data_Device_Interface : constant Interface_T :=
+   Data_Device_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Data_Device_Interface'Access);
 
-   Data_Device_Manager_Interface : constant Interface_T :=
+   Data_Device_Manager_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Data_Device_Manager_Interface'Access);
 
-   Shell_Interface : constant Interface_T :=
+   Shell_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Shell_Interface'Access);
 
-   Shell_Surface_Interface : constant Interface_T :=
+   Shell_Surface_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Shell_Surface_Interface'Access);
 
-   Surface_Interface : constant Interface_T :=
+   Surface_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Surface_Interface'Access);
 
-   Seat_Interface : constant Interface_T :=
+   Seat_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Seat_Interface'Access);
 
-   Pointer_Interface : constant Interface_T :=
+   Pointer_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Pointer_Interface'Access);
 
-   Keyboard_Interface : constant Interface_T :=
+   Keyboard_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Keyboard_Interface'Access);
 
-   Touch_Interface : constant Interface_T :=
+   Touch_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Touch_Interface'Access);
 
-   Output_Interface : constant Interface_T :=
+   Output_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Output_Interface'Access);
 
-   Region_Interface : constant Interface_T :=
+   Region_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Region_Interface'Access);
 
-   Subcompositor_Interface : constant Interface_T :=
+   Subcompositor_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Subcompositor_Interface'Access);
 
-   Subsurface_Interface : constant Interface_T :=
+   Subsurface_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Subsurface_Interface'Access);
 
 end Wl;

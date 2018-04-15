@@ -154,13 +154,13 @@ package body Xml_Parser_Utils is
          when Type_Integer =>
             Set_Unbounded_String (N, "Integer");
          when Type_Unsigned_Integer =>
-            Set_Unbounded_String (N, "Interfaces.Unsigned_32");
+            Set_Unbounded_String (N, "Unsigned_32");
          when Type_String =>
-            Set_Unbounded_String (N, "Interfaces.C.Strings.chars_ptr");
+            Set_Unbounded_String (N, "chars_ptr");
          when Type_FD =>
             Set_Unbounded_String (N, "Integer");
          when Type_New_Id =>
-            Set_Unbounded_String (N, "Interfaces.Unsigned_32");
+            Set_Unbounded_String (N, "Unsigned_32");
          when Type_Object =>
             if Arg_Tag.Exists_Interface_Attribute then
                Set_Unbounded_String (N, Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
@@ -168,7 +168,7 @@ package body Xml_Parser_Utils is
                Set_Unbounded_String (N, "Void_Ptr");
             end if;
          when Type_Fixed =>
-            Set_Unbounded_String (N, "Fixed_T");
+            Set_Unbounded_String (N, "Fixed");
          when Type_Array =>
             Set_Unbounded_String (N, "Wayland_Array_T");
       end case;
