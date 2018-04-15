@@ -100,7 +100,7 @@ begin
    Put_Line ("Disconnected from display");
 end Example_6_4_Find_Compositor_Proxy;
 ```
-The corresponding C code:
+The corresponding C code is:
 ```
 #include <stdio.h>
 #include <stdlib.h>
