@@ -1,20 +1,23 @@
-with Wl;
+with Posix.Wayland;
 with Ada.Text_IO;
 
 -- See section 6.4 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
-   type Compositor_Ptr is access all Wl.Compositor_T;
+   package Wl renames Posix.Wayland;
+
+   procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
+
+   type Compositor_Ptr is access all Wl.Compositor;
 
    procedure Global_Registry_Handler (Data     : not null Compositor_Ptr;
-                                      Registry : Wl.Registry_T;
+                                      Registry : Wl.Registry;
                                       Id       : Wl.Unsigned_32;
                                       Name     : String;
                                       Version  : Wl.Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line
-        ("Got a registry event for " & Name & " id" & Id'Image);
+      Put_Line ("Got a registry event for " & Name & " id" & Id'Image);
 
       if Name = "wl_compositor" then
          Data.Bind (Registry, Id, Version);
@@ -22,13 +25,13 @@ procedure Example_6_4_Find_Compositor_Proxy is
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover (Data     : not null Compositor_Ptr;
-                                      Registry : Wl.Registry_T;
+                                      Registry : Wl.Registry;
                                       Id       : Wl.Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line ("Got a registry losing event for" & Id'Image);
+      Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   Compositor : aliased Wl.Compositor_T;
+   Compositor : aliased Wl.Compositor;
 
    package Subscriber is new Wl.Registry_Objects_Subscriber
      (Data_T                => Compositor_Ptr,
@@ -36,20 +39,20 @@ procedure Example_6_4_Find_Compositor_Proxy is
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display    : Wl.Display_T;
-   Registry   : Wl.Registry_T;
+   Display    : Wl.Display;
+   Registry   : Wl.Registry;
 
 begin
    Display.Connect (Wl.Default_Display_Name);
    if not Display.Is_Connected then
-      Ada.Text_IO.Put_Line ("Can't connect to display");
+      Put_Line ("Can't connect to display");
       return;
    end if;
-   Ada.Text_IO.Put_Line ("Connected to display");
+   Put_Line ("Connected to display");
 
-   Registry.Get (Display);
+   Display.Get_Registry (Registry);
    if not Registry.Has_Registry_Object then
-      Ada.Text_IO.Put_Line ("Can't get global registry object");
+      Put_Line ("Can't get global registry object");
       return;
    end if;
 
@@ -58,12 +61,12 @@ begin
    Display.Roundtrip;
 
    if Compositor.Is_Bound then
-      Ada.Text_IO.Put_Line ("Found compositor");
+      Put_Line ("Found compositor");
    else
-      Ada.Text_IO.Put_Line ("Can't find compositor");
+      Put_Line ("Can't find compositor");
    end if;
 
    Registry.Destroy;
    Display.Disconnect;
-   Ada.Text_IO.Put_Line ("Disconnected from display");
+   Put_Line ("Disconnected from display");
 end Example_6_4_Find_Compositor_Proxy;

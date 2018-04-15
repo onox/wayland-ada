@@ -1,10 +1,12 @@
-with Wl;
+with Posix.Wayland;
 with Ada.Text_IO;
 
 -- See section 6.3 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_3_Connect_To_Server is
-   Display : Wl.Display_T;
+   package Wl renames Posix.Wayland;
+
+   Display : Wl.Display;
 begin
    Display.Connect (Wl.Default_Display_Name);
    if not Display.Is_Connected then
