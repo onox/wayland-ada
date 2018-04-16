@@ -9,22 +9,20 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
 
-   type Compositor_Ptr is access all Wl.Compositor;
-
-   procedure Global_Registry_Handler (Data     : not null Compositor_Ptr;
-                                      Registry : Wl.Registry;
-                                      Id       : Wl.Unsigned_32;
-                                      Name     : String;
-                                      Version  : Wl.Unsigned_32) is
+   procedure Global_Registry_Handler (Compositor : not null Wl.Compositor_Ptr;
+                                      Registry   : Wl.Registry;
+                                      Id         : Wl.Unsigned_32;
+                                      Name       : String;
+                                      Version    : Wl.Unsigned_32) is
    begin
       Put_Line ("Got a registry event for " & Name & " id" & Id'Image);
 
       if Name = "wl_compositor" then
-         Data.Bind (Registry, Id, Version);
+         Compositor.Get_Proxy (Registry, Id, Version);
       end if;
    end Global_Registry_Handler;
 
-   procedure Global_Registry_Remover (Data     : not null Compositor_Ptr;
+   procedure Global_Registry_Remover (Data     : not null Wl.Compositor_Ptr;
                                       Registry : Wl.Registry;
                                       Id       : Wl.Unsigned_32) is
    begin
@@ -34,13 +32,13 @@ procedure Example_6_4_Find_Compositor_Proxy is
    Compositor : aliased Wl.Compositor;
 
    package Subscriber is new Wl.Registry_Objects_Subscriber
-     (Data_T                => Compositor_Ptr,
+     (Data_Type             => Wl.Compositor_Ptr,
       Data                  => Compositor'Unchecked_Access,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display    : Wl.Display;
-   Registry   : Wl.Registry;
+   Display  : Wl.Display;
+   Registry : Wl.Registry;
 
 begin
    Display.Connect (Wl.Default_Display_Name);
@@ -50,8 +48,8 @@ begin
    end if;
    Put_Line ("Connected to display");
 
-   Display.Get_Registry (Registry);
-   if not Registry.Has_Registry_Object then
+   Display.Get_Registry_Proxy (Registry);
+   if not Registry.Has_Proxy then
       Put_Line ("Can't get global registry object");
       return;
    end if;
@@ -60,7 +58,7 @@ begin
    Display.Dispatch;
    Display.Roundtrip;
 
-   if Compositor.Is_Bound then
+   if Compositor.Has_Proxy then
       Put_Line ("Found compositor");
    else
       Put_Line ("Can't find compositor");

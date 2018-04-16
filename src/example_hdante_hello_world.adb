@@ -94,25 +94,25 @@ procedure Example_Hdante_Hello_World is
                                       Version  : Wl.Unsigned_32) is
    begin
       if Name = Wl.Compositor_Interface.Name then
-         Compositor.Bind (Registry,
-                          Id,
-                          Min (Version, 4));
-         Ada.Text_IO.Put_Line ("Bind compositor");
+         Compositor.Get_Proxy (Registry,
+                               Id,
+                               Min (Version, 4));
+         Ada.Text_IO.Put_Line ("Got compositor proxy");
       elsif Name = Wl.Shm_Interface.Name then
-         Shm.Bind (Registry,
-                   Id,
-                   Min (Version, 1));
-         Ada.Text_IO.Put_Line ("Bind shm");
+         Shm.Get_Proxy (Registry,
+                        Id,
+                        Min (Version, 1));
+         Ada.Text_IO.Put_Line ("Got shm proxy");
       elsif Name = Wl.Shell_Interface.Name then
-         Shell.Bind (Registry,
-                     Id,
-                     Min (Version, 1));
-         Ada.Text_IO.Put_Line ("Bind shell");
+         Shell.Get_Proxy (Registry,
+                          Id,
+                          Min (Version, 1));
+         Ada.Text_IO.Put_Line ("Got shell proxy");
       elsif Name = Wl.Seat_Interface.Name then
          Px.Put_Line ("Pointer listener is setup " & Wl.Seat_Interface.Name);
-         Seat.Bind (Registry,
-                    Id,
-                    Min (Version, 2));
+         Seat.Get_Proxy (Registry,
+                         Id,
+                         Min (Version, 2));
          Seat_Subscriber.Start_Subscription (Seat);
          --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
       end if;
@@ -126,7 +126,7 @@ procedure Example_Hdante_Hello_World is
    end Global_Registry_Remover;
 
    package Subscriber is new Wl.Registry_Objects_Subscriber
-     (Data_T                => Data_Ptr,
+     (Data_Type             => Data_Ptr,
       Data                  => Data'Unchecked_Access,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
@@ -277,7 +277,7 @@ procedure Example_Hdante_Hello_World is
    Surface       : Wl.Surface;
    Shell_Surface : Wl.Shell_Surface;
    Image         : Px.File;
-   Stat          : Px.File_Status;
+   File_Status   : Px.File_Status;
 
    use type Px.int;
    use type Px.C_String;
@@ -294,8 +294,8 @@ begin
    end if;
    Px.Put_Line ("Connected to display");
 
-   Display.Get_Registry (Registry);
-   if not Registry.Has_Registry_Object then
+   Display.Get_Registry_Proxy (Registry);
+   if not Registry.Has_Proxy then
       Px.Put_Line ("Can't get global registry object");
       return;
    end if;
@@ -306,8 +306,8 @@ begin
    Registry.Destroy;
 
    if Exists_Mouse then
-      Ada.Text_IO.Put_Line ("Start mosue subscription");
-      Seat.Get_Pointer (Pointer);
+      Px.Put_Line ("Start mouse subscription");
+      Seat.Get_Pointer_Proxy (Pointer);
       Mouse_Subscriber.Start_Subscription (Pointer);
    end if;
 
@@ -320,39 +320,41 @@ begin
       return;
    end if;
 
-   Image.Get_File_Status (Stat);
+   Image.Get_File_Status (File_Status);
 
-   if not Stat.Is_Valid then
+   if not File_Status.Is_Valid then
       Px.Put_Line ("File does not exist?");
       return;
    end if;
 
    Image.Map_Memory (Px.Nil,
-                     Px.unsigned_long (Stat.Size),
+                     Px.unsigned_long (File_Status.Size),
                      Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
 
    if Memory_Map.Has_Mapping then
-      Shm.Create_Pool (Integer (Image.File_Descriptor), Integer (Stat.Size), Pool);
+      Shm.Create_Pool (Image,
+                       Integer (File_Status.Size),
+                       Pool);
    else
       Px.Put_Line ("Failed to map file");
       return;
    end if;
 
-   if not Pool.Exists then
+   if not Pool.Has_Proxy then
       Px.Put_Line ("Failed to create pool");
       return;
    end if;
 
    Compositor.Create_Surface (Surface);
 
-   if not Surface.Exists then
+   if not Surface.Has_Proxy then
       Px.Put_Line ("Failed to create surface");
       return;
    end if;
 
-   Shell.Get_Shell_Surface (Surface, Shell_Surface);
+   Shell.Get_Shell_Surface_Proxy (Surface, Shell_Surface);
 
-   if not Shell_Surface.Exists then
+   if not Shell_Surface.Has_Proxy then
       Surface.Destroy;
       Px.Put_Line ("Failed to create shell surface");
       return;
@@ -369,7 +371,7 @@ begin
                        Wl.Unsigned_32 (Wl.Shm_Format_Argb_8888),
                        Buffer);
 
-   if not Buffer.Exists then
+   if not Buffer.Has_Proxy then
       Px.Put_Line ("Failed to create buffer");
       return;
    end if;

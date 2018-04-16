@@ -266,7 +266,7 @@ package Posix is
      Global => null,
      Pre    => File.Is_Open;
 
-   function File_Descriptor (File : Px.File) return int with
+   function File_Descriptor (File : Px.File) return Integer with
      Global => null,
      Pre    => File.Is_Open;
 
@@ -363,13 +363,13 @@ package Posix is
      Pre    => Map.Has_Mapping;
 
    -- Returns 0 on success, otherwise -1.
-   function Unmap_Memory (Map : in out Px.Memory_Map) return int with
+   function Unmap_Memory (Map : in out Px.Memory_Map) return Integer with
      Global => null,
      Post   => (if Unmap_Memory'Result = 0 then not Map.Has_Mapping);
 
    -- Returns 0 on success, otherwise -1.
    function Memory_Unmap (Address : Void_Ptr;
-                          Length  : Size_Type) return int with
+                          Length  : Size_Type) return Integer with
      Global => null;
 
    --
@@ -429,8 +429,8 @@ private
         Convention => C_Pass_By_Copy;
 
       function Get_File_Status
-        (Fd     : int;
-         Status : access File_Status_T) return int with
+        (Fd     : Integer;
+         Status : access File_Status_T) return Integer with
         Import        => True,
         Convention    => C,
         External_Name => "fstat";
@@ -446,18 +446,18 @@ private
       function Open
         (File_Name : C_String;
          Flags     : O_FLag;
-         S_Flags   : S_FLag) return int with
+         S_Flags   : S_FLag) return Integer with
         Import        => True,
         Convention    => C,
         External_Name => "open";
 
-      procedure Close (File_Descriptor : int) with
+      procedure Close (File_Descriptor : Integer) with
         Import        => True,
         Convention    => C,
         External_Name => "close";
 
       function Write
-        (File_Descriptor : int;
+        (File_Descriptor : Integer;
          Buffer          : Byte_Array;
          Count           : Size_Type) return SSize_Type with
         Import        => True,
@@ -465,7 +465,7 @@ private
         External_Name => "write";
 
       function Write
-        (File_Descriptor : int;
+        (File_Descriptor : Integer;
          Buffer          : String;
          Count           : Size_Type) return SSize_Type with
         Import        => True,
@@ -473,7 +473,7 @@ private
         External_Name => "write";
 
       function Read
-        (File_Descriptor : int;
+        (File_Descriptor : Integer;
          Buffer          : Byte_Array;
          Count           : Size_Type) return SSize_Type with
         Import        => True,
@@ -485,13 +485,13 @@ private
          Len    : Size_Type;
          Prot   : Prot_FLag;
          Flags  : int;
-         Fd     : int;
+         Fd     : Integer;
          Offset : Px.Offset) return Void_Ptr with
         Import        => True,
         Convention    => C,
         External_Name => "mmap";
 
-      function Munmap (Addr : Void_Ptr; Length : Size_Type) return int with
+      function Munmap (Addr : Void_Ptr; Length : Size_Type) return Integer with
         Import        => True,
         Convention    => C,
         External_Name => "munmap";
@@ -499,7 +499,7 @@ private
    end Px_Thin;
 
    type File is tagged limited record
-      My_File_Descriptor : int;
+      My_File_Descriptor : Integer;
       My_Is_Open         : Boolean := False;
    end record;
 
@@ -512,7 +512,7 @@ private
       My_Is_Valid : Boolean := False;
    end record;
 
-   function File_Descriptor (File : Px.File) return int is
+   function File_Descriptor (File : Px.File) return Integer is
      (File.My_File_Descriptor);
 
    function Is_Valid

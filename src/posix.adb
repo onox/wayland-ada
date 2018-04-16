@@ -23,7 +23,7 @@ package body Posix is
      (File   : in     Px.File;
       Status : in out File_Status)
    is
-      Result : constant int :=
+      Result : constant Integer :=
         Px_Thin.Get_File_Status
           (Fd     => File.My_File_Descriptor,
            Status => Status.My_Status'Access);
@@ -64,8 +64,8 @@ package body Posix is
       Memory_Map.My_Length := Len;
    end Map_Memory;
 
-   function Unmap_Memory (Map : in out Px.Memory_Map) return int is
-      R : int;
+   function Unmap_Memory (Map : in out Px.Memory_Map) return Integer is
+      R : Integer;
    begin
       R := Px_Thin.Munmap (Map.My_Mapping, Map.My_Length);
       if R = 0 then
@@ -75,7 +75,7 @@ package body Posix is
    end Unmap_Memory;
 
    function Memory_Unmap (Address : Void_Ptr;
-                          Length  : Size_Type) return int is
+                          Length  : Size_Type) return Integer is
    begin
       return Px_Thin.Munmap (Address, Length);
    end Memory_Unmap;
