@@ -92,7 +92,6 @@ begin
       Put_Line ("Can't find compositor");
    end if;
 
-   Registry.Destroy;
    Display.Disconnect;
    Put_Line ("Disconnected from display");
 end Example_6_4_Find_Compositor_Proxy;
