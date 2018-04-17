@@ -345,7 +345,7 @@ begin
       return;
    end if;
 
-   Compositor.Create_Surface (Surface);
+   Compositor.Get_Surface_Proxy (Surface);
 
    if not Surface.Has_Proxy then
       Px.Put_Line ("Failed to create surface");

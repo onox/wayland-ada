@@ -481,11 +481,27 @@ package Posix.Wayland_Client is
                         Version     : Wl.Unsigned_32) with
      Global => null,
      Pre    => not Compositor.Has_Proxy and Has_Proxy (Registry);
+   
+   procedure Get_Surface_Proxy (Compositor : Wl.Compositor;
+                                Surface    : in out Wl.Surface) with
+     Global => null,
+     Pre    => Compositor.Has_Proxy;
+   -- Ask the compositor to create a new surface. When success, Surface has
+   -- When success Surface.Has_Proxy = True,
+   -- otherwise Surface.Has_Proxy = False.
 
-   procedure Create_Surface (Compositor : Wl.Compositor;
-                             Surface    : in out Wl.Surface) with
-     Global => null;
+   procedure Get_Region_Proxy (Compositor : Wl.Compositor;
+                               Region     : in out Wl.Region) with
+     Global => null,
+     Pre    => Compositor.Has_Proxy;
+   -- Ask the compositor to create a new region.
+   -- When success Region.Has_Proxy = True, otherwise Region.Has_Proxy = False.
 
+   procedure Destroy (Compositor : in out Wl.Compositor) with
+     Global => null,
+     Pre    => Compositor.Has_Proxy,
+     Post   => not Compositor.Has_Proxy;
+   
    type Seat is tagged limited private;
 
    function Has_Proxy (Seat : Wl.Seat) return Boolean with
@@ -624,11 +640,38 @@ package Posix.Wayland_Client is
      Pre    => Display.Is_Connected,
      Post   => not Display.Is_Connected;
 
+   function Get_Version (Display : Wl.Display) return Unsigned_32 with
+     Pre => Display.Is_Connected;
+   
    procedure Get_Registry_Proxy (Display  : Wl.Display;
                                  Registry : in out Wl.Registry) with
      Global => null,
      Pre    => Display.Is_Connected and not Has_Proxy (Registry);
+   -- This request to the compositor (Wayland Server)
+   -- creates a registry proxy object that allows the client
+   -- to list and get a hold of proxy objects for
+   -- the global objects available from the compositor.
+   -- 
+   -- It should be noted that the server side resources consumed in
+   -- response to a Get_Registry_Proxy request can only be released when the
+   -- client disconnects, not when the client side registry proxy is destroyed.
+   -- Therefore, clients should invoke Get_Registry_Proxy as infrequently as
+   -- possible to avoid wasting memory.
 
+   function Sync (Display : Wl.Display) return Callback with
+     Global => null;
+   -- The sync request asks the server to emit the 'done' event
+   -- on the returned wl_callback object.  Since requests are
+   -- handled in-order and events are delivered in-order, this can
+   -- be used as a barrier to ensure all previous requests and the
+   -- resulting events have been handled.
+   -- 
+   -- The object returned by this request will be destroyed by the
+   -- compositor after the callback is fired and as such the client must not
+   -- attempt to use it after that point.
+   -- 
+   -- The callback_data passed in the callback is the event serial.
+   
    type Registry is tagged limited private;
 
    function Has_Proxy (Registry : Wl.Registry) return Boolean with
@@ -642,8 +685,22 @@ package Posix.Wayland_Client is
      Pre    => Registry.Has_Proxy,
      Post   => not Registry.Has_Proxy;
 
+   function Get_Version (Registry : Wl.Registry) return Unsigned_32 with
+     Pre => Registry.Has_Proxy;
+   
    type Callback is tagged limited private;
 
+   function Has_Proxy (Callback : Wl.Callback) return Boolean with
+     Global => null;
+   
+   procedure Destroy (Callback : in out Wl.Callback) with
+     Global => null,
+     Pre    => Callback.Has_Proxy,
+     Post   => not Callback.Has_Proxy;
+
+   function Get_Version (Callback : Wl.Callback) return Unsigned_32 with
+     Pre => Callback.Has_Proxy;
+   
    type Data_Offer is tagged limited private;
 
    type Data_Source is tagged limited private;

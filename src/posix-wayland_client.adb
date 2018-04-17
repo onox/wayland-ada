@@ -1617,6 +1617,11 @@ package body Posix.Wayland_Client is
       end if;
    end Disconnect;
 
+   function Get_Version (Display : Wl.Display) return Unsigned_32 is
+   begin
+      return Wl_Thin.Display_Get_Version (Display.My_Display);
+   end Get_Version;
+   
    procedure Get_Registry_Proxy (Display  : Wl.Display;
                                  Registry : in out Wl.Registry) is
    begin
@@ -1672,13 +1677,28 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Create_Surface (Compositor : Wl.Compositor;
+   procedure Get_Surface_Proxy (Compositor : Wl.Compositor;
                              Surface    : in out Wl.Surface) is
    begin
       Surface.My_Surface :=
         Wl_Thin.Compositor_Create_Surface (Compositor.My_Compositor);
-   end Create_Surface;
+   end Get_Surface_Proxy;
 
+   procedure Get_Region_Proxy (Compositor : Wl.Compositor;
+                               Region     : in out Wl.Region) is
+   begin
+      Region.My_Region :=
+        Wl_Thin.Compositor_Create_Region (Compositor.My_Compositor);
+   end Get_Region_Proxy;
+
+   procedure Destroy (Compositor : in out Wl.Compositor) is
+   begin
+      if Compositor.My_Compositor /= null then
+         Wl_Thin.Compositor_Destroy (Compositor.My_Compositor);
+         Compositor.My_Compositor := null;
+      end if;
+   end Destroy;
+   
    procedure Get_Proxy (Seat     : in out Wl.Seat;
                         Registry : Wl.Registry;
                         Id       : Unsigned_32;
@@ -1803,4 +1823,32 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
+   function Sync (Display : Wl.Display) return Callback is
+   begin
+      return Callback : Wl.Callback do
+         Callback.My_Callback := Wl_Thin.Display_Sync (Display.My_Display);
+      end return;
+   end Sync;
+
+   function Get_Version (Registry : Wl.Registry) return Unsigned_32 is
+   begin
+      return Wl_Thin.Registry_Get_Version (Registry.My_Registry);
+   end Get_Version;
+
+   function Has_Proxy (Callback : Wl.Callback) return Boolean is
+      (Callback.My_Callback /= null);
+   
+   procedure Destroy (Callback : in out Wl.Callback) is
+   begin
+      if Callback.My_Callback /= null then
+         Wl_Thin.Callback_Destroy (Callback.My_Callback);
+         Callback.My_Callback := null;
+      end if;
+   end Destroy;
+
+   function Get_Version (Callback : Wl.Callback) return Unsigned_32 is
+   begin
+      return Wl_Thin.Callback_Get_Version (Callback.My_Callback);
+   end Get_Version;
+   
 end Posix.Wayland_Client;
