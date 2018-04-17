@@ -1,7 +1,7 @@
 # Ada binding to the Wayland Client library
 The Wayland binding consists of two packages:
 - Posix, minimal Ada binding to the Ubuntu Posix API.
-- Posix.Wayland, thick Ada binding to the Wayland Client API.
+- Posix.Wayland_Client, thick Ada binding to the Wayland Client API.
 
 The Ada binding is only known to work on Ubuntu 18.04 due to a bug
 in the Gnome Compositor that has a bugfix, but it has only found its way
@@ -14,9 +14,11 @@ that start with _example_. To build all executables
 "gprbuild -P all_executables.gpr". Alternatively open all_executables.gpr
 with the GPS and then select Build -> Project -> Build All.
 
-The Ada binding (package Posix.Wayland) is auto-generated from wayland.xml
-by the application xml_parser.gpr. It can be compiled by
-GNAT FSF version 7.2 and GNAT Community Edition 2017.
+The Ada binding (package Posix.Wayland_Client) has been auto-generated from
+wayland.xml by the application xml_parser.gpr and
+then subsequently manually edited.
+All Ada source code can be compiled by GNAT FSF version 7.2 and
+GNAT Community Edition 2017.
 
 To do anything in Wayland one needs proxy objects to components
 (called interfaces in Wayland terminology)
@@ -161,7 +163,7 @@ int main(int argc, char **argv) {
 # Notes on the creation of the Wayland Ada binding
 
 The thin ada binding (the nested package Wl_Thin in the private part of
-the package Posix.Wayland) is auto-generated from wayland.xml and
+the package Posix.Wayland_Client) is auto-generated from wayland.xml and
 then the thick Ada binding is manually built on top of it.
 
 The reason the thick Ada binding is not also auto-generated is because it is
@@ -196,8 +198,8 @@ contains access types (pointers) and
 they should be hidden from the user in the thick Ada binding which makes
 the code non-trivial to auto-generate.
 
-There are more reasons for not auto-generating the thick Ada binding, but that
-discussion is left for another day.
+There are more reasons for not auto-generating the thick Ada binding,
+but stopping the discussion here.
 
 # Thanks to
 - Dmitry Kazakov for Simple Components. They are used in the wayland.xml-file parser application for reading UTF8-characters.
