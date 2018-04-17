@@ -12,8 +12,8 @@ project Wayland_Client is
 --                           );
 
    for Source_Files use (
-                         "posix-wayland.ads",
-                         "posix-wayland.adb"
+                         "posix-wayland_client.ads",
+                         "posix-wayland_client.adb"
                          );
 
 --     package Compiler is

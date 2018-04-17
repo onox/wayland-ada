@@ -28,12 +28,12 @@ A program to find a proxy for the compositor,
 while listing the other registry objects on the command line (See section 6.4
 at https://jan.newmarch.name/Wayland/ProgrammingClient/):
 ```
-with Posix.Wayland;
+with Posix.Wayland_Client;
 with Ada.Text_IO;
 
 procedure Example_6_4_Find_Compositor_Proxy is
 
-   package Wl renames Posix.Wayland;
+   package Wl renames Posix.Wayland_Client;
 
    procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
 

@@ -1,13 +1,13 @@
 private with Interfaces.C.Strings;
 
 -- Auto-generated from Wayland.xml
-package Posix.Wayland is
+package Posix.Wayland_Client is
 
    pragma Linker_Options ("-lwayland-client");
    -- Added this linker option here to avoid adding it
    -- to each gpr file that with's this Wayland Ada binding.
 
-   package Wl renames Posix.Wayland;
+   package Wl renames Posix.Wayland_Client;
 
    type Display;
    type Registry;
@@ -3521,4 +3521,4 @@ private
    Subsurface_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Subsurface_Interface'Access);
 
-end Posix.Wayland;
+end Posix.Wayland_Client;

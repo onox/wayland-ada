@@ -1,4 +1,4 @@
-package body Posix.Wayland is
+package body Posix.Wayland_Client is
 
    -- Mostly auto generated from Wayland.xml
    package body Wl_Thin is
@@ -1803,4 +1803,4 @@ package body Posix.Wayland is
       end if;
    end Destroy;
 
-end Posix.Wayland;
+end Posix.Wayland_Client;

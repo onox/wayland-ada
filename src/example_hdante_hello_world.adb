@@ -1,4 +1,4 @@
-with Posix.Wayland;
+with Posix.Wayland_Client;
 with Ada.Text_IO;
 -- sudo apt install libwayland-dev
 
@@ -15,7 +15,7 @@ procedure Example_Hdante_Hello_World is
 
    package Px renames Posix;
 
-   package Wl renames Posix.Wayland;
+   package Wl renames Posix.Wayland_Client;
 
    use type Px.S_FLag;
 
@@ -29,7 +29,7 @@ procedure Example_Hdante_Hello_World is
 
    Done : Boolean := false;
 
-   type Data_T is limited record
+   type Data_Type is limited record
       Compositor : not null access Wl.Compositor;
       Pointer    : not null access Wl.Pointer;
       Seat       : not null access Wl.Seat;
@@ -37,9 +37,9 @@ procedure Example_Hdante_Hello_World is
       Shm        : not null access Wl.Shm;
    end record;
 
-   type Data_Ptr is access all Data_T;
+   type Data_Ptr is access all Data_Type;
 
-   Data : aliased Data_T :=
+   Data : aliased Data_Type :=
      (
       Compositor => Compositor'Unchecked_Access,
       Pointer    => Pointer'Unchecked_Access,

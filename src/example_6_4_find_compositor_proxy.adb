@@ -1,11 +1,11 @@
-with Posix.Wayland;
+with Posix.Wayland_Client;
 with Ada.Text_IO;
 
 -- See section 6.4 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
-   package Wl renames Posix.Wayland;
+   package Wl renames Posix.Wayland_Client;
 
    procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
 
