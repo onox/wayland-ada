@@ -160,6 +160,25 @@ int main(int argc, char **argv) {
     exit(0);
 }
 ```
+# The TODO list
+ - Maximize the number subprograms in the thick Ada binding that is available
+   in the thin Ada binding.
+ - Investigate the best way to expose events in the thick Ada binding.
+ - Add xdg_shell support (which obsoletes wl_shell)
+ - Add EGL support
+ - Add Vulkan support (when available on Ubuntu)
+
+Contact me if you want to help out: joakimds at kth dot se
+
+# License
+All software written by me (and potential contributors)
+is released to the public domain or the software
+license of your choice. This repository does however contain code that does
+not originate from me like code from Dmitry Kazakov's Simple Components,
+Brad Moore's Deepend and Trats-Based Containers from AdaCore.
+These software treasures retain their original license
+of their original authors.
+
 # Notes on the creation of the Wayland Ada binding
 
 The thin ada binding (the nested package Wl_Thin in the private part of
