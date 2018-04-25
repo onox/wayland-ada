@@ -31,7 +31,7 @@ procedure Example_6_4_Find_Compositor_Proxy is
 
    Compositor : aliased Wl.Compositor;
 
-   package Subscriber is new Wl.Registry_Objects_Subscriber
+   package Subscriber is new Wl.Registry_Subscriber
      (Data_Type             => Wl.Compositor_Ptr,
       Data                  => Compositor'Unchecked_Access,
       Global_Object_Added   => Global_Registry_Handler,
@@ -48,7 +48,7 @@ begin
    end if;
    Put_Line ("Connected to display");
 
-   Display.Get_Registry_Proxy (Registry);
+   Display.Get_Registry (Registry);
    if not Registry.Has_Proxy then
       Put_Line ("Can't get global registry object");
       return;

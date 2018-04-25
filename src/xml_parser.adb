@@ -14,6 +14,8 @@ with Ada.Containers;
 with Wayland_XML;
 with Xml_Parser_Utils;
 
+-- chars_ptr should be replaced with C_String in the thin Ada binding.
+-- The enumeration subprogram arguments should be used when applicable instead of Unsigned_32
 -- Pretty print this file with "gnatpp -M140"
 procedure XML_Parser is
 

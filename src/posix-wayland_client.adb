@@ -1,3 +1,4 @@
+with System.Address_To_Access_Conversions;
 package body Posix.Wayland_Client is
 
    -- Mostly auto generated from Wayland.xml
@@ -386,7 +387,7 @@ package body Posix.Wayland_Client is
       end Data_Offer_Accept;
 
       procedure Data_Offer_Receive (Data_Offer : Data_Offer_Ptr;
-                                    Mime_Type : chars_ptr;
+                                    Mime_Type : C_String;
                                     Fd : Integer
                                    ) is
       begin
@@ -1240,7 +1241,7 @@ package body Posix.Wayland_Client is
 
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
-   package body Registry_Objects_Subscriber is
+   package body Registry_Subscriber is
 
       procedure Internal_Object_Added (Unused_Data : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
@@ -1297,8 +1298,73 @@ package body Posix.Wayland_Client is
                                              Nil);
       end Start_Subscription;
 
-   end Registry_Objects_Subscriber;
+   end Registry_Subscriber;
 
+   package body Registry_Events is
+
+      package Conv is new System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
+                                       Registry    : Wl_Thin.Registry_Ptr;
+                                       Id          : Wl.Unsigned_32;
+                                       Interface_V : Wl.chars_ptr;
+                                       Version     : Wl.Unsigned_32) with
+        Convention => C,
+        Global     => null;
+
+      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
+                                       Registry    : Wl_Thin.Registry_Ptr;
+                                       Id          : Wl.Unsigned_32;
+                                       Interface_V : Wl.chars_ptr;
+                                       Version     : Wl.Unsigned_32)
+      is
+--         pragma Unreferenced (Unused_Data);
+
+         R : Wl.Registry := (
+                             My_Registry                 => Registry,
+                             My_Has_Started_Subscription => True
+                            );
+      begin
+         Global_Object_Added (Data_Ptr (Conv.To_Pointer (Unused_Data)),
+                              R, Id, Value (Interface_V), Version);
+      end Internal_Object_Added;
+
+      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
+                                         Registry    : Wl_Thin.Registry_Ptr;
+                                         Id          : Wl.Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
+                                         Registry    : Wl_Thin.Registry_Ptr;
+                                         Id          : Wl.Unsigned_32)
+      is
+         R : Wl.Registry := (
+                             My_Registry                 => Registry,
+                             My_Has_Started_Subscription => True
+                            );
+      begin
+         Global_Object_Removed (Data_Ptr (Conv.To_Pointer (Unused_Data)), R, Id);
+      end Internal_Object_Removed;
+
+      Listener : aliased Wl.Registry_Listener_T :=
+        (
+         Global        => Internal_Object_Added'Unrestricted_Access,
+         Global_Remove => Internal_Object_Removed'Unrestricted_Access
+        );
+      -- Note: It should be safe to use Unrestricted_Access here since
+      -- this generic can only be instantiated at library level.
+
+      procedure Subscribe (Registry : in out Wl.Registry;
+                           Data     : not null Data_Ptr) is
+         I : Px.int;
+      begin
+         I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
+                                             Listener'Access,
+                                             Data.all'Address);
+      end Subscribe;
+
+   end Registry_Events;
+   
    package body Shell_Surface_Subscriber is
 
       procedure Internal_Shell_Surface_Ping
@@ -1622,11 +1688,11 @@ package body Posix.Wayland_Client is
       return Wl_Thin.Display_Get_Version (Display.My_Display);
    end Get_Version;
    
-   procedure Get_Registry_Proxy (Display  : Wl.Display;
-                                 Registry : in out Wl.Registry) is
+   procedure Get_Registry (Display  : Wl.Display;
+                           Registry : in out Wl.Registry) is
    begin
       Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
-   end Get_Registry_Proxy;
+   end Get_Registry;
 
    procedure Destroy (Registry : in out Wl.Registry) is
    begin
@@ -1698,6 +1764,11 @@ package body Posix.Wayland_Client is
          Compositor.My_Compositor := null;
       end if;
    end Destroy;
+
+   function Get_Version (Seat : Wl.Seat) return Unsigned_32 is
+   begin
+      return Wl_Thin.Seat_Get_Version (Seat.My_Seat);
+   end Get_Version;
    
    procedure Get_Proxy (Seat     : in out Wl.Seat;
                         Registry : Wl.Registry;
@@ -1716,12 +1787,30 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Pointer_Proxy (Seat    : Wl.Seat;
-                                Pointer : in out Wl.Pointer) is
+   procedure Get_Pointer (Seat    : Wl.Seat;
+                          Pointer : in out Wl.Pointer) is
    begin
       Pointer.My_Pointer := Wl_Thin.Seat_Get_Pointer (Seat.My_Seat);
-   end Get_Pointer_Proxy;
+   end Get_Pointer;
 
+   procedure Get_Keyboard (Seat     : Wl.Seat;
+                           Keyboard : in out Wl.Keyboard) is
+   begin
+      Keyboard.My_Keyboard := Wl_Thin.Seat_Get_Keyboard (Seat.My_Seat);
+   end Get_Keyboard;
+   
+   procedure Get_Touch (Seat  : Wl.Seat;
+                        Touch : in out Wl.Touch) is
+   begin
+      Touch.My_Touch := Wl_Thin.Seat_Get_Touch (Seat.My_Seat);
+   end Get_Touch;
+   
+   procedure Release (Seat : in out Wl.Seat) is
+   begin
+      Wl_Thin.Seat_Release (Seat.My_Seat);
+      Seat.My_Seat := null;
+   end Release;
+   
    procedure Get_Proxy (Shell    : in out Wl.Shell;
                         Registry : Wl.Registry;
                         Id       : Unsigned_32;
@@ -1739,13 +1828,13 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Shell_Surface_Proxy (Shell         : Wl.Shell;
-                                      Surface       : Wl.Surface;
-                                      Shell_Surface : in out Wl.Shell_Surface) is
+   procedure Get_Shell_Surface (Shell         : Wl.Shell;
+                                Surface       : Wl.Surface;
+                                Shell_Surface : in out Wl.Shell_Surface) is
    begin
       Shell_Surface.My_Shell_Surface :=
         Wl_Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);
-   end Get_Shell_Surface_Proxy;
+   end Get_Shell_Surface;
 
    procedure Get_Proxy (Shm      : in out Wl.Shm;
                         Registry : Wl.Registry;
@@ -1775,12 +1864,25 @@ package body Posix.Wayland_Client is
          Size);
    end Create_Pool;
 
+   function Get_Version (Shm : Wl.Shm) return Unsigned_32 is
+   begin
+      return Wl_Thin.Shm_Get_Version (Shm.My_Shm);
+   end Get_Version;
+   
+   procedure Destroy (Shm : in out Wl.Shm) is
+   begin
+      if Shm.My_Shm /= null then
+         Wl_Thin.Shm_Destroy (Shm.My_Shm);
+         Shm.My_Shm := null;
+      end if;
+   end Destroy;
+   
    procedure Create_Buffer (Pool   : Wl.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
                             Height   : Integer;
                             Stride   : Integer;
-                            Format   : Unsigned_32;
+                            Format   : Shm_Format;
                             Buffer : in out Wl.Buffer) is
    begin
       Buffer.My_Buffer := Wl_Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,
@@ -1788,20 +1890,207 @@ package body Posix.Wayland_Client is
                                                           Width,
                                                           Height,
                                                           Stride,
-                                                          Format);
+                                                          Unsigned_32 (Format));
    end Create_Buffer;
 
-   procedure Set_Toplevel (Surface : Wl.Shell_Surface) is
+   procedure Resize (Pool : Wl.Shm_Pool;
+                     Size : Integer) is
    begin
-      Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
-   end Set_Toplevel;
+      Wl_Thin.Shm_Pool_Resize (Pool.My_Shm_Pool, Size);
+   end Resize;
+
+   function Get_Version (Pool : Wl.Shm_Pool) return Unsigned_32 is
+   begin
+      return Wl_Thin.Shm_Pool_Get_Version (Pool.My_Shm_Pool);
+   end Get_Version;
+   
+   procedure Destroy (Pool : in out Wl.Shm_Pool) is
+   begin
+      if Pool.My_Shm_Pool /= null then
+         Wl_Thin.Shm_Pool_Destroy (Pool.My_Shm_Pool);
+         Pool.My_Shm_Pool := null;
+      end if;
+   end Destroy;
+
+   function Get_Version (Buffer : Wl.Buffer) return Unsigned_32 is
+   begin
+      return Wl_Thin.Buffer_Get_Version (Buffer.My_Buffer);
+   end Get_Version;
+   
+   procedure Destroy (Buffer : in out Wl.Buffer) is
+   begin
+      if Buffer.My_Buffer /= null then
+         Wl_Thin.Buffer_Destroy (Buffer.My_Buffer);
+         Buffer.My_Buffer := null;
+      end if;
+   end Destroy;
+
+   function Has_Proxy (Offer : Wl.Data_Offer) return Boolean is
+      (Offer.My_Data_Offer /= null);
+
+   function Get_Version (Offer : Wl.Data_Offer) return Unsigned_32 is
+   begin
+      return Wl_Thin.Data_Offer_Get_Version (Offer.My_Data_Offer);
+   end Get_Version;
+   
+   procedure Destroy (Offer : in out Wl.Data_Offer) is
+   begin
+      if Offer.My_Data_Offer /= null then
+         Wl_Thin.Data_Offer_Destroy (Offer.My_Data_Offer);
+         Offer.My_Data_Offer := null;
+      end if;
+   end Destroy;
+
+   procedure Do_Accept (Offer     : Data_Offer;
+                        Serial    : Unsigned_32;
+                        Mime_Type : C_String) is
+   begin
+      Wl_Thin.Proxy_Marshal (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
+                             WL_DATA_OFFER_ACCEPT,
+                             Serial,
+                             Mime_Type);
+
+   end Do_Accept;
+
+   procedure Do_Not_Accept (Offer  : Data_Offer;
+                            Serial : Unsigned_32) is
+   begin
+      Wl_Thin.Data_Offer_Accept (Offer.My_Data_Offer,
+                                 Serial,
+                                 Interfaces.C.Strings.Null_Ptr);
+   end Do_Not_Accept;
+   
+   procedure Receive (Offer           : Data_Offer;
+                      Mime_Type       : C_String;
+                      File_Descriptor : Integer) is
+   begin
+      Wl_Thin.Data_Offer_Receive (Offer.My_Data_Offer, Mime_Type, File_Descriptor);
+   end Receive;
+
+   procedure Finish (Offer : Data_Offer) is
+   begin
+      Wl_Thin.Data_Offer_Finish (Offer.My_Data_Offer);
+   end Finish;
+
+   procedure Set_Actions (Offer            : Data_Offer;
+                          Dnd_Actions      : Unsigned_32;
+                          Preferred_Action : Unsigned_32) is
+   begin
+      Wl_Thin.Data_Offer_Set_Actions (Offer.My_Data_Offer,
+                                      Dnd_Actions,
+                                      Preferred_Action);
+   end Set_Actions;
+
+   function Get_Version (Surface : Shell_Surface) return Unsigned_32 is
+   begin
+      return Wl_Thin.Shell_Surface_Get_Version (Surface.My_Shell_Surface);
+   end Get_Version;
+   
+   procedure Destroy (Surface : in out Shell_Surface) is
+   begin
+      if Surface.My_Shell_Surface /= null then
+         Wl_Thin.Shell_Surface_Destroy (Surface.My_Shell_Surface);
+         Surface.My_Shell_Surface := null;
+      end if;
+   end Destroy;
 
    procedure Pong (Surface : Wl.Shell_Surface;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
    end Pong;
+   
+   procedure Move (Surface : Shell_Surface;
+                   Seat    : Wl.Seat;
+                   Serial  : Unsigned_32) is
+   begin
+      Wl_Thin.Shell_Surface_Move (Surface.My_Shell_Surface,
+                                  Seat.My_Seat,
+                                  Serial);
+   end Move;
 
+   procedure Resize (Surface : Shell_Surface;
+                     Seat    : Wl.Seat;
+                     Serial  : Unsigned_32;
+                     Edges   : Unsigned_32) is
+   begin
+      Wl_Thin.Shell_Surface_Resize (Surface.My_Shell_Surface,
+                                    Seat.My_Seat,
+                                    Serial,
+                                    Edges);
+   end Resize;
+   
+   procedure Set_Toplevel (Surface : Wl.Shell_Surface) is
+   begin
+      Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
+   end Set_Toplevel;
+
+   procedure Set_Transient (Surface : Shell_Surface;
+                            Parent  : Wl.Surface;
+                            X       : Integer;
+                            Y       : Integer;
+                            Flags   : Unsigned_32) is
+   begin
+      Wl_Thin.Shell_Surface_Set_Transient (Surface.My_Shell_Surface,
+                                           Parent.My_Surface,
+                                           X,
+                                           Y,
+                                           Flags);
+   end Set_Transient;
+   
+   procedure Set_Fullscreen (Surface   : Shell_Surface;
+                             Method    : Unsigned_32;
+                             Framerate : Unsigned_32;
+                             Output    : Wl.Output) is
+   begin
+      Wl_Thin.Shell_Surface_Set_Fullscreen (Surface.My_Shell_Surface,
+                                            Method,
+                                            Framerate,
+                                            Output.My_Output);
+   end Set_Fullscreen;
+   
+   procedure Set_Popup (Surface : Shell_Surface;
+                        Seat    : Wl.Seat;
+                        Serial  : Unsigned_32;
+                        Parent  : Wl.Surface;
+                        X       : Integer;
+                        Y       : Integer;
+                        Flags   : Unsigned_32) is
+   begin
+      Wl_Thin.Shell_Surface_Set_Popup (Surface.My_Shell_Surface,
+                                       Seat.My_Seat,
+                                       Serial,
+                                       Parent.My_Surface,
+                                       X,
+                                       Y,
+                                       Flags);
+   end Set_Popup;
+   
+   procedure Set_Maximized (Surface : Shell_Surface;
+                            Output  : Wl.Output) is
+   begin
+      Wl_Thin.Shell_Surface_Set_Maximized (Surface.My_Shell_Surface,
+                                           Output.My_Output);
+   end Set_Maximized;
+   
+   procedure Set_Title (Surface : Shell_Surface;
+                        Title   : C_String) is
+   begin
+      Wl_Thin.Proxy_Marshal
+        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+         WL_SHELL_SURFACE_SET_TITLE,
+         Title);
+   end Set_Title;
+   
+   procedure Set_Class (Surface : Shell_Surface;
+                        Class_V : C_String) is
+   begin
+      Wl_Thin.Proxy_Marshal
+        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+         WL_SHELL_SURFACE_SET_CLASS,
+         Class_V);
+   end Set_Class;
+   
    procedure Attach (Surface : Wl.Surface;
                      Buffer  : Wl.Buffer;
                      X       : Integer;
@@ -1810,11 +2099,65 @@ package body Posix.Wayland_Client is
       Wl_Thin.Surface_Attach (Surface.My_Surface, Buffer.My_Buffer, X, Y);
    end Attach;
 
+   procedure Damage (Surface : Wl.Surface;
+                     X       : Integer;
+                     Y       : Integer;
+                     Width   : Integer;
+                     Height  : Integer) is
+   begin
+      Wl_Thin.Surface_Damage (Surface.My_Surface, X, Y, Width, Height);
+   end Damage;
+   
+   function Frame (Surface : Wl.Surface) return Callback is
+   begin
+      return C : Callback do
+         C.My_Callback := Wl_Thin.Surface_Frame (Surface.My_Surface);
+      end return;
+   end Frame;
+   
+   procedure Set_Opaque_Region (Surface : Wl.Surface;
+                                Region  : Wl.Region) is
+   begin
+      Wl_Thin.Surface_Set_Opaque_Region (Surface.My_Surface,
+                                         Region.My_Region);
+   end Set_Opaque_Region;
+   
+   procedure Set_Input_Region (Surface : Wl.Surface;
+                               Region  : Wl.Region) is
+   begin
+      Wl_Thin.Surface_Set_Input_Region (Surface.My_Surface,
+                                        Region.My_Region);
+      
+   end Set_Input_Region;
+   
    procedure Commit (Surface : Wl.Surface) is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
    end Commit;
 
+   procedure Set_Buffer_Transform (Surface   : Wl.Surface;
+                                   Transform : Integer) is
+   begin
+      Wl_Thin.Surface_Set_Buffer_Transform (Surface.My_Surface,
+                                            Transform);
+   end Set_Buffer_Transform;
+   
+   procedure Set_Buffer_Scale (Surface : Wl.Surface;
+                               Scale   : Integer) is
+   begin
+      Wl_Thin.Surface_Set_Buffer_Scale (Surface.My_Surface,
+                                        Scale);
+   end Set_Buffer_Scale;
+   
+   procedure Damage_Buffer (Surface : Wl.Surface;
+                            X       : Integer;
+                            Y       : Integer;
+                            Width   : Integer;
+                            Height  : Integer) is
+   begin
+      Wl_Thin.Surface_Damage_Buffer (Surface.My_Surface, X, Y, Width, Height);
+   end Damage_Buffer;
+   
    procedure Destroy (Surface : in out Wl.Surface) is
    begin
       if Surface.My_Surface /= null then
@@ -1850,5 +2193,304 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Callback_Get_Version (Callback.My_Callback);
    end Get_Version;
+
+   function Get_Version (Pointer : Wl.Pointer) return Unsigned_32 is
+   begin
+      return Wl_Thin.Pointer_Get_Version (Pointer.My_Pointer);
+   end Get_Version;
+   
+   procedure Destroy (Pointer : in out Wl.Pointer) is
+   begin
+      if Pointer.My_Pointer /= null then
+         Wl_Thin.Pointer_Destroy (Pointer.My_Pointer);
+         Pointer.My_Pointer := null;
+      end if;
+   end Destroy;
+   
+   procedure Set_Cursor (Pointer   : Wl.Pointer;
+                         Serial    : Unsigned_32;
+                         Surface   : Wl.Surface;
+                         Hotspot_X : Integer;
+                         Hotspot_Y : Integer) is
+   begin
+      Wl_Thin.Pointer_Set_Cursor (Pointer.My_Pointer,
+                                  Serial,
+                                  Surface.My_Surface,
+                                  Hotspot_X,
+                                  Hotspot_Y);
+   end Set_Cursor;
+   
+   procedure Release (Pointer : in out Wl.Pointer) is
+   begin
+      if Pointer.My_Pointer /= null then
+         Wl_Thin.Pointer_Release (Pointer.My_Pointer);
+         Pointer.My_Pointer := null;
+      end if;
+   end Release;
+
+   function Get_Version (Keyboard : Wl.Keyboard) return Unsigned_32 is
+   begin
+      return Wl_Thin.Keyboard_Get_Version (Keyboard.My_Keyboard);
+   end Get_Version;
+   
+   procedure Destroy (Keyboard : in out Wl.Keyboard) is
+   begin
+      if Keyboard.My_Keyboard /= null then
+         Wl_Thin.Keyboard_Destroy (Keyboard.My_Keyboard);
+         Keyboard.My_Keyboard := null;
+      end if;
+   end Destroy;
+
+   procedure Release (Keyboard : in out Wl.Keyboard) is
+   begin
+      if Keyboard.My_Keyboard /= null then
+         Wl_Thin.Keyboard_Release (Keyboard.My_Keyboard);
+         Keyboard.My_Keyboard := null;
+      end if;
+   end Release;
+
+   function Get_Version (Touch : Wl.Touch) return Unsigned_32 is
+   begin
+      return Wl_Thin.Touch_Get_Version (Touch.My_Touch);
+   end Get_Version;
+   
+   procedure Destroy (Touch : in out Wl.Touch) is
+   begin
+      if Touch.My_Touch /= null then
+         Wl_Thin.Touch_Destroy (Touch.My_Touch);
+         Touch.My_Touch := null;
+      end if;
+   end Destroy;
+
+   procedure Release (Touch : in out Wl.Touch) is
+   begin
+      if Touch.My_Touch /= null then
+         Wl_Thin.Touch_Release (Touch.My_Touch);
+         Touch.My_Touch := null;
+      end if;
+   end Release;
+
+   function Get_Version (Output : Wl.Output) return Unsigned_32 is
+   begin
+      return Wl_Thin.Output_Get_Version (Output.My_Output);
+   end Get_Version;
+   
+   procedure Destroy (Output : in out Wl.Output) is
+   begin
+      if Output.My_Output /= null then
+         Wl_Thin.Output_Destroy (Output.My_Output);
+         Output.My_Output := null;
+      end if;
+   end Destroy;
+
+   procedure Release (Output : in out Wl.Output) is
+   begin
+      if Output.My_Output /= null then
+         Wl_Thin.Output_Release (Output.My_Output);
+         Output.My_Output := null;
+      end if;
+   end Release;
+
+   function Get_Version (Region : Wl.Region) return Unsigned_32 is
+   begin
+      return Wl_Thin.Region_Get_Version (Region.My_Region);
+   end Get_Version;
+   
+   procedure Destroy (Region : in out Wl.Region) is
+   begin
+      if Region.My_Region /= null then
+         Wl_Thin.Region_Destroy (Region.My_Region);
+         Region.My_Region := null;
+      end if;
+   end Destroy;
+
+   procedure Add (Region : Wl.Region;
+                  X      : Integer;
+                  Y      : Integer;
+                  Width  : Integer;
+                  Height : Integer) is
+   begin
+      Wl_Thin.Region_Add (Region.My_Region, X, Y, Width, Height);
+   end Add;
+   
+   procedure Subtract (Region : Wl.Region;
+                       X      : Integer;
+                       Y      : Integer;
+                       Width  : Integer;
+                       Height : Integer) is
+   begin
+      Wl_Thin.Region_Subtract (Region.My_Region, X, Y, Width, Height);
+   end Subtract;
+
+   function Get_Version (S : Wl.Subcompositor) return Unsigned_32 is
+   begin
+      return Wl_Thin.Subcompositor_Get_Version (S.My_Subcompositor);
+   end Get_Version;
+   
+   procedure Destroy (S : in out Wl.Subcompositor) is
+   begin
+      if S.My_Subcompositor /= null then
+         Wl_Thin.Subcompositor_Destroy (S.My_Subcompositor);
+         S.My_Subcompositor := null;
+      end if;
+   end Destroy;
+
+   procedure Get_Subsurface (Subcompositor : Wl.Subcompositor;
+                             Surface       : Wl.Surface;
+                             Parent        : Wl.Surface;
+                             Subsurface    : in out Wl.Subsurface) is
+   begin
+      Subsurface.My_Subsurface :=
+        Wl_Thin.Subcompositor_Get_Subsurface (Subcompositor.My_Subcompositor,
+                                              Surface.My_Surface,
+                                              Parent.My_Surface);
+   end Get_Subsurface;
+   
+   function Get_Version (Subsurface : Wl.Subsurface) return Unsigned_32 is
+   begin
+      return Wl_Thin.Subsurface_Get_Version (Subsurface.My_Subsurface);
+   end Get_Version;
+   
+   procedure Destroy (Subsurface : in out Wl.Subsurface) is
+   begin
+      if Subsurface.My_Subsurface /= null then
+         Wl_Thin.Subsurface_Destroy (Subsurface.My_Subsurface);
+         Subsurface.My_Subsurface := null;
+      end if;
+   end Destroy;
+
+   procedure Set_Position (Subsurface : Wl.Subsurface;
+                           X          : Integer;
+                           Y          : Integer) is
+   begin
+      Wl_Thin.Subsurface_Set_Position (Subsurface.My_Subsurface,
+                                       X,
+                                       Y);
+   end Set_Position;
+   
+   procedure Place_Above (Subsurface : Wl.Subsurface;
+                          Sibling    : Wl.Surface) is
+   begin
+      Wl_Thin.Subsurface_Place_Above (Subsurface.My_Subsurface,
+                                      Sibling.My_Surface);
+   end Place_Above;
+   
+   procedure Place_Below (Subsurface : Wl.Subsurface;
+                          Sibling    : Wl.Surface) is
+   begin
+      Wl_Thin.Subsurface_Place_Below (Subsurface.My_Subsurface,
+                                      Sibling.My_Surface);
+   end Place_Below;
+   
+   procedure Set_Sync (Subsurface : Wl.Subsurface) is
+   begin
+      Wl_Thin.Subsurface_Set_Sync (Subsurface.My_Subsurface);
+   end Set_Sync;
+   
+   procedure Set_Desync (Subsurface : Wl.Subsurface) is
+   begin
+      Wl_Thin.Subsurface_Set_Desync (Subsurface.My_Subsurface);
+   end Set_Desync;
+
+   function Get_Version (Source : Data_Source) return Unsigned_32 is
+   begin
+      return Wl_Thin.Data_Source_Get_Version (Source.My_Data_Source);
+   end Get_Version;
+   
+   procedure Destroy (Source : in out Data_Source) is
+   begin
+      if Source.My_Data_Source /= null then
+         Wl_Thin.Data_Source_Destroy (Source.My_Data_Source);
+         Source.My_Data_Source := null;
+      end if;
+   end Destroy;
+   
+   procedure Offer (Source    : Data_Source;
+                    Mime_Type : C_String) is
+   begin
+      Wl_Thin.Proxy_Marshal
+        (Wl_Thin.Proxy_Ptr'(Source.My_Data_Source.all'Access),
+         WL_DATA_SOURCE_OFFER,
+         Mime_Type);
+   end Offer;
+   
+   procedure Set_Actions (Source      : Data_Source;
+                          Dnd_Actions : Unsigned_32) is
+   begin
+      Wl_Thin.Data_Source_Set_Actions (Source.My_Data_Source,
+                                       Dnd_Actions);
+   end Set_Actions;
+
+   function Get_Version (Device : Data_Device) return Unsigned_32 is
+   begin
+      return Wl_Thin.Data_Device_Get_Version (Device.My_Data_Device);
+   end Get_Version;
+   
+   procedure Destroy (Device : in out Data_Device) is
+   begin
+      if Device.My_Data_Device /= null then
+         Wl_Thin.Data_Device_Destroy (Device.My_Data_Device);
+         Device.My_Data_Device := null;
+      end if;
+   end Destroy;
+
+   procedure Start_Drag (Device : Data_Device;
+                         Source : Data_Source;
+                         Origin : Surface;
+                         Icon   : Surface;
+                         Serial : Unsigned_32) is
+   begin
+      Wl_Thin.Data_Device_Start_Drag (Device.My_Data_Device,
+                                      Source.My_Data_Source,
+                                      Origin.My_Surface,
+                                      Icon.My_Surface,
+                                      Serial);
+   end Start_Drag;
+   
+   procedure Set_Selection (Device : Data_Device;
+                            Source : Data_Source;
+                            Serial : Unsigned_32) is
+   begin
+      Wl_Thin.Data_Device_Set_Selection (Device.My_Data_Device,
+                                         Source.My_Data_Source,
+                                         Serial);
+   end Set_Selection;
+   
+   procedure Release (Device : in out Data_Device) is
+   begin
+      if Device.My_Data_Device /= null then
+         Wl_Thin.Data_Device_Release (Device.My_Data_Device);
+         Device.My_Data_Device := null;
+      end if;
+   end Release;
+
+   function Get_Version (Manager : Data_Device_Manager) return Unsigned_32 is
+   begin
+      return Wl_Thin.Data_Device_Manager_Get_Version
+        (Manager.My_Data_Device_Manager);
+   end Get_Version;
+   
+   procedure Destroy (Manager : in out Data_Device_Manager) is
+   begin
+      if Manager.My_Data_Device_Manager /= null then
+         Wl_Thin.Data_Device_Manager_Destroy (Manager.My_Data_Device_Manager);
+         Manager.My_Data_Device_Manager := null;
+      end if;
+   end Destroy;
+
+   procedure Create_Data_Source (Manager : Data_Device_Manager;
+                                 Source  : in out Data_Source) is
+   begin
+      Source.My_Data_Source := Wl_Thin.Data_Device_Manager_Create_Data_Source
+        (Manager.My_Data_Device_Manager);
+   end Create_Data_Source;
+   
+   procedure Get_Data_Device (Manager : Data_Device_Manager;
+                              Seat    : Wl.Seat;
+                              Device  : in out Data_Device) is
+   begin
+      Device.My_Data_Device := Wl_Thin.Data_Device_Manager_Get_Data_Device
+        (Manager.My_Data_Device_Manager, Seat.My_Seat);
+   end Get_Data_Device;
    
 end Posix.Wayland_Client;

@@ -6,10 +6,13 @@ project Example_6_3_Connect_To_Server is
 
    for Object_Dir use "obj";
 
-   for Main use ("example_6_3_connect_to_server.adb");
+   for Main use ("client_examples-connect_to_server-main.adb");
 
    for Source_Files use (
-                         "example_6_3_connect_to_server.adb"
+                         "client_examples.ads",
+                         "client_examples-connect_to_server.ads",
+                         "client_examples-connect_to_server.adb",
+                         "client_examples-connect_to_server-main.adb"
                          );
 
 end Example_6_3_Connect_To_Server;

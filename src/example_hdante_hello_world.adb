@@ -294,7 +294,7 @@ begin
    end if;
    Px.Put_Line ("Connected to display");
 
-   Display.Get_Registry_Proxy (Registry);
+   Display.Get_Registry (Registry);
    if not Registry.Has_Proxy then
       Px.Put_Line ("Can't get global registry object");
       return;
@@ -307,7 +307,7 @@ begin
 
    if Exists_Mouse then
       Px.Put_Line ("Start mouse subscription");
-      Seat.Get_Pointer_Proxy (Pointer);
+      Seat.Get_Pointer (Pointer);
       Mouse_Subscriber.Start_Subscription (Pointer);
    end if;
 
@@ -352,7 +352,7 @@ begin
       return;
    end if;
 
-   Shell.Get_Shell_Surface_Proxy (Surface, Shell_Surface);
+   Wl.Get_Shell_Surface (Shell, Surface, Shell_Surface);
 
    if not Shell_Surface.Has_Proxy then
       Surface.Destroy;
@@ -368,7 +368,7 @@ begin
                        Integer (Width),
                        Integer (Height),
                        Integer (Width)*4,
-                       Wl.Unsigned_32 (Wl.Shm_Format_Argb_8888),
+                       Wl.Shm_Format_Argb_8888,
                        Buffer);
 
    if not Buffer.Has_Proxy then

@@ -6,10 +6,14 @@ project Example_6_4_Find_Compositor_Proxy is
 
    for Object_Dir use "obj";
 
-   for Main use ("example_6_4_find_compositor_proxy.adb");
+   for Main use ("client_examples-find_compositor-main.adb");
 
    for Source_Files use (
-                         "example_6_4_find_compositor_proxy.adb"
+                         "example_6_4_find_compositor_proxy.adb",
+                         "client_examples-find_compositor-main.adb",
+                         "client_examples-find_compositor.ads",
+                         "client_examples-find_compositor.adb",
+                         "client_examples.ads"
                          );
 
 end Example_6_4_Find_Compositor_Proxy;

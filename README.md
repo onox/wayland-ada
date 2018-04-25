@@ -30,10 +30,15 @@ A program to find a proxy for the compositor,
 while listing the other registry objects on the command line (See section 6.4
 at https://jan.newmarch.name/Wayland/ProgrammingClient/):
 ```
+package Application is
+
+   procedure Main;
+
+end Application;
+
 with Posix.Wayland_Client;
 with Ada.Text_IO;
-
-procedure Example_6_4_Find_Compositor_Proxy is
+package body Application is
 
    package Wl renames Posix.Wayland_Client;
 
@@ -59,44 +64,48 @@ procedure Example_6_4_Find_Compositor_Proxy is
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   Compositor : aliased Wl.Compositor;
-
-   package Subscriber is new Wl.Registry_Objects_Subscriber
-     (Data_Type             => Wl.Compositor_Ptr,
-      Data                  => Compositor'Unchecked_Access,
+   package Registry_Events is new Wl.Registry_Events
+     (Data_Type             => Wl.Compositor,
+      Data_Ptr              => Wl.Compositor_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
    Display  : Wl.Display;
    Registry : Wl.Registry;
 
-begin
-   Display.Connect (Wl.Default_Display_Name);
-   if not Display.Is_Connected then
-      Put_Line ("Can't connect to display");
-      return;
-   end if;
-   Put_Line ("Connected to display");
+   Compositor : aliased Wl.Compositor;
 
-   Display.Get_Registry_Proxy (Registry);
-   if not Registry.Has_Proxy then
-      Put_Line ("Can't get global registry object");
-      return;
-   end if;
+   procedure Main is
+   begin
+      Display.Connect (Wl.Default_Display_Name);
+      if not Display.Is_Connected then
+         Put_Line ("Can't connect to display");
+         return;
+      end if;
+      Put_Line ("Connected to display");
 
-   Subscriber.Start_Subscription (Registry);
-   Display.Dispatch;
-   Display.Roundtrip;
+      Display.Get_Registry (Registry);
+      if not Registry.Has_Proxy then
+         Put_Line ("Can't get global registry object");
+         return;
+      end if;
 
-   if Compositor.Has_Proxy then
-      Put_Line ("Found compositor");
-   else
-      Put_Line ("Can't find compositor");
-   end if;
+      Registry_Events.Subscribe (Registry, Compositor'Access);
+      Display.Dispatch;
+      Display.Roundtrip;
 
-   Display.Disconnect;
-   Put_Line ("Disconnected from display");
-end Example_6_4_Find_Compositor_Proxy;
+      if Compositor.Has_Proxy then
+         Put_Line ("Found compositor");
+      else
+         Put_Line ("Can't find compositor");
+      end if;
+
+      Registry.Destroy;
+      Display.Disconnect;
+      Put_Line ("Disconnected from display");
+   end Main;
+
+end Application;
 ```
 The corresponding C code is:
 ```
@@ -161,8 +170,6 @@ int main(int argc, char **argv) {
 }
 ```
 # The TODO list
- - Maximize the number subprograms in the thick Ada binding that is available
-   in the thin Ada binding.
  - Investigate the best way to expose events in the thick Ada binding.
  - Add xdg_shell support (which obsoletes wl_shell)
  - Add EGL support
