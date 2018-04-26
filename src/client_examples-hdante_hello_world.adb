@@ -1,7 +1,4 @@
-with Posix.Wayland_Client;
-with Ada.Text_IO;
 -- sudo apt install libwayland-dev
-
 -- This is a wayland hello world application. It uses the wayland
 -- client library and the wayland protocol to display a window.
 --
@@ -11,13 +8,11 @@ with Ada.Text_IO;
 --
 -- When compiled go to the .../bin directory
 -- and execute the executable from there.
-procedure Example_Hdante_Hello_World is
-
-   package Px renames Posix;
-
-   package Wl renames Posix.Wayland_Client;
+package body Client_Examples.Hdante_Hello_World is
 
    use type Px.S_FLag;
+   use type Px.int;
+   use type Px.C_String;
 
    use type Wl.Unsigned_32;
 
@@ -125,9 +120,9 @@ procedure Example_Hdante_Hello_World is
       Px.Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   package Subscriber is new Wl.Registry_Objects_Subscriber
-     (Data_Type             => Data_Ptr,
-      Data                  => Data'Unchecked_Access,
+   package Registry_Events is new Wl.Registry_Events
+     (Data_Type             => Data_Type,
+      Data_Ptr              => Data_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
@@ -279,111 +274,111 @@ procedure Example_Hdante_Hello_World is
    Image         : Px.File;
    File_Status   : Px.File_Status;
 
-   use type Px.int;
-   use type Px.C_String;
-
    File_Name : Px.C_String := "hello_world_image.bin" & Px.Nul;
 
    Memory_Map : Px.Memory_Map;
 
-begin
-   Display.Connect (Wl.Default_Display_Name);
-   if not Display.Is_Connected then
-      Px.Put_Line ("Can't connect to display");
-      return;
-   end if;
-   Px.Put_Line ("Connected to display");
-
-   Display.Get_Registry (Registry);
-   if not Registry.Has_Proxy then
-      Px.Put_Line ("Can't get global registry object");
-      return;
-   end if;
-
-   Subscriber.Start_Subscription (Registry);
-   Display.Dispatch;
-   Display.Roundtrip;
-   Registry.Destroy;
-
-   if Exists_Mouse then
-      Px.Put_Line ("Start mouse subscription");
-      Seat.Get_Pointer (Pointer);
-      Mouse_Subscriber.Start_Subscription (Pointer);
-   end if;
-
-   Image.Open (File_Name,
-               Px.O_RDWR,
-               Px.S_IRUSR or Px.S_IRGRP or Px.S_IROTH);
-
-   if Image.Is_Closed then
-      Px.Put_Line ("Error opening surface image");
-      return;
-   end if;
-
-   Image.Get_File_Status (File_Status);
-
-   if not File_Status.Is_Valid then
-      Px.Put_Line ("File does not exist?");
-      return;
-   end if;
-
-   Image.Map_Memory (Px.Nil,
-                     Px.unsigned_long (File_Status.Size),
-                     Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
-
-   if Memory_Map.Has_Mapping then
-      Shm.Create_Pool (Image,
-                       Integer (File_Status.Size),
-                       Pool);
-   else
-      Px.Put_Line ("Failed to map file");
-      return;
-   end if;
-
-   if not Pool.Has_Proxy then
-      Px.Put_Line ("Failed to create pool");
-      return;
-   end if;
-
-   Compositor.Get_Surface_Proxy (Surface);
-
-   if not Surface.Has_Proxy then
-      Px.Put_Line ("Failed to create surface");
-      return;
-   end if;
-
-   Wl.Get_Shell_Surface (Shell, Surface, Shell_Surface);
-
-   if not Shell_Surface.Has_Proxy then
-      Surface.Destroy;
-      Px.Put_Line ("Failed to create shell surface");
-      return;
-   end if;
-
-   Shell_Surface_Subscriber.Start_Subscription (Shell_Surface);
-
-   Shell_Surface.Set_Toplevel;
-
-   Pool.Create_Buffer (0,
-                       Integer (Width),
-                       Integer (Height),
-                       Integer (Width)*4,
-                       Wl.Shm_Format_Argb_8888,
-                       Buffer);
-
-   if not Buffer.Has_Proxy then
-      Px.Put_Line ("Failed to create buffer");
-      return;
-   end if;
-
-   Surface.Attach (Buffer, 0, 0);
-
-   Surface.Commit;
-
-   while not Done loop
-      if Display.Dispatch < 0 then
-         Px.Put_Line ("Main loop error");
-         Done := true;
+   procedure Run is
+   begin
+      Display.Connect (Wl.Default_Display_Name);
+      if not Display.Is_Connected then
+         Px.Put_Line ("Can't connect to display");
+         return;
       end if;
-   end loop;
-end Example_Hdante_Hello_World;
+      Px.Put_Line ("Connected to display");
+
+      Display.Get_Registry (Registry);
+      if not Registry.Has_Proxy then
+         Px.Put_Line ("Can't get global registry object");
+         return;
+      end if;
+
+      Registry_Events.Subscribe (Registry, Data'Access);
+      Display.Dispatch;
+      Display.Roundtrip;
+      Registry.Destroy;
+
+      if Exists_Mouse then
+         Px.Put_Line ("Start mouse subscription");
+         Seat.Get_Pointer (Pointer);
+         Mouse_Subscriber.Start_Subscription (Pointer);
+      end if;
+
+      Image.Open (File_Name,
+                  Px.O_RDWR,
+                  Px.S_IRUSR or Px.S_IRGRP or Px.S_IROTH);
+
+      if Image.Is_Closed then
+         Px.Put_Line ("Error opening surface image");
+         return;
+      end if;
+
+      Image.Get_File_Status (File_Status);
+
+      if not File_Status.Is_Valid then
+         Px.Put_Line ("File does not exist?");
+         return;
+      end if;
+
+      Image.Map_Memory (Px.Nil,
+                        Px.unsigned_long (File_Status.Size),
+                        Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
+
+      if Memory_Map.Has_Mapping then
+         Shm.Create_Pool (Image,
+                          Integer (File_Status.Size),
+                          Pool);
+      else
+         Px.Put_Line ("Failed to map file");
+         return;
+      end if;
+
+      if not Pool.Has_Proxy then
+         Px.Put_Line ("Failed to create pool");
+         return;
+      end if;
+
+      Compositor.Get_Surface_Proxy (Surface);
+
+      if not Surface.Has_Proxy then
+         Px.Put_Line ("Failed to create surface");
+         return;
+      end if;
+
+      Wl.Get_Shell_Surface (Shell, Surface, Shell_Surface);
+
+      if not Shell_Surface.Has_Proxy then
+         Surface.Destroy;
+         Px.Put_Line ("Failed to create shell surface");
+         return;
+      end if;
+
+      Shell_Surface_Subscriber.Start_Subscription (Shell_Surface);
+
+      Shell_Surface.Set_Toplevel;
+
+      Pool.Create_Buffer (0,
+                          Integer (Width),
+                          Integer (Height),
+                          Integer (Width)*4,
+                          Wl.Shm_Format_Argb_8888,
+                          Buffer);
+
+      if not Buffer.Has_Proxy then
+         Px.Put_Line ("Failed to create buffer");
+         return;
+      end if;
+
+      Surface.Attach (Buffer, 0, 0);
+
+      Surface.Commit;
+
+      while not Done loop
+         if Display.Dispatch < 0 then
+            Px.Put_Line ("Main loop error");
+            Done := true;
+         end if;
+      end loop;
+   end Run;
+
+end Client_Examples.Hdante_Hello_World;

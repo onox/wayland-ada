@@ -9,10 +9,13 @@ project Example_Hdante_Hello_World is
 
    for Exec_Dir use "bin";
 
-   for Main use ("example_hdante_hello_world.adb");
+   for Main use ("client_examples-hdante_hello_world-main.adb");
 
    for Source_Files use (
-                         "example_hdante_hello_world.adb"
+                         "client_examples.ads",
+                         "client_examples-hdante_hello_world.ads",
+                         "client_examples-hdante_hello_world.adb",
+                         "client_examples-hdante_hello_world-main.adb"
                          );
 
 end Example_Hdante_Hello_World;
