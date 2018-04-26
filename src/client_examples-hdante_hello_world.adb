@@ -77,10 +77,11 @@ package body Client_Examples.Hdante_Hello_World is
       null;
    end Seat_Name;
 
-   package Seat_Subscriber is new Wl.Seat_Capability_Subscriber (Data_Type         => Data_Ptr,
-                                                                 Data              => Data'Unchecked_Access,
-                                                                 Seat_Capabilities => Seat_Capabilities,
-                                                                 Seat_Name         => Seat_Name);
+   package Seat_Events is new Wl.Seat_Events
+     (Data_Type         => Data_Ptr,
+      Data              => Data'Unchecked_Access,
+      Seat_Capabilities => Seat_Capabilities,
+      Seat_Name         => Seat_Name);
 
    procedure Global_Registry_Handler (Data     : not null Data_Ptr;
                                       Registry : Wl.Registry;
@@ -108,7 +109,7 @@ package body Client_Examples.Hdante_Hello_World is
          Seat.Get_Proxy (Registry,
                          Id,
                          Min (Version, 2));
-         Seat_Subscriber.Start_Subscription (Seat);
+         Seat_Events.Subscribe (Seat);
          --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
       end if;
    end Global_Registry_Handler;
@@ -151,7 +152,7 @@ package body Client_Examples.Hdante_Hello_World is
       null;
    end Shell_Surface_Popup_Done;
 
-   package Shell_Surface_Subscriber is new Wl.Shell_Surface_Subscriber
+   package Shell_Surface_Events is new Wl.Shell_Surface_Events
      (Data_Type                => Data_Ptr,
       Data                     => Data'Unchecked_Access,
       Shell_Surface_Ping       => Shell_Surface_Ping,
@@ -242,7 +243,7 @@ package body Client_Examples.Hdante_Hello_World is
       Ada.Text_IO.Put_Line ("Pointer axis discrete");
    end Pointer_Axis_Discrete;
 
-   package Mouse_Subscriber is new Wl.Pointer_Subscriber
+   package Mouse_Events is new Wl.Pointer_Events
      (Data_Type             => Data_Ptr,
       Data                  => Data'Unchecked_Access,
       Pointer_Enter         => Mouse_Enter,
@@ -301,7 +302,7 @@ package body Client_Examples.Hdante_Hello_World is
       if Exists_Mouse then
          Px.Put_Line ("Start mouse subscription");
          Seat.Get_Pointer (Pointer);
-         Mouse_Subscriber.Start_Subscription (Pointer);
+         Mouse_Events.Subscribe (Pointer);
       end if;
 
       Image.Open (File_Name,
@@ -353,7 +354,7 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Shell_Surface_Subscriber.Start_Subscription (Shell_Surface);
+      Shell_Surface_Events.Subscribe (Shell_Surface);
 
       Shell_Surface.Set_Toplevel;
 
@@ -376,7 +377,7 @@ package body Client_Examples.Hdante_Hello_World is
       while not Done loop
          if Display.Dispatch < 0 then
             Px.Put_Line ("Main loop error");
-            Done := true;
+            Done := True;
          end if;
       end loop;
    end Run;

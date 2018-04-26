@@ -1241,65 +1241,6 @@ package body Posix.Wayland_Client is
 
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
-   package body Registry_Subscriber is
-
-      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
-                                       Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Wl.Unsigned_32;
-                                       Interface_V : Wl.chars_ptr;
-                                       Version     : Wl.Unsigned_32) with
-        Convention => C,
-        Global     => null;
-
-      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
-                                       Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Wl.Unsigned_32;
-                                       Interface_V : Wl.chars_ptr;
-                                       Version     : Wl.Unsigned_32)
-      is
-         pragma Unreferenced (Unused_Data);
-
-         R : Wl.Registry := (
-                             My_Registry                 => Registry,
-                             My_Has_Started_Subscription => True
-                            );
-      begin
-         Global_Object_Added (Data, R, Id, Value (Interface_V), Version);
-      end Internal_Object_Added;
-
-      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
-                                         Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Wl.Unsigned_32) with
-        Convention => C;
-
-      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
-                                         Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Wl.Unsigned_32)
-      is
-         R : Wl.Registry := (
-                             My_Registry                 => Registry,
-                             My_Has_Started_Subscription => True
-                            );
-      begin
-         Global_Object_Removed (Data, R, Id);
-      end Internal_Object_Removed;
-
-      Listener : aliased Wl.Registry_Listener_T :=
-        (
-         Global        => Internal_Object_Added'Unrestricted_Access,
-         Global_Remove => Internal_Object_Removed'Unrestricted_Access
-        );
-
-      procedure Start_Subscription (Registry : in out Wl.Registry) is
-         I : Px.int;
-      begin
-         I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
-                                             Listener'Unchecked_Access,
-                                             Nil);
-      end Start_Subscription;
-
-   end Registry_Subscriber;
-
    package body Registry_Events is
 
       package Conv is new System.Address_To_Access_Conversions (Data_Type);
@@ -1365,7 +1306,7 @@ package body Posix.Wayland_Client is
 
    end Registry_Events;
    
-   package body Shell_Surface_Subscriber is
+   package body Shell_Surface_Events is
 
       procedure Internal_Shell_Surface_Ping
         (Unused_Data : Void_Ptr;
@@ -1424,18 +1365,18 @@ package body Posix.Wayland_Client is
          Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
         );
 
-      procedure Start_Subscription (Surface : in out Wl.Shell_Surface) is
+      procedure Subscribe (Surface : in out Wl.Shell_Surface) is
          I : Px.int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
            (Surface.My_Shell_Surface,
             Listener'Unchecked_Access,
             Nil);
-      end Start_Subscription;
+      end Subscribe;
 
-   end Shell_Surface_Subscriber;
+   end Shell_Surface_Events;
 
-   package body Seat_Capability_Subscriber is
+   package body Seat_Events is
 
       procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
                                             Seat         : Wl_Thin.Seat_Ptr;
@@ -1479,17 +1420,17 @@ package body Posix.Wayland_Client is
          Name         => Internal_Seat_Name'Unrestricted_Access
         );
 
-      procedure Start_Subscription (S : in out Wl.Seat) is
+      procedure Subscribe (S : in out Wl.Seat) is
          I : Px.int;
       begin
          I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,
                                          Listener => Seat_Listener'Unchecked_Access,
                                          Data     => Nil);
-      end Start_Subscription;
+      end Subscribe;
 
-   end Seat_Capability_Subscriber;
+   end Seat_Events;
 
-   package body Pointer_Subscriber is
+   package body Pointer_Events is
 
       procedure Internal_Pointer_Enter
         (Unused_Data : Void_Ptr;
@@ -1660,15 +1601,15 @@ package body Posix.Wayland_Client is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
         );
 
-      procedure Start_Subscription (P : in out Wl.Pointer) is
+      procedure Subscribe (P : in out Wl.Pointer) is
          I : Px.int;
       begin
          I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
                                             Listener => Pointer_Listener'Unrestricted_Access,
                                             Data     => Nil);
-      end Start_Subscription;
+      end Subscribe;
 
-   end Pointer_Subscriber;
+   end Pointer_Events;
 
    procedure Connect (Display : in out Wl.Display;
                       Name    : C_String) is

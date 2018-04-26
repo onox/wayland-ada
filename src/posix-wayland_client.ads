@@ -1643,26 +1643,6 @@ package Posix.Wayland_Client is
    -- Subtract the specified rectangle from the region.
    
    generic
-      type Data_Type is private;
-      Data : Data_Type;
-      with procedure Global_Object_Added (Data     : Data_Type;
-                                          Registry : Wl.Registry;
-                                          Id       : Unsigned_32;
-                                          Name     : String;
-                                          Version  : Unsigned_32);
-
-      with procedure Global_Object_Removed (Data     : Data_Type;
-                                            Registry : Wl.Registry;
-                                            Id       : Unsigned_32);
-   package Registry_Subscriber is
-
-      -- Starts subcription to global objects addded and removed events.
-      -- To stop subscription, call Registry.Destroy.
-      procedure Start_Subscription (Registry : in out Wl.Registry);
-
-   end Registry_Subscriber;
-
-   generic
       type Data_Type is limited private;
       type Data_Ptr is access all Data_Type;
       with procedure Global_Object_Added (Data     : not null Data_Ptr;
@@ -1703,11 +1683,11 @@ package Posix.Wayland_Client is
         (Data    : Data_Type;
          Surface : Shell_Surface);
 
-   package Shell_Surface_Subscriber is
+   package Shell_Surface_Events is
 
-      procedure Start_Subscription (Surface : in out Shell_Surface);
+      procedure Subscribe (Surface : in out Shell_Surface);
 
-   end Shell_Surface_Subscriber;
+   end Shell_Surface_Events;
 
    generic
       type Data_Type is private;
@@ -1722,11 +1702,12 @@ package Posix.Wayland_Client is
         (Data : Data_Type;
          Seat : Wl.Seat;
          Name : String);
-   package Seat_Capability_Subscriber is
+      
+   package Seat_Events is
 
-      procedure Start_Subscription (S : in out Seat);
+      procedure Subscribe (S : in out Seat);
 
-   end Seat_Capability_Subscriber;
+   end Seat_Events;
 
    generic
       type Data_Type is private;
@@ -1788,11 +1769,11 @@ package Posix.Wayland_Client is
          Axis     : Unsigned_32;
          Discrete : Integer);
 
-   package Pointer_Subscriber is
+   package Pointer_Events is
 
-      procedure Start_Subscription (P : in out Pointer);
+      procedure Subscribe (P : in out Pointer);
 
-   end Pointer_Subscriber;
+   end Pointer_Events;
 
    type Display_Ptr is access all Display;
    type Registry_Ptr is access all Registry;
