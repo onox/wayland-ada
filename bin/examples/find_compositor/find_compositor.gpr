@@ -1,10 +1,12 @@
-with "wayland_client.gpr";
+with "../../../wayland_client.gpr";
 
-project Example_6_4_Find_Compositor_Proxy is
+project Find_Compositor is
 
-   for Source_Dirs use ("src");
+   for Source_Dirs use ("../../../src");
 
    for Object_Dir use "obj";
+
+   for Exec_Dir use ".";
 
    for Source_Files use (
                          "example_6_4_find_compositor_proxy.adb",
@@ -21,4 +23,4 @@ project Example_6_4_Find_Compositor_Proxy is
         "find_compositor";
    end Builder;
 
-end Example_6_4_Find_Compositor_Proxy;
+end Find_Compositor;
