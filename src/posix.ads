@@ -1,5 +1,5 @@
-with Interfaces.C.Strings;
 with System.Storage_Elements;
+with Interfaces.C;
 
 private with Ada.Unchecked_Conversion;
 
@@ -17,6 +17,13 @@ package Posix is
    subtype long is Interfaces.C.long;
    subtype Unsigned_32 is Interfaces.Unsigned_32;
 
+--     type unsigned       is mod 2 ** Integer'Size;
+--     type unsigned_long  is mod 2 ** Long_Integer'Size;
+--     type int is new Integer;
+--     type long is new Long_Integer;
+--     type Unsigned_32 is mod 2 ** 32;
+--     for Unsigned_32'Size use 32;
+
    subtype Void_Ptr is System.Address;
 
    type S_FLag is new Unsigned_32;
@@ -30,21 +37,27 @@ package Posix is
    use type long;
    use type Void_Ptr;
 
-   function Shift_Right
-     (Value  : Unsigned_32;
-      Amount : Natural) return Unsigned_32 renames
-     Interfaces.Shift_Right;
-
-   function Shift_Right
-     (Value  : S_FLag;
-      Amount : Natural) return S_FLag is
-     (S_FLag (Shift_Right (Unsigned_32 (Value), Amount)));
+--     function Shift_Right
+--       (Value  : Unsigned_32;
+--        Amount : Natural) return Unsigned_32 renames
+--       Interfaces.Shift_Right;
+--
+--     function Shift_Right
+--       (Value  : S_FLag;
+--        Amount : Natural) return S_FLag is
+--       (S_FLag (Shift_Right (Unsigned_32 (Value), Amount)));
 
    Nul : constant Character := Character'Val (0);
 
    type C_String is new String with
      Dynamic_Predicate => C_String'Length > 0
      and then C_String (C_String'Last) = Nul;
+
+   function "-" (Text : C_String) return String;
+   -- Removes the last 'Nul' character and returns a normal String.
+
+   function "+" (Text : String) return C_String;
+   -- Appends a 'Nul' character to a standard String and returns a C_String.
 
    --
    -- Non-primitive subprograms
@@ -57,6 +70,8 @@ package Posix is
    -- Write to standard out. May be used instead of Ada.Text_IO.Put_Line ().
    procedure Put_Line (Text : String) with
      Global => null;
+
+   function Get_Line return String;
 
    --
    -- Encoding of the file mode.
@@ -96,28 +111,28 @@ package Posix is
    S_IRWXU : constant S_FLag := S_IRUSR or S_IWUSR or S_IXUSR;
 
    -- Read by group.
-   S_IRGRP : constant S_FLag := Shift_Right (S_IRUSR, 3);
+   S_IRGRP : constant S_FLag := 3_200;
 
    -- Write by group.
-   S_IWGRP : constant S_FLag := Shift_Right (S_IWUSR, 3);
+   S_IWGRP : constant S_FLag := 1_600;
 
    -- Execute by group.
-   S_IXGRP : constant S_FLag := Shift_Right (S_IXUSR, 3);
+   S_IXGRP : constant S_FLag := 800;
 
    -- Read, write, and execute by group.
-   S_IRWXG : constant S_FLag := Shift_Right (S_IRWXU, 3);
+   S_IRWXG : constant S_FLag := 5_600;
 
    -- Read by others.
-   S_IROTH : constant S_FLag := Shift_Right (S_IRGRP, 3);
+   S_IROTH : constant S_FLag := 25_600;
 
    -- Write by others.
-   S_IWOTH : constant S_FLag := Shift_Right (S_IWGRP, 3);
+   S_IWOTH : constant S_FLag := 12_800;
 
    -- Execute by others.
-   S_IXOTH : constant S_FLag := Shift_Right (S_IXGRP, 3);
+   S_IXOTH : constant S_FLag := 6_400;
 
    -- Read, write, and execute by others.
-   S_IRWXO : constant S_FLag := Shift_Right (S_IRWXG, 3);
+   S_IRWXO : constant S_FLag := 44_800;
 
    -- Open for reading only
    O_RDONLY : constant O_FLag := 16#00#;
@@ -252,6 +267,10 @@ package Posix is
       S_Flags   : in     S_FLag) with
      Global => null,
      Pre    => File.Is_Closed;
+   -- To open a file for reading example:
+   --
+   -- File : Px.File;
+   --
 
    procedure Close (File : in out Px.File) with
      Global => null,
@@ -262,7 +281,7 @@ package Posix is
      Global => null,
      Pre    => File.Is_Open;
 
-   function Read (File : Px.File; Bytes : Byte_Array) return SSize_Type with
+   function Read (File : Px.File; Bytes : in out Byte_Array) return SSize_Type with
      Global => null,
      Pre    => File.Is_Open;
 
@@ -330,6 +349,7 @@ package Posix is
    function Size (Status : File_Status) return Offset with
      Global => null,
      Pre    => Status.Is_Valid;
+   -- The file size in bytes.
 
    function Block_Size (Status : File_Status) return Block_Size_Type with
      Global => null,
@@ -474,7 +494,7 @@ private
 
       function Read
         (File_Descriptor : Integer;
-         Buffer          : Byte_Array;
+         Buffer          : in out Byte_Array;
          Count           : Size_Type) return SSize_Type with
         Import        => True,
         Convention    => C,

@@ -1,6 +1,6 @@
 package body Posix is
 
-   use type Interfaces.C.int;
+   use type int;
 
    procedure Open
      (File      : in out Px.File;
@@ -41,7 +41,7 @@ package body Posix is
            Count           => Bytes'Length);
    end Write;
 
-   function Read (File : Px.File; Bytes : Byte_Array) return SSize_Type is
+   function Read (File : Px.File; Bytes : in out Byte_Array) return SSize_Type is
    begin
       return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
    end Read;
@@ -102,5 +102,34 @@ package body Posix is
                               Buffer          => Text,
                               Count           => Text'Length);
    end Put;
+
+   function Get_Line return String is
+      SSize : SSize_Type;
+      B : Byte_Array (1..200);
+   begin
+      SSize := Px_Thin.Read (File_Descriptor => Px_Thin.STDIN_FILENO,
+                             Buffer          => B,
+                             Count           => Size_Type (200));
+
+      declare
+         S : String (1..Integer (SSize));
+      begin
+         for I in Integer range 1..Integer (SSize) loop
+            S (I) := Character'Val (B (System.Storage_Elements.Storage_Offset (I)));
+         end loop;
+         return S (1..Integer (SSize - 1));
+      end;
+
+   end Get_Line;
+
+   function "-" (Text : C_String) return String is
+   begin
+      return String (Text (Text'First .. Text'Last - 1));
+   end "-";
+
+   function "+" (Text : String) return C_String is
+   begin
+      return C_String (Text & Nul);
+   end "+";
 
 end Posix;

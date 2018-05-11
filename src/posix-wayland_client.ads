@@ -3,12 +3,6 @@ private with Interfaces.C.Strings;
 -- Auto-generated from Wayland.xml
 package Posix.Wayland_Client is
 
-   pragma Linker_Options ("-lwayland-client");
-   -- Added this linker option here to avoid adding it
-   -- to each gpr file that with's this Wayland Ada binding.
-
-   package Wl renames Posix.Wayland_Client;
-
    type Display;
    type Registry;
    type Callback;
@@ -31,6 +25,12 @@ package Posix.Wayland_Client is
    type Region;
    type Subcompositor;
    type Subsurface;
+
+   pragma Linker_Options ("-lwayland-client");
+   -- Added this linker option here to avoid adding it
+   -- to each gpr file that with's this Wayland Ada binding.
+
+   package Wl renames Posix.Wayland_Client;
    
    subtype Unsigned_32 is Interfaces.Unsigned_32;
 
