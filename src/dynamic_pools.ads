@@ -186,6 +186,13 @@
 --  containing task components to a subpool.
 --
 
+pragma Annotate
+  (GNATCheck, Exempt_On, "Restrictions:No_Finalization",
+   "Finalization is only permitted in the implementation of Deepend");
+pragma Annotate
+  (GNATCheck, Exempt_On, "Restrictions:No_Protected_Types",
+   "Deepend is an external library made for multi-tasked applications");
+
 with Ada.Task_Identification; use Ada.Task_Identification;
 with Ada.Finalization;
 with Ada.Unchecked_Deallocate_Subpool;
@@ -516,5 +523,9 @@ private
    function Has_Default_Subpool
      (Pool : Dynamic_Pool) return Boolean is
       (Pool.Default_Subpool /= null);
-
 end Dynamic_Pools;
+
+pragma Annotate
+  (GNATCheck, Exempt_Off, "Restrictions:No_Finalization");
+pragma Annotate
+  (GNATCheck, Exempt_Off, "Restrictions:No_Protected_Types");

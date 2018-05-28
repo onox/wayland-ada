@@ -1,12 +1,7 @@
-with Posix.Wayland_Client;
-with Ada.Text_IO;
+with Posix;
 
 package Client_Examples is
 
-   package Px renames Posix;
-
-   package Wl renames Posix.Wayland_Client;
-
-   procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
+   procedure Put_Line (Text : String) renames Posix.Put_Line;
 
 end Client_Examples;

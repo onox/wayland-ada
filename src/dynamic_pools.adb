@@ -27,6 +27,10 @@
 --  executable file might be covered by the GNU Public License.
 ------------------------------------------------------------------------------
 
+pragma Annotate
+  (GNATCheck, Exempt_On, "Restrictions:No_Unchecked_Deallocation",
+   "Unchecked deallocation is only permitted in the implementation of Deepend");
+
 with Ada.Unchecked_Deallocation;
 with System.Address_To_Access_Conversions;
 
@@ -434,3 +438,6 @@ package body Dynamic_Pools is
    end Subpool_Allocators;
 
 end Dynamic_Pools;
+
+pragma Annotate
+  (GNATCheck, Exempt_Off, "Restrictions:No_Unchecked_Deallocation");

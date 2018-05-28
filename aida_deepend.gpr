@@ -20,7 +20,6 @@ project Aida_Deepend is
    for Object_Dir use "obj";
 
    package Compiler is
---      for Local_Configuration_Pragmas use "aida.adc";
       for Default_Switches ("ada") use (
                                         "-gnat2012"--,
  --                                       "-gnata"

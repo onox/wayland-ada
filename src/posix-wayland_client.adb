@@ -1247,21 +1247,19 @@ package body Posix.Wayland_Client is
       
       procedure Internal_Object_Added (Unused_Data : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Wl.Unsigned_32;
-                                       Interface_V : Wl.chars_ptr;
-                                       Version     : Wl.Unsigned_32) with
+                                       Id          : Unsigned_32;
+                                       Interface_V : Wayland_Client.chars_ptr;
+                                       Version     : Unsigned_32) with
         Convention => C,
         Global     => null;
 
       procedure Internal_Object_Added (Unused_Data : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Wl.Unsigned_32;
-                                       Interface_V : Wl.chars_ptr;
-                                       Version     : Wl.Unsigned_32)
+                                       Id          : Unsigned_32;
+                                       Interface_V : Wayland_Client.chars_ptr;
+                                       Version     : Unsigned_32)
       is
---         pragma Unreferenced (Unused_Data);
-
-         R : Wl.Registry := (
+         R : Wayland_Client.Registry := (
                              My_Registry                 => Registry,
                              My_Has_Started_Subscription => True
                             );
@@ -1272,22 +1270,23 @@ package body Posix.Wayland_Client is
 
       procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
                                          Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Wl.Unsigned_32) with
+                                         Id          : Unsigned_32) with
         Convention => C;
 
       procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
                                          Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Wl.Unsigned_32)
+                                         Id          : Unsigned_32)
       is
-         R : Wl.Registry := (
-                             My_Registry                 => Registry,
-                             My_Has_Started_Subscription => True
-                            );
+         R : Wayland_Client.Registry :=
+           (
+            My_Registry                 => Registry,
+            My_Has_Started_Subscription => True
+           );
       begin
          Global_Object_Removed (Data_Ptr (Conv.To_Pointer (Unused_Data)), R, Id);
       end Internal_Object_Removed;
 
-      Listener : aliased Wl.Registry_Listener_T :=
+      Listener : aliased Wayland_Client.Registry_Listener_T :=
         (
          Global        => Internal_Object_Added'Unrestricted_Access,
          Global_Remove => Internal_Object_Removed'Unrestricted_Access
@@ -1295,9 +1294,9 @@ package body Posix.Wayland_Client is
       -- Note: It should be safe to use Unrestricted_Access here since
       -- this generic can only be instantiated at library level.
 
-      procedure Subscribe (Registry : in out Wl.Registry;
+      procedure Subscribe (Registry : in out Wayland_Client.Registry;
                            Data     : not null Data_Ptr) is
-         I : Px.int;
+         I : Posix.int;
       begin
          I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
                                              Listener'Access,
@@ -1332,7 +1331,7 @@ package body Posix.Wayland_Client is
          Surface     : Wl_Thin.Shell_Surface_Ptr;
          Serial      : Unsigned_32)
       is
-         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
+         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Ping (Data, S, Serial);
       end Internal_Shell_Surface_Ping;
@@ -1344,7 +1343,7 @@ package body Posix.Wayland_Client is
          Width       : Integer;
          Height      : Integer)
       is
-         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
+         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Configure (Data, S, Edges, Width, Height);
       end Internal_Shell_Surface_Configure;
@@ -1353,7 +1352,7 @@ package body Posix.Wayland_Client is
         (Unused_Data : Void_Ptr;
          Surface     : Wl_Thin.Shell_Surface_Ptr)
       is
-         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);
+         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Popup_Done (Data, S);
       end Internal_Shell_Surface_Popup_Done;
@@ -1365,8 +1364,8 @@ package body Posix.Wayland_Client is
          Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
         );
 
-      procedure Subscribe (Surface : in out Wl.Shell_Surface) is
-         I : Px.int;
+      procedure Subscribe (Surface : in out Wayland_Client.Shell_Surface) is
+         I : Posix.int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
            (Surface.My_Shell_Surface,
@@ -1387,7 +1386,7 @@ package body Posix.Wayland_Client is
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32)
       is
-         S : Wl.Seat := (
+         S : Wayland_Client.Seat := (
                          My_Seat                     => Seat,
                          My_Has_Started_Subscription => True
                         );
@@ -1406,7 +1405,7 @@ package body Posix.Wayland_Client is
       is
          N : String := Interfaces.C.Strings.Value (Name);
 
-         S : Wl.Seat := (
+         S : Wayland_Client.Seat := (
                          My_Seat                     => Seat,
                          My_Has_Started_Subscription => True
                         );
@@ -1420,8 +1419,8 @@ package body Posix.Wayland_Client is
          Name         => Internal_Seat_Name'Unrestricted_Access
         );
 
-      procedure Subscribe (S : in out Wl.Seat) is
-         I : Px.int;
+      procedure Subscribe (S : in out Wayland_Client.Seat) is
+         I : Posix.int;
       begin
          I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,
                                          Listener => Seat_Listener'Unchecked_Access,
@@ -1437,8 +1436,8 @@ package body Posix.Wayland_Client is
          Pointer     : Wl_Thin.Pointer_Ptr;
          Serial      : Unsigned_32;
          Surface     : Wl_Thin.Surface_Ptr;
-         Surface_X   : Wl.Fixed;
-         Surface_Y   : Wl.Fixed) with
+         Surface_X   : Wayland_Client.Fixed;
+         Surface_Y   : Wayland_Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Leave
@@ -1452,8 +1451,8 @@ package body Posix.Wayland_Client is
         (Data      : Void_Ptr;
          Pointer   : Wl_Thin.Pointer_Ptr;
          Time      : Unsigned_32;
-         Surface_X : Wl.Fixed;
-         Surface_Y : Wl.Fixed) with
+         Surface_X : Wayland_Client.Fixed;
+         Surface_Y : Wayland_Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Button
@@ -1470,7 +1469,7 @@ package body Posix.Wayland_Client is
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wl.Fixed) with
+         Value   : Wayland_Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
@@ -1502,11 +1501,11 @@ package body Posix.Wayland_Client is
          Pointer     : Wl_Thin.Pointer_Ptr;
          Serial      : Unsigned_32;
          Surface     : Wl_Thin.Surface_Ptr;
-         Surface_X   : Wl.Fixed;
-         Surface_Y   : Wl.Fixed)
+         Surface_X   : Wayland_Client.Fixed;
+         Surface_Y   : Wayland_Client.Fixed)
       is
-         P : Wl.Pointer := (My_Pointer => Pointer);
-         S : Wl.Surface := (My_Surface => Surface);
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         S : Wayland_Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);
       end Internal_Pointer_Enter;
@@ -1517,8 +1516,8 @@ package body Posix.Wayland_Client is
          Serial      : Unsigned_32;
          Surface     : Wl_Thin.Surface_Ptr)
       is
-         P : Wl.Pointer := (My_Pointer => Pointer);
-         S : Wl.Surface := (My_Surface => Surface);
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         S : Wayland_Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Leave (Data, P, Serial, S);
       end Internal_Pointer_Leave;
@@ -1527,8 +1526,8 @@ package body Posix.Wayland_Client is
         (Data      : Void_Ptr;
          Pointer   : Wl_Thin.Pointer_Ptr;
          Time      : Unsigned_32;
-         Surface_X : Wl.Fixed;
-         Surface_Y : Wl.Fixed) is
+         Surface_X : Wayland_Client.Fixed;
+         Surface_Y : Wayland_Client.Fixed) is
       begin
          null;
       end Internal_Pointer_Motion;
@@ -1541,7 +1540,7 @@ package body Posix.Wayland_Client is
          Button      : Unsigned_32;
          State       : Unsigned_32)
       is
-         P : Wl.Pointer := (My_Pointer => Pointer);
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Button (Data, P, Serial, Time, Button, State);
       end Internal_Pointer_Button;
@@ -1551,7 +1550,7 @@ package body Posix.Wayland_Client is
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wl.Fixed) is
+         Value   : Wayland_Client.Fixed) is
       begin
          null;
       end Internal_Pointer_Axis;
@@ -1601,8 +1600,8 @@ package body Posix.Wayland_Client is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
         );
 
-      procedure Subscribe (P : in out Wl.Pointer) is
-         I : Px.int;
+      procedure Subscribe (P : in out Wayland_Client.Pointer) is
+         I : Posix.int;
       begin
          I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
                                             Listener => Pointer_Listener'Unrestricted_Access,
@@ -1611,31 +1610,31 @@ package body Posix.Wayland_Client is
 
    end Pointer_Events;
 
-   procedure Connect (Display : in out Wl.Display;
-                      Name    : C_String) is
+   procedure Connect (Display : in out Wayland_Client.Display;
+                      Name    : C_String := Default_Display_Name) is
    begin
       Display.My_Display := Wl_Thin.Display_Connect (Name);
    end Connect;
 
-   procedure Disconnect (Display : in out Wl.Display) is
+   procedure Disconnect (Display : in out Wayland_Client.Display) is
    begin
       if Display.My_Display /= null then
          Wl_Thin.Display_Disconnect (Display.My_Display);
       end if;
    end Disconnect;
 
-   function Get_Version (Display : Wl.Display) return Unsigned_32 is
+   function Get_Version (Display : Wayland_Client.Display) return Unsigned_32 is
    begin
       return Wl_Thin.Display_Get_Version (Display.My_Display);
    end Get_Version;
    
-   procedure Get_Registry (Display  : Wl.Display;
-                           Registry : in out Wl.Registry) is
+   procedure Get_Registry (Display  : Wayland_Client.Display;
+                           Registry : in out Wayland_Client.Registry) is
    begin
       Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
    end Get_Registry;
 
-   procedure Destroy (Registry : in out Wl.Registry) is
+   procedure Destroy (Registry : in out Wayland_Client.Registry) is
    begin
       if Registry.My_Registry /= null then
          Wl_Thin.Registry_Destroy (Registry.My_Registry);
@@ -1643,32 +1642,32 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Dispatch (Display : Wl.Display) return Int is
+   function Dispatch (Display : Wayland_Client.Display) return Int is
    begin
       return Wl_Thin.Display_Dispatch (Display.My_Display);
    end Dispatch;
 
-   procedure Dispatch (Display : Wl.Display) is
+   procedure Dispatch (Display : Wayland_Client.Display) is
       I : Int;
       pragma Unreferenced (I);
    begin
       I := Display.Dispatch;
    end Dispatch;
 
-   function Roundtrip (Display : Wl.Display) return Int is
+   function Roundtrip (Display : Wayland_Client.Display) return Int is
    begin
       return Wl_Thin.Display_Roundtrip (Display.My_Display);
    end Roundtrip;
 
-   procedure Roundtrip (Display : Wl.Display) is
+   procedure Roundtrip (Display : Wayland_Client.Display) is
       I : Int;
       pragma Unreferenced (I);
    begin
       I := Display.Roundtrip;
    end Roundtrip;
 
-   procedure Get_Proxy (Compositor  : in out Wl.Compositor;
-                        Registry    : Wl.Registry;
+   procedure Get_Proxy (Compositor  : in out Wayland_Client.Compositor;
+                        Registry    : Wayland_Client.Registry;
                         Id          : Unsigned_32;
                         Version     : Unsigned_32)
    is
@@ -1684,21 +1683,21 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Surface_Proxy (Compositor : Wl.Compositor;
-                             Surface    : in out Wl.Surface) is
+   procedure Get_Surface_Proxy (Compositor : Wayland_Client.Compositor;
+                             Surface    : in out Wayland_Client.Surface) is
    begin
       Surface.My_Surface :=
         Wl_Thin.Compositor_Create_Surface (Compositor.My_Compositor);
    end Get_Surface_Proxy;
 
-   procedure Get_Region_Proxy (Compositor : Wl.Compositor;
-                               Region     : in out Wl.Region) is
+   procedure Get_Region_Proxy (Compositor : Wayland_Client.Compositor;
+                               Region     : in out Wayland_Client.Region) is
    begin
       Region.My_Region :=
         Wl_Thin.Compositor_Create_Region (Compositor.My_Compositor);
    end Get_Region_Proxy;
 
-   procedure Destroy (Compositor : in out Wl.Compositor) is
+   procedure Destroy (Compositor : in out Wayland_Client.Compositor) is
    begin
       if Compositor.My_Compositor /= null then
          Wl_Thin.Compositor_Destroy (Compositor.My_Compositor);
@@ -1706,13 +1705,13 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Seat : Wl.Seat) return Unsigned_32 is
+   function Get_Version (Seat : Wayland_Client.Seat) return Unsigned_32 is
    begin
       return Wl_Thin.Seat_Get_Version (Seat.My_Seat);
    end Get_Version;
    
-   procedure Get_Proxy (Seat     : in out Wl.Seat;
-                        Registry : Wl.Registry;
+   procedure Get_Proxy (Seat     : in out Wayland_Client.Seat;
+                        Registry : Wayland_Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1728,32 +1727,32 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Pointer (Seat    : Wl.Seat;
-                          Pointer : in out Wl.Pointer) is
+   procedure Get_Pointer (Seat    : Wayland_Client.Seat;
+                          Pointer : in out Wayland_Client.Pointer) is
    begin
       Pointer.My_Pointer := Wl_Thin.Seat_Get_Pointer (Seat.My_Seat);
    end Get_Pointer;
 
-   procedure Get_Keyboard (Seat     : Wl.Seat;
-                           Keyboard : in out Wl.Keyboard) is
+   procedure Get_Keyboard (Seat     : Wayland_Client.Seat;
+                           Keyboard : in out Wayland_Client.Keyboard) is
    begin
       Keyboard.My_Keyboard := Wl_Thin.Seat_Get_Keyboard (Seat.My_Seat);
    end Get_Keyboard;
    
-   procedure Get_Touch (Seat  : Wl.Seat;
-                        Touch : in out Wl.Touch) is
+   procedure Get_Touch (Seat  : Wayland_Client.Seat;
+                        Touch : in out Wayland_Client.Touch) is
    begin
       Touch.My_Touch := Wl_Thin.Seat_Get_Touch (Seat.My_Seat);
    end Get_Touch;
    
-   procedure Release (Seat : in out Wl.Seat) is
+   procedure Release (Seat : in out Wayland_Client.Seat) is
    begin
       Wl_Thin.Seat_Release (Seat.My_Seat);
       Seat.My_Seat := null;
    end Release;
    
-   procedure Get_Proxy (Shell    : in out Wl.Shell;
-                        Registry : Wl.Registry;
+   procedure Get_Proxy (Shell    : in out Wayland_Client.Shell;
+                        Registry : Wayland_Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1769,16 +1768,16 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Shell_Surface (Shell         : Wl.Shell;
-                                Surface       : Wl.Surface;
-                                Shell_Surface : in out Wl.Shell_Surface) is
+   procedure Get_Shell_Surface (Shell         : Wayland_Client.Shell;
+                                Surface       : Wayland_Client.Surface;
+                                Shell_Surface : in out Wayland_Client.Shell_Surface) is
    begin
       Shell_Surface.My_Shell_Surface :=
         Wl_Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);
    end Get_Shell_Surface;
 
-   procedure Get_Proxy (Shm      : in out Wl.Shm;
-                        Registry : Wl.Registry;
+   procedure Get_Proxy (Shm      : in out Wayland_Client.Shm;
+                        Registry : Wayland_Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1794,10 +1793,10 @@ package body Posix.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Create_Pool (Shm             : Wl.Shm;
+   procedure Create_Pool (Shm             : Wayland_Client.Shm;
                           File_Descriptor : File;
                           Size            : Integer;
-                          Pool            : in out Wl.Shm_Pool) is
+                          Pool            : in out Wayland_Client.Shm_Pool) is
    begin
       Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool
         (Shm.My_Shm,
@@ -1805,12 +1804,12 @@ package body Posix.Wayland_Client is
          Size);
    end Create_Pool;
 
-   function Get_Version (Shm : Wl.Shm) return Unsigned_32 is
+   function Get_Version (Shm : Wayland_Client.Shm) return Unsigned_32 is
    begin
       return Wl_Thin.Shm_Get_Version (Shm.My_Shm);
    end Get_Version;
    
-   procedure Destroy (Shm : in out Wl.Shm) is
+   procedure Destroy (Shm : in out Wayland_Client.Shm) is
    begin
       if Shm.My_Shm /= null then
          Wl_Thin.Shm_Destroy (Shm.My_Shm);
@@ -1818,13 +1817,13 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
    
-   procedure Create_Buffer (Pool   : Wl.Shm_Pool;
+   procedure Create_Buffer (Pool   : Wayland_Client.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
                             Height   : Integer;
                             Stride   : Integer;
                             Format   : Shm_Format;
-                            Buffer : in out Wl.Buffer) is
+                            Buffer : in out Wayland_Client.Buffer) is
    begin
       Buffer.My_Buffer := Wl_Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,
                                                           Offset,
@@ -1834,18 +1833,18 @@ package body Posix.Wayland_Client is
                                                           Unsigned_32 (Format));
    end Create_Buffer;
 
-   procedure Resize (Pool : Wl.Shm_Pool;
+   procedure Resize (Pool : Wayland_Client.Shm_Pool;
                      Size : Integer) is
    begin
       Wl_Thin.Shm_Pool_Resize (Pool.My_Shm_Pool, Size);
    end Resize;
 
-   function Get_Version (Pool : Wl.Shm_Pool) return Unsigned_32 is
+   function Get_Version (Pool : Wayland_Client.Shm_Pool) return Unsigned_32 is
    begin
       return Wl_Thin.Shm_Pool_Get_Version (Pool.My_Shm_Pool);
    end Get_Version;
    
-   procedure Destroy (Pool : in out Wl.Shm_Pool) is
+   procedure Destroy (Pool : in out Wayland_Client.Shm_Pool) is
    begin
       if Pool.My_Shm_Pool /= null then
          Wl_Thin.Shm_Pool_Destroy (Pool.My_Shm_Pool);
@@ -1853,12 +1852,12 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Buffer : Wl.Buffer) return Unsigned_32 is
+   function Get_Version (Buffer : Wayland_Client.Buffer) return Unsigned_32 is
    begin
       return Wl_Thin.Buffer_Get_Version (Buffer.My_Buffer);
    end Get_Version;
    
-   procedure Destroy (Buffer : in out Wl.Buffer) is
+   procedure Destroy (Buffer : in out Wayland_Client.Buffer) is
    begin
       if Buffer.My_Buffer /= null then
          Wl_Thin.Buffer_Destroy (Buffer.My_Buffer);
@@ -1866,15 +1865,15 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Has_Proxy (Offer : Wl.Data_Offer) return Boolean is
+   function Has_Proxy (Offer : Wayland_Client.Data_Offer) return Boolean is
       (Offer.My_Data_Offer /= null);
 
-   function Get_Version (Offer : Wl.Data_Offer) return Unsigned_32 is
+   function Get_Version (Offer : Wayland_Client.Data_Offer) return Unsigned_32 is
    begin
       return Wl_Thin.Data_Offer_Get_Version (Offer.My_Data_Offer);
    end Get_Version;
    
-   procedure Destroy (Offer : in out Wl.Data_Offer) is
+   procedure Destroy (Offer : in out Wayland_Client.Data_Offer) is
    begin
       if Offer.My_Data_Offer /= null then
          Wl_Thin.Data_Offer_Destroy (Offer.My_Data_Offer);
@@ -1935,14 +1934,14 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Pong (Surface : Wl.Shell_Surface;
+   procedure Pong (Surface : Wayland_Client.Shell_Surface;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
    end Pong;
    
    procedure Move (Surface : Shell_Surface;
-                   Seat    : Wl.Seat;
+                   Seat    : Wayland_Client.Seat;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Move (Surface.My_Shell_Surface,
@@ -1951,7 +1950,7 @@ package body Posix.Wayland_Client is
    end Move;
 
    procedure Resize (Surface : Shell_Surface;
-                     Seat    : Wl.Seat;
+                     Seat    : Wayland_Client.Seat;
                      Serial  : Unsigned_32;
                      Edges   : Unsigned_32) is
    begin
@@ -1961,13 +1960,13 @@ package body Posix.Wayland_Client is
                                     Edges);
    end Resize;
    
-   procedure Set_Toplevel (Surface : Wl.Shell_Surface) is
+   procedure Set_Toplevel (Surface : Wayland_Client.Shell_Surface) is
    begin
       Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
    end Set_Toplevel;
 
    procedure Set_Transient (Surface : Shell_Surface;
-                            Parent  : Wl.Surface;
+                            Parent  : Wayland_Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Flags   : Unsigned_32) is
@@ -1982,7 +1981,7 @@ package body Posix.Wayland_Client is
    procedure Set_Fullscreen (Surface   : Shell_Surface;
                              Method    : Unsigned_32;
                              Framerate : Unsigned_32;
-                             Output    : Wl.Output) is
+                             Output    : Wayland_Client.Output) is
    begin
       Wl_Thin.Shell_Surface_Set_Fullscreen (Surface.My_Shell_Surface,
                                             Method,
@@ -1991,9 +1990,9 @@ package body Posix.Wayland_Client is
    end Set_Fullscreen;
    
    procedure Set_Popup (Surface : Shell_Surface;
-                        Seat    : Wl.Seat;
+                        Seat    : Wayland_Client.Seat;
                         Serial  : Unsigned_32;
-                        Parent  : Wl.Surface;
+                        Parent  : Wayland_Client.Surface;
                         X       : Integer;
                         Y       : Integer;
                         Flags   : Unsigned_32) is
@@ -2008,7 +2007,7 @@ package body Posix.Wayland_Client is
    end Set_Popup;
    
    procedure Set_Maximized (Surface : Shell_Surface;
-                            Output  : Wl.Output) is
+                            Output  : Wayland_Client.Output) is
    begin
       Wl_Thin.Shell_Surface_Set_Maximized (Surface.My_Shell_Surface,
                                            Output.My_Output);
@@ -2032,15 +2031,15 @@ package body Posix.Wayland_Client is
          Class_V);
    end Set_Class;
    
-   procedure Attach (Surface : Wl.Surface;
-                     Buffer  : Wl.Buffer;
+   procedure Attach (Surface : Wayland_Client.Surface;
+                     Buffer  : Wayland_Client.Buffer;
                      X       : Integer;
                      Y       : Integer) is
    begin
       Wl_Thin.Surface_Attach (Surface.My_Surface, Buffer.My_Buffer, X, Y);
    end Attach;
 
-   procedure Damage (Surface : Wl.Surface;
+   procedure Damage (Surface : Wayland_Client.Surface;
                      X       : Integer;
                      Y       : Integer;
                      Width   : Integer;
@@ -2049,48 +2048,48 @@ package body Posix.Wayland_Client is
       Wl_Thin.Surface_Damage (Surface.My_Surface, X, Y, Width, Height);
    end Damage;
    
-   function Frame (Surface : Wl.Surface) return Callback is
+   function Frame (Surface : Wayland_Client.Surface) return Callback is
    begin
       return C : Callback do
          C.My_Callback := Wl_Thin.Surface_Frame (Surface.My_Surface);
       end return;
    end Frame;
    
-   procedure Set_Opaque_Region (Surface : Wl.Surface;
-                                Region  : Wl.Region) is
+   procedure Set_Opaque_Region (Surface : Wayland_Client.Surface;
+                                Region  : Wayland_Client.Region) is
    begin
       Wl_Thin.Surface_Set_Opaque_Region (Surface.My_Surface,
                                          Region.My_Region);
    end Set_Opaque_Region;
    
-   procedure Set_Input_Region (Surface : Wl.Surface;
-                               Region  : Wl.Region) is
+   procedure Set_Input_Region (Surface : Wayland_Client.Surface;
+                               Region  : Wayland_Client.Region) is
    begin
       Wl_Thin.Surface_Set_Input_Region (Surface.My_Surface,
                                         Region.My_Region);
       
    end Set_Input_Region;
    
-   procedure Commit (Surface : Wl.Surface) is
+   procedure Commit (Surface : Wayland_Client.Surface) is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
    end Commit;
 
-   procedure Set_Buffer_Transform (Surface   : Wl.Surface;
+   procedure Set_Buffer_Transform (Surface   : Wayland_Client.Surface;
                                    Transform : Integer) is
    begin
       Wl_Thin.Surface_Set_Buffer_Transform (Surface.My_Surface,
                                             Transform);
    end Set_Buffer_Transform;
    
-   procedure Set_Buffer_Scale (Surface : Wl.Surface;
+   procedure Set_Buffer_Scale (Surface : Wayland_Client.Surface;
                                Scale   : Integer) is
    begin
       Wl_Thin.Surface_Set_Buffer_Scale (Surface.My_Surface,
                                         Scale);
    end Set_Buffer_Scale;
    
-   procedure Damage_Buffer (Surface : Wl.Surface;
+   procedure Damage_Buffer (Surface : Wayland_Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Width   : Integer;
@@ -2099,7 +2098,7 @@ package body Posix.Wayland_Client is
       Wl_Thin.Surface_Damage_Buffer (Surface.My_Surface, X, Y, Width, Height);
    end Damage_Buffer;
    
-   procedure Destroy (Surface : in out Wl.Surface) is
+   procedure Destroy (Surface : in out Wayland_Client.Surface) is
    begin
       if Surface.My_Surface /= null then
          Wl_Thin.Surface_Destroy (Surface.My_Surface);
@@ -2107,22 +2106,22 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Sync (Display : Wl.Display) return Callback is
+   function Sync (Display : Wayland_Client.Display) return Callback is
    begin
-      return Callback : Wl.Callback do
+      return Callback : Wayland_Client.Callback do
          Callback.My_Callback := Wl_Thin.Display_Sync (Display.My_Display);
       end return;
    end Sync;
 
-   function Get_Version (Registry : Wl.Registry) return Unsigned_32 is
+   function Get_Version (Registry : Wayland_Client.Registry) return Unsigned_32 is
    begin
       return Wl_Thin.Registry_Get_Version (Registry.My_Registry);
    end Get_Version;
 
-   function Has_Proxy (Callback : Wl.Callback) return Boolean is
+   function Has_Proxy (Callback : Wayland_Client.Callback) return Boolean is
       (Callback.My_Callback /= null);
    
-   procedure Destroy (Callback : in out Wl.Callback) is
+   procedure Destroy (Callback : in out Wayland_Client.Callback) is
    begin
       if Callback.My_Callback /= null then
          Wl_Thin.Callback_Destroy (Callback.My_Callback);
@@ -2130,17 +2129,17 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Callback : Wl.Callback) return Unsigned_32 is
+   function Get_Version (Callback : Wayland_Client.Callback) return Unsigned_32 is
    begin
       return Wl_Thin.Callback_Get_Version (Callback.My_Callback);
    end Get_Version;
 
-   function Get_Version (Pointer : Wl.Pointer) return Unsigned_32 is
+   function Get_Version (Pointer : Wayland_Client.Pointer) return Unsigned_32 is
    begin
       return Wl_Thin.Pointer_Get_Version (Pointer.My_Pointer);
    end Get_Version;
    
-   procedure Destroy (Pointer : in out Wl.Pointer) is
+   procedure Destroy (Pointer : in out Wayland_Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
          Wl_Thin.Pointer_Destroy (Pointer.My_Pointer);
@@ -2148,9 +2147,9 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
    
-   procedure Set_Cursor (Pointer   : Wl.Pointer;
+   procedure Set_Cursor (Pointer   : Wayland_Client.Pointer;
                          Serial    : Unsigned_32;
-                         Surface   : Wl.Surface;
+                         Surface   : Wayland_Client.Surface;
                          Hotspot_X : Integer;
                          Hotspot_Y : Integer) is
    begin
@@ -2161,7 +2160,7 @@ package body Posix.Wayland_Client is
                                   Hotspot_Y);
    end Set_Cursor;
    
-   procedure Release (Pointer : in out Wl.Pointer) is
+   procedure Release (Pointer : in out Wayland_Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
          Wl_Thin.Pointer_Release (Pointer.My_Pointer);
@@ -2169,12 +2168,12 @@ package body Posix.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Keyboard : Wl.Keyboard) return Unsigned_32 is
+   function Get_Version (Keyboard : Wayland_Client.Keyboard) return Unsigned_32 is
    begin
       return Wl_Thin.Keyboard_Get_Version (Keyboard.My_Keyboard);
    end Get_Version;
    
-   procedure Destroy (Keyboard : in out Wl.Keyboard) is
+   procedure Destroy (Keyboard : in out Wayland_Client.Keyboard) is
    begin
       if Keyboard.My_Keyboard /= null then
          Wl_Thin.Keyboard_Destroy (Keyboard.My_Keyboard);
@@ -2182,7 +2181,7 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Keyboard : in out Wl.Keyboard) is
+   procedure Release (Keyboard : in out Wayland_Client.Keyboard) is
    begin
       if Keyboard.My_Keyboard /= null then
          Wl_Thin.Keyboard_Release (Keyboard.My_Keyboard);
@@ -2190,12 +2189,12 @@ package body Posix.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Touch : Wl.Touch) return Unsigned_32 is
+   function Get_Version (Touch : Wayland_Client.Touch) return Unsigned_32 is
    begin
       return Wl_Thin.Touch_Get_Version (Touch.My_Touch);
    end Get_Version;
    
-   procedure Destroy (Touch : in out Wl.Touch) is
+   procedure Destroy (Touch : in out Wayland_Client.Touch) is
    begin
       if Touch.My_Touch /= null then
          Wl_Thin.Touch_Destroy (Touch.My_Touch);
@@ -2203,7 +2202,7 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Touch : in out Wl.Touch) is
+   procedure Release (Touch : in out Wayland_Client.Touch) is
    begin
       if Touch.My_Touch /= null then
          Wl_Thin.Touch_Release (Touch.My_Touch);
@@ -2211,12 +2210,12 @@ package body Posix.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Output : Wl.Output) return Unsigned_32 is
+   function Get_Version (Output : Wayland_Client.Output) return Unsigned_32 is
    begin
       return Wl_Thin.Output_Get_Version (Output.My_Output);
    end Get_Version;
    
-   procedure Destroy (Output : in out Wl.Output) is
+   procedure Destroy (Output : in out Wayland_Client.Output) is
    begin
       if Output.My_Output /= null then
          Wl_Thin.Output_Destroy (Output.My_Output);
@@ -2224,7 +2223,7 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Output : in out Wl.Output) is
+   procedure Release (Output : in out Wayland_Client.Output) is
    begin
       if Output.My_Output /= null then
          Wl_Thin.Output_Release (Output.My_Output);
@@ -2232,12 +2231,12 @@ package body Posix.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Region : Wl.Region) return Unsigned_32 is
+   function Get_Version (Region : Wayland_Client.Region) return Unsigned_32 is
    begin
       return Wl_Thin.Region_Get_Version (Region.My_Region);
    end Get_Version;
    
-   procedure Destroy (Region : in out Wl.Region) is
+   procedure Destroy (Region : in out Wayland_Client.Region) is
    begin
       if Region.My_Region /= null then
          Wl_Thin.Region_Destroy (Region.My_Region);
@@ -2245,7 +2244,7 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Add (Region : Wl.Region;
+   procedure Add (Region : Wayland_Client.Region;
                   X      : Integer;
                   Y      : Integer;
                   Width  : Integer;
@@ -2254,7 +2253,7 @@ package body Posix.Wayland_Client is
       Wl_Thin.Region_Add (Region.My_Region, X, Y, Width, Height);
    end Add;
    
-   procedure Subtract (Region : Wl.Region;
+   procedure Subtract (Region : Wayland_Client.Region;
                        X      : Integer;
                        Y      : Integer;
                        Width  : Integer;
@@ -2263,12 +2262,12 @@ package body Posix.Wayland_Client is
       Wl_Thin.Region_Subtract (Region.My_Region, X, Y, Width, Height);
    end Subtract;
 
-   function Get_Version (S : Wl.Subcompositor) return Unsigned_32 is
+   function Get_Version (S : Wayland_Client.Subcompositor) return Unsigned_32 is
    begin
       return Wl_Thin.Subcompositor_Get_Version (S.My_Subcompositor);
    end Get_Version;
    
-   procedure Destroy (S : in out Wl.Subcompositor) is
+   procedure Destroy (S : in out Wayland_Client.Subcompositor) is
    begin
       if S.My_Subcompositor /= null then
          Wl_Thin.Subcompositor_Destroy (S.My_Subcompositor);
@@ -2276,10 +2275,10 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Get_Subsurface (Subcompositor : Wl.Subcompositor;
-                             Surface       : Wl.Surface;
-                             Parent        : Wl.Surface;
-                             Subsurface    : in out Wl.Subsurface) is
+   procedure Get_Subsurface (Subcompositor : Wayland_Client.Subcompositor;
+                             Surface       : Wayland_Client.Surface;
+                             Parent        : Wayland_Client.Surface;
+                             Subsurface    : in out Wayland_Client.Subsurface) is
    begin
       Subsurface.My_Subsurface :=
         Wl_Thin.Subcompositor_Get_Subsurface (Subcompositor.My_Subcompositor,
@@ -2287,12 +2286,12 @@ package body Posix.Wayland_Client is
                                               Parent.My_Surface);
    end Get_Subsurface;
    
-   function Get_Version (Subsurface : Wl.Subsurface) return Unsigned_32 is
+   function Get_Version (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 is
    begin
       return Wl_Thin.Subsurface_Get_Version (Subsurface.My_Subsurface);
    end Get_Version;
    
-   procedure Destroy (Subsurface : in out Wl.Subsurface) is
+   procedure Destroy (Subsurface : in out Wayland_Client.Subsurface) is
    begin
       if Subsurface.My_Subsurface /= null then
          Wl_Thin.Subsurface_Destroy (Subsurface.My_Subsurface);
@@ -2300,7 +2299,7 @@ package body Posix.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Set_Position (Subsurface : Wl.Subsurface;
+   procedure Set_Position (Subsurface : Wayland_Client.Subsurface;
                            X          : Integer;
                            Y          : Integer) is
    begin
@@ -2309,26 +2308,26 @@ package body Posix.Wayland_Client is
                                        Y);
    end Set_Position;
    
-   procedure Place_Above (Subsurface : Wl.Subsurface;
-                          Sibling    : Wl.Surface) is
+   procedure Place_Above (Subsurface : Wayland_Client.Subsurface;
+                          Sibling    : Wayland_Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Above (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Above;
    
-   procedure Place_Below (Subsurface : Wl.Subsurface;
-                          Sibling    : Wl.Surface) is
+   procedure Place_Below (Subsurface : Wayland_Client.Subsurface;
+                          Sibling    : Wayland_Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Below (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Below;
    
-   procedure Set_Sync (Subsurface : Wl.Subsurface) is
+   procedure Set_Sync (Subsurface : Wayland_Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Sync (Subsurface.My_Subsurface);
    end Set_Sync;
    
-   procedure Set_Desync (Subsurface : Wl.Subsurface) is
+   procedure Set_Desync (Subsurface : Wayland_Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Desync (Subsurface.My_Subsurface);
    end Set_Desync;
@@ -2427,7 +2426,7 @@ package body Posix.Wayland_Client is
    end Create_Data_Source;
    
    procedure Get_Data_Device (Manager : Data_Device_Manager;
-                              Seat    : Wl.Seat;
+                              Seat    : Wayland_Client.Seat;
                               Device  : in out Data_Device) is
    begin
       Device.My_Data_Device := Wl_Thin.Data_Device_Manager_Get_Data_Device

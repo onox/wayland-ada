@@ -76,7 +76,10 @@ procedure XML_Parser is
 
    package Utils renames Xml_Parser_Utils;
 
+   procedure Check_Wayland_XML_File_Exists;
    procedure Allocate_Space_For_Wayland_XML_Contents;
+   procedure Read_Contents_Of_Wayland_XML;
+   procedure Parse_Contents;
 
    procedure Check_Wayland_XML_File_Exists is
    begin
@@ -90,8 +93,6 @@ procedure XML_Parser is
    File_Size : Natural;
 
    File_Contents : Aida.Deepend_XML_DOM_Parser.String_Ptr;
-
-   procedure Read_Contents_Of_Wayland_XML;
 
    procedure Allocate_Space_For_Wayland_XML_Contents is
    begin
@@ -107,8 +108,6 @@ procedure XML_Parser is
 
    pragma Unmodified (File_Size);
    pragma Unmodified (File_Contents);
-
-   procedure Parse_Contents;
 
    procedure Read_Contents_Of_Wayland_XML is
    begin

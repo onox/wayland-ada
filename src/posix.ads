@@ -1,11 +1,8 @@
 with System.Storage_Elements;
 with Interfaces.C;
-
 private with Ada.Unchecked_Conversion;
 
 package Posix is
-
-   package Px renames Posix;
 
    type File;
    type File_Status;
@@ -77,7 +74,7 @@ package Posix is
    -- Encoding of the file mode.
    --
 
-   S_IFMT : constant S_FLag := 0170000; --These bits determine file type.
+   S_IFMT : constant S_FLag := 0170000; -- These bits determine file type.
 
    --
    -- File types
@@ -98,68 +95,17 @@ package Posix is
    --  #define  __S_IWRITE  0200   /* Write by owner.  */
    --  #define  __S_IEXEC   0100   /* Execute by owner.  */
 
-   -- Read by owner.
-   S_IRUSR : constant S_FLag := 0400;
+   type File_Permission is (
+                            Owner_Read,  Owner_Write,  Owner_Execute,
+                            Group_Read,  Group_Write,  Group_Execute,
+                            Others_Read, Others_Write, Others_Execute
+                           );
 
-   -- Write by owner.
-   S_IWUSR : constant S_FLag := 0200;
+   type File_Permissions is array (File_Permission) of Boolean;
 
-   -- Execute by owner.
-   S_IXUSR : constant S_FLag := 0100;
-
-   -- Read, write, and execute by owner.
-   S_IRWXU : constant S_FLag := S_IRUSR or S_IWUSR or S_IXUSR;
-
-   -- Read by group.
-   S_IRGRP : constant S_FLag := 3_200;
-
-   -- Write by group.
-   S_IWGRP : constant S_FLag := 1_600;
-
-   -- Execute by group.
-   S_IXGRP : constant S_FLag := 800;
-
-   -- Read, write, and execute by group.
-   S_IRWXG : constant S_FLag := 5_600;
-
-   -- Read by others.
-   S_IROTH : constant S_FLag := 25_600;
-
-   -- Write by others.
-   S_IWOTH : constant S_FLag := 12_800;
-
-   -- Execute by others.
-   S_IXOTH : constant S_FLag := 6_400;
-
-   -- Read, write, and execute by others.
-   S_IRWXO : constant S_FLag := 44_800;
-
-   -- Open for reading only
-   O_RDONLY : constant O_FLag := 16#00#;
-
-   -- Open for write only
-   O_WRONLY : constant O_FLag := 16#01#;
-
-   -- Open for reading and writing
-   O_RDWR : constant O_FLag := 16#02#;
-
-   O_ACCMODE : constant O_FLag := 16#03#;
-
-   O_CREAT : constant O_FLag := 0100;
-
-   O_EXCL : constant O_FLag := 0200;
-
-   O_NOCTTY : constant O_FLag := 0400;
-
-   O_TRUNC : constant O_FLag := 01000;
-
-   O_APPEND : constant O_FLag := 02000;
-
-   O_NONBLOCK : constant O_FLag := 04000;
-
-   O_SYNC : constant O_FLag := 04010000;
-
-   O_ASYNC : constant O_FLag := 020000;
+   type File_Mode is (
+                      Read_Only, Write_Only, Read_Write
+                     );
 
    -- Protections are chosen from these bits, OR'd together.  The
    -- implementation does not necessarily support PROT_EXEC or PROT_WRITE
@@ -259,57 +205,54 @@ package Posix is
 
    type File is tagged limited private with
      Default_Initial_Condition => Is_Closed (File);
+   -- Represents a file on the hard disk.
 
    procedure Open
-     (File      : in out Px.File;
-      File_Name : in     C_String;
-      Flags     : in     O_FLag;
-      S_Flags   : in     S_FLag) with
+     (File        : in out Posix.File;
+      File_Name   : in     C_String;
+      Mode        : in     File_Mode;
+      Permissions : in     File_Permissions) with
      Global => null,
      Pre    => File.Is_Closed;
-   -- To open a file for reading example:
-   --
-   -- File : Px.File;
-   --
 
-   procedure Close (File : in out Px.File) with
+   procedure Close (File : in out Posix.File) with
      Global => null,
      Pre    => File.Is_Open,
      Post   => File.Is_Closed;
 
-   procedure Write (File : Px.File; Bytes : Byte_Array) with
+   procedure Write (File : Posix.File; Bytes : Byte_Array) with
      Global => null,
      Pre    => File.Is_Open;
 
-   function Read (File : Px.File; Bytes : in out Byte_Array) return SSize_Type with
+   function Read (File : Posix.File; Bytes : in out Byte_Array) return SSize_Type with
      Global => null,
      Pre    => File.Is_Open;
 
-   function File_Descriptor (File : Px.File) return Integer with
+   function File_Descriptor (File : Posix.File) return Integer with
      Global => null,
      Pre    => File.Is_Open;
 
    procedure Get_File_Status
-     (File   : in     Px.File;
+     (File   : in     Posix.File;
       Status : in out File_Status) with
      Global => null,
      Pre    => File.Is_Open;
 
    procedure Map_Memory
-     (File    : in Px.File;
+     (File    : in Posix.File;
       Address : Void_Ptr;
       Len     : Size_Type;
       Prot    : Prot_FLag;
       Flags   : int;
-      Offset  : Px.Offset;
-      Memory_Map : in out Px.Memory_Map) with
+      Offset  : Posix.Offset;
+      Memory_Map : in out Posix.Memory_Map) with
      Global => null,
      Pre    => not Has_Mapping (Memory_Map);
 
-   function Is_Open (File : Px.File) return Boolean with
+   function Is_Open (File : Posix.File) return Boolean with
      Global => null;
 
-   function Is_Closed (File : Px.File) return Boolean with
+   function Is_Closed (File : Posix.File) return Boolean with
      Global => null;
 
    type File_Status is tagged limited private;
@@ -375,15 +318,15 @@ package Posix is
 
    type Memory_Map is tagged limited private;
 
-   function Has_Mapping (Map : Px.Memory_Map) return Boolean with
+   function Has_Mapping (Map : Posix.Memory_Map) return Boolean with
      Global => null;
 
-   function Mapping (Map : Px.Memory_Map) return Void_Ptr with
+   function Mapping (Map : Posix.Memory_Map) return Void_Ptr with
      Global => null,
      Pre    => Map.Has_Mapping;
 
    -- Returns 0 on success, otherwise -1.
-   function Unmap_Memory (Map : in out Px.Memory_Map) return Integer with
+   function Unmap_Memory (Map : in out Posix.Memory_Map) return Integer with
      Global => null,
      Post   => (if Unmap_Memory'Result = 0 then not Map.Has_Mapping);
 
@@ -400,6 +343,69 @@ package Posix is
    STDERR : constant File; -- Standard error output.
 
 private
+
+   -- Read by owner.
+   S_IRUSR : constant S_FLag := 8#400#; -- 256 in decimal
+
+   -- Write by owner.
+   S_IWUSR : constant S_FLag := 8#200#; -- 128 in decimal
+
+   -- Execute by owner.
+   S_IXUSR : constant S_FLag := 8#100#; -- 64 in decimal
+
+   -- Read, write, and execute by owner.
+   S_IRWXU : constant S_FLag := S_IRUSR or S_IWUSR or S_IXUSR;
+
+   -- Read by group.
+   S_IRGRP : constant S_FLag := S_IRUSR / 8;
+
+   -- Write by group.
+   S_IWGRP : constant S_FLag := S_IWUSR / 8;
+
+   -- Execute by group.
+   S_IXGRP : constant S_FLag := S_IXUSR / 8;
+
+   -- Read, write, and execute by group.
+   S_IRWXG : constant S_FLag := S_IRWXU / 8;
+
+   -- Read by others.
+   S_IROTH : constant S_FLag := S_IRGRP / 8;
+
+   -- Write by others.
+   S_IWOTH : constant S_FLag := S_IWGRP / 8;
+
+   -- Execute by others.
+   S_IXOTH : constant S_FLag := S_IXGRP / 8;
+
+   -- Read, write, and execute by others.
+   S_IRWXO : constant S_FLag := S_IRWXG / 8;
+
+   -- Open for reading only
+   O_RDONLY : constant O_FLag := 16#00#;
+
+   -- Open for write only
+   O_WRONLY : constant O_FLag := 16#01#;
+
+   -- Open for reading and writing
+   O_RDWR : constant O_FLag := 16#02#;
+
+   O_ACCMODE : constant O_FLag := 16#03#;
+
+   O_CREAT : constant O_FLag := 8#100#;
+
+   O_EXCL : constant O_FLag := 8#200#;
+
+   O_NOCTTY : constant O_FLag := 8#400#;
+
+   O_TRUNC : constant O_FLag := 8#1000#;
+
+   O_APPEND : constant O_FLag := 8#2000#;
+
+   O_NONBLOCK : constant O_FLag := 8#4000#;
+
+   O_SYNC : constant O_FLag := 8#4010000#;
+
+   O_ASYNC : constant O_FLag := 8#20000#;
 
    package Px_Thin is
 
@@ -506,7 +512,7 @@ private
          Prot   : Prot_FLag;
          Flags  : int;
          Fd     : Integer;
-         Offset : Px.Offset) return Void_Ptr with
+         Offset : Posix.Offset) return Void_Ptr with
         Import        => True,
         Convention    => C,
         External_Name => "mmap";
@@ -519,20 +525,19 @@ private
    end Px_Thin;
 
    type File is tagged limited record
-      My_File_Descriptor : Integer;
-      My_Is_Open         : Boolean := False;
+      My_File_Descriptor : Integer := -1;
    end record;
 
-   function Is_Open (File : Px.File) return Boolean is (File.My_Is_Open);
+   function Is_Open (File : Posix.File) return Boolean is (File.My_File_Descriptor /= -1);
 
-   function Is_Closed (File : Px.File) return Boolean is (not File.My_Is_Open);
+   function Is_Closed (File : Posix.File) return Boolean is (File.My_File_Descriptor = -1);
 
    type File_Status is tagged limited record
       My_Status   : aliased Px_Thin.File_Status_T;
       My_Is_Valid : Boolean := False;
    end record;
 
-   function File_Descriptor (File : Px.File) return Integer is
+   function File_Descriptor (File : Posix.File) return Integer is
      (File.My_File_Descriptor);
 
    function Is_Valid
@@ -602,26 +607,23 @@ private
    end record;
 
    function Has_Mapping
-     (Map : Px.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
+     (Map : Posix.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
 
-   function Mapping (Map : Px.Memory_Map) return Void_Ptr is (Map.My_Mapping);
+   function Mapping (Map : Posix.Memory_Map) return Void_Ptr is (Map.My_Mapping);
 
    STDIN  : constant File :=
      (
-      My_File_Descriptor => Px_Thin.STDIN_FILENO,
-      My_Is_Open         => True
+      My_File_Descriptor => Px_Thin.STDIN_FILENO
      );
 
    STDOUT : constant File :=
      (
-      My_File_Descriptor => Px_Thin.STDOUT_FILENO,
-      My_Is_Open         => True
+      My_File_Descriptor => Px_Thin.STDOUT_FILENO
      );
 
    STDERR : constant File :=
      (
-      My_File_Descriptor => Px_Thin.STDERR_FILENO,
-      My_Is_Open         => True
+      My_File_Descriptor => Px_Thin.STDERR_FILENO
      );
 
 end Posix;

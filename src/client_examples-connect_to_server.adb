@@ -1,4 +1,4 @@
-with Posix.Wayland_Client;
+with Wayland_Client;
 with Ada.Text_IO;
 
 -- See section 6.3 at:
@@ -6,11 +6,9 @@ with Ada.Text_IO;
 package body Client_Examples.Connect_To_Server is
 
    procedure Run is
-      package Wl renames Posix.Wayland_Client;
-
-      Display : Wl.Display;
+      Display : Wayland_Client.Display;
    begin
-      Display.Connect (Wl.Default_Display_Name);
+      Display.Connect;
       if not Display.Is_Connected then
          Ada.Text_IO.Put_Line ("Can't connect to display");
          return;

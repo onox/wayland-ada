@@ -1,10 +1,13 @@
+with Wayland_Client;
+
 package body Client_Examples.Find_Compositor is
 
-   procedure Global_Registry_Handler (Compositor : not null Wl.Compositor_Ptr;
-                                      Registry   : Wl.Registry;
-                                      Id         : Wl.Unsigned_32;
-                                      Name       : String;
-                                      Version    : Wl.Unsigned_32) is
+   procedure Global_Registry_Handler
+     (Compositor : not null Wayland_Client.Compositor_Ptr;
+      Registry   : Wayland_Client.Registry;
+      Id         : Wayland_Client.Unsigned_32;
+      Name       : String;
+      Version    : Wayland_Client.Unsigned_32) is
    begin
       Put_Line ("Got a registry event for " & Name & " id" & Id'Image);
 
@@ -13,27 +16,28 @@ package body Client_Examples.Find_Compositor is
       end if;
    end Global_Registry_Handler;
 
-   procedure Global_Registry_Remover (Data     : not null Wl.Compositor_Ptr;
-                                      Registry : Wl.Registry;
-                                      Id       : Wl.Unsigned_32) is
+   procedure Global_Registry_Remover
+     (Data     : not null Wayland_Client.Compositor_Ptr;
+      Registry : Wayland_Client.Registry;
+      Id       : Wayland_Client.Unsigned_32) is
    begin
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   package Registry_Events is new Wl.Registry_Events
-     (Data_Type             => Wl.Compositor,
-      Data_Ptr              => Wl.Compositor_Ptr,
+   package Registry_Events is new Wayland_Client.Registry_Events
+     (Data_Type             => Wayland_Client.Compositor,
+      Data_Ptr              => Wayland_Client.Compositor_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display  : Wl.Display;
-   Registry : Wl.Registry;
+   Display  : Wayland_Client.Display;
+   Registry : Wayland_Client.Registry;
 
-   Compositor : aliased Wl.Compositor;
+   Compositor : aliased Wayland_Client.Compositor;
 
    procedure Run is
    begin
-      Display.Connect (Wl.Default_Display_Name);
+      Display.Connect;
       if not Display.Is_Connected then
          Put_Line ("Can't connect to display");
          return;

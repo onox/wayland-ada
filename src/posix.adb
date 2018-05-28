@@ -1,26 +1,69 @@
 package body Posix is
 
    use type int;
+   use type S_FLag;
 
    procedure Open
-     (File      : in out Px.File;
-      File_Name : in     C_String;
-      Flags     : in     O_FLag;
-      S_Flags   : in     S_FLag)
+     (File        : in out Posix.File;
+      File_Name   : in     C_String;
+      Mode        : in     File_Mode;
+      Permissions : in     File_Permissions)
    is
+      M : O_FLag := 0;
+      P : S_FLag := 0;
    begin
-      File.My_File_Descriptor := Px_Thin.Open (File_Name, Flags, S_Flags);
-      File.My_Is_Open         := File.My_File_Descriptor /= 0;
+      case Mode is
+         when Read_Only  => M := M or O_RDONLY;
+         when Write_Only => M := M or O_WRONLY;
+         when Read_Write => M := M or O_RDWR;
+      end case;
+
+      if Permissions (Owner_Read) then
+         P := P or S_IRUSR;
+      end if;
+
+      if Permissions (Owner_Write) then
+         P := P or S_IWUSR;
+      end if;
+
+      if Permissions (Owner_Execute) then
+         P := P or S_IXGRP;
+      end if;
+
+      if Permissions (Group_Read) then
+         P := P or S_IRGRP;
+      end if;
+
+      if Permissions (Group_Write) then
+         P := P or S_IWGRP;
+      end if;
+
+      if Permissions (Group_Execute) then
+         P := P or S_IXUSR;
+      end if;
+
+      if Permissions (Others_Read) then
+         P := P or S_IROTH;
+      end if;
+
+      if Permissions (Others_Write) then
+         P := P or S_IWOTH;
+      end if;
+
+      if Permissions (Others_Execute) then
+         P := P or S_IXOTH;
+      end if;
+
+      File.My_File_Descriptor := Px_Thin.Open (File_Name, M, P);
    end Open;
 
-   procedure Close (File : in out Px.File) is
+   procedure Close (File : in out Posix.File) is
    begin
       Px_Thin.Close (File.My_File_Descriptor);
-      File.My_Is_Open := False;
    end Close;
 
    procedure Get_File_Status
-     (File   : in     Px.File;
+     (File   : in     Posix.File;
       Status : in out File_Status)
    is
       Result : constant Integer :=
@@ -31,7 +74,7 @@ package body Posix is
       Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
 
-   procedure Write (File : Px.File; Bytes : Byte_Array) is
+   procedure Write (File : Posix.File; Bytes : Byte_Array) is
       SSize : SSize_Type;
    begin
       SSize :=
@@ -41,19 +84,19 @@ package body Posix is
            Count           => Bytes'Length);
    end Write;
 
-   function Read (File : Px.File; Bytes : in out Byte_Array) return SSize_Type is
+   function Read (File : Posix.File; Bytes : in out Byte_Array) return SSize_Type is
    begin
       return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
    end Read;
 
    procedure Map_Memory
-     (File    : in Px.File;
+     (File    : in Posix.File;
       Address : Void_Ptr;
       Len     : Size_Type;
       Prot    : Prot_FLag;
       Flags   : int;
-      Offset  : Px.Offset;
-      Memory_Map : in out Px.Memory_Map) is
+      Offset  : Posix.Offset;
+      Memory_Map : in out Posix.Memory_Map) is
    begin
       Memory_Map.My_Mapping := Px_Thin.Mmap (Address,
                                              Len,
@@ -64,7 +107,7 @@ package body Posix is
       Memory_Map.My_Length := Len;
    end Map_Memory;
 
-   function Unmap_Memory (Map : in out Px.Memory_Map) return Integer is
+   function Unmap_Memory (Map : in out Posix.Memory_Map) return Integer is
       R : Integer;
    begin
       R := Px_Thin.Munmap (Map.My_Mapping, Map.My_Length);
@@ -111,14 +154,18 @@ package body Posix is
                              Buffer          => B,
                              Count           => Size_Type (200));
 
-      declare
-         S : String (1..Integer (SSize));
-      begin
-         for I in Integer range 1..Integer (SSize) loop
-            S (I) := Character'Val (B (System.Storage_Elements.Storage_Offset (I)));
-         end loop;
-         return S (1..Integer (SSize - 1));
-      end;
+      if SSize > 1 then
+         declare
+            S : String (1..Integer (SSize));
+         begin
+            for I in Integer range 1..Integer (SSize) loop
+               S (I) := Character'Val (B (System.Storage_Elements.Storage_Offset (I)));
+            end loop;
+            return S (1..Integer (SSize - 1));
+         end;
+      else
+         return "";
+      end if;
 
    end Get_Line;
 

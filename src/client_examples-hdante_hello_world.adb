@@ -1,3 +1,6 @@
+with Posix;
+with Wayland_Client;
+
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
 -- client library and the wayland protocol to display a window.
@@ -10,26 +13,31 @@
 -- and execute the executable from there.
 package body Client_Examples.Hdante_Hello_World is
 
-   use type Px.S_FLag;
-   use type Px.int;
-   use type Px.C_String;
+   subtype Unsigned_32 is Wayland_Client.Unsigned_32;
 
-   use type Wl.Unsigned_32;
+   use type Posix.S_FLag;
+   use type Posix.int;
+   use type Posix.C_String;
 
-   Compositor : aliased Wl.Compositor;
-   Pointer    : aliased Wl.Pointer;
-   Seat       : aliased Wl.Seat;
-   Shell      : aliased Wl.Shell;
-   Shm        : aliased Wl.Shm;
+   use type Unsigned_32;
+
+   use all type Posix.File_Mode;
+   use all type Posix.File_Permission;
+
+   Compositor : aliased Wayland_Client.Compositor;
+   Pointer    : aliased Wayland_Client.Pointer;
+   Seat       : aliased Wayland_Client.Seat;
+   Shell      : aliased Wayland_Client.Shell;
+   Shm        : aliased Wayland_Client.Shm;
 
    Done : Boolean := false;
 
    type Data_Type is limited record
-      Compositor : not null access Wl.Compositor;
-      Pointer    : not null access Wl.Pointer;
-      Seat       : not null access Wl.Seat;
-      Shell      : not null access Wl.Shell;
-      Shm        : not null access Wl.Shm;
+      Compositor : not null access Wayland_Client.Compositor;
+      Pointer    : not null access Wayland_Client.Pointer;
+      Seat       : not null access Wayland_Client.Seat;
+      Shell      : not null access Wayland_Client.Shell;
+      Shm        : not null access Wayland_Client.Shm;
    end record;
 
    type Data_Ptr is access all Data_Type;
@@ -43,85 +51,85 @@ package body Client_Examples.Hdante_Hello_World is
       Shm        => Shm'Unchecked_Access
      );
 
-   function Min (L, R : Wl.Unsigned_32) return Wl.Unsigned_32 renames
-     Wl.Unsigned_32'Min;
+   function Min (L, R : Unsigned_32) return Unsigned_32 renames
+     Unsigned_32'Min;
 
    Exists_Mouse    : Boolean := False;
    Exists_Keyboard : Boolean := False;
 
    procedure Seat_Capabilities
      (Data         : not null Data_Ptr;
-      Seat         : Wl.Seat;
-      Capabilities : Wl.Unsigned_32) is
+      Seat         : Wayland_Client.Seat;
+      Capabilities : Unsigned_32) is
    begin
-      if (Capabilities and Wl.Seat_Capability_Pointer) > 0 then
-         Px.Put_Line ("Display has a pointer");
+      if (Capabilities and Wayland_Client.Seat_Capability_Pointer) > 0 then
+         Put_Line ("Display has a pointer");
          Exists_Mouse := True;
       end if;
 
-      if (Capabilities and Wl.Seat_Capability_Keyboard) > 0 then
-         Px.Put_Line ("Display has a keyboard");
+      if (Capabilities and Wayland_Client.Seat_Capability_Keyboard) > 0 then
+         Put_Line ("Display has a keyboard");
          Exists_Keyboard := True;
       end if;
 
-      if (Capabilities and Wl.Seat_Capability_Touch) > 0 then
-         Px.Put_Line ("Display has a touch screen");
+      if (Capabilities and Wayland_Client.Seat_Capability_Touch) > 0 then
+         Put_Line ("Display has a touch screen");
       end if;
    end Seat_Capabilities;
 
    procedure Seat_Name
      (Data : not null Data_Ptr;
-      Seat : Wl.Seat;
+      Seat : Wayland_Client.Seat;
       Name : String) is
    begin
       null;
    end Seat_Name;
 
-   package Seat_Events is new Wl.Seat_Events
+   package Seat_Events is new Wayland_Client.Seat_Events
      (Data_Type         => Data_Ptr,
       Data              => Data'Unchecked_Access,
       Seat_Capabilities => Seat_Capabilities,
       Seat_Name         => Seat_Name);
 
    procedure Global_Registry_Handler (Data     : not null Data_Ptr;
-                                      Registry : Wl.Registry;
-                                      Id       : Wl.Unsigned_32;
+                                      Registry : Wayland_Client.Registry;
+                                      Id       : Unsigned_32;
                                       Name     : String;
-                                      Version  : Wl.Unsigned_32) is
+                                      Version  : Unsigned_32) is
    begin
-      if Name = Wl.Compositor_Interface.Name then
+      if Name = Wayland_Client.Compositor_Interface.Name then
          Compositor.Get_Proxy (Registry,
                                Id,
                                Min (Version, 4));
-         Ada.Text_IO.Put_Line ("Got compositor proxy");
-      elsif Name = Wl.Shm_Interface.Name then
+         Put_Line ("Got compositor proxy");
+      elsif Name = Wayland_Client.Shm_Interface.Name then
          Shm.Get_Proxy (Registry,
                         Id,
                         Min (Version, 1));
-         Ada.Text_IO.Put_Line ("Got shm proxy");
-      elsif Name = Wl.Shell_Interface.Name then
+         Put_Line ("Got shm proxy");
+      elsif Name = Wayland_Client.Shell_Interface.Name then
          Shell.Get_Proxy (Registry,
                           Id,
                           Min (Version, 1));
-         Ada.Text_IO.Put_Line ("Got shell proxy");
-      elsif Name = Wl.Seat_Interface.Name then
-         Px.Put_Line ("Pointer listener is setup " & Wl.Seat_Interface.Name);
+         Put_Line ("Got shell proxy");
+      elsif Name = Wayland_Client.Seat_Interface.Name then
+         Put_Line ("Pointer listener is setup " & Wayland_Client.Seat_Interface.Name);
          Seat.Get_Proxy (Registry,
                          Id,
                          Min (Version, 2));
          Seat_Events.Subscribe (Seat);
-         --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Px.Nil);
+         --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Posix.Nil);
       end if;
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover (Data     : not null Data_Ptr;
-                                      Registry : Wl.Registry;
-                                      Id       : Wl.Unsigned_32) is
+                                      Registry : Wayland_Client.Registry;
+                                      Id       : Unsigned_32) is
    begin
-      Px.Put_Line ("Got a registry losing event for" & Id'Image);
+      Posix.Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   package Registry_Events is new Wl.Registry_Events
+   package Registry_Events is new Wayland_Client.Registry_Events
      (Data_Type             => Data_Type,
       Data_Ptr              => Data_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
@@ -129,16 +137,16 @@ package body Client_Examples.Hdante_Hello_World is
 
    procedure Shell_Surface_Ping
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface;
-      Serial  : Wl.Unsigned_32) is
+      Surface : Wayland_Client.Shell_Surface;
+      Serial  : Unsigned_32) is
    begin
       Surface.Pong (Serial);
    end Shell_Surface_Ping;
 
    procedure Shell_Surface_Configure
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface;
-      Edges   : Wl.Unsigned_32;
+      Surface : Wayland_Client.Shell_Surface;
+      Edges   : Unsigned_32;
       Width   : Integer;
       Height  : Integer) is
    begin
@@ -147,12 +155,12 @@ package body Client_Examples.Hdante_Hello_World is
 
    procedure Shell_Surface_Popup_Done
      (Data    : not null Data_Ptr;
-      Surface : Wl.Shell_Surface) is
+      Surface : Wayland_Client.Shell_Surface) is
    begin
       null;
    end Shell_Surface_Popup_Done;
 
-   package Shell_Surface_Events is new Wl.Shell_Surface_Events
+   package Shell_Surface_Events is new Wayland_Client.Shell_Surface_Events
      (Data_Type                => Data_Ptr,
       Data                     => Data'Unchecked_Access,
       Shell_Surface_Ping       => Shell_Surface_Ping,
@@ -161,89 +169,89 @@ package body Client_Examples.Hdante_Hello_World is
 
    procedure Mouse_Enter
      (Data      : not null Data_Ptr;
-      Pointer   : Wl.Pointer;
-      Serial    : Wl.Unsigned_32;
-      Surface   : Wl.Surface;
-      Surface_X : Wl.Fixed;
-      Surface_Y : Wl.Fixed) is
+      Pointer   : Wayland_Client.Pointer;
+      Serial    : Unsigned_32;
+      Surface   : Wayland_Client.Surface;
+      Surface_X : Wayland_Client.Fixed;
+      Surface_Y : Wayland_Client.Fixed) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer enter");
+      Put_Line ("Pointer enter");
    end Mouse_Enter;
 
    procedure Pointer_Leave
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer;
-      Serial  : Wl.Unsigned_32;
-      Surface : Wl.Surface) is
+      Pointer : Wayland_Client.Pointer;
+      Serial  : Unsigned_32;
+      Surface : Wayland_Client.Surface) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer leave");
+      Put_Line ("Pointer leave");
    end Pointer_Leave;
 
    procedure Pointer_Motion
      (Data      : not null Data_Ptr;
-      Pointer   : Wl.Pointer;
-      Time      : Wl.Unsigned_32;
-      Surface_X : Wl.Fixed;
-      Surface_Y : Wl.Fixed) is
+      Pointer   : Wayland_Client.Pointer;
+      Time      : Unsigned_32;
+      Surface_X : Wayland_Client.Fixed;
+      Surface_Y : Wayland_Client.Fixed) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer motion");
+      Put_Line ("Pointer motion");
    end Pointer_Motion;
 
    procedure Pointer_Button
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer;
-      Serial  : Wl.Unsigned_32;
-      Time    : Wl.Unsigned_32;
-      Button  : Wl.Unsigned_32;
-      State   : Wl.Unsigned_32) is
+      Pointer : Wayland_Client.Pointer;
+      Serial  : Unsigned_32;
+      Time    : Unsigned_32;
+      Button  : Unsigned_32;
+      State   : Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer button");
+      Put_Line ("Pointer button");
       Done := True;
    end Pointer_Button;
 
    procedure Pointer_Axis
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer;
-      Time    : Wl.Unsigned_32;
-      Axis    : Wl.Unsigned_32;
-      Value   : Wl.Fixed) is
+      Pointer : Wayland_Client.Pointer;
+      Time    : Unsigned_32;
+      Axis    : Unsigned_32;
+      Value   : Wayland_Client.Fixed) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer axis");
+      Put_Line ("Pointer axis");
    end Pointer_Axis;
 
    procedure Pointer_Frame (Data    : not null Data_Ptr;
-                            Pointer : Wl.Pointer) is
+                            Pointer : Wayland_Client.Pointer) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer frame");
+      Put_Line ("Pointer frame");
    end Pointer_Frame;
 
    procedure Pointer_Axis_Source
      (Data        : not null Data_Ptr;
-      Pointer     : Wl.Pointer;
-      Axis_Source : Wl.Unsigned_32) is
+      Pointer     : Wayland_Client.Pointer;
+      Axis_Source : Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer axis source");
+      Put_Line ("Pointer axis source");
    end Pointer_Axis_Source;
 
    procedure Pointer_Axis_Stop
      (Data    : not null Data_Ptr;
-      Pointer : Wl.Pointer;
-      Time    : Wl.Unsigned_32;
-      Axis    : Wl.Unsigned_32) is
+      Pointer : Wayland_Client.Pointer;
+      Time    : Unsigned_32;
+      Axis    : Unsigned_32) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer axis stop");
+      Put_Line ("Pointer axis stop");
    end Pointer_Axis_Stop;
 
    procedure Pointer_Axis_Discrete
      (Data     : not null Data_Ptr;
-      Pointer  : Wl.Pointer;
-      Axis     : Wl.Unsigned_32;
+      Pointer  : Wayland_Client.Pointer;
+      Axis     : Unsigned_32;
       Discrete : Integer) is
    begin
-      Ada.Text_IO.Put_Line ("Pointer axis discrete");
+      Put_Line ("Pointer axis discrete");
    end Pointer_Axis_Discrete;
 
-   package Mouse_Events is new Wl.Pointer_Events
+   package Mouse_Events is new Wayland_Client.Pointer_Events
      (Data_Type             => Data_Ptr,
       Data                  => Data'Unchecked_Access,
       Pointer_Enter         => Mouse_Enter,
@@ -256,8 +264,8 @@ package body Client_Examples.Hdante_Hello_World is
       Pointer_Axis_Stop     => Pointer_Axis_Stop,
       Pointer_Axis_Discrete => Pointer_Axis_Discrete);
 
-   Display    : Wl.Display;
-   Registry   : Wl.Registry;
+   Display    : Wayland_Client.Display;
+   Registry   : Wayland_Client.Registry;
 
    WIDTH : constant := 320;
    HEIGHT : constant := 200;
@@ -268,29 +276,29 @@ package body Client_Examples.Hdante_Hello_World is
    --
    --
 
-   Buffer        : Wl.Buffer;
-   Pool          : Wl.Shm_Pool;
-   Surface       : Wl.Surface;
-   Shell_Surface : Wl.Shell_Surface;
-   Image         : Px.File;
-   File_Status   : Px.File_Status;
+   Buffer        : Wayland_Client.Buffer;
+   Pool          : Wayland_Client.Shm_Pool;
+   Surface       : Wayland_Client.Surface;
+   Shell_Surface : Wayland_Client.Shell_Surface;
+   Image         : Posix.File;
+   File_Status   : Posix.File_Status;
 
-   File_Name : Px.C_String := "hello_world_image.bin" & Px.Nul;
+   File_Name : Posix.C_String := +"hello_world_image.bin";
 
-   Memory_Map : Px.Memory_Map;
+   Memory_Map : Posix.Memory_Map;
 
    procedure Run is
    begin
-      Display.Connect (Wl.Default_Display_Name);
+      Display.Connect;
       if not Display.Is_Connected then
-         Px.Put_Line ("Can't connect to display");
+         Put_Line ("Can't connect to display");
          return;
       end if;
-      Px.Put_Line ("Connected to display");
+      Put_Line ("Connected to display");
 
       Display.Get_Registry (Registry);
       if not Registry.Has_Proxy then
-         Px.Put_Line ("Can't get global registry object");
+         Put_Line ("Can't get global registry object");
          return;
       end if;
 
@@ -300,57 +308,62 @@ package body Client_Examples.Hdante_Hello_World is
       Registry.Destroy;
 
       if Exists_Mouse then
-         Px.Put_Line ("Start mouse subscription");
+         Put_Line ("Start mouse subscription");
          Seat.Get_Pointer (Pointer);
          Mouse_Events.Subscribe (Pointer);
       end if;
 
       Image.Open (File_Name,
-                  Px.O_RDWR,
-                  Px.S_IRUSR or Px.S_IRGRP or Px.S_IROTH);
+                  Mode        => Read_Write,
+                  Permissions => (
+                                  Owner_Read  => True,
+                                  Group_Read  => True,
+                                  Others_Read => True,
+                                  others      => False
+                                 ));
 
       if Image.Is_Closed then
-         Px.Put_Line ("Error opening surface image");
+         Put_Line ("Error opening surface image");
          return;
       end if;
 
       Image.Get_File_Status (File_Status);
 
       if not File_Status.Is_Valid then
-         Px.Put_Line ("File does not exist?");
+         Put_Line ("File does not exist?");
          return;
       end if;
 
-      Image.Map_Memory (Px.Nil,
-                        Px.unsigned_long (File_Status.Size),
-                        Px.PROT_READ, Px.MAP_SHARED, 0, Memory_Map);
+      Image.Map_Memory (Posix.Nil,
+                        Posix.unsigned_long (File_Status.Size),
+                        Posix.PROT_READ, Posix.MAP_SHARED, 0, Memory_Map);
 
       if Memory_Map.Has_Mapping then
          Shm.Create_Pool (Image,
                           Integer (File_Status.Size),
                           Pool);
       else
-         Px.Put_Line ("Failed to map file");
+         Put_Line ("Failed to map file");
          return;
       end if;
 
       if not Pool.Has_Proxy then
-         Px.Put_Line ("Failed to create pool");
+         Put_Line ("Failed to create pool");
          return;
       end if;
 
       Compositor.Get_Surface_Proxy (Surface);
 
       if not Surface.Has_Proxy then
-         Px.Put_Line ("Failed to create surface");
+         Put_Line ("Failed to create surface");
          return;
       end if;
 
-      Wl.Get_Shell_Surface (Shell, Surface, Shell_Surface);
+      Wayland_Client.Get_Shell_Surface (Shell, Surface, Shell_Surface);
 
       if not Shell_Surface.Has_Proxy then
          Surface.Destroy;
-         Px.Put_Line ("Failed to create shell surface");
+         Put_Line ("Failed to create shell surface");
          return;
       end if;
 
@@ -362,11 +375,11 @@ package body Client_Examples.Hdante_Hello_World is
                           Integer (Width),
                           Integer (Height),
                           Integer (Width)*4,
-                          Wl.Shm_Format_Argb_8888,
+                          Wayland_Client.Shm_Format_Argb_8888,
                           Buffer);
 
       if not Buffer.Has_Proxy then
-         Px.Put_Line ("Failed to create buffer");
+         Put_Line ("Failed to create buffer");
          return;
       end if;
 
@@ -376,7 +389,7 @@ package body Client_Examples.Hdante_Hello_World is
 
       while not Done loop
          if Display.Dispatch < 0 then
-            Px.Put_Line ("Main loop error");
+            Put_Line ("Main loop error");
             Done := True;
          end if;
       end loop;

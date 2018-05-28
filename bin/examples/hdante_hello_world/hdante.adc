@@ -241,7 +241,6 @@ pragma Eliminate (Posix, Memory_Unmap, Source_Location => "posix.ads:391");
 pragma Eliminate (Posix, Put, Source_Location => "posix.ads:67");
 pragma Eliminate (Posix, Get_Line, Source_Location => "posix.ads:74");
 pragma Eliminate (Posix, "-", Source_Location => "posix.ads:56");
-pragma Eliminate (Posix, "+", Source_Location => "posix.ads:59");
 pragma Eliminate (Posix, File_Descriptor, Source_Location => "posix.ads:288");
 pragma Eliminate (Posix, Device_Id, Source_Location => "posix.ads:320");
 pragma Eliminate (Posix, Inode_Number, Source_Location => "posix.ads:324");
