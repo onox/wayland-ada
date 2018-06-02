@@ -1369,12 +1369,49 @@ package Posix.Wayland_Client is
      Pre => not Display.Is_Connected;
    -- Attempts connecting with the Wayland server.
 
+   type Check_For_Events_Status is (
+                                    Events_Need_Processing,
+                                    No_Events,
+                                    Error
+                                    );
+   
+   function Check_For_Events (Display : Wayland_Client.Display;
+                              Timeout : Integer) return Check_For_Events_Status;
+   
    function Dispatch (Display : Wayland_Client.Display) return Int with
      Pre => Display.Is_Connected;
+   -- Process incoming events.
 
    procedure Dispatch (Display : Wayland_Client.Display) with
      Pre => Display.Is_Connected;
+   -- Process incoming events. Ignores error code. To be removed?
+   
+   function Dispatch_Pending
+     (Display : Wayland_Client.Display) return Integer with
+     Pre => Display.Is_Connected;
+   -- Dispatch default queue events without reading from
+   -- the display file descriptor.
+   --
+   -- This function dispatches events on the main event queue.
+   -- It does not attempt to read the display fd and simply returns zero
+   -- if the main queue is empty, i.e., it doesn't block.
+   --
+   -- Returns the number of dispatched events or -1 on failure
 
+   function Prepare_Read
+     (Display : Wayland_Client.Display) return Integer with
+     Pre => Display.Is_Connected;
+   -- Prepare to read events from the display's file descriptor
+
+   function Read_Events
+     (Display : Wayland_Client.Display) return Integer with
+     Pre => Display.Is_Connected;
+   -- Returns 0 on success or -1 on error.
+   
+   procedure Cancel_Read (Display : Wayland_Client.Display) with
+     Pre => Display.Is_Connected;
+   -- Cancel read intention on display's fd.
+   
    function Roundtrip (Display : Wayland_Client.Display) return Int with
      Pre => Display.Is_Connected;
 
@@ -1751,7 +1788,7 @@ package Posix.Wayland_Client is
 
       with procedure Pointer_Frame (Data    : Data_Type;
                                     Pointer : Wayland_Client.Pointer);
-
+      
       with procedure Pointer_Axis_Source
         (Data        : Data_Type;
          Pointer     : Wayland_Client.Pointer;
@@ -1774,6 +1811,7 @@ package Posix.Wayland_Client is
       procedure Subscribe (P : in out Pointer);
 
    end Pointer_Events;
+   -- Pointer Axis Events are for example scroll wheel rotation
 
    type Display_Ptr is access all Display;
    type Registry_Ptr is access all Registry;
@@ -2170,7 +2208,8 @@ private
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
-   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
+   function Value
+     (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
 
    -- Mostly auto generated from Wayland.xml
    package Wl_Thin is
@@ -2190,6 +2229,13 @@ private
          This : in out Display_Ptr
         );
 
+      function Display_Get_File_Descriptor
+        (Display : Display_Ptr) return Integer with
+        Pre           => Display /= null,
+        Convention    => C,
+        Import        => True,
+        External_Name => "wl_display_get_fd";
+      
       type Interface_T is limited record
          Name         : Interfaces.C.Strings.chars_ptr;
          Version      : Interfaces.C.int;
@@ -2248,6 +2294,29 @@ private
         Convention => C,
         External_Name => "wl_display_dispatch";
 
+      function Display_Dispatch_Pending
+        (Display : Display_Ptr) return Integer with
+        Import => True,
+        Convention => C,
+        External_Name => "wl_display_dispatch_pending";
+      
+      function Display_Prepare_Read (Display : Display_Ptr) return Integer with
+        Import        => True,
+        Convention    => C,
+        External_Name => "wl_display_prepare_read";
+      -- Returns 0 on success or -1 if event queue was not empty
+
+      function Display_Read_Events (Display : Display_Ptr) return Integer with
+        Import        => True,
+        Convention    => C,
+        External_Name => "wl_display_read_events";
+      -- Returns 0 on success or -1 on error.
+      
+      procedure Display_Cancel_Read (Display : Display_Ptr) with
+        Import        => True,
+        Convention    => C,
+        External_Name => "wl_display_cancel_read";
+      
       function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with
         Import => True,
         Convention => C,
@@ -4325,6 +4394,7 @@ private
 
    type Display is tagged limited record
       My_Display : Wl_Thin.Display_Ptr;
+      My_Fd      : Integer;
    end record;
 
    function Is_Connected (Display : Wayland_Client.Display) return Boolean is

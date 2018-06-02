@@ -1,0 +1,7 @@
+aggregate project All_Executables is
+   for Project_Files use (
+                          "examples/connect_to_server/connect_to_server.gpr",
+                          "examples/find_compositor/find_compositor_proxy.gpr",
+                          "xml_parser/xml_parser.gpr"
+                         );
+end All_Executables;

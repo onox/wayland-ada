@@ -15,14 +15,14 @@ package body Posix.Wayland_Client is
            Convention    => C,
            Import        => True,
            External_Name => "wl_display_connect";
-
+         
       begin
          return wl_display_connect (Name);
       end Display_Connect;
 
       procedure Display_Disconnect (This : in out Display_Ptr) is
 
-         procedure wl_display_disconnect (Display : in Display_Ptr) with
+         procedure wl_display_disconnect (Display : Display_Ptr) with
            Convention => C,
            Import     => True;
 
@@ -32,7 +32,7 @@ package body Posix.Wayland_Client is
             This := null;
          end if;
       end Display_Disconnect;
-   
+      
       function wl_proxy_add_listener
         (arg1 : Proxy_Ptr;
          arg2 : Void_Ptr;
@@ -1603,9 +1603,10 @@ package body Posix.Wayland_Client is
       procedure Subscribe (P : in out Wayland_Client.Pointer) is
          I : Posix.int;
       begin
-         I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,
-                                            Listener => Pointer_Listener'Unrestricted_Access,
-                                            Data     => Nil);
+         I := Wl_Thin.Pointer_Add_Listener
+           (Pointer  => P.My_Pointer,
+            Listener => Pointer_Listener'Unrestricted_Access,
+            Data     => Nil);
       end Subscribe;
 
    end Pointer_Events;
@@ -1614,6 +1615,14 @@ package body Posix.Wayland_Client is
                       Name    : C_String := Default_Display_Name) is
    begin
       Display.My_Display := Wl_Thin.Display_Connect (Name);
+      if Display.My_Display /= null then
+         Display.My_Fd :=
+           Wl_Thin.Display_Get_File_Descriptor (Display.My_Display);
+         if Display.My_Fd = -1 then
+            Display.Disconnect;
+            Display.My_Display := null;
+         end if;
+      end if;
    end Connect;
 
    procedure Disconnect (Display : in out Wayland_Client.Display) is
@@ -1623,6 +1632,22 @@ package body Posix.Wayland_Client is
       end if;
    end Disconnect;
 
+   function Check_For_Events (Display : Wayland_Client.Display;
+                              Timeout : Integer) return Check_For_Events_Status
+   is
+      File_Descriptors : Posix.Poll_File_Descriptor_Array
+        := (1 => (Descriptor => Display.My_Fd,
+                  Events     => Posix.POLLIN,
+                  Revents    => 0));
+      I : constant Integer := Posix.Poll (File_Descriptors, Timeout);
+   begin
+      case I is
+         when 1..Integer'Last   => return Events_Need_Processing;
+         when 0                 => return No_Events;
+         when Integer'First..-1 => return Error;
+      end case;
+   end Check_For_Events;
+   
    function Get_Version (Display : Wayland_Client.Display) return Unsigned_32 is
    begin
       return Wl_Thin.Display_Get_Version (Display.My_Display);
@@ -1647,6 +1672,29 @@ package body Posix.Wayland_Client is
       return Wl_Thin.Display_Dispatch (Display.My_Display);
    end Dispatch;
 
+   function Dispatch_Pending
+     (Display : Wayland_Client.Display) return Integer is
+   begin
+      return Wl_Thin.Display_Dispatch_Pending (Display.My_Display);
+   end Dispatch_Pending;
+
+   function Prepare_Read
+     (Display : Wayland_Client.Display) return Integer is
+   begin
+      return Wl_Thin.Display_Prepare_Read (Display.My_Display);
+   end Prepare_Read;
+
+   function Read_Events
+     (Display : Wayland_Client.Display) return Integer is
+   begin
+      return Wl_Thin.Display_Read_Events (Display.My_Display);
+   end Read_Events;
+   
+   procedure Cancel_Read (Display : Wayland_Client.Display) is
+   begin
+      Wl_Thin.Display_Cancel_Read (Display.My_Display);
+   end Cancel_Read;
+   
    procedure Dispatch (Display : Wayland_Client.Display) is
       I : Int;
       pragma Unreferenced (I);

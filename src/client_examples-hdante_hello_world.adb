@@ -1,5 +1,6 @@
 with Posix;
 with Wayland_Client;
+with Ada.Real_Time;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -23,6 +24,10 @@ package body Client_Examples.Hdante_Hello_World is
 
    use all type Posix.File_Mode;
    use all type Posix.File_Permission;
+
+   use all type Wayland_Client.Check_For_Events_Status;
+
+   use all type Ada.Real_Time.Time;
 
    Compositor : aliased Wayland_Client.Compositor;
    Pointer    : aliased Wayland_Client.Pointer;
@@ -287,6 +292,12 @@ package body Client_Examples.Hdante_Hello_World is
 
    Memory_Map : Posix.Memory_Map;
 
+   Events_Status : Wayland_Client.Check_For_Events_Status;
+
+   Status_Code : Integer;
+
+   Timestamp : Ada.Real_Time.Time := Clock;
+
    procedure Run is
    begin
       Display.Connect;
@@ -387,11 +398,46 @@ package body Client_Examples.Hdante_Hello_World is
 
       Surface.Commit;
 
+      Display.Dispatch;
+
       while not Done loop
-         if Display.Dispatch < 0 then
-            Put_Line ("Main loop error");
-            Done := True;
-         end if;
+         while Display.Prepare_Read /= 0 loop
+            Status_Code := Display.Dispatch_Pending;
+            if Status_Code = -1 then
+               Put_Line ("Failed dispatch pending");
+            end if;
+         end loop;
+
+         declare
+            D : Integer := Integer (Ada.Real_Time.To_Duration ((Timestamp + Ada.Real_Time.To_Time_Span (1.0)) - Clock)*1000);
+         begin
+            if D > 0 then
+               Events_Status := Display.Check_For_Events (D);
+            else
+               Events_Status := Display.Check_For_Events (0);
+            end if;
+         end;
+         case Events_Status is
+            when Events_Need_Processing =>
+               Status_Code := Display.Read_Events;
+               if Status_Code = -1 then
+                  Put_Line ("Failed read events");
+               end if;
+
+               Status_Code := Display.Dispatch_Pending;
+               if Status_Code = -1 then
+                  Put_Line ("Failed dispatch pending 2");
+               end if;
+
+            when No_Events =>
+               Put_Line ("loop");
+               Display.Cancel_Read;
+               Timestamp := Clock;
+            when Error =>
+               Put_Line ("Error checking for events");
+               Done := True;
+               Display.Cancel_Read;
+         end case;
       end loop;
    end Run;
 

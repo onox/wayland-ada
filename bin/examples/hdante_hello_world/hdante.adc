@@ -149,7 +149,6 @@ pragma Eliminate (Posix.Wayland_Client, Subsurface_Place_Above, Source_Location 
 pragma Eliminate (Posix.Wayland_Client, Subsurface_Place_Below, Source_Location => "posix-wayland_client.ads:4257");
 pragma Eliminate (Posix.Wayland_Client, Subsurface_Set_Sync, Source_Location => "posix-wayland_client.ads:4274");
 pragma Eliminate (Posix.Wayland_Client, Subsurface_Set_Desync, Source_Location => "posix-wayland_client.ads:4295");
-pragma Eliminate (Posix.Wayland_Client, Disconnect, Source_Location => "posix-wayland_client.ads:1384");
 pragma Eliminate (Posix.Wayland_Client, Get_Version, Source_Location => "posix-wayland_client.ads:1388");
 pragma Eliminate (Posix.Wayland_Client, Get_Region_Proxy, Source_Location => "posix-wayland_client.ads:521");
 pragma Eliminate (Posix.Wayland_Client, Destroy, Source_Location => "posix-wayland_client.ads:527");

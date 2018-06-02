@@ -13,6 +13,7 @@ package Posix is
    subtype int is Interfaces.C.int;
    subtype long is Interfaces.C.long;
    subtype Unsigned_32 is Interfaces.Unsigned_32;
+   subtype Unsigned_16 is Interfaces.Unsigned_16;
 
 --     type unsigned       is mod 2 ** Integer'Size;
 --     type unsigned_long  is mod 2 ** Long_Integer'Size;
@@ -34,15 +35,16 @@ package Posix is
    use type long;
    use type Void_Ptr;
 
---     function Shift_Right
---       (Value  : Unsigned_32;
---        Amount : Natural) return Unsigned_32 renames
---       Interfaces.Shift_Right;
---
---     function Shift_Right
---       (Value  : S_FLag;
---        Amount : Natural) return S_FLag is
---       (S_FLag (Shift_Right (Unsigned_32 (Value), Amount)));
+   type Poll_File_Descriptor is record
+      Descriptor : aliased Integer := -1;
+      Events     : aliased Unsigned_16 := 0;
+      Revents    : aliased Unsigned_16 := 0;
+   end record with
+     Convention => C_Pass_By_Copy;
+
+   type Poll_File_Descriptor_Array is array (Positive range <>) of
+     Poll_File_Descriptor with
+       Convention => C;
 
    Nul : constant Character := Character'Val (0);
 
@@ -70,6 +72,10 @@ package Posix is
 
    function Get_Line return String;
 
+   function Poll
+     (File_Descriptors : Poll_File_Descriptor_Array;
+      Timeout          : Integer) return Integer;
+
    --
    -- Encoding of the file mode.
    --
@@ -87,6 +93,15 @@ package Posix is
    S_IFIFO  : constant S_FLag := 0010000; -- FIFO.
    S_IFLNK  : constant S_FLag := 0120000; -- Symbolic link.
    S_IFSOCK : constant S_FLag := 0140000; -- Socket.
+
+   POLLIN  : constant := 16#001#;
+   -- There is data to read.
+
+   POLLPRI : constant := 16#002#;
+   -- There is urgent data to read.
+
+   POLLOUT : constant := 16#004#;
+   -- Writing now will not block.
 
    --  #define  __S_ISUID   04000  /* Set user ID on execution.  */
    --  #define  __S_ISGID   02000  /* Set group ID on execution.  */
@@ -522,6 +537,13 @@ private
         Convention    => C,
         External_Name => "munmap";
 
+      function Poll (File_Descriptors        : Poll_File_Descriptor_Array;
+                     File_Descriptors_Length : unsigned_long;
+                     Timeout                 : Integer) return Integer with
+        Import        => True,
+        Convention    => C,
+        External_Name => "poll";
+
    end Px_Thin;
 
    type File is tagged limited record
@@ -625,5 +647,10 @@ private
      (
       My_File_Descriptor => Px_Thin.STDERR_FILENO
      );
+
+   function Poll
+     (File_Descriptors : Poll_File_Descriptor_Array;
+      Timeout          : Integer) return Integer is
+      (Px_Thin.Poll (File_Descriptors, File_Descriptors'Length, Timeout));
 
 end Posix;
