@@ -39,6 +39,14 @@ package Posix.Wayland_Client is
 
    type Fixed is new Integer;
 
+   type Wayland_Array_T is record
+      Size  : Unsigned_32;
+      Alloc : Unsigned_32;
+      Data : Void_Ptr;
+   end record with
+     Convention => C_Pass_By_Copy;
+   -- TODO: Remove the trailing _T from the name of this type
+   
    type Interface_Type is tagged limited private;
    -- This type name ends with _Type because 'interface'
    -- is a reserved keyword in the Ada programming language.
@@ -1895,6 +1903,25 @@ package Posix.Wayland_Client is
 
    end Shell_Surface_Events;
 
+   generic      
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Enter (Data    : not null Data_Ptr;
+                            Surface : Wayland_Client.Surface;
+                            Output  : Wayland_Client.Output);
+
+      with procedure Leave (Data    : not null Data_Ptr;
+                            Surface : Wayland_Client.Surface;
+                            Output  : Wayland_Client.Output);
+
+   package Surface_Events is
+
+      function Subscribe (Surface : in out Wayland_Client.Surface;
+                          Data    : not null Data_Ptr) return Call_Result_Code;
+      
+   end Surface_Events;
+   
    generic
       type Data_Type is limited private;
       type Data_Ptr is access all Data_Type;
@@ -1984,6 +2011,139 @@ package Posix.Wayland_Client is
    end Pointer_Events;
    -- Pointer Axis Events are for example scroll wheel rotation
 
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Keymap (Data     : not null Data_Ptr;
+                             Keyboard : Wayland_Client.Keyboard;
+                             Format   : Unsigned_32;
+                             Fd       : Integer;
+                             Size     : Unsigned_32);
+
+      with procedure Enter (Data     : not null Data_Ptr;
+                            Keyboard : Wayland_Client.Keyboard;
+                            Serial   : Unsigned_32;
+                            Surface  : Wayland_Client.Surface;
+                            Keys     : Wayland_Array_T);
+
+      with procedure Leave (Data     : not null Data_Ptr;
+                            Keyboard : Wayland_Client.Keyboard;
+                            Serial   : Unsigned_32;
+                            Surface  : Wayland_Client.Surface);
+
+      with procedure Key (Data     : not null Data_Ptr;
+                          Keyboard : Wayland_Client.Keyboard;
+                          Serial   : Unsigned_32;
+                          Time     : Unsigned_32;
+                          Key      : Unsigned_32;
+                          State    : Unsigned_32);
+
+      with procedure Modifiers (Data           : not null Data_Ptr;
+                                Keyboard       : Wayland_Client.Keyboard;
+                                Serial         : Unsigned_32;
+                                Mods_Depressed : Unsigned_32;
+                                Mods_Latched   : Unsigned_32;
+                                Mods_Locked    : Unsigned_32;
+                                Group          : Unsigned_32);
+
+      with procedure Repeat_Info (Data     : not null Data_Ptr;
+                                  Keyboard : Wayland_Client.Keyboard;
+                                  Rate     : Integer;
+                                  Delay_V  : Integer);
+
+   package Keyboard_Events is
+      
+      function Subscribe (Keyboard : in out Wayland_Client.Keyboard;
+                          Data     : not null Data_Ptr) return Call_Result_Code;
+      
+   end Keyboard_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Down (Data    : not null Data_Ptr;
+                           Touch   : Wayland_Client.Touch;
+                           Serial  : Unsigned_32;
+                           Time    : Unsigned_32;
+                           Surface : Wayland_Client.Surface;
+                           Id      : Integer;
+                           X       : Fixed;
+                           Y       : Fixed);
+
+      with procedure Up (Data   : not null Data_Ptr;
+                         Touch  : Wayland_Client.Touch;
+                         Serial : Unsigned_32;
+                         Time   : Unsigned_32;
+                         Id     : Integer);
+
+      with procedure Motion (Data  : not null Data_Ptr;
+                             Touch : Wayland_Client.Touch;
+                             Time  : Unsigned_32;
+                             Id    : Integer;
+                             X     : Fixed;
+                             Y     : Fixed);
+
+      with procedure Frame (Data  : not null Data_Ptr;
+                            Touch : Wayland_Client.Touch);
+
+      with procedure Cancel (Data  : not null Data_Ptr;
+                             Touch : Wayland_Client.Touch);
+
+      with procedure Shape (Data  : not null Data_Ptr;
+                            Touch : Wayland_Client.Touch;
+                            Id    : Integer;
+                            Major : Fixed;
+                            Minor : Fixed);
+
+      with procedure Orientation (Data        : not null Data_Ptr;
+                                  Touch       : Wayland_Client.Touch;
+                                  Id          : Integer;
+                                  Orientation : Fixed);
+   package Touch_Events is
+
+      function Subscribe (Touch : in out Wayland_Client.Touch;
+                          Data  : not null Data_Ptr) return Call_Result_Code;
+
+   end Touch_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;      
+      
+      with procedure Geometry (Data            : not null Data_Ptr;
+                               Output          : Wayland_Client.Output;
+                               X               : Integer;
+                               Y               : Integer;
+                               Physical_Width  : Integer;
+                               Physical_Height : Integer;
+                               Subpixel        : Integer;
+                               Make            : String;
+                               Model           : String;
+                               Transform       : Integer);
+
+      with procedure Mode (Data    : not null Data_Ptr;
+                           Output  : Wayland_Client.Output;
+                           Flags   : Unsigned_32;
+                           Width   : Integer;
+                           Height  : Integer;
+                           Refresh : Integer);
+
+      with procedure Done (Data   : not null Data_Ptr;
+                           Output : Wayland_Client.Output);
+
+      with procedure Scale (Data   : not null Data_Ptr;
+                            Output : Wayland_Client.Output;
+                            Factor : Integer);
+   
+   package Output_Events is
+
+      function Subscribe (Output : in out Wayland_Client.Output;
+                          Data   : not null Data_Ptr) return Call_Result_Code;
+      
+   end Output_Events;
+   
    type Display_Ptr is access all Display;
    type Registry_Ptr is access all Registry;
    type Callback_Ptr is access all Callback;
@@ -2694,13 +2854,6 @@ private
         External_Name => "wl_proxy_marshal_constructor";
 
       -- End core parts
-
-      type Wayland_Array_T is record
-         Size  : Unsigned_32;
-         Alloc : Unsigned_32;
-         Data : Void_Ptr;
-      end record with
-        Convention => C_Pass_By_Copy;
 
       Display_Interface : aliased Interface_T with
         Import => True,

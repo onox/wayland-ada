@@ -162,7 +162,6 @@ pragma Eliminate (Posix.Wayland_Client, Resize, Source_Location => "posix-waylan
 pragma Eliminate (Posix.Wayland_Client, Get_Version, Source_Location => "posix-wayland_client.ads:900");
 pragma Eliminate (Posix.Wayland_Client, Destroy, Source_Location => "posix-wayland_client.ads:903");
 pragma Eliminate (Posix.Wayland_Client, Get_Version, Source_Location => "posix-wayland_client.ads:1355");
-pragma Eliminate (Posix.Wayland_Client, Destroy, Source_Location => "posix-wayland_client.ads:1358");
 pragma Eliminate (Posix.Wayland_Client, Get_Version, Source_Location => "posix-wayland_client.ads:1452");
 pragma Eliminate (Posix.Wayland_Client, Destroy, Source_Location => "posix-wayland_client.ads:1448");
 pragma Eliminate (Posix.Wayland_Client, Do_Accept, Source_Location => "posix-wayland_client.ads:1455");

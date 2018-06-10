@@ -1924,6 +1924,64 @@ package body Posix.Wayland_Client is
 
    end Shell_Surface_Events;
 
+   package body Surface_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Enter (Data    : Void_Ptr;
+                                Surface : Wl_Thin.Surface_Ptr;
+                                Output  : Wl_Thin.Output_Ptr) with
+        Convention => C;
+
+      procedure Internal_Leave (Data    : Void_Ptr;
+                                Surface : Wl_Thin.Surface_Ptr;
+                                Output  : Wl_Thin.Output_Ptr) with
+        Convention => C;
+
+      procedure Internal_Enter (Data    : Void_Ptr;
+                                Surface : Wl_Thin.Surface_Ptr;
+                                Output  : Wl_Thin.Output_Ptr)
+      is
+         S : Wayland_Client.Surface := (My_Surface => Surface);
+         O : Wayland_Client.Output := (My_Output => Output);
+      begin
+         Enter (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
+      end Internal_Enter;
+
+      procedure Internal_Leave (Data    : Void_Ptr;
+                                Surface : Wl_Thin.Surface_Ptr;
+                                Output  : Wl_Thin.Output_Ptr)
+      is
+         S : Wayland_Client.Surface := (My_Surface => Surface);
+         O : Wayland_Client.Output := (My_Output => Output);
+      begin
+         Leave (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
+      end Internal_Leave;
+      
+      Listener : aliased Wl_Thin.Surface_Listener_T
+        := (Enter => Internal_Enter'Unrestricted_Access,
+            Leave => Internal_Leave'Unrestricted_Access);
+
+      function Subscribe
+        (Surface : in out Wayland_Client.Surface;
+         Data    : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Surface_Add_Listener (Surface.My_Surface,
+                                            Listener'Access,
+                                            Data.all'Address);
+         
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Surface_Events;
+   
    package body Seat_Events is
 
       package Conversion is new
@@ -2217,6 +2275,469 @@ package body Posix.Wayland_Client is
 
    end Pointer_Events;
 
+   package body Keyboard_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Keymap (Data     : Void_Ptr;
+                                 Keyboard : Wl_Thin.Keyboard_Ptr;
+                                 Format   : Unsigned_32;
+                                 Fd       : Integer;
+                                 Size     : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Enter (Data     : Void_Ptr;
+                                Keyboard : Wl_Thin.Keyboard_Ptr;
+                                Serial   : Unsigned_32;
+                                Surface  : Wl_Thin.Surface_Ptr;
+                                Keys     : Wayland_Array_T) with
+        Convention => C;
+
+      procedure Internal_Leave (Data     : Void_Ptr;
+                                Keyboard : Wl_Thin.Keyboard_Ptr;
+                                Serial   : Unsigned_32;
+                                Surface  : Wl_Thin.Surface_Ptr) with
+        Convention => C;
+
+      procedure Internal_Key (Data     : Void_Ptr;
+                              Keyboard : Wl_Thin.Keyboard_Ptr;
+                              Serial   : Unsigned_32;
+                              Time     : Unsigned_32;
+                              Key      : Unsigned_32;
+                              State    : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Modifiers (Data           : Void_Ptr;
+                                    Keyboard       : Wl_Thin.Keyboard_Ptr;
+                                    Serial         : Unsigned_32;
+                                    Mods_Depressed : Unsigned_32;
+                                    Mods_Latched   : Unsigned_32;
+                                    Mods_Locked    : Unsigned_32;
+                                    Group          : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Repeat_Info (Data     : Void_Ptr;
+                                      Keyboard : Wl_Thin.Keyboard_Ptr;
+                                      Rate     : Integer;
+                                      Delay_V  : Integer) with
+        Convention => C;
+
+      procedure Internal_Keymap (Data     : Void_Ptr;
+                                 Keyboard : Wl_Thin.Keyboard_Ptr;
+                                 Format   : Unsigned_32;
+                                 Fd       : Integer;
+                                 Size     : Unsigned_32)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+      begin
+         Keymap (Data_Ptr (Conversion.To_Pointer (Data)),
+                 K,
+                 Format,
+                 Fd,
+                 Size);
+      end Internal_Keymap;
+
+      procedure Internal_Enter (Data     : Void_Ptr;
+                                Keyboard : Wl_Thin.Keyboard_Ptr;
+                                Serial   : Unsigned_32;
+                                Surface  : Wl_Thin.Surface_Ptr;
+                                Keys     : Wayland_Array_T)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         S : Wayland_Client.Surface  := (My_Surface => Surface);
+      begin
+         Enter (Data_Ptr (Conversion.To_Pointer (Data)),
+                K,
+                Serial,
+                S,
+                Keys);
+      end Internal_Enter;
+
+      procedure Internal_Leave (Data     : Void_Ptr;
+                                Keyboard : Wl_Thin.Keyboard_Ptr;
+                                Serial   : Unsigned_32;
+                                Surface  : Wl_Thin.Surface_Ptr)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         S : Wayland_Client.Surface  := (My_Surface => Surface);
+      begin
+         Leave (Data_Ptr (Conversion.To_Pointer (Data)),
+                K,
+                Serial,
+                S);
+      end Internal_Leave;
+
+      procedure Internal_Key (Data     : Void_Ptr;
+                              Keyboard : Wl_Thin.Keyboard_Ptr;
+                              Serial   : Unsigned_32;
+                              Time     : Unsigned_32;
+                              Key      : Unsigned_32;
+                              State    : Unsigned_32)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+      begin
+         Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)),
+                              K,
+                              Serial,
+                              Time,
+                              Key,
+                              State);
+      end Internal_Key;
+
+      procedure Internal_Modifiers (Data           : Void_Ptr;
+                                    Keyboard       : Wl_Thin.Keyboard_Ptr;
+                                    Serial         : Unsigned_32;
+                                    Mods_Depressed : Unsigned_32;
+                                    Mods_Latched   : Unsigned_32;
+                                    Mods_Locked    : Unsigned_32;
+                                    Group          : Unsigned_32)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+      begin
+         Modifiers (Data_Ptr (Conversion.To_Pointer (Data)),
+                    K,
+                    Serial,
+                    Mods_Depressed,
+                    Mods_Latched,
+                    Mods_Locked,
+                    Group);
+      end Internal_Modifiers;
+
+      procedure Internal_Repeat_Info (Data     : Void_Ptr;
+                                      Keyboard : Wl_Thin.Keyboard_Ptr;
+                                      Rate     : Integer;
+                                      Delay_V  : Integer)
+      is
+         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+      begin
+         Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)),
+                      K,
+                      Rate,
+                      Delay_V);
+      end Internal_Repeat_Info;
+      
+      Listener : aliased Wl_Thin.Keyboard_Listener_T
+        := (Keymap      => Internal_Keymap'Unrestricted_Access,
+            Enter       => Internal_Enter'Unrestricted_Access,
+            Leave       => Internal_Leave'Unrestricted_Access,
+            Key         => Internal_Key'Unrestricted_Access,
+            Modifiers   => Internal_Modifiers'Unrestricted_Access,
+            Repeat_Info => Internal_Repeat_Info'Unrestricted_Access);
+
+      function Subscribe
+        (Keyboard : in out Wayland_Client.Keyboard;
+         Data     : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Keyboard_Add_Listener (Keyboard => Keyboard.My_Keyboard,
+                                             Listener => Listener'Access,
+                                             Data     => Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Keyboard_Events;
+
+   package body Touch_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Down (Data    : Void_Ptr;
+                               Touch   : Wl_Thin.Touch_Ptr;
+                               Serial  : Unsigned_32;
+                               Time    : Unsigned_32;
+                               Surface : Wl_Thin.Surface_Ptr;
+                               Id      : Integer;
+                               X       : Fixed;
+                               Y       : Fixed) with
+        Convention => C;
+
+      procedure Internal_Up (Data   : Void_Ptr;
+                             Touch  : Wl_Thin.Touch_Ptr;
+                             Serial : Unsigned_32;
+                             Time   : Unsigned_32;
+                             Id     : Integer) with
+        Convention => C;
+
+      procedure Internal_Motion (Data  : Void_Ptr;
+                                 Touch : Wl_Thin.Touch_Ptr;
+                                 Time  : Unsigned_32;
+                                 Id    : Integer;
+                                 X     : Fixed;
+                                 Y     : Fixed) with
+        Convention => C;
+      
+      procedure Internal_Frame (Data  : Void_Ptr;
+                                Touch : Wl_Thin.Touch_Ptr) with
+        Convention => C;
+
+      procedure Internal_Cancel (Data  : Void_Ptr;
+                                 Touch : Wl_Thin.Touch_Ptr) with
+        Convention => C;
+
+      procedure Internal_Shape (Data  : Void_Ptr;
+                                Touch : Wl_Thin.Touch_Ptr;
+                                Id    : Integer;
+                                Major : Fixed;
+                                Minor : Fixed) with
+        Convention => C;
+
+      procedure Internal_Orientation (Data        : Void_Ptr;
+                                      Touch       : Wl_Thin.Touch_Ptr;
+                                      Id          : Integer;
+                                      Orientation : Fixed) with
+        Convention => C;
+
+      procedure Internal_Down (Data    : Void_Ptr;
+                               Touch   : Wl_Thin.Touch_Ptr;
+                               Serial  : Unsigned_32;
+                               Time    : Unsigned_32;
+                               Surface : Wl_Thin.Surface_Ptr;
+                               Id      : Integer;
+                               X       : Fixed;
+                               Y       : Fixed)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+         S : Wayland_Client.Surface := (My_Surface => Surface);
+      begin
+         Down (Data_Ptr (Conversion.To_Pointer (Data)),
+               T,
+               Serial,
+               Time,
+               S,
+               Id,
+               X,
+               Y);
+      end Internal_Down;
+
+      procedure Internal_Up (Data   : Void_Ptr;
+                             Touch  : Wl_Thin.Touch_Ptr;
+                             Serial : Unsigned_32;
+                             Time   : Unsigned_32;
+                             Id     : Integer)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Up (Data_Ptr (Conversion.To_Pointer (Data)),
+             T,
+             Serial,
+             Time,
+             Id);
+      end Internal_Up;
+
+      procedure Internal_Motion (Data  : Void_Ptr;
+                                 Touch : Wl_Thin.Touch_Ptr;
+                                 Time  : Unsigned_32;
+                                 Id    : Integer;
+                                 X     : Fixed;
+                                 Y     : Fixed)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Motion (Data_Ptr (Conversion.To_Pointer (Data)),
+                 T,
+                 Time,
+                 Id,
+                 X,
+                 Y);
+      end Internal_Motion;
+      
+      procedure Internal_Frame (Data  : Void_Ptr;
+                                Touch : Wl_Thin.Touch_Ptr)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Frame (Data_Ptr (Conversion.To_Pointer (Data)), T);
+      end Internal_Frame;
+
+      procedure Internal_Cancel (Data  : Void_Ptr;
+                                 Touch : Wl_Thin.Touch_Ptr)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
+      end Internal_Cancel;
+      
+      procedure Internal_Shape (Data  : Void_Ptr;
+                                Touch : Wl_Thin.Touch_Ptr;
+                                Id    : Integer;
+                                Major : Fixed;
+                                Minor : Fixed)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Shape (Data_Ptr (Conversion.To_Pointer (Data)),
+                T,
+                Id,
+                Major,
+                Minor);
+      end Internal_Shape;
+
+      procedure Internal_Orientation (Data        : Void_Ptr;
+                                      Touch       : Wl_Thin.Touch_Ptr;
+                                      Id          : Integer;
+                                      Orientation : Fixed)
+      is
+         T : Wayland_Client.Touch := (My_Touch => Touch);
+      begin
+         Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)),
+                                   T,
+                                   Id,
+                                   Orientation);
+      end Internal_Orientation;
+      
+      Listener : aliased Wl_Thin.Touch_Listener_T
+        := (Down        => Internal_Down'Unrestricted_Access,
+            Up          => Internal_Up'Unrestricted_Access,
+            Motion      => Internal_Motion'Unrestricted_Access,
+            Frame       => Internal_Frame'Unrestricted_Access,
+            Cancel      => Internal_Cancel'Unrestricted_Access,
+            Shape       => Internal_Shape'Unrestricted_Access,
+            Orientation => Internal_Orientation'Unrestricted_Access);
+
+      function Subscribe
+        (Touch : in out Wayland_Client.Touch;
+         Data  : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Touch_Add_Listener (Touch    => Touch.My_Touch,
+                                          Listener => Listener'Access,
+                                          Data     => Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Touch_Events;
+   
+   package body Output_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Geometry (Data            : Void_Ptr;
+                                   Output          : Wl_Thin.Output_Ptr;
+                                   X               : Integer;
+                                   Y               : Integer;
+                                   Physical_Width  : Integer;
+                                   Physical_Height : Integer;
+                                   Subpixel        : Integer;
+                                   Make            : chars_ptr;
+                                   Model           : chars_ptr;
+                                   Transform       : Integer) with
+        Convention => C;
+
+      procedure Internal_Mode (Data    : Void_Ptr;
+                               Output  : Wl_Thin.Output_Ptr;
+                               Flags   : Unsigned_32;
+                               Width   : Integer;
+                               Height  : Integer;
+                               Refresh : Integer) with
+        Convention => C;
+
+      procedure Internal_Done (Data   : Void_Ptr;
+                               Output : Wl_Thin.Output_Ptr) with
+        Convention => C;
+
+      procedure Internal_Scale (Data   : Void_Ptr;
+                                Output : Wl_Thin.Output_Ptr;
+                                Factor : Integer) with
+        Convention => C;
+
+      procedure Internal_Geometry (Data            : Void_Ptr;
+                                   Output          : Wl_Thin.Output_Ptr;
+                                   X               : Integer;
+                                   Y               : Integer;
+                                   Physical_Width  : Integer;
+                                   Physical_Height : Integer;
+                                   Subpixel        : Integer;
+                                   Make            : chars_ptr;
+                                   Model           : chars_ptr;
+                                   Transform       : Integer)
+      is
+         O : Wayland_Client.Output := (My_Output => Output);
+         Ma : constant String := Interfaces.C.Strings.Value (Make);
+         Mo : constant String := Interfaces.C.Strings.Value (Model);
+      begin
+         Geometry (Data_Ptr (Conversion.To_Pointer (Data)),
+                   O,
+                   X,
+                   Y,
+                   Physical_Width,
+                   Physical_Height,
+                   Subpixel,
+                   Ma,
+                   Mo,
+                   Transform);
+      end Internal_Geometry;
+
+      procedure Internal_Mode (Data    : Void_Ptr;
+                               Output  : Wl_Thin.Output_Ptr;
+                               Flags   : Unsigned_32;
+                               Width   : Integer;
+                               Height  : Integer;
+                               Refresh : Integer)
+      is
+         O : Wayland_Client.Output := (My_Output => Output);
+      begin
+         Mode (Data_Ptr (Conversion.To_Pointer (Data)),
+               O,
+               Flags,
+               Width,
+               Height,
+               Refresh);
+      end Internal_Mode;
+
+      procedure Internal_Done (Data   : Void_Ptr;
+                               Output : Wl_Thin.Output_Ptr)
+      is
+         O : Wayland_Client.Output := (My_Output => Output);
+      begin
+         Done (Data_Ptr (Conversion.To_Pointer (Data)), O);
+      end Internal_Done;
+
+      procedure Internal_Scale (Data   : Void_Ptr;
+                                Output : Wl_Thin.Output_Ptr;
+                                Factor : Integer)
+      is
+         O : Wayland_Client.Output := (My_Output => Output);
+      begin
+         Scale (Data_Ptr (Conversion.To_Pointer (Data)), O, Factor);
+      end Internal_Scale;
+      
+      Listener : aliased Wl_Thin.Output_Listener_T
+        := (Geometry => Internal_Geometry'Unrestricted_Access,
+            Mode     => Internal_Mode'Unrestricted_Access,
+            Done     => Internal_Done'Unrestricted_Access,
+            Scale    => Internal_Scale'Unrestricted_Access);
+
+      function Subscribe
+        (Output : in out Wayland_Client.Output;
+         Data   : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Output_Add_Listener (Output   => Output.My_Output,
+                                           Listener => Listener'Access,
+                                           Data     => Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Output_Events;
+   
    procedure Connect (Display : in out Wayland_Client.Display;
                       Name    : C_String := Default_Display_Name) is
    begin
