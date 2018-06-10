@@ -26,8 +26,10 @@ package body Client_Examples.Hdante_Hello_World is
    use all type Posix.File_Permission;
 
    use all type Wayland_Client.Check_For_Events_Status;
+   use all type Wayland_Client.Call_Result_Code;
 
    use all type Ada.Real_Time.Time;
+   use all type Ada.Real_Time.Time_Span;
 
    Compositor : aliased Wayland_Client.Compositor;
    Pointer    : aliased Wayland_Client.Pointer;
@@ -100,7 +102,9 @@ package body Client_Examples.Hdante_Hello_World is
                                       Registry : Wayland_Client.Registry;
                                       Id       : Unsigned_32;
                                       Name     : String;
-                                      Version  : Unsigned_32) is
+                                      Version  : Unsigned_32)
+   is
+      Call_Result : Wayland_Client.Call_Result_Code;
    begin
       if Name = Wayland_Client.Compositor_Interface.Name then
          Compositor.Get_Proxy (Registry,
@@ -118,12 +122,16 @@ package body Client_Examples.Hdante_Hello_World is
                           Min (Version, 1));
          Put_Line ("Got shell proxy");
       elsif Name = Wayland_Client.Seat_Interface.Name then
-         Put_Line ("Pointer listener is setup " & Wayland_Client.Seat_Interface.Name);
          Seat.Get_Proxy (Registry,
                          Id,
                          Min (Version, 2));
-         Seat_Events.Subscribe (Seat, Data);
-         --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Posix.Nil);
+
+         Call_Result := Seat_Events.Subscribe (Seat, Data);
+
+         case Call_Result is
+            when Success => Put_Line ("Successfully subscribed to seat events");
+            when Error   => Put_Line ("Failed to subscribe to seat events");
+         end case;
       end if;
    end Global_Registry_Handler;
 
@@ -298,6 +306,8 @@ package body Client_Examples.Hdante_Hello_World is
 
    Timestamp : Ada.Real_Time.Time := Clock;
 
+   Call_Result : Wayland_Client.Call_Result_Code;
+
    procedure Run is
    begin
       Display.Connect;
@@ -313,7 +323,15 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Registry_Events.Subscribe (Registry, Data'Access);
+      Call_Result := Registry_Events.Subscribe (Registry, Data'Access);
+      case Call_Result is
+         when Success => null;
+         when Error   =>
+            Put_Line ("Failed to subscribe to registry events");
+            Display.Disconnect;
+            return;
+      end case;
+
       Display.Dispatch;
       Display.Roundtrip;
       Registry.Destroy;
@@ -321,7 +339,14 @@ package body Client_Examples.Hdante_Hello_World is
       if Exists_Mouse then
          Put_Line ("Start mouse subscription");
          Seat.Get_Pointer (Pointer);
-         Mouse_Events.Subscribe (Pointer, Data'Access);
+         Call_Result := Mouse_Events.Subscribe (Pointer, Data'Access);
+
+         case Call_Result is
+            when Success =>
+               Put_Line ("Successfully subscribed to mouse events");
+            when Error   =>
+               Put_Line ("Failed to subscribe to mouse events");
+         end case;
       end if;
 
       Image.Open (File_Name,
@@ -378,7 +403,17 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Shell_Surface_Events.Subscribe (Shell_Surface, Data'Access);
+      Call_Result := Shell_Surface_Events.Subscribe (Shell_Surface,
+                                                     Data'Access);
+
+      case Call_Result is
+         when Success =>
+            Put_Line ("Successfully subscribed to shell surface events");
+         when Error   =>
+            Put_Line ("Failed to subscribe to shell surface events");
+            Display.Disconnect;
+            return;
+      end case;
 
       Shell_Surface.Set_Toplevel;
 
@@ -409,18 +444,24 @@ package body Client_Examples.Hdante_Hello_World is
          end loop;
 
          declare
-            D : Integer := Integer (Ada.Real_Time.To_Duration ((Timestamp + Ada.Real_Time.To_Time_Span (1.0)) - Clock)*1000);
+            Interval : Ada.Real_Time.Time_Span
+              := Ada.Real_Time.To_Time_Span (1.0);
+
+            Timeout : constant Integer
+              := Integer (To_Duration ((Timestamp + Interval) - Clock)*1000);
+            -- The timeout to check for events in millisends
          begin
-            if D > 0 then
-               Events_Status := Display.Check_For_Events (D);
+            if Timeout > 0 then
+               Events_Status := Display.Check_For_Events (Timeout);
             else
                Events_Status := Display.Check_For_Events (0);
             end if;
          end;
+
          case Events_Status is
             when Events_Need_Processing =>
-               Status_Code := Display.Read_Events;
-               if Status_Code = -1 then
+               Call_Result := Display.Read_Events;
+               if Call_Result = Error then
                   Put_Line ("Failed read events");
                end if;
 

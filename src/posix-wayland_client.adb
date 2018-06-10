@@ -1302,13 +1302,20 @@ package body Posix.Wayland_Client is
             Delete_Id => Internal_Delete_Id'Unrestricted_Access
            );
 
-      procedure Subscribe (Display : in out Wayland_Client.Display;
-                           Data    : not null Data_Ptr) is
+      function Subscribe
+        (Display : in out Wayland_Client.Display;
+         Data    : not null Data_Ptr) return Call_Result_Code
+      is
          I : Posix.int;
       begin
          I := Wl_Thin.Display_Add_Listener (Display.My_Display,
                                             Listener'Access,
                                             Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
       
    end Display_Events;
@@ -1363,13 +1370,20 @@ package body Posix.Wayland_Client is
       -- Note: It should be safe to use Unrestricted_Access here since
       -- this generic can only be instantiated at library level.
 
-      procedure Subscribe (Registry : in out Wayland_Client.Registry;
-                           Data     : not null Data_Ptr) is
+      function Subscribe
+        (Registry : in out Wayland_Client.Registry;
+         Data     : not null Data_Ptr) return Call_Result_Code is
          I : Posix.int;
       begin
          I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
                                              Listener'Access,
                                              Data.all'Address);
+         
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
 
    end Registry_Events;
@@ -1396,13 +1410,20 @@ package body Posix.Wayland_Client is
       Listener : aliased Wl_Thin.Callback_Listener_T
         := (Done => Internal_Done'Unrestricted_Access);
 
-      procedure Subscribe (Callback : in out Wayland_Client.Callback;
-                           Data     : not null Data_Ptr) is
+      function Subscribe
+        (Callback : in out Wayland_Client.Callback;
+         Data     : not null Data_Ptr) return Call_Result_Code
+      is
          I : Posix.int;
       begin
          I := Wl_Thin.Callback_Add_Listener (Callback.My_Callback,
                                              Listener'Access,
                                              Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
       
    end Callback_Events;   
@@ -1475,14 +1496,22 @@ package body Posix.Wayland_Client is
          Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
         );
 
-      procedure Subscribe (Surface : in out Wayland_Client.Shell_Surface;
-                           Data    : not null Data_Ptr) is
+      function Subscribe
+        (Surface : in out Wayland_Client.Shell_Surface;
+         Data    : not null Data_Ptr) return Call_Result_Code
+      is
          I : Posix.int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
            (Surface.My_Shell_Surface,
             Listener'Access,
             Data.all'Address);
+         
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
 
    end Shell_Surface_Events;
@@ -1530,14 +1559,21 @@ package body Posix.Wayland_Client is
          Name         => Internal_Seat_Name'Unrestricted_Access
         );
 
-      procedure Subscribe (Seat : in out Wayland_Client.Seat;
-                           Data : not null Data_Ptr) is
+      function Subscribe
+        (Seat : in out Wayland_Client.Seat;
+         Data : not null Data_Ptr) return Call_Result_Code
+      is
          I : Posix.int;
       begin
          I := Wl_Thin.Seat_Add_Listener
            (Seat     => Seat.My_Seat,
             Listener => Seat_Listener'Access,
             Data     => Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
 
    end Seat_Events;
@@ -1754,14 +1790,21 @@ package body Posix.Wayland_Client is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
         );
 
-      procedure Subscribe (Pointer : in out Wayland_Client.Pointer;
-                           Data    : not null Data_Ptr) is
+      function Subscribe
+        (Pointer : in out Wayland_Client.Pointer;
+         Data    : not null Data_Ptr) return Call_Result_Code
+      is
          I : Posix.int;
       begin
          I := Wl_Thin.Pointer_Add_Listener
            (Pointer  => Pointer.My_Pointer,
             Listener => Pointer_Listener'Access,
             Data     => Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
       end Subscribe;
 
    end Pointer_Events;
@@ -1840,9 +1883,15 @@ package body Posix.Wayland_Client is
    end Prepare_Read;
 
    function Read_Events
-     (Display : Wayland_Client.Display) return Integer is
+     (Display : Wayland_Client.Display) return Call_Result_Code
+   is
+      I : constant Integer := Wl_Thin.Display_Read_Events (Display.My_Display);
    begin
-      return Wl_Thin.Display_Read_Events (Display.My_Display);
+      if I = 0 then
+         return Success;
+      else
+         return Error;
+      end if;
    end Read_Events;
    
    procedure Cancel_Read (Display : Wayland_Client.Display) is

@@ -30,7 +30,10 @@ package Posix.Wayland_Client is
    -- Added this linker option here to avoid adding it
    -- to each gpr file that with's this Wayland Ada binding.
 
-   package Wl renames Posix.Wayland_Client;
+   type Call_Result_Code is (
+                             Success,
+                             Error
+                            );
    
    subtype Unsigned_32 is Interfaces.Unsigned_32;
 
@@ -1377,6 +1380,7 @@ package Posix.Wayland_Client is
    
    function Check_For_Events (Display : Wayland_Client.Display;
                               Timeout : Integer) return Check_For_Events_Status;
+   -- The timeout is given in milliseconds.
    
    function Dispatch (Display : Wayland_Client.Display) return Int with
      Pre => Display.Is_Connected;
@@ -1404,7 +1408,7 @@ package Posix.Wayland_Client is
    -- Prepare to read events from the display's file descriptor
 
    function Read_Events
-     (Display : Wayland_Client.Display) return Integer with
+     (Display : Wayland_Client.Display) return Call_Result_Code with
      Pre => Display.Is_Connected;
    -- Returns 0 on success or -1 on error.
    
@@ -1676,7 +1680,7 @@ package Posix.Wayland_Client is
                        Height : Integer) with
      Pre => Region.Has_Proxy;
    -- Subtract the specified rectangle from the region.
-
+   
    generic
       type Data_Type is limited private;
       type Data_Ptr is access all Data_Type;
@@ -1695,8 +1699,8 @@ package Posix.Wayland_Client is
       
    package Display_Events is
       
-      procedure Subscribe (Display : in out Wayland_Client.Display;
-                           Data    : not null Data_Ptr);      
+      function Subscribe (Display : in out Wayland_Client.Display;
+                          Data    : not null Data_Ptr) return Call_Result_Code;
       
    end Display_Events;
    
@@ -1715,8 +1719,8 @@ package Posix.Wayland_Client is
                                             Id       : Unsigned_32);
    package Registry_Events is
 
-      procedure Subscribe (Registry : in out Wayland_Client.Registry;
-                           Data     : not null Data_Ptr);
+      function Subscribe (Registry : in out Wayland_Client.Registry;
+                          Data     : not null Data_Ptr) return Call_Result_Code;
       -- Starts subcription to global objects addded and removed events.
       -- To stop subscription, call Registry.Destroy.
 
@@ -1732,8 +1736,8 @@ package Posix.Wayland_Client is
       
    package Callback_Events is
       
-      procedure Subscribe (Callback : in out Wayland_Client.Callback;
-                           Data     : not null Data_Ptr);
+      function Subscribe (Callback : in out Wayland_Client.Callback;
+                          Data     : not null Data_Ptr) return Call_Result_Code;
       
    end Callback_Events;
    
@@ -1759,8 +1763,8 @@ package Posix.Wayland_Client is
 
    package Shell_Surface_Events is
 
-      procedure Subscribe (Surface : in out Shell_Surface;
-                           Data    : not null Data_Ptr);
+      function Subscribe (Surface : in out Shell_Surface;
+                          Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Shell_Surface_Events;
 
@@ -1780,8 +1784,8 @@ package Posix.Wayland_Client is
       
    package Seat_Events is
 
-      procedure Subscribe (Seat : in out Wayland_Client.Seat;
-                           Data : not null Data_Ptr);
+      function Subscribe (Seat : in out Wayland_Client.Seat;
+                          Data : not null Data_Ptr) return Call_Result_Code;
 
    end Seat_Events;
 
@@ -1847,8 +1851,8 @@ package Posix.Wayland_Client is
 
    package Pointer_Events is
 
-      procedure Subscribe (Pointer : in out Wayland_Client.Pointer;
-                           Data    : not null Data_Ptr);
+      function Subscribe (Pointer : in out Wayland_Client.Pointer;
+                          Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Pointer_Events;
    -- Pointer Axis Events are for example scroll wheel rotation

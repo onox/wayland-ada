@@ -2,6 +2,8 @@ with Wayland_Client;
 
 package body Client_Examples.Find_Compositor is
 
+   use all type Wayland_Client.Call_Result_Code;
+
    procedure Global_Registry_Handler
      (Compositor : not null Wayland_Client.Compositor_Ptr;
       Registry   : Wayland_Client.Registry;
@@ -35,6 +37,8 @@ package body Client_Examples.Find_Compositor is
 
    Compositor : aliased Wayland_Client.Compositor;
 
+   Call_Result : Wayland_Client.Call_Result_Code;
+
    procedure Run is
    begin
       Display.Connect;
@@ -50,7 +54,16 @@ package body Client_Examples.Find_Compositor is
          return;
       end if;
 
-      Registry_Events.Subscribe (Registry, Compositor'Access);
+      Call_Result := Registry_Events.Subscribe (Registry, Compositor'Access);
+      case Call_Result is
+         when Success =>
+            Put_Line ("Successfully subscribed to registry events");
+         when Error =>
+            Put_Line ("Failed to subscribe to registry events");
+            Display.Disconnect;
+            return;
+      end case;
+
       Display.Dispatch;
       Display.Roundtrip;
 
