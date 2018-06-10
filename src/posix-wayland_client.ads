@@ -1457,8 +1457,6 @@ package Posix.Wayland_Client is
 
    function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean;
 
-   function Has_Started_Subscription (Registry : Wayland_Client.Registry) return Boolean;
-
    procedure Destroy (Registry : in out Wayland_Client.Registry) with
      Pre  => Registry.Has_Proxy,
      Post => not Registry.Has_Proxy;
@@ -1723,6 +1721,21 @@ package Posix.Wayland_Client is
       -- To stop subscription, call Registry.Destroy.
 
    end Registry_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+
+      with procedure Done (Data          : not null Data_Ptr;
+                           Callback      : Wayland_Client.Callback;
+                           Callback_Data : Unsigned_32);
+      
+   package Callback_Events is
+      
+      procedure Subscribe (Callback : in out Wayland_Client.Callback;
+                           Data     : not null Data_Ptr);
+      
+   end Callback_Events;
    
    generic
       type Data_Type is limited private;
@@ -4420,28 +4433,19 @@ private
    use type Wl_Thin.Subsurface_Ptr;
 
    type Display is tagged limited record
-      My_Display                  : Wl_Thin.Display_Ptr;
-      My_Fd                       : Integer;
-      My_Has_Started_Subscription : Boolean := False;
+      My_Display : Wl_Thin.Display_Ptr;
+      My_Fd      : Integer;
    end record;
-
-   function Has_Started_Subscription
-     (Display : Wayland_Client.Display) return Boolean is
-     (Display.My_Has_Started_Subscription);
    
    function Is_Connected (Display : Wayland_Client.Display) return Boolean is
      (Display.My_Display /= null);
 
    type Registry is tagged limited record
-      My_Registry                 : Wl_Thin.Registry_Ptr;
-      My_Has_Started_Subscription : Boolean := False;
+      My_Registry : Wl_Thin.Registry_Ptr;
    end record;
 
    function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean is
      (Registry.My_Registry /= null);
-
-   function Has_Started_Subscription (Registry : Wayland_Client.Registry) return Boolean is
-     (Registry.My_Has_Started_Subscription);
 
    type Compositor is tagged limited record
       My_Compositor : Wl_Thin.Compositor_Ptr;
@@ -4459,7 +4463,6 @@ private
    
    type Seat is tagged limited record
       My_Seat : Wl_Thin.Seat_Ptr;
-      My_Has_Started_Subscription : Boolean := False;
    end record;
 
    function Has_Proxy (Seat : Wayland_Client.Seat) return Boolean is

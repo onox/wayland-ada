@@ -1269,8 +1269,7 @@ package body Posix.Wayland_Client is
            := (
                My_Display                  => Display,
                My_Fd                       =>
-                 Wl_Thin.Display_Get_File_Descriptor (Display),
-               My_Has_Started_Subscription => True
+                 Wl_Thin.Display_Get_File_Descriptor (Display)
               );
          M : constant String := Interfaces.C.Strings.Value (Message);
       begin
@@ -1289,8 +1288,7 @@ package body Posix.Wayland_Client is
            := (
                My_Display                  => Display,
                My_Fd                       =>
-                 Wl_Thin.Display_Get_File_Descriptor (Display),
-               My_Has_Started_Subscription => True
+                 Wl_Thin.Display_Get_File_Descriptor (Display)
               );
       begin
          Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -1334,11 +1332,7 @@ package body Posix.Wayland_Client is
                                        Interface_V : Wayland_Client.chars_ptr;
                                        Version     : Unsigned_32)
       is
-         R : Wayland_Client.Registry
-           := (
-               My_Registry                 => Registry,
-               My_Has_Started_Subscription => True
-              );
+         R : Wayland_Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Added (Data_Ptr (Conversion.To_Pointer (Data)),
                               R,
@@ -1356,11 +1350,7 @@ package body Posix.Wayland_Client is
                                          Registry : Wl_Thin.Registry_Ptr;
                                          Id       : Unsigned_32)
       is
-         R : Wayland_Client.Registry
-           := (
-               My_Registry                 => Registry,
-               My_Has_Started_Subscription => True
-              );
+         R : Wayland_Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Removed (Data_Ptr (Conversion.To_Pointer (Data)), R, Id);
       end Internal_Object_Removed;
@@ -1383,6 +1373,39 @@ package body Posix.Wayland_Client is
       end Subscribe;
 
    end Registry_Events;
+   
+   package body Callback_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Done (Data          : Void_Ptr;
+                               Callback      : Wl_Thin.Callback_Ptr;
+                               Callback_Data : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Done (Data          : Void_Ptr;
+                               Callback      : Wl_Thin.Callback_Ptr;
+                               Callback_Data : Unsigned_32)
+      is
+         C : Wayland_Client.Callback := (My_Callback => Callback);
+      begin
+         Done (Data_Ptr (Conversion.To_Pointer (Data)), C, Callback_Data);
+      end Internal_Done;
+      
+      Listener : aliased Wl_Thin.Callback_Listener_T
+        := (Done => Internal_Done'Unrestricted_Access);
+
+      procedure Subscribe (Callback : in out Wayland_Client.Callback;
+                           Data     : not null Data_Ptr) is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Callback_Add_Listener (Callback.My_Callback,
+                                             Listener'Access,
+                                             Data.all'Address);
+      end Subscribe;
+      
+   end Callback_Events;   
    
    package body Shell_Surface_Events is
 
@@ -1478,10 +1501,7 @@ package body Posix.Wayland_Client is
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32)
       is
-         S : Wayland_Client.Seat := (
-                                     My_Seat                     => Seat,
-                                     My_Has_Started_Subscription => True
-                                    );
+         S : Wayland_Client.Seat := (My_Seat => Seat);
       begin
          Seat_Capabilities (Data_Ptr (Conversion.To_Pointer (Data)),
                             S,
@@ -1499,10 +1519,7 @@ package body Posix.Wayland_Client is
       is
          N : String := Interfaces.C.Strings.Value (Name);
 
-         S : Wayland_Client.Seat := (
-                                     My_Seat                     => Seat,
-                                     My_Has_Started_Subscription => True
-                                    );
+         S : Wayland_Client.Seat := (My_Seat => Seat);
       begin
          Seat_Name (Data_Ptr (Conversion.To_Pointer (Data)), S, N);
       end Internal_Seat_Name;
