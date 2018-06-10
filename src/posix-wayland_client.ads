@@ -1678,10 +1678,34 @@ package Posix.Wayland_Client is
                        Height : Integer) with
      Pre => Region.Has_Proxy;
    -- Subtract the specified rectangle from the region.
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+
+      with procedure Error (Data      : not null Data_Ptr;
+                            Display   : Wayland_Client.Display;
+                            Object_Id : Void_Ptr;
+                            Code      : Unsigned_32;
+                            Message   : String);
+      -- Should really Object_Id really be exposed here? This part
+      -- of the API can potentially be improved upon.
+
+      with procedure Delete_Id (Data    : not null Data_Ptr;
+                                Display : Wayland_Client.Display;
+                                Id      : Unsigned_32);
+      
+   package Display_Events is
+      
+      procedure Subscribe (Display : in out Wayland_Client.Display;
+                           Data    : not null Data_Ptr);      
+      
+   end Display_Events;
    
    generic
       type Data_Type is limited private;
       type Data_Ptr is access all Data_Type;
+      
       with procedure Global_Object_Added (Data     : not null Data_Ptr;
                                           Registry : Wayland_Client.Registry;
                                           Id       : Unsigned_32;
@@ -1693,65 +1717,67 @@ package Posix.Wayland_Client is
                                             Id       : Unsigned_32);
    package Registry_Events is
 
-      -- Starts subcription to global objects addded and removed events.
-      -- To stop subscription, call Registry.Destroy.
       procedure Subscribe (Registry : in out Wayland_Client.Registry;
                            Data     : not null Data_Ptr);
+      -- Starts subcription to global objects addded and removed events.
+      -- To stop subscription, call Registry.Destroy.
 
    end Registry_Events;
    
    generic
-      type Data_Type is private;
-      Data : Data_Type;
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
 
       with procedure Shell_Surface_Ping
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Surface : Shell_Surface;
          Serial  : Unsigned_32);
 
       with procedure Shell_Surface_Configure
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Surface : Shell_Surface;
          Edges   : Unsigned_32;
          Width   : Integer;
          Height  : Integer);
 
       with procedure Shell_Surface_Popup_Done
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Surface : Shell_Surface);
 
    package Shell_Surface_Events is
 
-      procedure Subscribe (Surface : in out Shell_Surface);
+      procedure Subscribe (Surface : in out Shell_Surface;
+                           Data    : not null Data_Ptr);
 
    end Shell_Surface_Events;
 
    generic
-      type Data_Type is private;
-      Data : Data_Type;
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
 
       with procedure Seat_Capabilities
-        (Data         : Data_Type;
+        (Data         : not null Data_Ptr;
          Seat         : Wayland_Client.Seat;
          Capabilities : Unsigned_32);
 
       with procedure Seat_Name
-        (Data : Data_Type;
+        (Data : not null Data_Ptr;
          Seat : Wayland_Client.Seat;
          Name : String);
       
    package Seat_Events is
 
-      procedure Subscribe (S : in out Seat);
+      procedure Subscribe (Seat : in out Wayland_Client.Seat;
+                           Data : not null Data_Ptr);
 
    end Seat_Events;
 
    generic
-      type Data_Type is private;
-      Data : Data_Type;
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
 
       with procedure Pointer_Enter
-        (Data      : Data_Type;
+        (Data      : not null Data_Ptr;
          Pointer   : Wayland_Client.Pointer;
          Serial    : Unsigned_32;
          Surface   : Wayland_Client.Surface;
@@ -1759,20 +1785,20 @@ package Posix.Wayland_Client is
          Surface_Y : Wayland_Client.Fixed);
 
       with procedure Pointer_Leave
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Pointer : Wayland_Client.Pointer;
          Serial  : Unsigned_32;
          Surface : Wayland_Client.Surface);
 
       with procedure Pointer_Motion
-        (Data      : Data_Type;
+        (Data      : not null Data_Ptr;
          Pointer   : Wayland_Client.Pointer;
          Time      : Unsigned_32;
          Surface_X : Wayland_Client.Fixed;
          Surface_Y : Wayland_Client.Fixed);
 
       with procedure Pointer_Button
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Pointer : Wayland_Client.Pointer;
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
@@ -1780,35 +1806,36 @@ package Posix.Wayland_Client is
          State   : Unsigned_32);
 
       with procedure Pointer_Axis
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Pointer : Wayland_Client.Pointer;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
          Value   : Wayland_Client.Fixed);
 
-      with procedure Pointer_Frame (Data    : Data_Type;
+      with procedure Pointer_Frame (Data    : not null Data_Ptr;
                                     Pointer : Wayland_Client.Pointer);
       
       with procedure Pointer_Axis_Source
-        (Data        : Data_Type;
+        (Data        : not null Data_Ptr;
          Pointer     : Wayland_Client.Pointer;
          Axis_Source : Unsigned_32);
 
       with procedure Pointer_Axis_Stop
-        (Data    : Data_Type;
+        (Data    : not null Data_Ptr;
          Pointer : Wayland_Client.Pointer;
          Time    : Unsigned_32;
          Axis    : Unsigned_32);
 
       with procedure Pointer_Axis_Discrete
-        (Data     : Data_Type;
+        (Data     : not null Data_Ptr;
          Pointer  : Wayland_Client.Pointer;
          Axis     : Unsigned_32;
          Discrete : Integer);
 
    package Pointer_Events is
 
-      procedure Subscribe (P : in out Pointer);
+      procedure Subscribe (Pointer : in out Wayland_Client.Pointer;
+                           Data    : not null Data_Ptr);
 
    end Pointer_Events;
    -- Pointer Axis Events are for example scroll wheel rotation
@@ -4393,10 +4420,15 @@ private
    use type Wl_Thin.Subsurface_Ptr;
 
    type Display is tagged limited record
-      My_Display : Wl_Thin.Display_Ptr;
-      My_Fd      : Integer;
+      My_Display                  : Wl_Thin.Display_Ptr;
+      My_Fd                       : Integer;
+      My_Has_Started_Subscription : Boolean := False;
    end record;
 
+   function Has_Started_Subscription
+     (Display : Wayland_Client.Display) return Boolean is
+     (Display.My_Has_Started_Subscription);
+   
    function Is_Connected (Display : Wayland_Client.Display) return Boolean is
      (Display.My_Display /= null);
 

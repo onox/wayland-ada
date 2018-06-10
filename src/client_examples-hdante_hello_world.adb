@@ -91,8 +91,8 @@ package body Client_Examples.Hdante_Hello_World is
    end Seat_Name;
 
    package Seat_Events is new Wayland_Client.Seat_Events
-     (Data_Type         => Data_Ptr,
-      Data              => Data'Unchecked_Access,
+     (Data_Type         => Data_Type,
+      Data_Ptr          => Data_Ptr,
       Seat_Capabilities => Seat_Capabilities,
       Seat_Name         => Seat_Name);
 
@@ -122,7 +122,7 @@ package body Client_Examples.Hdante_Hello_World is
          Seat.Get_Proxy (Registry,
                          Id,
                          Min (Version, 2));
-         Seat_Events.Subscribe (Seat);
+         Seat_Events.Subscribe (Seat, Data);
          --         Result := Wl_Thin.Pointer_Add_Listener (Pointer, Pointer_Listener'Access, Posix.Nil);
       end if;
    end Global_Registry_Handler;
@@ -166,8 +166,8 @@ package body Client_Examples.Hdante_Hello_World is
    end Shell_Surface_Popup_Done;
 
    package Shell_Surface_Events is new Wayland_Client.Shell_Surface_Events
-     (Data_Type                => Data_Ptr,
-      Data                     => Data'Unchecked_Access,
+     (Data_Type                => Data_Type,
+      Data_Ptr                 => Data_Ptr,
       Shell_Surface_Ping       => Shell_Surface_Ping,
       Shell_Surface_Configure  => Shell_Surface_Configure,
       Shell_Surface_Popup_Done => Shell_Surface_Popup_Done);
@@ -257,8 +257,8 @@ package body Client_Examples.Hdante_Hello_World is
    end Pointer_Axis_Discrete;
 
    package Mouse_Events is new Wayland_Client.Pointer_Events
-     (Data_Type             => Data_Ptr,
-      Data                  => Data'Unchecked_Access,
+     (Data_Type             => Data_Type,
+      Data_Ptr              => Data_Ptr,
       Pointer_Enter         => Mouse_Enter,
       Pointer_Leave         => Pointer_Leave,
       Pointer_Motion        => Pointer_Motion,
@@ -321,7 +321,7 @@ package body Client_Examples.Hdante_Hello_World is
       if Exists_Mouse then
          Put_Line ("Start mouse subscription");
          Seat.Get_Pointer (Pointer);
-         Mouse_Events.Subscribe (Pointer);
+         Mouse_Events.Subscribe (Pointer, Data'Access);
       end if;
 
       Image.Open (File_Name,
@@ -378,7 +378,7 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Shell_Surface_Events.Subscribe (Shell_Surface);
+      Shell_Surface_Events.Subscribe (Shell_Surface, Data'Access);
 
       Shell_Surface.Set_Toplevel;
 

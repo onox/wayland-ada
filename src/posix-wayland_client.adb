@@ -40,6 +40,7 @@ package body Posix.Wayland_Client is
         Import        => True,
         Convention    => C,
         External_Name => "wl_proxy_add_listener";
+      -- Returns 0 on success, otherwise -1 on failure.
 
       procedure wl_proxy_set_user_data
         (arg1 : Proxy_Ptr;
@@ -1241,11 +1242,85 @@ package body Posix.Wayland_Client is
 
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
+   package body Display_Events is
+      
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+
+      procedure Internal_Error (Data      : Void_Ptr;
+                                Display   : Wl_Thin.Display_Ptr;
+                                Object_Id : Void_Ptr;
+                                Code      : Unsigned_32;
+                                Message   : chars_ptr) with
+        Convention => C;
+
+      procedure Internal_Delete_Id (Data    : Void_Ptr;
+                                    Display : Wl_Thin.Display_Ptr;
+                                    Id      : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Error (Data      : Void_Ptr;
+                                Display   : Wl_Thin.Display_Ptr;
+                                Object_Id : Void_Ptr;
+                                Code      : Unsigned_32;
+                                Message   : chars_ptr)
+      is
+         D : Wayland_Client.Display
+           := (
+               My_Display                  => Display,
+               My_Fd                       =>
+                 Wl_Thin.Display_Get_File_Descriptor (Display),
+               My_Has_Started_Subscription => True
+              );
+         M : constant String := Interfaces.C.Strings.Value (Message);
+      begin
+         Error (Data_Ptr (Conversion.To_Pointer (Data)),
+                D,
+                Object_Id,
+                Code,
+                M);
+      end Internal_Error;
+      
+      procedure Internal_Delete_Id (Data    : Void_Ptr;
+                                    Display : Wl_Thin.Display_Ptr;
+                                    Id      : Unsigned_32)
+      is
+         D : Wayland_Client.Display
+           := (
+               My_Display                  => Display,
+               My_Fd                       =>
+                 Wl_Thin.Display_Get_File_Descriptor (Display),
+               My_Has_Started_Subscription => True
+              );
+      begin
+         Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)),
+                    D,
+                    Id);
+      end Internal_Delete_Id;
+      
+      Listener : aliased Wl_Thin.Display_Listener_T
+        := (
+            Error     => Internal_Error'Unrestricted_Access,
+            Delete_Id => Internal_Delete_Id'Unrestricted_Access
+           );
+
+      procedure Subscribe (Display : in out Wayland_Client.Display;
+                           Data    : not null Data_Ptr) is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Display_Add_Listener (Display.My_Display,
+                                            Listener'Access,
+                                            Data.all'Address);
+      end Subscribe;
+      
+   end Display_Events;
+   
    package body Registry_Events is
 
-      package Conv is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
       
-      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
+      procedure Internal_Object_Added (Data        : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
                                        Id          : Unsigned_32;
                                        Interface_V : Wayland_Client.chars_ptr;
@@ -1253,37 +1328,41 @@ package body Posix.Wayland_Client is
         Convention => C,
         Global     => null;
 
-      procedure Internal_Object_Added (Unused_Data : Void_Ptr;
+      procedure Internal_Object_Added (Data        : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
                                        Id          : Unsigned_32;
                                        Interface_V : Wayland_Client.chars_ptr;
                                        Version     : Unsigned_32)
       is
-         R : Wayland_Client.Registry := (
-                             My_Registry                 => Registry,
-                             My_Has_Started_Subscription => True
-                            );
+         R : Wayland_Client.Registry
+           := (
+               My_Registry                 => Registry,
+               My_Has_Started_Subscription => True
+              );
       begin
-         Global_Object_Added (Data_Ptr (Conv.To_Pointer (Unused_Data)),
-                              R, Id, Value (Interface_V), Version);
+         Global_Object_Added (Data_Ptr (Conversion.To_Pointer (Data)),
+                              R,
+                              Id,
+                              Value (Interface_V),
+                              Version);
       end Internal_Object_Added;
 
-      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
-                                         Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Unsigned_32) with
+      procedure Internal_Object_Removed (Data     : Void_Ptr;
+                                         Registry : Wl_Thin.Registry_Ptr;
+                                         Id       : Unsigned_32) with
         Convention => C;
 
-      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;
-                                         Registry    : Wl_Thin.Registry_Ptr;
-                                         Id          : Unsigned_32)
+      procedure Internal_Object_Removed (Data     : Void_Ptr;
+                                         Registry : Wl_Thin.Registry_Ptr;
+                                         Id       : Unsigned_32)
       is
-         R : Wayland_Client.Registry :=
-           (
-            My_Registry                 => Registry,
-            My_Has_Started_Subscription => True
-           );
+         R : Wayland_Client.Registry
+           := (
+               My_Registry                 => Registry,
+               My_Has_Started_Subscription => True
+              );
       begin
-         Global_Object_Removed (Data_Ptr (Conv.To_Pointer (Unused_Data)), R, Id);
+         Global_Object_Removed (Data_Ptr (Conversion.To_Pointer (Data)), R, Id);
       end Internal_Object_Removed;
 
       Listener : aliased Wayland_Client.Registry_Listener_T :=
@@ -1307,54 +1386,63 @@ package body Posix.Wayland_Client is
    
    package body Shell_Surface_Events is
 
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
       procedure Internal_Shell_Surface_Ping
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr;
-         Serial      : Unsigned_32) with
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr;
+         Serial  : Unsigned_32) with
         Convention => C;
 
       procedure Internal_Shell_Surface_Configure
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr;
-         Edges       : Unsigned_32;
-         Width       : Integer;
-         Height      : Integer) with
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr;
+         Edges   : Unsigned_32;
+         Width   : Integer;
+         Height  : Integer) with
         Convention => C;
 
       procedure Internal_Shell_Surface_Popup_Done
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr) with
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr) with
         Convention => C;
 
       procedure Internal_Shell_Surface_Ping
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr;
-         Serial      : Unsigned_32)
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr;
+         Serial  : Unsigned_32)
       is
          S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
-         Shell_Surface_Ping (Data, S, Serial);
+         Shell_Surface_Ping (Data_Ptr (Conversion.To_Pointer (Data)),
+                             S,
+                             Serial);
       end Internal_Shell_Surface_Ping;
 
       procedure Internal_Shell_Surface_Configure
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr;
-         Edges       : Unsigned_32;
-         Width       : Integer;
-         Height      : Integer)
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr;
+         Edges   : Unsigned_32;
+         Width   : Integer;
+         Height  : Integer)
       is
          S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
-         Shell_Surface_Configure (Data, S, Edges, Width, Height);
+         Shell_Surface_Configure (Data_Ptr (Conversion.To_Pointer (Data)),
+                                  S,
+                                  Edges,
+                                  Width,
+                                  Height);
       end Internal_Shell_Surface_Configure;
 
       procedure Internal_Shell_Surface_Popup_Done
-        (Unused_Data : Void_Ptr;
-         Surface     : Wl_Thin.Shell_Surface_Ptr)
+        (Data    : Void_Ptr;
+         Surface : Wl_Thin.Shell_Surface_Ptr)
       is
          S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
       begin
-         Shell_Surface_Popup_Done (Data, S);
+         Shell_Surface_Popup_Done (Data_Ptr (Conversion.To_Pointer (Data)), S);
       end Internal_Shell_Surface_Popup_Done;
 
       Listener : aliased Wl_Thin.Shell_Surface_Listener_T :=
@@ -1364,53 +1452,59 @@ package body Posix.Wayland_Client is
          Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
         );
 
-      procedure Subscribe (Surface : in out Wayland_Client.Shell_Surface) is
+      procedure Subscribe (Surface : in out Wayland_Client.Shell_Surface;
+                           Data    : not null Data_Ptr) is
          I : Posix.int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
            (Surface.My_Shell_Surface,
-            Listener'Unchecked_Access,
-            Nil);
+            Listener'Access,
+            Data.all'Address);
       end Subscribe;
 
    end Shell_Surface_Events;
 
    package body Seat_Events is
 
-      procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32) with
         Convention => C;
 
-      procedure Internal_Seat_Capabilities (Unused_Data  : Void_Ptr;
+      procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32)
       is
          S : Wayland_Client.Seat := (
-                         My_Seat                     => Seat,
-                         My_Has_Started_Subscription => True
-                        );
+                                     My_Seat                     => Seat,
+                                     My_Has_Started_Subscription => True
+                                    );
       begin
-         Seat_Capabilities (Data, S, Capabilities);
+         Seat_Capabilities (Data_Ptr (Conversion.To_Pointer (Data)),
+                            S,
+                            Capabilities);
       end Internal_Seat_Capabilities;
 
-      procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
-                                    Seat        : Wl_Thin.Seat_Ptr;
-                                    Name        : Interfaces.C.Strings.chars_ptr) with
+      procedure Internal_Seat_Name (Data : Void_Ptr;
+                                    Seat : Wl_Thin.Seat_Ptr;
+                                    Name : Interfaces.C.Strings.chars_ptr) with
         Convention => C;
 
-      procedure Internal_Seat_Name (Unused_Data : Void_Ptr;
-                                    Seat        : Wl_Thin.Seat_Ptr;
-                                    Name        : Interfaces.C.Strings.chars_ptr)
+      procedure Internal_Seat_Name (Data : Void_Ptr;
+                                    Seat : Wl_Thin.Seat_Ptr;
+                                    Name : Interfaces.C.Strings.chars_ptr)
       is
          N : String := Interfaces.C.Strings.Value (Name);
 
          S : Wayland_Client.Seat := (
-                         My_Seat                     => Seat,
-                         My_Has_Started_Subscription => True
-                        );
+                                     My_Seat                     => Seat,
+                                     My_Has_Started_Subscription => True
+                                    );
       begin
-         Seat_Name (Data, S, N);
+         Seat_Name (Data_Ptr (Conversion.To_Pointer (Data)), S, N);
       end Internal_Seat_Name;
 
       Seat_Listener : aliased Wl_Thin.Seat_Listener_T :=
@@ -1419,32 +1513,37 @@ package body Posix.Wayland_Client is
          Name         => Internal_Seat_Name'Unrestricted_Access
         );
 
-      procedure Subscribe (S : in out Wayland_Client.Seat) is
+      procedure Subscribe (Seat : in out Wayland_Client.Seat;
+                           Data : not null Data_Ptr) is
          I : Posix.int;
       begin
-         I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,
-                                         Listener => Seat_Listener'Unchecked_Access,
-                                         Data     => Nil);
+         I := Wl_Thin.Seat_Add_Listener
+           (Seat     => Seat.My_Seat,
+            Listener => Seat_Listener'Access,
+            Data     => Data.all'Address);
       end Subscribe;
 
    end Seat_Events;
 
    package body Pointer_Events is
 
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
       procedure Internal_Pointer_Enter
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Surface     : Wl_Thin.Surface_Ptr;
-         Surface_X   : Wayland_Client.Fixed;
-         Surface_Y   : Wayland_Client.Fixed) with
+        (Data      : Void_Ptr;
+         Pointer   : Wl_Thin.Pointer_Ptr;
+         Serial    : Unsigned_32;
+         Surface   : Wl_Thin.Surface_Ptr;
+         Surface_X : Wayland_Client.Fixed;
+         Surface_Y : Wayland_Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Leave
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Surface     : Wl_Thin.Surface_Ptr) with
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Serial  : Unsigned_32;
+         Surface : Wl_Thin.Surface_Ptr) with
         Convention => C;
 
       procedure Internal_Pointer_Motion
@@ -1456,12 +1555,12 @@ package body Posix.Wayland_Client is
         Convention => C;
 
       procedure Internal_Pointer_Button
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Time        : Unsigned_32;
-         Button      : Unsigned_32;
-         State       : Unsigned_32) with
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Serial  : Unsigned_32;
+         Time    : Unsigned_32;
+         Button  : Unsigned_32;
+         State   : Unsigned_32) with
         Convention => C;
 
       procedure Internal_Pointer_Axis
@@ -1497,29 +1596,34 @@ package body Posix.Wayland_Client is
         Convention => C;
 
       procedure Internal_Pointer_Enter
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Surface     : Wl_Thin.Surface_Ptr;
-         Surface_X   : Wayland_Client.Fixed;
-         Surface_Y   : Wayland_Client.Fixed)
+        (Data      : Void_Ptr;
+         Pointer   : Wl_Thin.Pointer_Ptr;
+         Serial    : Unsigned_32;
+         Surface   : Wl_Thin.Surface_Ptr;
+         Surface_X : Wayland_Client.Fixed;
+         Surface_Y : Wayland_Client.Fixed)
       is
          P : Wayland_Client.Pointer := (My_Pointer => Pointer);
          S : Wayland_Client.Surface := (My_Surface => Surface);
       begin
-         Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);
+         Pointer_Enter (Data_Ptr (Conversion.To_Pointer (Data)),
+                        P,
+                        Serial,
+                        S,
+                        Surface_X,
+                        Surface_Y);
       end Internal_Pointer_Enter;
 
       procedure Internal_Pointer_Leave
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Surface     : Wl_Thin.Surface_Ptr)
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Serial  : Unsigned_32;
+         Surface : Wl_Thin.Surface_Ptr)
       is
          P : Wayland_Client.Pointer := (My_Pointer => Pointer);
          S : Wayland_Client.Surface := (My_Surface => Surface);
       begin
-         Pointer_Leave (Data, P, Serial, S);
+         Pointer_Leave (Data_Ptr (Conversion.To_Pointer (Data)), P, Serial, S);
       end Internal_Pointer_Leave;
 
       procedure Internal_Pointer_Motion
@@ -1527,22 +1631,33 @@ package body Posix.Wayland_Client is
          Pointer   : Wl_Thin.Pointer_Ptr;
          Time      : Unsigned_32;
          Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed) is
-      begin
-         null;
-      end Internal_Pointer_Motion;
-
-      procedure Internal_Pointer_Button
-        (Unused_Data : Void_Ptr;
-         Pointer     : Wl_Thin.Pointer_Ptr;
-         Serial      : Unsigned_32;
-         Time        : Unsigned_32;
-         Button      : Unsigned_32;
-         State       : Unsigned_32)
+         Surface_Y : Wayland_Client.Fixed)
       is
          P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         Pointer_Button (Data, P, Serial, Time, Button, State);
+         Pointer_Motion (Data_Ptr (Conversion.To_Pointer (Data)),
+                         P,
+                         Time,
+                         Surface_X,
+                         Surface_Y);
+      end Internal_Pointer_Motion;
+
+      procedure Internal_Pointer_Button
+        (Data    : Void_Ptr;
+         Pointer : Wl_Thin.Pointer_Ptr;
+         Serial  : Unsigned_32;
+         Time    : Unsigned_32;
+         Button  : Unsigned_32;
+         State   : Unsigned_32)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+      begin
+         Pointer_Button (Data_Ptr (Conversion.To_Pointer (Data)),
+                         P,
+                         Serial,
+                         Time,
+                         Button,
+                         State);
       end Internal_Pointer_Button;
 
       procedure Internal_Pointer_Axis
@@ -1550,41 +1665,63 @@ package body Posix.Wayland_Client is
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wayland_Client.Fixed) is
+         Value   : Wayland_Client.Fixed)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         null;
+         Pointer_Axis (Data_Ptr (Conversion.To_Pointer (Data)),
+                       P,
+                       Time,
+                       Axis,
+                       Value);
       end Internal_Pointer_Axis;
 
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
-                                        Pointer : Wl_Thin.Pointer_Ptr) is
+                                        Pointer : Wl_Thin.Pointer_Ptr)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         null;
+         Pointer_Frame (Data_Ptr (Conversion.To_Pointer (Data)), P);
       end Internal_Pointer_Frame;
 
       procedure Internal_Pointer_Axis_Source
         (Data        : Void_Ptr;
          Pointer     : Wl_Thin.Pointer_Ptr;
-         Axis_Source : Unsigned_32) is
+         Axis_Source : Unsigned_32)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         null;
+         Pointer_Axis_Source (Data_Ptr (Conversion.To_Pointer (Data)),
+                              P,
+                              Axis_Source);
       end Internal_Pointer_Axis_Source;
 
       procedure Internal_Pointer_Axis_Stop
         (Data    : Void_Ptr;
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Unsigned_32) is
+         Axis    : Unsigned_32)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         null;
+         Pointer_Axis_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
+                            P,
+                            Time,
+                            Axis);
       end Internal_Pointer_Axis_Stop;
 
       procedure Internal_Pointer_Axis_Discrete
         (Data     : Void_Ptr;
          Pointer  : Wl_Thin.Pointer_Ptr;
          Axis     : Unsigned_32;
-         Discrete : Integer) is
+         Discrete : Integer)
+      is
+         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
-         null;
+         Pointer_Axis_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
+                                P,
+                                Axis,
+                                Discrete);
       end Internal_Pointer_Axis_Discrete;
 
       Pointer_Listener : aliased Wl_Thin.Pointer_Listener_T :=
@@ -1600,13 +1737,14 @@ package body Posix.Wayland_Client is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
         );
 
-      procedure Subscribe (P : in out Wayland_Client.Pointer) is
+      procedure Subscribe (Pointer : in out Wayland_Client.Pointer;
+                           Data    : not null Data_Ptr) is
          I : Posix.int;
       begin
          I := Wl_Thin.Pointer_Add_Listener
-           (Pointer  => P.My_Pointer,
-            Listener => Pointer_Listener'Unrestricted_Access,
-            Data     => Nil);
+           (Pointer  => Pointer.My_Pointer,
+            Listener => Pointer_Listener'Access,
+            Data     => Data.all'Address);
       end Subscribe;
 
    end Pointer_Events;
