@@ -1427,6 +1427,84 @@ package body Posix.Wayland_Client is
       end Subscribe;
       
    end Callback_Events;   
+
+   package body Shm_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Format (Data   : Void_Ptr;
+                                 Shm    : Wl_Thin.Shm_Ptr;
+                                 Format : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Format (Data   : Void_Ptr;
+                                 Shm    : Wl_Thin.Shm_Ptr;
+                                 Format : Unsigned_32)
+      is
+         S : Wayland_Client.Shm := (My_Shm => Shm);
+      begin
+         Shm_Events.Format (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
+      end Internal_Format;
+      
+      Listener : aliased Wl_Thin.Shm_Listener_T
+        := (Format => Internal_Format'Unrestricted_Access);
+   
+      function Subscribe
+        (Shm  : in out Wayland_Client.Shm;
+         Data : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Shm_Add_Listener (Shm.My_Shm,
+                                        Listener'Access,
+                                        Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Shm_Events;
+
+   package body Buffer_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Release (Data   : Void_Ptr;
+                                  Buffer : Wl_Thin.Buffer_Ptr) with
+        Convention => C;
+
+      procedure Internal_Release (Data   : Void_Ptr;
+                                  Buffer : Wl_Thin.Buffer_Ptr)
+      is
+         B : Wayland_Client.Buffer := (My_Buffer => Buffer);
+      begin
+         Release (Data_Ptr (Conversion.To_Pointer (Data)), B);
+      end Internal_Release;
+      
+      Listener : aliased Wl_Thin.Buffer_Listener_T
+        := (Release => Internal_Release'Unrestricted_Access);
+
+      function Subscribe
+        (Buffer : in out Wayland_Client.Buffer;
+         Data   : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Buffer_Add_Listener (Buffer.My_Buffer,
+                                           Listener'Access,
+                                           Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Buffer_Events;
    
    package body Shell_Surface_Events is
 

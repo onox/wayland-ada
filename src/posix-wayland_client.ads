@@ -1740,6 +1740,34 @@ package Posix.Wayland_Client is
                           Data     : not null Data_Ptr) return Call_Result_Code;
       
    end Callback_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Format (Data   : not null Data_Ptr;
+                             Shm    : Wayland_Client.Shm;
+                             Format : Unsigned_32);
+   package Shm_Events is
+
+      function Subscribe (Shm  : in out Wayland_Client.Shm;
+                          Data : not null Data_Ptr) return Call_Result_Code;
+      
+   end Shm_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Release (Data   : not null Data_Ptr;
+                              Buffer : Wayland_Client.Buffer);
+      
+   package Buffer_Events is
+      
+      function Subscribe (Buffer : in out Wayland_Client.Buffer;
+                          Data   : not null Data_Ptr) return Call_Result_Code;
+      
+   end Buffer_Events;
    
    generic
       type Data_Type is limited private;
