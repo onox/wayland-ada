@@ -1505,6 +1505,336 @@ package body Posix.Wayland_Client is
       end Subscribe;
       
    end Buffer_Events;
+
+   package body Data_Offer_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Offer (Data       : Void_Ptr;
+                                Data_Offer : Wl_Thin.Data_Offer_Ptr;
+                                Mime_Type  : chars_ptr) with
+        Convention => C;
+
+      procedure Internal_Source_Actions
+        (Data           : Void_Ptr;
+         Data_Offer     : Wl_Thin.Data_Offer_Ptr;
+         Source_Actions : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Action (Data       : Void_Ptr;
+                                 Data_Offer : Wl_Thin.Data_Offer_Ptr;
+                                 Dnd_Action : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Offer (Data       : Void_Ptr;
+                                Data_Offer : Wl_Thin.Data_Offer_Ptr;
+                                Mime_Type  : chars_ptr)
+      is
+         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+         
+         M : String := Interfaces.C.Strings.Value (Mime_Type);
+      begin
+         Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
+      end Internal_Offer;
+
+      procedure Internal_Source_Actions
+        (Data           : Void_Ptr;
+         Data_Offer     : Wl_Thin.Data_Offer_Ptr;
+         Source_Actions : Unsigned_32)
+      is
+         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+      begin
+         Data_Offer_Events.Source_Actions
+           (Data_Ptr (Conversion.To_Pointer (Data)),
+            D,
+            Source_Actions);
+      end Internal_Source_Actions;
+
+      procedure Internal_Action (Data       : Void_Ptr;
+                                 Data_Offer : Wl_Thin.Data_Offer_Ptr;
+                                 Dnd_Action : Unsigned_32)
+      is
+         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+      begin
+         Action (Data_Ptr (Conversion.To_Pointer (Data)),
+                 D,
+                 Dnd_Action);
+      end Internal_Action;
+      
+      Listener : aliased Wl_Thin.Data_Offer_Listener_T
+        := (Offer          => Internal_Offer'Unrestricted_Access,
+            Source_Actions => Internal_Source_Actions'Unrestricted_Access,
+            Action         => Internal_Action'Unrestricted_Access);
+
+      function Subscribe
+        (Data_Offer : in out Wayland_Client.Data_Offer;
+         Data       : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Data_Offer_Add_Listener (Data_Offer.My_Data_Offer,
+                                               Listener'Access,
+                                               Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Data_Offer_Events;
+
+   package body Data_Source_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Target (Data        : Void_Ptr;
+                                 Data_Source : Wl_Thin.Data_Source_Ptr;
+                                 Mime_Type   : chars_ptr) with
+        Convention => C;
+
+      procedure Internal_Send (Data        : Void_Ptr;
+                               Data_Source : Wl_Thin.Data_Source_Ptr;
+                               Mime_Type   : chars_ptr;
+                               Fd          : Integer) with
+        Convention => C;
+
+      procedure Internal_Cancelled (Data        : Void_Ptr;
+                                    Data_Source : Wl_Thin.Data_Source_Ptr) with
+        Convention => C;
+
+      procedure Internal_Dnd_Drop_Performed
+        (Data        : Void_Ptr;
+         Data_Source : Wl_Thin.Data_Source_Ptr) with
+        Convention => C;
+
+      procedure Internal_Dnd_Finished
+        (Data        : Void_Ptr;
+         Data_Source : Wl_Thin.Data_Source_Ptr) with
+        Convention => C;
+
+      procedure Internal_Action (Data        : Void_Ptr;
+                                 Data_Source : Wl_Thin.Data_Source_Ptr;
+                                 Dnd_Action  : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Target (Data        : Void_Ptr;
+                                 Data_Source : Wl_Thin.Data_Source_Ptr;
+                                 Mime_Type   : chars_ptr)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         
+         M : String := Interfaces.C.Strings.Value (Mime_Type);
+      begin
+         Target (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
+      end Internal_Target;
+
+      procedure Internal_Send (Data        : Void_Ptr;
+                               Data_Source : Wl_Thin.Data_Source_Ptr;
+                               Mime_Type   : chars_ptr;
+                               Fd          : Integer)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         
+         M : String := Interfaces.C.Strings.Value (Mime_Type);
+      begin
+         Send (Data_Ptr (Conversion.To_Pointer (Data)), D, M, Fd);
+      end Internal_Send;
+
+      procedure Internal_Cancelled (Data        : Void_Ptr;
+                                    Data_Source : Wl_Thin.Data_Source_Ptr)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+      begin
+         Cancelled (Data_Ptr (Conversion.To_Pointer (Data)), D);
+      end Internal_Cancelled;
+
+      procedure Internal_Dnd_Drop_Performed
+        (Data        : Void_Ptr;
+         Data_Source : Wl_Thin.Data_Source_Ptr)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+      begin
+         Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
+      end Internal_Dnd_Drop_Performed;
+
+      procedure Internal_Dnd_Finished (Data        : Void_Ptr;
+                                       Data_Source : Wl_Thin.Data_Source_Ptr)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+      begin
+         Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
+      end Internal_Dnd_Finished;
+
+      procedure Internal_Action (Data        : Void_Ptr;
+                                 Data_Source : Wl_Thin.Data_Source_Ptr;
+                                 Dnd_Action  : Unsigned_32)
+      is
+         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+      begin
+         Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
+      end Internal_Action;
+      
+      Listener : aliased Wl_Thin.Data_Source_Listener_T
+        := (Target             => Internal_Target'Unrestricted_Access,
+            Send               => Internal_Send'Unrestricted_Access,
+            Cancelled          => Internal_Cancelled'Unrestricted_Access,
+            Dnd_Drop_Performed =>
+              Internal_Dnd_Drop_Performed'Unrestricted_Access,
+            Dnd_Finished       => Internal_Dnd_Finished'Unrestricted_Access,
+            Action             => Internal_Action'Unrestricted_Access);
+
+      function Subscribe
+        (Data_Source : in out Wayland_Client.Data_Source;
+         Data       : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Data_Source_Add_Listener (Data_Source.My_Data_Source,
+                                                Listener'Access,
+                                                Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Data_Source_Events;
+   
+   package body Data_Device_Events is
+
+      package Conversion is new
+        System.Address_To_Access_Conversions (Data_Type);
+      
+      procedure Internal_Data_Offer (Data        : Void_Ptr;
+                                     Data_Device : Wl_Thin.Data_Device_Ptr;
+                                     Id          : Unsigned_32) with
+        Convention => C;
+
+      procedure Internal_Enter (Data        : Void_Ptr;
+                                Data_Device : Wl_Thin.Data_Device_Ptr;
+                                Serial      : Unsigned_32;
+                                Surface     : Wl_Thin.Surface_Ptr;
+                                X           : Fixed;
+                                Y           : Fixed;
+                                Id          : Wl_Thin.Data_Offer_Ptr) with
+        Convention => C;
+
+      procedure Internal_Leave (Data        : Void_Ptr;
+                                Data_Device : Wl_Thin.Data_Device_Ptr) with
+        Convention => C;
+
+      procedure Internal_Motion (Data        : Void_Ptr;
+                                 Data_Device : Wl_Thin.Data_Device_Ptr;
+                                 Time        : Unsigned_32;
+                                 X           : Fixed;
+                                 Y           : Fixed) with
+        Convention => C;
+
+      procedure Internal_Drop (Data        : Void_Ptr;
+                               Data_Device : Wl_Thin.Data_Device_Ptr) with
+        Convention => C;
+
+      procedure Internal_Selection (Data        : Void_Ptr;
+                                    Data_Device : Wl_Thin.Data_Device_Ptr;
+                                    Id          : Wl_Thin.Data_Offer_Ptr) with
+        Convention => C;
+
+      procedure Internal_Data_Offer (Data        : Void_Ptr;
+                                     Data_Device : Wl_Thin.Data_Device_Ptr;
+                                     Id          : Unsigned_32)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+      begin
+         Data_Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
+      end Internal_Data_Offer;
+
+      procedure Internal_Enter (Data        : Void_Ptr;
+                                Data_Device : Wl_Thin.Data_Device_Ptr;
+                                Serial      : Unsigned_32;
+                                Surface     : Wl_Thin.Surface_Ptr;
+                                X           : Fixed;
+                                Y           : Fixed;
+                                Id          : Wl_Thin.Data_Offer_Ptr)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         S : Wayland_Client.Surface := (My_Surface => Surface);
+         Offer : Wayland_Client.Data_Offer := (My_Data_Offer => Id);
+      begin
+         Enter (Data_Ptr (Conversion.To_Pointer (Data)),
+                D,
+                Serial,
+                S,
+                X,
+                Y,
+                Offer);
+      end Internal_Enter;
+
+      procedure Internal_Leave (Data        : Void_Ptr;
+                                Data_Device : Wl_Thin.Data_Device_Ptr)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+      begin
+         Leave (Data_Ptr (Conversion.To_Pointer (Data)), D);
+      end Internal_Leave;
+
+      procedure Internal_Motion (Data        : Void_Ptr;
+                                 Data_Device : Wl_Thin.Data_Device_Ptr;
+                                 Time        : Unsigned_32;
+                                 X           : Fixed;
+                                 Y           : Fixed)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+      begin
+         Motion (Data_Ptr (Conversion.To_Pointer (Data)), D, Time, X, Y);
+      end Internal_Motion;
+
+      procedure Internal_Drop (Data        : Void_Ptr;
+                               Data_Device : Wl_Thin.Data_Device_Ptr)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+      begin
+         Drop (Data_Ptr (Conversion.To_Pointer (Data)), D);
+      end Internal_Drop;
+
+      procedure Internal_Selection (Data        : Void_Ptr;
+                                    Data_Device : Wl_Thin.Data_Device_Ptr;
+                                    Id          : Wl_Thin.Data_Offer_Ptr)
+      is
+         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         Offer : Wayland_Client.Data_Offer := (My_Data_Offer => Id);
+      begin
+         Selection (Data_Ptr (Conversion.To_Pointer (Data)), D, Offer);
+      end Internal_Selection;
+      
+      Listener : aliased Wl_Thin.Data_Device_Listener_T
+        := (Data_Offer => Internal_Data_Offer'Unrestricted_Access,
+            Enter      => Internal_Enter'Unrestricted_Access,
+            Leave      => Internal_Leave'Unrestricted_Access,
+            Motion     => Internal_Motion'Unrestricted_Access,
+            Drop       => Internal_Drop'Unrestricted_Access,
+            Selection  => Internal_Selection'Unrestricted_Access);
+
+      function Subscribe
+        (Data_Device : in out Wayland_Client.Data_Device;
+         Data        : not null Data_Ptr) return Call_Result_Code
+      is
+         I : Posix.int;
+      begin
+         I := Wl_Thin.Data_Device_Add_Listener (Data_Device.My_Data_Device,
+                                                Listener'Access,
+                                                Data.all'Address);
+         if I = 0 then
+            return Success;
+         else
+            return Error;
+         end if;
+      end Subscribe;
+      
+   end Data_Device_Events;
    
    package body Shell_Surface_Events is
 

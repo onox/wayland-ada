@@ -1768,6 +1768,105 @@ package Posix.Wayland_Client is
                           Data   : not null Data_Ptr) return Call_Result_Code;
       
    end Buffer_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Offer (Data       : not null Data_Ptr;
+                            Data_Offer : Wayland_Client.Data_Offer;
+                            Mime_Type  : String);
+
+      with procedure Source_Actions (Data           : not null Data_Ptr;
+                                     Data_Offer     : Wayland_Client.Data_Offer;
+                                     Source_Actions : Unsigned_32);
+
+      with procedure Action (Data       : not null Data_Ptr;
+                             Data_Offer : Wayland_Client.Data_Offer;
+                             Dnd_Action : Unsigned_32);
+
+   package Data_Offer_Events is
+      
+      function Subscribe
+        (Data_Offer : in out Wayland_Client.Data_Offer;
+         Data       : not null Data_Ptr) return Call_Result_Code;
+      
+   end Data_Offer_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Target (Data        : not null Data_Ptr;
+                             Data_Source : Wayland_Client.Data_Source;
+                             Mime_Type   : String);
+
+      with procedure Send (Data        : not null Data_Ptr;
+                           Data_Source : Wayland_Client.Data_Source;
+                           Mime_Type   : String;
+                           Fd          : Integer);
+
+      with procedure Cancelled (Data        : not null Data_Ptr;
+                                Data_Source : Wayland_Client.Data_Source);
+
+      with procedure Dnd_Drop_Performed
+        (Data        : not null Data_Ptr;
+         Data_Source : Wayland_Client.Data_Source);
+
+      with procedure Dnd_Finished (Data        : not null Data_Ptr;
+                                   Data_Source : Wayland_Client.Data_Source);
+
+      with procedure Action (Data        : not null Data_Ptr;
+                             Data_Source : Wayland_Client.Data_Source;
+                             Dnd_Action  : Unsigned_32);
+   
+   package Data_Source_Events is
+      
+      function Subscribe
+        (Data_Source : in out Wayland_Client.Data_Source;
+         Data        : not null Data_Ptr) return Call_Result_Code;
+      
+   end Data_Source_Events;
+
+   generic
+      type Data_Type is limited private;
+      type Data_Ptr is access all Data_Type;
+      
+      with procedure Data_Offer (Data        : not null Data_Ptr;
+                                 Data_Device : Wayland_Client.Data_Device;
+                                 Id          : Unsigned_32);
+
+      with procedure Enter (Data        : not null Data_Ptr;
+                            Data_Device : Wayland_Client.Data_Device;
+                            Serial      : Unsigned_32;
+                            Surface     : Wayland_Client.Surface;
+                            X           : Fixed;
+                            Y           : Fixed;
+                            Id          : Wayland_Client.Data_Offer);
+
+      with procedure Leave (Data        : not null Data_Ptr;
+                            Data_Device : Wayland_Client.Data_Device);
+
+      with procedure Motion (Data        : not null Data_Ptr;
+                             Data_Device : Wayland_Client.Data_Device;
+                             Time        : Unsigned_32;
+                             X           : Fixed;
+                             Y           : Fixed);
+
+      with procedure Drop (Data        : not null Data_Ptr;
+                           Data_Device : Wayland_Client.Data_Device);
+
+      with procedure Selection (Data        : not null Data_Ptr;
+                                Data_Device : Wayland_Client.Data_Device;
+                                Id          : Wayland_Client.Data_Offer);
+      
+   package Data_Device_Events is
+      
+      function Subscribe
+        (Data_Device : in out Wayland_Client.Data_Device;
+         Data        : not null Data_Ptr) return Call_Result_Code;
+      
+   end Data_Device_Events;
    
    generic
       type Data_Type is limited private;
