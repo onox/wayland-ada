@@ -1,7 +1,6 @@
 with Dynamic_Pools;
 with Ada.Containers.Vectors;
 with Aida.Deepend_XML_DOM_Parser;
-with Conts.Vectors.Definite_Unbounded;
 
 package Wayland_XML is
 

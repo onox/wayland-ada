@@ -7,7 +7,7 @@ pragma Elaborate_All (Aida.Deepend_XML_SAX_Parser);
 
 package Aida.Deepend_XML_DOM_Parser is
 
-   Default_Subpool : Dynamic_Pools.Dynamic_Pool (3_000_000);
+   Default_Subpool : Dynamic_Pools.Dynamic_Pool (0);
    -- Allocations are done in subpools, not the default subpool
 
    type String_Ptr is access all Standard.String with Storage_Pool => Default_Subpool;

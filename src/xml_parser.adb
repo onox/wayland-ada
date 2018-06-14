@@ -6,9 +6,7 @@ with Aida.Subprogram_Call_Result;
 with Dynamic_Pools;
 with Ada.Directories;
 with Aida.Sequential_Stream_IO;
-with Aida.UTF8_Code_Point;
 with Ada.Strings.Fixed;
-with Ada.Strings.Unbounded;
 with Ada.Containers;
 
 with Wayland_XML;
@@ -48,10 +46,6 @@ procedure XML_Parser is
    use type Wx.Request_Child;
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
-
-   use all type Ada.Strings.Unbounded.Unbounded_String;
-
-   use all type Aida.UTF8_Code_Point.T;
 
    use all type Wx.Protocol_Child_Kind_Id;
    use all type Wx.Interface_Child_Kind_Id;
