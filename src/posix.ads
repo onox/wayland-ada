@@ -35,6 +35,33 @@ package Posix is
    use type long;
    use type Void_Ptr;
 
+   type fd_set_uu_fds_bits_array is array (0 .. 15) of aliased long;
+   type fd_set is record
+      Fds_Bits : aliased fd_set_uu_fds_bits_array;
+   end record;
+   pragma Convention (C_Pass_By_Copy, fd_set);
+
+   type timeval is record
+      tv_sec  : aliased long;
+      tv_usec : aliased long; -- Microseconds!
+   end record;
+   pragma Convention (C_Pass_By_Copy, timeval);
+
+  function C_Select
+     (File_Descriptor : int;
+      Readfds   : access fd_set;
+      Writefds  : access fd_set;
+      Exceptfds : access fd_set;
+      Time      : access timeval) return int;
+   pragma Import (C, C_Select, "select");
+   --  On success, returns the number of file descriptors contained
+   --  in the three returned descriptor sets (that is,
+   --  the total number of bits that are set in readfds, writefds, exceptfds)
+   --  which may be zero if the timeout expires before
+   --  anything interesting happens. On error, -1 is returned,
+   --  and errno is set appropriately; the sets and timeout become undefined,
+   --  so do not rely on their contents after an error.
+
    type Poll_File_Descriptor is record
       Descriptor : aliased Integer := -1;
       Events     : aliased Unsigned_16 := 0;
@@ -220,7 +247,11 @@ package Posix is
 
    type File is tagged limited private with
      Default_Initial_Condition => Is_Closed (File);
-   -- Represents a file on the hard disk.
+   --  Represents a file on the hard disk.
+
+   procedure Set_File_Descriptor
+     (File  : in out Posix.File;
+      Value : Integer);
 
    procedure Open
      (File        : in out Posix.File;

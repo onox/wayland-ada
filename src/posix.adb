@@ -3,6 +3,13 @@ package body Posix is
    use type int;
    use type S_FLag;
 
+   procedure Set_File_Descriptor
+     (File  : in out Posix.File;
+      Value : Integer) is
+   begin
+      File.My_File_Descriptor := Value;
+   end Set_File_Descriptor;
+
    procedure Open
      (File        : in out Posix.File;
       File_Name   : in     C_String;
