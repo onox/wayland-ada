@@ -35,20 +35,27 @@ package Posix is
    use type long;
    use type Void_Ptr;
 
-   type fd_set_uu_fds_bits_array is array (0 .. 15) of aliased long;
+   type Fds_Bits_Index is range 0 .. 1023;
+   --  The interval is chosen 0 .. 1023 to be able to use file descriptors
+   --  as index into the Fds_Bits_Array.
+
+   type Fds_Bits_Array is array (Fds_Bits_Index) of Boolean with Pack;
+
    type fd_set is record
-      Fds_Bits : aliased fd_set_uu_fds_bits_array;
-   end record;
-   pragma Convention (C_Pass_By_Copy, fd_set);
+      Fds_Bits : aliased Fds_Bits_Array;
+   end record with
+     Convention => C_Pass_By_Copy,
+     Size       => 1024;
 
    type timeval is record
       tv_sec  : aliased long;
       tv_usec : aliased long; -- Microseconds!
-   end record;
-   pragma Convention (C_Pass_By_Copy, timeval);
+   end record with
+     Convention => C_Pass_By_Copy;
 
-  function C_Select
-     (File_Descriptor : int;
+
+   function C_Select
+     (File_Descriptor : Integer;
       Readfds   : access fd_set;
       Writefds  : access fd_set;
       Exceptfds : access fd_set;
