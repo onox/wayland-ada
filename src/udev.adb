@@ -51,7 +51,7 @@ package body Udev is
    begin
       if Text /= Interfaces.C.Strings.Null_Ptr then
          declare
-            Result : String := Interfaces.C.Strings.Value (Text);
+            Result : constant String := Interfaces.C.Strings.Value (Text);
          begin
             return
                 (Is_Success => True,
@@ -67,14 +67,14 @@ package body Udev is
    end Get_String_Result;
 
    function Syspath (Device : Udev.Device) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Syspath (Device.My_Ptr);
    begin
       return Get_String_Result (Text, "Syspath failure");
    end Syspath;
 
    function Devpath (Device : Udev.Device) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Devpath (Device.My_Ptr);
    begin
       return Get_String_Result (Text, "Devpath failure");
@@ -82,7 +82,7 @@ package body Udev is
 
    function Sysattr (Device : Udev.Device;
                      Name   : String) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Sysattr_Value (Device.My_Ptr, +Name);
    begin
       return Get_String_Result (Text, "Sysattr failure");
@@ -96,21 +96,21 @@ package body Udev is
    end Get_Parent;
 
    function Driver (Device : Udev.Device) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Driver (Device.My_Ptr);
    begin
       return Get_String_Result (Text, "Driver failure");
    end Driver;
 
    function Devtype (Device : Udev.Device) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Devtype (Device.My_Ptr);
    begin
       return Get_String_Result (Text, "Devtype failure");
    end Devtype;
 
    function Sysname (Device : Udev.Device) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_Device_Get_Sysname (Device.My_Ptr);
    begin
       return Get_String_Result (Text, "Devtype failure");
@@ -166,14 +166,14 @@ package body Udev is
    end Next;
 
    function Name (LE : List_Entry) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_List_Entry_Get_Name (LE.My_Ptr);
    begin
       return Get_String_Result (Text, "List entry name failure");
    end Name;
 
    function Value (LE : List_Entry) return String_Result is
-      Text : Interfaces.C.Strings.Chars_Ptr
+      Text : constant Interfaces.C.Strings.Chars_Ptr
         := Thin.Udev_List_Entry_Get_Value (LE.My_Ptr);
    begin
       return Get_String_Result (Text, "List entry value failure");

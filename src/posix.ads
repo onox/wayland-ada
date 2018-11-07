@@ -28,10 +28,6 @@ package Posix is
    type O_FLag is new Unsigned_32;
    type Prot_FLag is new Unsigned_32;
 
-   use type Unsigned_32;
-   use type S_FLag;
-   use type O_FLag;
-   use type int;
    use type long;
    use type Void_Ptr;
 

@@ -1,8 +1,5 @@
 package body Posix is
 
-   use type int;
-   use type S_FLag;
-
    procedure Set_File_Descriptor
      (File  : in out Posix.File;
       Value : Integer) is
@@ -83,6 +80,7 @@ package body Posix is
 
    procedure Write (File : Posix.File; Bytes : Byte_Array) is
       SSize : SSize_Type;
+      pragma Unreferenced (SSize);
    begin
       SSize :=
         Px_Thin.Write
