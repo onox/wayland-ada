@@ -148,12 +148,12 @@ private
 
       type Udev_Ptr is access Udev;
 
-      function Udev_Ref (Arg1 : Udev_Ptr) return Udev_Ptr;
+      function Udev_Ref (Udev : Udev_Ptr) return Udev_Ptr;
       pragma Import (C, Udev_Ref, "udev_ref");
       --  Acquire a udev context object.
       --  Returns the argument that it was passed, unmodified.
 
-      function Udev_Unref (Arg1 : Udev_Ptr) return Udev_Ptr;
+      function Udev_Unref (Udev : Udev_Ptr) return Udev_Ptr;
       pragma Import (C, Udev_Unref, "udev_unref");
       --  Release a udev context object.
       --  Always returns null.
