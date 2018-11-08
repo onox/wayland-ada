@@ -35,17 +35,34 @@ private
      (Text  : Interfaces.C.Strings.Chars_Ptr;
       Error : String) return String_Result;
 
+   type Udev_Context is null record;
+   --  Udev context
+
+   type Udev_Ptr is access Udev_Context;
+
+   type Udev_List_Entry is null record;
+
+   type Udev_List_Entry_Ptr is access Udev_List_Entry;
+
+   type Udev_Device is null record;
+   --  This object is opaque and must not be accessed by the caller via
+   --  different means than functions provided by libudev.
+   --  Initially, the reference count of the device is 1.
+   --  You can acquire further references, and drop gained references via
+   --  udev_device_ref() and udev_device_unref(). Once the reference count
+   --  hits 0, the device object is destroyed and freed.
+
+   type Udev_Device_Ptr is access Udev_Device;
+
+   type Udev_Enumerate is null record;
+
+   type Udev_Enumerate_Ptr is access Udev_Enumerate;
+
+   type Udev_Monitor is null record;
+
+   type Udev_Monitor_Ptr is access Udev_Monitor;
+
    package Thin is
-
-      subtype Int           is Interfaces.C.Int;
-      subtype Char          is Interfaces.C.Char;
-      subtype Unsigned      is Interfaces.C.Unsigned;
-      subtype Unsigned_Long is Interfaces.C.Unsigned_Long;
-
-      type Udev is null record;
-      --  Udev context
-
-      type Udev_Ptr is access Udev;
 
       function Udev_Ref (Udev : Udev_Ptr) return Udev_Ptr;
       pragma Import (C, Udev_Ref, "udev_ref");
@@ -89,10 +106,6 @@ private
          Arg2 : System.Address);
       pragma Import (C, Udev_Set_Userdata, "udev_set_userdata");
 
-      type Udev_List_Entry is null record;
-
-      type Udev_List_Entry_Ptr is access Udev_List_Entry;
-
       function Udev_List_Entry_Get_Next
         (Arg1 : Udev_List_Entry_Ptr) return Udev_List_Entry_Ptr;
       pragma Import (C, Udev_List_Entry_Get_Next, "udev_list_entry_get_next");
@@ -119,16 +132,6 @@ private
       --  Success, return a pointer to a constant string
       --  representing the requested value. The string is bound to
       --  the lifetime of the list entry itself. On failure, null is returned.
-
-      type Udev_Device is null record;
-      --  This object is opaque and must not be accessed by the caller via
-      --  different means than functions provided by libudev.
-      --  Initially, the reference count of the device is 1.
-      --  You can acquire further references, and drop gained references via
-      --  udev_device_ref() and udev_device_unref(). Once the reference count
-      --  hits 0, the device object is destroyed and freed.
-
-      type Udev_Device_Ptr is access Udev_Device;
 
       function Udev_Device_Ref
         (Arg1 : Udev_Device_Ptr) return Udev_Device_Ptr;
@@ -303,10 +306,6 @@ private
          Arg2 : Interfaces.C.Strings.Chars_Ptr) return Int;
       pragma Import (C, Udev_Device_Has_Tag, "udev_device_has_tag");
 
-      type Udev_Monitor is null record;
-
-      type Udev_Monitor_Ptr is access Udev_Monitor;
-
       function Udev_Monitor_Ref
         (Monitor : Udev_Monitor_Ptr) return Udev_Monitor_Ptr;
       pragma Import (C, Udev_Monitor_Ref, "udev_monitor_ref");
@@ -374,10 +373,6 @@ private
       function Udev_Monitor_Filter_Remove (Arg1 : System.Address) return Int;
       pragma Import
         (C, Udev_Monitor_Filter_Remove, "udev_monitor_filter_remove");
-
-      type Udev_Enumerate is null record;
-
-      type Udev_Enumerate_Ptr is access Udev_Enumerate;
 
       function Udev_Enumerate_Ref
         (Arg1 : Udev_Enumerate_Ptr) return Udev_Enumerate_Ptr;
@@ -587,26 +582,20 @@ private
 
    end Thin;
 
-   use type Thin.Udev_Ptr;
-   use type Thin.Udev_Device_Ptr;
-   use type Thin.Udev_Enumerate_Ptr;
-   use type Thin.Udev_List_Entry_Ptr;
-   use type Thin.Udev_Monitor_Ptr;
-
    type Monitor_Base is tagged limited record
-      My_Ptr : Thin.Udev_Monitor_Ptr;
+      My_Ptr : Udev_Monitor_Ptr;
    end record;
 
    type Context_Base is tagged limited record
-      My_Ptr : Thin.Udev_Ptr;
+      My_Ptr : Udev_Ptr;
    end record;
 
    type Device_Base is tagged limited record
-      My_Ptr : Thin.Udev_Device_Ptr;
+      My_Ptr : Udev_Device_Ptr;
    end record;
 
    type List_Entry_Base is tagged limited record
-      My_Ptr : Thin.Udev_List_Entry_Ptr;
+      My_Ptr : Udev_List_Entry_Ptr;
    end record;
 
 end C_Binding.Linux.Udev;

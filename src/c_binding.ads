@@ -4,6 +4,7 @@ with System;
 --  Contains type definitions common to all Ada bindings to C libraries.
 package C_Binding with Preelaborate is
 
+   subtype char is Interfaces.C.char;
    subtype unsigned_long is Interfaces.C.unsigned_long;
    subtype unsigned is Interfaces.C.unsigned;
    subtype int is Interfaces.C.int;

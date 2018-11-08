@@ -2,7 +2,7 @@ with C_Binding.Linux.Udev.Contexts;
 
 package body C_Binding.Linux.Udev.Devices is
 
-   --package body Bug is
+   package body Bug is
 
       procedure Get_Parent
         (Device : Devices.Device;
@@ -11,7 +11,7 @@ package body C_Binding.Linux.Udev.Devices is
          Parent.My_Ptr := Thin.Udev_Device_Get_Parent (Device.My_Ptr);
       end Get_Parent;
 
-   --end Bug;
+   end Bug;
 
    procedure Create
      (Device  : out Devices.Device;

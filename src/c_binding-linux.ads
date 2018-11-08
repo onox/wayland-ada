@@ -1,5 +1,4 @@
 with System.Storage_Elements;
-with Interfaces.C;
 private with Ada.Unchecked_Conversion;
 
 --  This package was originally named Posix but is nowadays Linux to avoid

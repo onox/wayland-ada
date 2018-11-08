@@ -1,7 +1,6 @@
 package body C_Binding.Linux.Udev is
 
    use type Interfaces.C.Strings.chars_ptr;
-   use type Interfaces.C.int;
 
    function Get_String_Result
      (Text  : Interfaces.C.Strings.Chars_Ptr;

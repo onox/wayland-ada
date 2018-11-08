@@ -4,13 +4,13 @@ package C_Binding.Linux.Udev.Devices is
 
    type Device;
 
-   --package Bug is
+   package Bug is
 
       procedure Get_Parent
         (Device : Devices.Device;
          Parent : out Devices.Device);
 
-   --end Bug;
+   end Bug;
 
    type Device is new Device_Base with null record;
 
