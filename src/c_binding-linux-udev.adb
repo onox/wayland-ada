@@ -1,4 +1,4 @@
-package body Udev is
+package body C_Binding.Linux.Udev is
 
    use type Interfaces.C.Strings.chars_ptr;
    use type Interfaces.C.int;
@@ -249,4 +249,4 @@ package body Udev is
       Device.My_Ptr := Thin.Udev_Monitor_Receive_Device (Monitor.My_Ptr);
    end Receive_Device;
 
-end Udev;
+end C_Binding.Linux.Udev;

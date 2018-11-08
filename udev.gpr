@@ -1,0 +1,24 @@
+--  with "ubuntu_posix.gpr";
+
+project Udev is
+
+   for Source_Dirs use ("src");
+
+   for Object_Dir use "obj";
+
+--     for Source_Files use
+--       (
+--        "c_binding-linux-wayland_client.ads",
+--        "c_binding-linux-wayland_client.adb",
+--        "wayland_client.ads"
+--       );
+
+--     package Compiler is
+--
+--        for Switches ("Ada") use (
+--                                  "-Wall"
+--                                  );
+--
+--     end Compiler;
+
+end Udev;
