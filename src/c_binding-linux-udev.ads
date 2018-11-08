@@ -4,6 +4,7 @@ with Interfaces.C.Strings;
 --  Udev is "abbreviation" of Userspace /dev.
 --  API for enumerating and introspecting local devices.
 package C_Binding.Linux.Udev is
+   pragma Elaborate_Body;
 
    subtype Max_Length is Natural range 0 .. 10_000;
 
@@ -23,118 +24,16 @@ package C_Binding.Linux.Udev is
       Failure
      );
 
-   type Context;
-   type Device;
-   type Enumerate;
-   type List_Entry;
-   type Monitor;
-
-   procedure Get_Parent
-     (Device : Udev.Device;
-      Parent : out Udev.Device);
-
-   procedure Receive_Device (Monitor : Udev.Monitor;
-                             Device  : out Udev.Device);
-
-   type Enumerate is tagged limited private;
-
-   procedure Create (Enum    : out Enumerate;
-                     Context : Udev.Context);
-
-   function Exists (Enum : Enumerate) return Boolean;
-
-   procedure Delete (Enum : in out Enumerate) with
-     Pre  => Enum.Exists,
-     Post => not Enum.Exists;
-
-   function Add_Match_Subsystem
-     (Enum      : Enumerate;
-      Subsystem : String) return Success_Flag;
-
-   function Scan_Devices
-     (Enum : Enumerate) return Success_Flag;
-
-   procedure Get_List_Entry (Enum : Enumerate;
-                             LE   : out List_Entry);
-
-   type List_Entry is tagged limited private;
-
-   function Exists (LE : List_Entry) return Boolean;
-
-   procedure Next (LE : in out List_Entry) with
-     Pre => LE.Exists;
-
-   function Name  (LE : List_Entry) return String_Result;
-   function Value (LE : List_Entry) return String_Result;
-
-   type Device is tagged limited private;
-
-   procedure Create
-     (Device  : out Udev.Device;
-      Context : Udev.Context;
-      Syspath : String);
-   --  A Syspath is any subdirectory of /sys, with the restriction
-   --  that a subdirectory of /sys/devices (or a symlink to one) represents
-   --  a real device and as such must contain a uevent file.
-
-   function Exists (Device : Udev.Device) return Boolean;
-
-   procedure Delete (Device : in out Udev.Device) with
-     Pre  => Device.Exists,
-     Post => not Device.Exists;
-
-   function Syspath (Device : Udev.Device) return String_Result;
-   function Devpath (Device : Udev.Device) return String_Result;
-   function Sysattr (Device : Udev.Device;
-                     Name   : String) return String_Result;
-   function Driver  (Device : Udev.Device) return String_Result;
-   function Devtype (Device : Udev.Device) return String_Result;
-   function Sysname (Device : Udev.Device) return String_Result;
-
-   type Context is tagged limited private;
-
-   procedure Create (Context : out Udev.Context);
-
-   function Exists (Context : Udev.Context) return Boolean;
-
-   procedure Delete (Context : in out Udev.Context) with
-     Pre  => Context.Exists,
-     Post => not Context.Exists;
-
-   procedure New_From_Netlink (Context : Udev.Context;
-                               Name    : String;
-                               Monitor : out Udev.Monitor);
-
-   type Monitor is tagged limited private;
-
-   function Exists (Monitor : Udev.Monitor) return Boolean;
-
-   procedure Delete (Monitor : in out Udev.Monitor) with
-     Pre  => Monitor.Exists,
-     Post => not Monitor.Exists;
-
-   function Filter_Add_Match_Subsystem_Devtype
-     (Monitor : Udev.Monitor;
-      Subsystem : String;
-      Devtype   : access String) return Success_Flag;
-
-   function Enable_Receiving (Monitor : Udev.Monitor) return Success_Flag;
-
-   function Get_File_Descriptor (Monitor : Udev.Monitor) return Integer;
+   type Context_Base is tagged limited private;
+   type Device_Base is tagged limited private;
+   type Monitor_Base is tagged limited private;
+   type List_Entry_Base is tagged limited private;
 
 private
 
-   Nul : constant Character := Character'Val (0);
-
-   type C_String is new String with
-     Dynamic_Predicate => C_String'Length > 0
-     and then C_String (C_String'Last) = Nul;
-
-   function "-" (Text : C_String) return String;
-   -- Removes the last 'Nul' character and returns a normal String.
-
-   function "+" (Text : String) return C_String;
-   -- Appends a 'Nul' character to a standard String and returns a C_String.
+   function Get_String_Result
+     (Text  : Interfaces.C.Strings.Chars_Ptr;
+      Error : String) return String_Result;
 
    package Thin is
 
@@ -694,39 +593,20 @@ private
    use type Thin.Udev_List_Entry_Ptr;
    use type Thin.Udev_Monitor_Ptr;
 
-   type Context is tagged limited record
-      My_Ptr : Thin.Udev_Ptr;
-   end record;
-
-   function Exists (Context : Udev.Context) return Boolean is
-     (Context.My_Ptr /= null);
-
-   type Device is tagged limited record
-      My_Ptr : Thin.Udev_Device_Ptr;
-   end record;
-
-   function Exists (Device : Udev.Device) return Boolean is
-     (Device.My_Ptr /= null);
-
-   type Enumerate is tagged limited record
-      My_Ptr : Thin.Udev_Enumerate_Ptr;
-   end record;
-
-   function Exists (Enum : Enumerate) return Boolean is
-     (Enum.My_Ptr /= null);
-
-   type List_Entry is tagged limited record
-      My_Ptr : Thin.Udev_List_Entry_Ptr;
-   end record;
-
-   function Exists (LE : List_Entry) return Boolean is
-     (LE.My_Ptr /= null);
-
-   type Monitor is tagged limited record
+   type Monitor_Base is tagged limited record
       My_Ptr : Thin.Udev_Monitor_Ptr;
    end record;
 
-   function Exists (Monitor : Udev.Monitor) return Boolean is
-     (Monitor.My_Ptr /= null);
+   type Context_Base is tagged limited record
+      My_Ptr : Thin.Udev_Ptr;
+   end record;
+
+   type Device_Base is tagged limited record
+      My_Ptr : Thin.Udev_Device_Ptr;
+   end record;
+
+   type List_Entry_Base is tagged limited record
+      My_Ptr : Thin.Udev_List_Entry_Ptr;
+   end record;
 
 end C_Binding.Linux.Udev;
