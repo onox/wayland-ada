@@ -6,16 +6,12 @@ project Wayland_Client is
 
    for Object_Dir use "obj";
 
---     for Source_Files use (
---                           "wl.ads",
---                           "wl.adb"
---                           );
-
-   for Source_Files use (
-                         "posix-wayland_client.ads",
-                         "posix-wayland_client.adb",
-                         "wayland_client.ads"
-                         );
+   for Source_Files use
+     (
+      "c_binding-linux-wayland_client.ads",
+      "c_binding-linux-wayland_client.adb",
+      "wayland_client.ads"
+     );
 
 --     package Compiler is
 --

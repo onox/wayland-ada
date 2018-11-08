@@ -1,5 +1,7 @@
 with System.Address_To_Access_Conversions;
-package body Posix.Wayland_Client is
+package body C_Binding.Linux.Wayland_Client is
+
+   use type int;
 
    -- Mostly auto generated from Wayland.xml
    package body Wl_Thin is
@@ -15,7 +17,7 @@ package body Posix.Wayland_Client is
            Convention    => C,
            Import        => True,
            External_Name => "wl_display_connect";
-         
+
       begin
          return wl_display_connect (Name);
       end Display_Connect;
@@ -32,7 +34,7 @@ package body Posix.Wayland_Client is
             This := null;
          end if;
       end Display_Disconnect;
-      
+
       function wl_proxy_add_listener
         (arg1 : Proxy_Ptr;
          arg2 : Void_Ptr;
@@ -1231,7 +1233,7 @@ package body Posix.Wayland_Client is
 
 
    end Wl_Thin;
-   
+
    use type Wl_Thin.Proxy_Ptr;
 
    subtype Registry_Global_Subprogram_Ptr is Wl_Thin.Registry_Global_Subprogram_Ptr;
@@ -1243,7 +1245,7 @@ package body Posix.Wayland_Client is
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
    package body Display_Events is
-      
+
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
 
@@ -1279,7 +1281,7 @@ package body Posix.Wayland_Client is
                 Code,
                 M);
       end Internal_Error;
-      
+
       procedure Internal_Delete_Id (Data    : Void_Ptr;
                                     Display : Wl_Thin.Display_Ptr;
                                     Id      : Unsigned_32)
@@ -1295,7 +1297,7 @@ package body Posix.Wayland_Client is
                     D,
                     Id);
       end Internal_Delete_Id;
-      
+
       Listener : aliased Wl_Thin.Display_Listener_T
         := (
             Error     => Internal_Error'Unrestricted_Access,
@@ -1306,7 +1308,7 @@ package body Posix.Wayland_Client is
         (Display : in out Wayland_Client.Display;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Display_Add_Listener (Display.My_Display,
                                             Listener'Access,
@@ -1317,14 +1319,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Display_Events;
-   
+
    package body Registry_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Object_Added (Data        : Void_Ptr;
                                        Registry    : Wl_Thin.Registry_Ptr;
                                        Id          : Unsigned_32;
@@ -1373,12 +1375,12 @@ package body Posix.Wayland_Client is
       function Subscribe
         (Registry : in out Wayland_Client.Registry;
          Data     : not null Data_Ptr) return Call_Result_Code is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,
                                              Listener'Access,
                                              Data.all'Address);
-         
+
          if I = 0 then
             return Success;
          else
@@ -1387,12 +1389,12 @@ package body Posix.Wayland_Client is
       end Subscribe;
 
    end Registry_Events;
-   
+
    package body Callback_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Done (Data          : Void_Ptr;
                                Callback      : Wl_Thin.Callback_Ptr;
                                Callback_Data : Unsigned_32) with
@@ -1406,7 +1408,7 @@ package body Posix.Wayland_Client is
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), C, Callback_Data);
       end Internal_Done;
-      
+
       Listener : aliased Wl_Thin.Callback_Listener_T
         := (Done => Internal_Done'Unrestricted_Access);
 
@@ -1414,7 +1416,7 @@ package body Posix.Wayland_Client is
         (Callback : in out Wayland_Client.Callback;
          Data     : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Callback_Add_Listener (Callback.My_Callback,
                                              Listener'Access,
@@ -1425,14 +1427,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
-   end Callback_Events;   
+
+   end Callback_Events;
 
    package body Shm_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Format (Data   : Void_Ptr;
                                  Shm    : Wl_Thin.Shm_Ptr;
                                  Format : Unsigned_32) with
@@ -1446,15 +1448,15 @@ package body Posix.Wayland_Client is
       begin
          Shm_Events.Format (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
       end Internal_Format;
-      
+
       Listener : aliased Wl_Thin.Shm_Listener_T
         := (Format => Internal_Format'Unrestricted_Access);
-   
+
       function Subscribe
         (Shm  : in out Wayland_Client.Shm;
          Data : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Shm_Add_Listener (Shm.My_Shm,
                                         Listener'Access,
@@ -1465,14 +1467,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Shm_Events;
 
    package body Buffer_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Release (Data   : Void_Ptr;
                                   Buffer : Wl_Thin.Buffer_Ptr) with
         Convention => C;
@@ -1484,7 +1486,7 @@ package body Posix.Wayland_Client is
       begin
          Release (Data_Ptr (Conversion.To_Pointer (Data)), B);
       end Internal_Release;
-      
+
       Listener : aliased Wl_Thin.Buffer_Listener_T
         := (Release => Internal_Release'Unrestricted_Access);
 
@@ -1492,7 +1494,7 @@ package body Posix.Wayland_Client is
         (Buffer : in out Wayland_Client.Buffer;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Buffer_Add_Listener (Buffer.My_Buffer,
                                            Listener'Access,
@@ -1503,14 +1505,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Buffer_Events;
 
    package body Data_Offer_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Offer (Data       : Void_Ptr;
                                 Data_Offer : Wl_Thin.Data_Offer_Ptr;
                                 Mime_Type  : chars_ptr) with
@@ -1532,7 +1534,7 @@ package body Posix.Wayland_Client is
                                 Mime_Type  : chars_ptr)
       is
          D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
-         
+
          M : String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
@@ -1561,7 +1563,7 @@ package body Posix.Wayland_Client is
                  D,
                  Dnd_Action);
       end Internal_Action;
-      
+
       Listener : aliased Wl_Thin.Data_Offer_Listener_T
         := (Offer          => Internal_Offer'Unrestricted_Access,
             Source_Actions => Internal_Source_Actions'Unrestricted_Access,
@@ -1571,7 +1573,7 @@ package body Posix.Wayland_Client is
         (Data_Offer : in out Wayland_Client.Data_Offer;
          Data       : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Data_Offer_Add_Listener (Data_Offer.My_Data_Offer,
                                                Listener'Access,
@@ -1582,14 +1584,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Data_Offer_Events;
 
    package body Data_Source_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Target (Data        : Void_Ptr;
                                  Data_Source : Wl_Thin.Data_Source_Ptr;
                                  Mime_Type   : chars_ptr) with
@@ -1625,7 +1627,7 @@ package body Posix.Wayland_Client is
                                  Mime_Type   : chars_ptr)
       is
          D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
-         
+
          M : String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Target (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
@@ -1637,7 +1639,7 @@ package body Posix.Wayland_Client is
                                Fd          : Integer)
       is
          D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
-         
+
          M : String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Send (Data_Ptr (Conversion.To_Pointer (Data)), D, M, Fd);
@@ -1676,7 +1678,7 @@ package body Posix.Wayland_Client is
       begin
          Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
       end Internal_Action;
-      
+
       Listener : aliased Wl_Thin.Data_Source_Listener_T
         := (Target             => Internal_Target'Unrestricted_Access,
             Send               => Internal_Send'Unrestricted_Access,
@@ -1690,7 +1692,7 @@ package body Posix.Wayland_Client is
         (Data_Source : in out Wayland_Client.Data_Source;
          Data       : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Data_Source_Add_Listener (Data_Source.My_Data_Source,
                                                 Listener'Access,
@@ -1701,14 +1703,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Data_Source_Events;
-   
+
    package body Data_Device_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Data_Offer (Data        : Void_Ptr;
                                      Data_Device : Wl_Thin.Data_Device_Ptr;
                                      Id          : Unsigned_32) with
@@ -1809,7 +1811,7 @@ package body Posix.Wayland_Client is
       begin
          Selection (Data_Ptr (Conversion.To_Pointer (Data)), D, Offer);
       end Internal_Selection;
-      
+
       Listener : aliased Wl_Thin.Data_Device_Listener_T
         := (Data_Offer => Internal_Data_Offer'Unrestricted_Access,
             Enter      => Internal_Enter'Unrestricted_Access,
@@ -1822,7 +1824,7 @@ package body Posix.Wayland_Client is
         (Data_Device : in out Wayland_Client.Data_Device;
          Data        : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Data_Device_Add_Listener (Data_Device.My_Data_Device,
                                                 Listener'Access,
@@ -1833,14 +1835,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Data_Device_Events;
-   
+
    package body Shell_Surface_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Shell_Surface_Ping
         (Data    : Void_Ptr;
          Surface : Wl_Thin.Shell_Surface_Ptr;
@@ -1908,13 +1910,13 @@ package body Posix.Wayland_Client is
         (Surface : in out Wayland_Client.Shell_Surface;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Shell_Surface_Add_Listener
            (Surface.My_Shell_Surface,
             Listener'Access,
             Data.all'Address);
-         
+
          if I = 0 then
             return Success;
          else
@@ -1928,7 +1930,7 @@ package body Posix.Wayland_Client is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Enter (Data    : Void_Ptr;
                                 Surface : Wl_Thin.Surface_Ptr;
                                 Output  : Wl_Thin.Output_Ptr) with
@@ -1958,7 +1960,7 @@ package body Posix.Wayland_Client is
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Leave;
-      
+
       Listener : aliased Wl_Thin.Surface_Listener_T
         := (Enter => Internal_Enter'Unrestricted_Access,
             Leave => Internal_Leave'Unrestricted_Access);
@@ -1967,26 +1969,26 @@ package body Posix.Wayland_Client is
         (Surface : in out Wayland_Client.Surface;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Surface_Add_Listener (Surface.My_Surface,
                                             Listener'Access,
                                             Data.all'Address);
-         
+
          if I = 0 then
             return Success;
          else
             return Error;
          end if;
       end Subscribe;
-      
+
    end Surface_Events;
-   
+
    package body Seat_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32) with
@@ -2029,7 +2031,7 @@ package body Posix.Wayland_Client is
         (Seat : in out Wayland_Client.Seat;
          Data : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Seat_Add_Listener
            (Seat     => Seat.My_Seat,
@@ -2048,7 +2050,7 @@ package body Posix.Wayland_Client is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Pointer_Enter
         (Data      : Void_Ptr;
          Pointer   : Wl_Thin.Pointer_Ptr;
@@ -2260,7 +2262,7 @@ package body Posix.Wayland_Client is
         (Pointer : in out Wayland_Client.Pointer;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Pointer_Add_Listener
            (Pointer  => Pointer.My_Pointer,
@@ -2279,7 +2281,7 @@ package body Posix.Wayland_Client is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Keymap (Data     : Void_Ptr;
                                  Keyboard : Wl_Thin.Keyboard_Ptr;
                                  Format   : Unsigned_32;
@@ -2416,7 +2418,7 @@ package body Posix.Wayland_Client is
                       Rate,
                       Delay_V);
       end Internal_Repeat_Info;
-      
+
       Listener : aliased Wl_Thin.Keyboard_Listener_T
         := (Keymap      => Internal_Keymap'Unrestricted_Access,
             Enter       => Internal_Enter'Unrestricted_Access,
@@ -2429,7 +2431,7 @@ package body Posix.Wayland_Client is
         (Keyboard : in out Wayland_Client.Keyboard;
          Data     : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Keyboard_Add_Listener (Keyboard => Keyboard.My_Keyboard,
                                              Listener => Listener'Access,
@@ -2440,14 +2442,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Keyboard_Events;
 
    package body Touch_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Down (Data    : Void_Ptr;
                                Touch   : Wl_Thin.Touch_Ptr;
                                Serial  : Unsigned_32;
@@ -2472,7 +2474,7 @@ package body Posix.Wayland_Client is
                                  X     : Fixed;
                                  Y     : Fixed) with
         Convention => C;
-      
+
       procedure Internal_Frame (Data  : Void_Ptr;
                                 Touch : Wl_Thin.Touch_Ptr) with
         Convention => C;
@@ -2547,7 +2549,7 @@ package body Posix.Wayland_Client is
                  X,
                  Y);
       end Internal_Motion;
-      
+
       procedure Internal_Frame (Data  : Void_Ptr;
                                 Touch : Wl_Thin.Touch_Ptr)
       is
@@ -2563,7 +2565,7 @@ package body Posix.Wayland_Client is
       begin
          Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Cancel;
-      
+
       procedure Internal_Shape (Data  : Void_Ptr;
                                 Touch : Wl_Thin.Touch_Ptr;
                                 Id    : Integer;
@@ -2591,7 +2593,7 @@ package body Posix.Wayland_Client is
                                    Id,
                                    Orientation);
       end Internal_Orientation;
-      
+
       Listener : aliased Wl_Thin.Touch_Listener_T
         := (Down        => Internal_Down'Unrestricted_Access,
             Up          => Internal_Up'Unrestricted_Access,
@@ -2605,7 +2607,7 @@ package body Posix.Wayland_Client is
         (Touch : in out Wayland_Client.Touch;
          Data  : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Touch_Add_Listener (Touch    => Touch.My_Touch,
                                           Listener => Listener'Access,
@@ -2616,14 +2618,14 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Touch_Events;
-   
+
    package body Output_Events is
 
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
-      
+
       procedure Internal_Geometry (Data            : Void_Ptr;
                                    Output          : Wl_Thin.Output_Ptr;
                                    X               : Integer;
@@ -2713,7 +2715,7 @@ package body Posix.Wayland_Client is
       begin
          Scale (Data_Ptr (Conversion.To_Pointer (Data)), O, Factor);
       end Internal_Scale;
-      
+
       Listener : aliased Wl_Thin.Output_Listener_T
         := (Geometry => Internal_Geometry'Unrestricted_Access,
             Mode     => Internal_Mode'Unrestricted_Access,
@@ -2724,7 +2726,7 @@ package body Posix.Wayland_Client is
         (Output : in out Wayland_Client.Output;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
-         I : Posix.int;
+         I : int;
       begin
          I := Wl_Thin.Output_Add_Listener (Output   => Output.My_Output,
                                            Listener => Listener'Access,
@@ -2735,9 +2737,9 @@ package body Posix.Wayland_Client is
             return Error;
          end if;
       end Subscribe;
-      
+
    end Output_Events;
-   
+
    procedure Connect (Display : in out Wayland_Client.Display;
                       Name    : C_String := Default_Display_Name) is
    begin
@@ -2762,11 +2764,11 @@ package body Posix.Wayland_Client is
    function Check_For_Events (Display : Wayland_Client.Display;
                               Timeout : Integer) return Check_For_Events_Status
    is
-      File_Descriptors : Posix.Poll_File_Descriptor_Array
+      File_Descriptors : Linux.Poll_File_Descriptor_Array
         := (1 => (Descriptor => Display.My_Fd,
-                  Events     => Posix.POLLIN,
+                  Events     => Linux.POLLIN,
                   Revents    => 0));
-      I : constant Integer := Posix.Poll (File_Descriptors, Timeout);
+      I : constant Integer := Linux.Poll (File_Descriptors, Timeout);
    begin
       case I is
          when 1..Integer'Last   => return Events_Need_Processing;
@@ -2774,12 +2776,12 @@ package body Posix.Wayland_Client is
          when Integer'First..-1 => return Error;
       end case;
    end Check_For_Events;
-   
+
    function Get_Version (Display : Wayland_Client.Display) return Unsigned_32 is
    begin
       return Wl_Thin.Display_Get_Version (Display.My_Display);
    end Get_Version;
-   
+
    procedure Get_Registry (Display  : Wayland_Client.Display;
                            Registry : in out Wayland_Client.Registry) is
    begin
@@ -2822,12 +2824,12 @@ package body Posix.Wayland_Client is
          return Error;
       end if;
    end Read_Events;
-   
+
    procedure Cancel_Read (Display : Wayland_Client.Display) is
    begin
       Wl_Thin.Display_Cancel_Read (Display.My_Display);
    end Cancel_Read;
-   
+
    procedure Dispatch (Display : Wayland_Client.Display) is
       I : Int;
       pragma Unreferenced (I);
@@ -2890,7 +2892,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Seat_Get_Version (Seat.My_Seat);
    end Get_Version;
-   
+
    procedure Get_Proxy (Seat     : in out Wayland_Client.Seat;
                         Registry : Wayland_Client.Registry;
                         Id       : Unsigned_32;
@@ -2919,19 +2921,19 @@ package body Posix.Wayland_Client is
    begin
       Keyboard.My_Keyboard := Wl_Thin.Seat_Get_Keyboard (Seat.My_Seat);
    end Get_Keyboard;
-   
+
    procedure Get_Touch (Seat  : Wayland_Client.Seat;
                         Touch : in out Wayland_Client.Touch) is
    begin
       Touch.My_Touch := Wl_Thin.Seat_Get_Touch (Seat.My_Seat);
    end Get_Touch;
-   
+
    procedure Release (Seat : in out Wayland_Client.Seat) is
    begin
       Wl_Thin.Seat_Release (Seat.My_Seat);
       Seat.My_Seat := null;
    end Release;
-   
+
    procedure Get_Proxy (Shell    : in out Wayland_Client.Shell;
                         Registry : Wayland_Client.Registry;
                         Id       : Unsigned_32;
@@ -2989,7 +2991,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Shm_Get_Version (Shm.My_Shm);
    end Get_Version;
-   
+
    procedure Destroy (Shm : in out Wayland_Client.Shm) is
    begin
       if Shm.My_Shm /= null then
@@ -2997,7 +2999,7 @@ package body Posix.Wayland_Client is
          Shm.My_Shm := null;
       end if;
    end Destroy;
-   
+
    procedure Create_Buffer (Pool   : Wayland_Client.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
@@ -3024,7 +3026,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Shm_Pool_Get_Version (Pool.My_Shm_Pool);
    end Get_Version;
-   
+
    procedure Destroy (Pool : in out Wayland_Client.Shm_Pool) is
    begin
       if Pool.My_Shm_Pool /= null then
@@ -3037,7 +3039,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Buffer_Get_Version (Buffer.My_Buffer);
    end Get_Version;
-   
+
    procedure Destroy (Buffer : in out Wayland_Client.Buffer) is
    begin
       if Buffer.My_Buffer /= null then
@@ -3053,7 +3055,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Data_Offer_Get_Version (Offer.My_Data_Offer);
    end Get_Version;
-   
+
    procedure Destroy (Offer : in out Wayland_Client.Data_Offer) is
    begin
       if Offer.My_Data_Offer /= null then
@@ -3080,7 +3082,7 @@ package body Posix.Wayland_Client is
                                  Serial,
                                  Interfaces.C.Strings.Null_Ptr);
    end Do_Not_Accept;
-   
+
    procedure Receive (Offer           : Data_Offer;
                       Mime_Type       : C_String;
                       File_Descriptor : Integer) is
@@ -3106,7 +3108,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Shell_Surface_Get_Version (Surface.My_Shell_Surface);
    end Get_Version;
-   
+
    procedure Destroy (Surface : in out Shell_Surface) is
    begin
       if Surface.My_Shell_Surface /= null then
@@ -3120,7 +3122,7 @@ package body Posix.Wayland_Client is
    begin
       Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
    end Pong;
-   
+
    procedure Move (Surface : Shell_Surface;
                    Seat    : Wayland_Client.Seat;
                    Serial  : Unsigned_32) is
@@ -3140,7 +3142,7 @@ package body Posix.Wayland_Client is
                                     Serial,
                                     Edges);
    end Resize;
-   
+
    procedure Set_Toplevel (Surface : Wayland_Client.Shell_Surface) is
    begin
       Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
@@ -3158,7 +3160,7 @@ package body Posix.Wayland_Client is
                                            Y,
                                            Flags);
    end Set_Transient;
-   
+
    procedure Set_Fullscreen (Surface   : Shell_Surface;
                              Method    : Unsigned_32;
                              Framerate : Unsigned_32;
@@ -3169,7 +3171,7 @@ package body Posix.Wayland_Client is
                                             Framerate,
                                             Output.My_Output);
    end Set_Fullscreen;
-   
+
    procedure Set_Popup (Surface : Shell_Surface;
                         Seat    : Wayland_Client.Seat;
                         Serial  : Unsigned_32;
@@ -3186,14 +3188,14 @@ package body Posix.Wayland_Client is
                                        Y,
                                        Flags);
    end Set_Popup;
-   
+
    procedure Set_Maximized (Surface : Shell_Surface;
                             Output  : Wayland_Client.Output) is
    begin
       Wl_Thin.Shell_Surface_Set_Maximized (Surface.My_Shell_Surface,
                                            Output.My_Output);
    end Set_Maximized;
-   
+
    procedure Set_Title (Surface : Shell_Surface;
                         Title   : C_String) is
    begin
@@ -3202,7 +3204,7 @@ package body Posix.Wayland_Client is
          WL_SHELL_SURFACE_SET_TITLE,
          Title);
    end Set_Title;
-   
+
    procedure Set_Class (Surface : Shell_Surface;
                         Class_V : C_String) is
    begin
@@ -3211,7 +3213,7 @@ package body Posix.Wayland_Client is
          WL_SHELL_SURFACE_SET_CLASS,
          Class_V);
    end Set_Class;
-   
+
    procedure Attach (Surface : Wayland_Client.Surface;
                      Buffer  : Wayland_Client.Buffer;
                      X       : Integer;
@@ -3228,29 +3230,29 @@ package body Posix.Wayland_Client is
    begin
       Wl_Thin.Surface_Damage (Surface.My_Surface, X, Y, Width, Height);
    end Damage;
-   
+
    function Frame (Surface : Wayland_Client.Surface) return Callback is
    begin
       return C : Callback do
          C.My_Callback := Wl_Thin.Surface_Frame (Surface.My_Surface);
       end return;
    end Frame;
-   
+
    procedure Set_Opaque_Region (Surface : Wayland_Client.Surface;
                                 Region  : Wayland_Client.Region) is
    begin
       Wl_Thin.Surface_Set_Opaque_Region (Surface.My_Surface,
                                          Region.My_Region);
    end Set_Opaque_Region;
-   
+
    procedure Set_Input_Region (Surface : Wayland_Client.Surface;
                                Region  : Wayland_Client.Region) is
    begin
       Wl_Thin.Surface_Set_Input_Region (Surface.My_Surface,
                                         Region.My_Region);
-      
+
    end Set_Input_Region;
-   
+
    procedure Commit (Surface : Wayland_Client.Surface) is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
@@ -3262,14 +3264,14 @@ package body Posix.Wayland_Client is
       Wl_Thin.Surface_Set_Buffer_Transform (Surface.My_Surface,
                                             Transform);
    end Set_Buffer_Transform;
-   
+
    procedure Set_Buffer_Scale (Surface : Wayland_Client.Surface;
                                Scale   : Integer) is
    begin
       Wl_Thin.Surface_Set_Buffer_Scale (Surface.My_Surface,
                                         Scale);
    end Set_Buffer_Scale;
-   
+
    procedure Damage_Buffer (Surface : Wayland_Client.Surface;
                             X       : Integer;
                             Y       : Integer;
@@ -3278,7 +3280,7 @@ package body Posix.Wayland_Client is
    begin
       Wl_Thin.Surface_Damage_Buffer (Surface.My_Surface, X, Y, Width, Height);
    end Damage_Buffer;
-   
+
    procedure Destroy (Surface : in out Wayland_Client.Surface) is
    begin
       if Surface.My_Surface /= null then
@@ -3301,7 +3303,7 @@ package body Posix.Wayland_Client is
 
    function Has_Proxy (Callback : Wayland_Client.Callback) return Boolean is
       (Callback.My_Callback /= null);
-   
+
    procedure Destroy (Callback : in out Wayland_Client.Callback) is
    begin
       if Callback.My_Callback /= null then
@@ -3319,7 +3321,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Pointer_Get_Version (Pointer.My_Pointer);
    end Get_Version;
-   
+
    procedure Destroy (Pointer : in out Wayland_Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
@@ -3327,7 +3329,7 @@ package body Posix.Wayland_Client is
          Pointer.My_Pointer := null;
       end if;
    end Destroy;
-   
+
    procedure Set_Cursor (Pointer   : Wayland_Client.Pointer;
                          Serial    : Unsigned_32;
                          Surface   : Wayland_Client.Surface;
@@ -3340,7 +3342,7 @@ package body Posix.Wayland_Client is
                                   Hotspot_X,
                                   Hotspot_Y);
    end Set_Cursor;
-   
+
    procedure Release (Pointer : in out Wayland_Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
@@ -3353,7 +3355,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Keyboard_Get_Version (Keyboard.My_Keyboard);
    end Get_Version;
-   
+
    procedure Destroy (Keyboard : in out Wayland_Client.Keyboard) is
    begin
       if Keyboard.My_Keyboard /= null then
@@ -3374,7 +3376,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Touch_Get_Version (Touch.My_Touch);
    end Get_Version;
-   
+
    procedure Destroy (Touch : in out Wayland_Client.Touch) is
    begin
       if Touch.My_Touch /= null then
@@ -3395,7 +3397,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Output_Get_Version (Output.My_Output);
    end Get_Version;
-   
+
    procedure Destroy (Output : in out Wayland_Client.Output) is
    begin
       if Output.My_Output /= null then
@@ -3416,7 +3418,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Region_Get_Version (Region.My_Region);
    end Get_Version;
-   
+
    procedure Destroy (Region : in out Wayland_Client.Region) is
    begin
       if Region.My_Region /= null then
@@ -3433,7 +3435,7 @@ package body Posix.Wayland_Client is
    begin
       Wl_Thin.Region_Add (Region.My_Region, X, Y, Width, Height);
    end Add;
-   
+
    procedure Subtract (Region : Wayland_Client.Region;
                        X      : Integer;
                        Y      : Integer;
@@ -3447,7 +3449,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Subcompositor_Get_Version (S.My_Subcompositor);
    end Get_Version;
-   
+
    procedure Destroy (S : in out Wayland_Client.Subcompositor) is
    begin
       if S.My_Subcompositor /= null then
@@ -3466,12 +3468,12 @@ package body Posix.Wayland_Client is
                                               Surface.My_Surface,
                                               Parent.My_Surface);
    end Get_Subsurface;
-   
+
    function Get_Version (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 is
    begin
       return Wl_Thin.Subsurface_Get_Version (Subsurface.My_Subsurface);
    end Get_Version;
-   
+
    procedure Destroy (Subsurface : in out Wayland_Client.Subsurface) is
    begin
       if Subsurface.My_Subsurface /= null then
@@ -3488,26 +3490,26 @@ package body Posix.Wayland_Client is
                                        X,
                                        Y);
    end Set_Position;
-   
+
    procedure Place_Above (Subsurface : Wayland_Client.Subsurface;
                           Sibling    : Wayland_Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Above (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Above;
-   
+
    procedure Place_Below (Subsurface : Wayland_Client.Subsurface;
                           Sibling    : Wayland_Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Below (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Below;
-   
+
    procedure Set_Sync (Subsurface : Wayland_Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Sync (Subsurface.My_Subsurface);
    end Set_Sync;
-   
+
    procedure Set_Desync (Subsurface : Wayland_Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Desync (Subsurface.My_Subsurface);
@@ -3517,7 +3519,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Data_Source_Get_Version (Source.My_Data_Source);
    end Get_Version;
-   
+
    procedure Destroy (Source : in out Data_Source) is
    begin
       if Source.My_Data_Source /= null then
@@ -3525,7 +3527,7 @@ package body Posix.Wayland_Client is
          Source.My_Data_Source := null;
       end if;
    end Destroy;
-   
+
    procedure Offer (Source    : Data_Source;
                     Mime_Type : C_String) is
    begin
@@ -3534,7 +3536,7 @@ package body Posix.Wayland_Client is
          WL_DATA_SOURCE_OFFER,
          Mime_Type);
    end Offer;
-   
+
    procedure Set_Actions (Source      : Data_Source;
                           Dnd_Actions : Unsigned_32) is
    begin
@@ -3546,7 +3548,7 @@ package body Posix.Wayland_Client is
    begin
       return Wl_Thin.Data_Device_Get_Version (Device.My_Data_Device);
    end Get_Version;
-   
+
    procedure Destroy (Device : in out Data_Device) is
    begin
       if Device.My_Data_Device /= null then
@@ -3567,7 +3569,7 @@ package body Posix.Wayland_Client is
                                       Icon.My_Surface,
                                       Serial);
    end Start_Drag;
-   
+
    procedure Set_Selection (Device : Data_Device;
                             Source : Data_Source;
                             Serial : Unsigned_32) is
@@ -3576,7 +3578,7 @@ package body Posix.Wayland_Client is
                                          Source.My_Data_Source,
                                          Serial);
    end Set_Selection;
-   
+
    procedure Release (Device : in out Data_Device) is
    begin
       if Device.My_Data_Device /= null then
@@ -3590,7 +3592,7 @@ package body Posix.Wayland_Client is
       return Wl_Thin.Data_Device_Manager_Get_Version
         (Manager.My_Data_Device_Manager);
    end Get_Version;
-   
+
    procedure Destroy (Manager : in out Data_Device_Manager) is
    begin
       if Manager.My_Data_Device_Manager /= null then
@@ -3605,7 +3607,7 @@ package body Posix.Wayland_Client is
       Source.My_Data_Source := Wl_Thin.Data_Device_Manager_Create_Data_Source
         (Manager.My_Data_Device_Manager);
    end Create_Data_Source;
-   
+
    procedure Get_Data_Device (Manager : Data_Device_Manager;
                               Seat    : Wayland_Client.Seat;
                               Device  : in out Data_Device) is
@@ -3613,5 +3615,5 @@ package body Posix.Wayland_Client is
       Device.My_Data_Device := Wl_Thin.Data_Device_Manager_Get_Data_Device
         (Manager.My_Data_Device_Manager, Seat.My_Seat);
    end Get_Data_Device;
-   
-end Posix.Wayland_Client;
+
+end C_Binding.Linux.Wayland_Client;

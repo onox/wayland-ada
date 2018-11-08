@@ -1,15 +1,15 @@
-package body Posix is
+package body C_Binding.Linux is
 
    procedure Set_File_Descriptor
-     (File  : in out Posix.File;
+     (File  : in out Linux.File;
       Value : Integer) is
    begin
       File.My_File_Descriptor := Value;
    end Set_File_Descriptor;
 
    procedure Open
-     (File        : in out Posix.File;
-      File_Name   : in     C_String;
+     (File        : in out Linux.File;
+      File_Name   : in     String;
       Mode        : in     File_Mode;
       Permissions : in     File_Permissions)
    is
@@ -58,16 +58,16 @@ package body Posix is
          P := P or S_IXOTH;
       end if;
 
-      File.My_File_Descriptor := Px_Thin.Open (File_Name, M, P);
+      File.My_File_Descriptor := Px_Thin.Open (+File_Name, M, P);
    end Open;
 
-   procedure Close (File : in out Posix.File) is
+   procedure Close (File : in out Linux.File) is
    begin
       Px_Thin.Close (File.My_File_Descriptor);
    end Close;
 
    procedure Get_File_Status
-     (File   : in     Posix.File;
+     (File   : in     Linux.File;
       Status : in out File_Status)
    is
       Result : constant Integer :=
@@ -78,7 +78,7 @@ package body Posix is
       Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
 
-   procedure Write (File : Posix.File; Bytes : Byte_Array) is
+   procedure Write (File : Linux.File; Bytes : Byte_Array) is
       SSize : SSize_Type;
       pragma Unreferenced (SSize);
    begin
@@ -89,19 +89,19 @@ package body Posix is
            Count           => Bytes'Length);
    end Write;
 
-   function Read (File : Posix.File; Bytes : in out Byte_Array) return SSize_Type is
+   function Read (File : Linux.File; Bytes : in out Byte_Array) return SSize_Type is
    begin
       return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
    end Read;
 
    procedure Map_Memory
-     (File    : in Posix.File;
+     (File    : in Linux.File;
       Address : Void_Ptr;
       Len     : Size_Type;
       Prot    : Prot_FLag;
       Flags   : int;
-      Offset  : Posix.Offset;
-      Memory_Map : in out Posix.Memory_Map) is
+      Offset  : Linux.Offset;
+      Memory_Map : in out Linux.Memory_Map) is
    begin
       Memory_Map.My_Mapping := Px_Thin.Mmap (Address,
                                              Len,
@@ -112,7 +112,7 @@ package body Posix is
       Memory_Map.My_Length := Len;
    end Map_Memory;
 
-   function Unmap_Memory (Map : in out Posix.Memory_Map) return Integer is
+   function Unmap_Memory (Map : in out Linux.Memory_Map) return Integer is
       R : Integer;
    begin
       R := Px_Thin.Munmap (Map.My_Mapping, Map.My_Length);
@@ -174,14 +174,4 @@ package body Posix is
 
    end Get_Line;
 
-   function "-" (Text : C_String) return String is
-   begin
-      return String (Text (Text'First .. Text'Last - 1));
-   end "-";
-
-   function "+" (Text : String) return C_String is
-   begin
-      return C_String (Text & Nul);
-   end "+";
-
-end Posix;
+end C_Binding.Linux;

@@ -1,3 +1,3 @@
-with Posix.Wayland_Client;
+with C_Binding.Linux.Wayland_Client;
 
-package Wayland_Client renames Posix.Wayland_Client;
+package Wayland_Client renames C_Binding.Linux.Wayland_Client;

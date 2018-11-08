@@ -1,20 +1,17 @@
 with "aida_deepend.gpr";
 --with "ada_traits_containers.gpr";
 
-library project Wayland_XML is
-
-   for Library_Name use "wayland_xml";
+project Wayland_XML is
 
    for Source_Dirs use ("src");
 
    for Object_Dir use "obj";
 
-   for Library_Dir use "lib";
-
-   for Source_Files use (
-                         "wayland_xml.ads",
-                         "wayland_xml.adb"
-                         );
+   for Source_Files use
+     (
+      "wayland_xml.ads",
+      "wayland_xml.adb"
+     );
 
    package Check is
       for Default_Switches ("ada") use ("-rules", "-from=gnatcheck_check_for_forbidden.txt");

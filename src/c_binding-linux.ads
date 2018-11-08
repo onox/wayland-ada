@@ -2,18 +2,13 @@ with System.Storage_Elements;
 with Interfaces.C;
 private with Ada.Unchecked_Conversion;
 
-package Posix is
+--  This package was originally named Posix but is nowadays Linux to avoid
+--  name clash with the Ada binding to Posix named Florist.
+package C_Binding.Linux is
 
    type File;
    type File_Status;
    type Memory_Map;
-
-   subtype unsigned_long is Interfaces.C.unsigned_long;
-   subtype unsigned is Interfaces.C.unsigned;
-   subtype int is Interfaces.C.int;
-   subtype long is Interfaces.C.long;
-   subtype Unsigned_32 is Interfaces.Unsigned_32;
-   subtype Unsigned_16 is Interfaces.Unsigned_16;
 
 --     type unsigned       is mod 2 ** Integer'Size;
 --     type unsigned_long  is mod 2 ** Long_Integer'Size;
@@ -22,14 +17,11 @@ package Posix is
 --     type Unsigned_32 is mod 2 ** 32;
 --     for Unsigned_32'Size use 32;
 
-   subtype Void_Ptr is System.Address;
-
    type S_FLag is new Unsigned_32;
    type O_FLag is new Unsigned_32;
    type Prot_FLag is new Unsigned_32;
 
    use type long;
-   use type Void_Ptr;
 
    type Fds_Bits_Index is range 0 .. 1023;
    --  The interval is chosen 0 .. 1023 to be able to use file descriptors
@@ -75,18 +67,6 @@ package Posix is
    type Poll_File_Descriptor_Array is array (Positive range <>) of
      Poll_File_Descriptor with
        Convention => C;
-
-   Nul : constant Character := Character'Val (0);
-
-   type C_String is new String with
-     Dynamic_Predicate => C_String'Length > 0
-     and then C_String (C_String'Last) = Nul;
-
-   function "-" (Text : C_String) return String;
-   -- Removes the last 'Nul' character and returns a normal String.
-
-   function "+" (Text : String) return C_String;
-   -- Appends a 'Nul' character to a standard String and returns a C_String.
 
    --
    -- Non-primitive subprograms
@@ -176,28 +156,6 @@ package Posix is
    PROT_GROWSUP : constant Prot_FLag := 16#02000000#;
 
    --
-   -- Sharing types (must choose one and only one of these).
-   --
-
-   -- Share changes.
-   MAP_SHARED : constant := 16#01#;
-
-   -- Changes are private.
-   MAP_PRIVATE : constant := 16#02#;
-
-   -- Interpret addr exactly.
-   MAP_FIXED : constant :=  16#10#;
-
-   -- Don't use a file.
-   MAP_ANON : constant := 16#20#;
-
-   MAP_HUGE_SHIFT : constant := 26;
-
-   MAP_HUGE_MASK : constant := 16#3f#;
-
-   MAP_FAILED : constant Void_Ptr;
-
-   --
    -- Flags to `msync'.
    --
 
@@ -234,8 +192,6 @@ package Posix is
 
    subtype Time_Nano_Sec is long;
 
-   Nil : Void_Ptr renames System.Null_Address;
-
    subtype Offset is long;
 
    subtype Byte is System.Storage_Elements.Storage_Element;
@@ -253,55 +209,55 @@ package Posix is
    --  Represents a file on the hard disk.
 
    procedure Set_File_Descriptor
-     (File  : in out Posix.File;
+     (File  : in out Linux.File;
       Value : Integer);
 
    procedure Open
-     (File        : in out Posix.File;
-      File_Name   : in     C_String;
+     (File        : in out Linux.File;
+      File_Name   : in     String;
       Mode        : in     File_Mode;
       Permissions : in     File_Permissions) with
      Global => null,
      Pre    => File.Is_Closed;
 
-   procedure Close (File : in out Posix.File) with
+   procedure Close (File : in out Linux.File) with
      Global => null,
      Pre    => File.Is_Open,
      Post   => File.Is_Closed;
 
-   procedure Write (File : Posix.File; Bytes : Byte_Array) with
+   procedure Write (File : Linux.File; Bytes : Byte_Array) with
      Global => null,
      Pre    => File.Is_Open;
 
-   function Read (File : Posix.File; Bytes : in out Byte_Array) return SSize_Type with
+   function Read (File : Linux.File; Bytes : in out Byte_Array) return SSize_Type with
      Global => null,
      Pre    => File.Is_Open;
 
-   function File_Descriptor (File : Posix.File) return Integer with
+   function File_Descriptor (File : Linux.File) return Integer with
      Global => null,
      Pre    => File.Is_Open;
 
    procedure Get_File_Status
-     (File   : in     Posix.File;
+     (File   : in     Linux.File;
       Status : in out File_Status) with
      Global => null,
      Pre    => File.Is_Open;
 
    procedure Map_Memory
-     (File    : in Posix.File;
+     (File    : in Linux.File;
       Address : Void_Ptr;
       Len     : Size_Type;
       Prot    : Prot_FLag;
       Flags   : int;
-      Offset  : Posix.Offset;
-      Memory_Map : in out Posix.Memory_Map) with
+      Offset  : Linux.Offset;
+      Memory_Map : in out Linux.Memory_Map) with
      Global => null,
      Pre    => not Has_Mapping (Memory_Map);
 
-   function Is_Open (File : Posix.File) return Boolean with
+   function Is_Open (File : Linux.File) return Boolean with
      Global => null;
 
-   function Is_Closed (File : Posix.File) return Boolean with
+   function Is_Closed (File : Linux.File) return Boolean with
      Global => null;
 
    type File_Status is tagged limited private;
@@ -367,15 +323,15 @@ package Posix is
 
    type Memory_Map is tagged limited private;
 
-   function Has_Mapping (Map : Posix.Memory_Map) return Boolean with
+   function Has_Mapping (Map : Linux.Memory_Map) return Boolean with
      Global => null;
 
-   function Mapping (Map : Posix.Memory_Map) return Void_Ptr with
+   function Mapping (Map : Linux.Memory_Map) return Void_Ptr with
      Global => null,
      Pre    => Map.Has_Mapping;
 
    -- Returns 0 on success, otherwise -1.
-   function Unmap_Memory (Map : in out Posix.Memory_Map) return Integer with
+   function Unmap_Memory (Map : in out Linux.Memory_Map) return Integer with
      Global => null,
      Post   => (if Unmap_Memory'Result = 0 then not Map.Has_Mapping);
 
@@ -391,7 +347,33 @@ package Posix is
    STDOUT : constant File; -- Standard output.
    STDERR : constant File; -- Standard error output.
 
+   MAP_FAILED : constant Void_Ptr;
+
 private
+
+   use type Void_Ptr;
+
+   Nil : Void_Ptr renames System.Null_Address;
+
+   --
+   -- Sharing types (must choose one and only one of these).
+   --
+
+   -- Share changes.
+   MAP_SHARED : constant := 16#01#;
+
+   -- Changes are private.
+   MAP_PRIVATE : constant := 16#02#;
+
+   -- Interpret addr exactly.
+   MAP_FIXED : constant :=  16#10#;
+
+   -- Don't use a file.
+   MAP_ANON : constant := 16#20#;
+
+   MAP_HUGE_SHIFT : constant := 26;
+
+   MAP_HUGE_MASK : constant := 16#3f#;
 
    -- Read by owner.
    S_IRUSR : constant S_FLag := 8#400#; -- 256 in decimal
@@ -561,7 +543,7 @@ private
          Prot   : Prot_FLag;
          Flags  : int;
          Fd     : Integer;
-         Offset : Posix.Offset) return Void_Ptr with
+         Offset : Linux.Offset) return Void_Ptr with
         Import        => True,
         Convention    => C,
         External_Name => "mmap";
@@ -584,16 +566,16 @@ private
       My_File_Descriptor : Integer := -1;
    end record;
 
-   function Is_Open (File : Posix.File) return Boolean is (File.My_File_Descriptor /= -1);
+   function Is_Open (File : Linux.File) return Boolean is (File.My_File_Descriptor /= -1);
 
-   function Is_Closed (File : Posix.File) return Boolean is (File.My_File_Descriptor = -1);
+   function Is_Closed (File : Linux.File) return Boolean is (File.My_File_Descriptor = -1);
 
    type File_Status is tagged limited record
       My_Status   : aliased Px_Thin.File_Status_T;
       My_Is_Valid : Boolean := False;
    end record;
 
-   function File_Descriptor (File : Posix.File) return Integer is
+   function File_Descriptor (File : Linux.File) return Integer is
      (File.My_File_Descriptor);
 
    function Is_Valid
@@ -663,9 +645,9 @@ private
    end record;
 
    function Has_Mapping
-     (Map : Posix.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
+     (Map : Linux.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
 
-   function Mapping (Map : Posix.Memory_Map) return Void_Ptr is (Map.My_Mapping);
+   function Mapping (Map : Linux.Memory_Map) return Void_Ptr is (Map.My_Mapping);
 
    STDIN  : constant File :=
      (
@@ -687,4 +669,4 @@ private
       Timeout          : Integer) return Integer is
       (Px_Thin.Poll (File_Descriptors, File_Descriptors'Length, Timeout));
 
-end Posix;
+end C_Binding.Linux;
