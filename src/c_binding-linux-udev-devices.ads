@@ -1,18 +1,14 @@
-limited with C_Binding.Linux.Udev.Contexts;
+with C_Binding.Linux.Udev.Contexts;
 
 package C_Binding.Linux.Udev.Devices is
 
    type Device;
 
-   package Bug is
+   procedure Get_Parent
+     (Device : Devices.Device;
+      Parent : out Devices.Device);
 
-      procedure Get_Parent
-        (Device : Devices.Device;
-         Parent : out Devices.Device);
-
-   end Bug;
-
-   type Device is new Device_Base with null record;
+   type Device is new Device_Base with private;
 
    procedure Create
      (Device  : out Devices.Device;
@@ -28,17 +24,27 @@ package C_Binding.Linux.Udev.Devices is
      Pre  => Device.Exists,
      Post => not Device.Exists;
 
-   function Syspath (Device : Devices.Device) return String_Result;
-   function Devpath (Device : Devices.Device) return String_Result;
+   function Syspath (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Devpath (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
    function Sysattr (Device : Devices.Device;
-                     Name   : String) return String_Result;
-   function Driver  (Device : Devices.Device) return String_Result;
-   function Devtype (Device : Devices.Device) return String_Result;
-   function Sysname (Device : Devices.Device) return String_Result;
+                     Name   : String) return String_Result with
+     Pre  => Device.Exists;
+
+   function Driver  (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Devtype (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Sysname (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
 
 private
 
-   function Exists (Device : Devices.Device) return Boolean is
-     (Device.My_Ptr /= null);
+   type Device is new Device_Base with null record;
 
 end C_Binding.Linux.Udev.Devices;

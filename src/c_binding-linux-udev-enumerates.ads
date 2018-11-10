@@ -27,10 +27,7 @@ package C_Binding.Linux.Udev.Enumerates is
 private
 
    type Enumerate is tagged limited record
-      My_Ptr : Thin.Udev_Enumerate_Ptr;
+      My_Ptr : Udev_Enumerate_Ptr;
    end record;
-
-   function Exists (Enum : Enumerate) return Boolean is
-     (Enum.My_Ptr /= null);
 
 end C_Binding.Linux.Udev.Enumerates;
