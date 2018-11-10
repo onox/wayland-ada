@@ -39,6 +39,26 @@ package C_Binding.Linux.Udev.Contexts is
    --  On success, Monitor.Exists = True.
    --  On failure, Monitor.Exists = False.
 
+   function Log_Priority (Context : Contexts.Context) return Integer;
+
+   procedure Set_Log_Priority
+     (Context : Contexts.Context;
+      Value   : Integer);
+
+   generic
+      with procedure Log
+        (Context  : Contexts.Context;
+         Priority : Integer;
+         File     : String;
+         Line     : Integer;
+         Fn       : String;
+         Format   : String);
+   package Logging is
+
+      procedure Redirect_Logs (Context : Contexts.Context);
+
+   end Logging;
+
    generic
       type Data_Type (<>) is limited private;
       type Data_Ptr is not null access all Data_Type;

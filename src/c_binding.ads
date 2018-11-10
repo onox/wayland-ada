@@ -33,4 +33,7 @@ private
 --     function "+" (Text : String) return chars_ptr;
    -- Appends a Character'Val (0) character to a standard String.
 
+   function "-" (Chars : chars_ptr) return String;
+   -- Removes the last Character'Val (0) character and returns a String.
+
 end C_Binding;

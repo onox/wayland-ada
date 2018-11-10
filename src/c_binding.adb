@@ -17,4 +17,10 @@ package body C_Binding is
 --        return Interfaces.C.Strings.To_Chars_Ptr (Chars'Access);
 --     end "+";
 
+   function "-" (Chars : chars_ptr) return String is
+      A : constant Interfaces.C.char_array
+        := Interfaces.C.Strings.Value (Chars);
+   begin
+      return Interfaces.C.To_Ada (A);
+   end "-";
 end C_Binding;

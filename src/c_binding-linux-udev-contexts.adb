@@ -19,22 +19,26 @@ package body C_Binding.Linux.Udev.Contexts is
    --  On success, returns a pointer to the allocated udev context.
    --  On failure, null is returned.
 
---     procedure Udev_Set_Log_Fn
---       (Arg1 : System.Address; Arg2 : access procedure
---          (Arg1 : System.Address;
---           Arg2 : Int;
---           Arg3 : Interfaces.C.Strings.Chars_Ptr;
---           Arg4 : Int;
---           Arg5 : Interfaces.C.Strings.Chars_Ptr;
---           Arg6 : Interfaces.C.Strings.Chars_Ptr;
---           Arg7 : access System.Address));
---     pragma Import (C, Udev_Set_Log_Fn, "udev_set_log_fn");
---
---     function Udev_Get_Log_Priority (Arg1 : System.Address) return Int;
---     pragma Import (C, Udev_Get_Log_Priority, "udev_get_log_priority");
---
---     procedure Udev_Set_Log_Priority (Arg1 : System.Address; Arg2 : Int);
---     pragma Import (C, Udev_Set_Log_Priority, "udev_set_log_priority");
+   procedure Udev_Set_Log_Fn
+     (Udev : Udev_Ptr;
+      Arg2 : access procedure
+        (Udev     : Udev_Ptr;
+         Priority : Int;
+         File     : Interfaces.C.Strings.Chars_Ptr;
+         Line     : Int;
+         Fn       : Interfaces.C.Strings.Chars_Ptr;
+         Format   : Interfaces.C.Strings.Chars_Ptr;
+         Args     : access System.Address));
+   pragma Import (C, Udev_Set_Log_Fn, "udev_set_log_fn");
+   --  The built-in logging writes to stderr. It can be overridden
+   --  by a custom function, to plug log messages into
+   --  the users' logging functionality.
+
+   function Udev_Get_Log_Priority (Udev : Udev_Ptr) return Int;
+   pragma Import (C, Udev_Get_Log_Priority, "udev_get_log_priority");
+
+   procedure Udev_Set_Log_Priority (Udev : Udev_Ptr; Arg2 : Int);
+   pragma Import (C, Udev_Set_Log_Priority, "udev_set_log_priority");
 
    function Udev_Get_Userdata
      (Udev : Udev_Ptr) return System.Address;
@@ -85,6 +89,53 @@ package body C_Binding.Linux.Udev.Contexts is
       Monitor_Base (Monitor).My_Ptr
         := Udev_Monitor_New_From_Netlink (Context.My_Ptr, +Name);
    end New_From_Netlink;
+
+   function Log_Priority (Context : Contexts.Context) return Integer is
+   begin
+      return Integer (Udev_Get_Log_Priority (Context.My_Ptr));
+   end Log_Priority;
+
+   procedure Set_Log_Priority
+     (Context : Contexts.Context;
+      Value   : Integer) is
+   begin
+      Udev_Set_Log_Priority (Context.My_Ptr, int (Value));
+   end Set_Log_Priority;
+
+   package body Logging is
+
+      procedure Internal_Callback
+        (Udev     : Udev_Ptr;
+         Priority : Int;
+         File     : Interfaces.C.Strings.Chars_Ptr;
+         Line     : Int;
+         Fn       : Interfaces.C.Strings.Chars_Ptr;
+         Format   : Interfaces.C.Strings.Chars_Ptr;
+         Args     : access System.Address) with
+        Convention => C;
+
+      procedure Internal_Callback
+        (Udev     : Udev_Ptr;
+         Priority : Int;
+         File     : Interfaces.C.Strings.Chars_Ptr;
+         Line     : Int;
+         Fn       : Interfaces.C.Strings.Chars_Ptr;
+         Format   : Interfaces.C.Strings.Chars_Ptr;
+         Args     : access System.Address)
+      is
+         pragma Unreferenced (Args);  --  What to do with this?
+
+         C : constant Context := (My_Ptr => Udev);
+      begin
+         Log (C, Integer (Priority), -File, Integer (Line), -Fn, -Format);
+      end Internal_Callback;
+
+      procedure Redirect_Logs (Context : Contexts.Context) is
+      begin
+         Udev_Set_Log_Fn (Context.My_Ptr, Internal_Callback'Access);
+      end Redirect_Logs;
+
+   end Logging;
 
    package body Custom_Data is
 
