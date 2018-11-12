@@ -1,4 +1,5 @@
 limited with C_Binding.Linux.Udev.Monitors;
+limited with C_Binding.Linux.Udev.Devices;
 
 package C_Binding.Linux.Udev.Contexts is
 
@@ -38,6 +39,27 @@ package C_Binding.Linux.Udev.Contexts is
    --  Create a udev monitor object.
    --  On success, Monitor.Exists = True.
    --  On failure, Monitor.Exists = False.
+
+   procedure New_Device_From_Devnum
+     (Context       : Contexts.Context;
+      Block_Device  : Character;
+      Device_Number : Interfaces.Unsigned_64;
+      Device        : out Devices.Device);
+
+   procedure New_Device_From_Subsystem_Sysname
+     (Context   : Contexts.Context;
+      Subsystem : String;
+      Sysname   : String;
+      Device    : out Devices.Device);
+
+   procedure New_Device_From_Device_Id
+     (Context : Contexts.Context;
+      Id      : String;
+      Device  : out Devices.Device);
+
+   procedure New_Device_From_Environment
+     (Context : Contexts.Context;
+      Device  : out Devices.Device);
 
    function Log_Priority (Context : Contexts.Context) return Integer;
 

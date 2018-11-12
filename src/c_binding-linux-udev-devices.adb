@@ -18,35 +18,11 @@ package body C_Binding.Linux.Udev.Devices is
       Syspath : C_String) return Udev_Device_Ptr;
    pragma Import
      (C, Udev_Device_New_From_Syspath, "udev_device_new_from_syspath");
-
---     function Udev_Device_New_From_Devnum
---       (Arg1 : System.Address;
---        Arg2 : Char;
---        Arg3 : Unsigned_Long) return System.Address;
---     pragma Import
---       (C, Udev_Device_New_From_Devnum, "udev_device_new_from_devnum");
-
---     function Udev_Device_New_From_Subsystem_Sysname
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_New_From_Subsystem_Sysname,
---        "udev_device_new_from_subsystem_sysname");
-
---     function Udev_Device_New_From_Device_Id
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr) return System.Address;
---     pragma Import
---       (C, Udev_Device_New_From_Device_Id, "udev_device_new_from_device_id");
-
---     function Udev_Device_New_From_Environment
---       (Arg1 : System.Address) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_New_From_Environment,
---        "udev_device_new_from_environment");
+   --  Create the device object based on information found in /sys,
+   --  annotated with properties from the udev-internal device database.
+   --  A syspath is any subdirectory of /sys, with the restriction that a
+   --  subdirectory of /sys/devices (or a symlink to one) represents a real
+   --  device and as such must contain a uevent file.
 
    function Udev_Device_Get_Parent
      (Device : Udev_Device_Ptr) return Udev_Device_Ptr;

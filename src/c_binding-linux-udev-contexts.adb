@@ -1,3 +1,4 @@
+with C_Binding.Linux.Udev.Devices;
 with C_Binding.Linux.Udev.Monitors;
 with System.Address_To_Access_Conversions;
 
@@ -60,6 +61,54 @@ package body C_Binding.Linux.Udev.Contexts is
    --  Create a udev monitor object.
    --  On success, returns a pointer to the allocated udev monitor.
    --  On failure, null is returned.
+
+   function Udev_Device_New_From_Devnum
+     (
+      Udev : Udev_Ptr;      --  udev library context
+      Arg2 : Char;          --  char or block device
+      Arg3 : Unsigned_Long  --  device major/minor number
+     ) return Udev_Device_Ptr;
+   pragma Import
+     (C, Udev_Device_New_From_Devnum, "udev_device_new_from_devnum");
+   --  Create new udev device, and fill in information from the sys device
+   --  and the udev database entry. The device is looked-up by its
+   --  major/minor number and type. Character and block device numbers are
+   --  not unique across the two types.
+   --
+   --  Returns a new udev device, or null, if it does not exist.
+   --  The initial refcount is 1, and needs to be decremented to release
+   --  the resources of the udev device.
+
+   function Udev_Device_New_From_Subsystem_Sysname
+     (Udev : Udev_Ptr;   --  udev library context
+      Arg2 : C_String;   --  the subsystem of the device
+      Arg3 : C_String    --  the name of the device
+     ) return Udev_Device_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_New_From_Subsystem_Sysname,
+      "udev_device_new_from_subsystem_sysname");
+   --  Create new udev device, and fill in information from the sys device
+   --  and the udev database entry. The device is looked up by the subsystem
+   --  and name string of the device, like "mem" / "zero", or "block" / "sda".
+   --
+   --  Returns a new udev device, or null, if it does not exist.
+   --
+   --  The initial refcount is 1, and needs to be decremented to release
+   --  the resources of the udev device.
+
+   function Udev_Device_New_From_Device_Id
+     (Udev : Udev_Ptr;
+      Id   : C_String) return Udev_Device_Ptr;
+   pragma Import
+     (C, Udev_Device_New_From_Device_Id, "udev_device_new_from_device_id");
+
+   function Udev_Device_New_From_Environment
+     (Udev : Udev_Ptr) return Udev_Device_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_New_From_Environment,
+      "udev_device_new_from_environment");
 
    procedure Acquire (Original  : Contexts.Context;
                       Reference : out Contexts.Context) is
@@ -158,5 +207,47 @@ package body C_Binding.Linux.Udev.Contexts is
       end Get_Userdata;
 
    end Custom_Data;
+
+   procedure New_Device_From_Devnum
+     (Context       : Contexts.Context;
+      Block_Device  : Character;
+      Device_Number : Interfaces.Unsigned_64;
+      Device        : out Devices.Device) is
+   begin
+      Device_Base (Device).My_Ptr := Udev_Device_New_From_Devnum
+        (Context.My_Ptr,
+         Char (Block_Device),
+         unsigned_long (Device_Number));
+   end New_Device_From_Devnum;
+
+   procedure New_Device_From_Subsystem_Sysname
+     (Context   : Contexts.Context;
+      Subsystem : String;
+      Sysname   : String;
+      Device    : out Devices.Device) is
+   begin
+      Device_Base (Device).My_Ptr := Udev_Device_New_From_Subsystem_Sysname
+        (Context.My_Ptr,
+         +Subsystem,
+         +Sysname);
+   end New_Device_From_Subsystem_Sysname;
+
+   procedure New_Device_From_Device_Id
+     (Context : Contexts.Context;
+      Id      : String;
+      Device  : out Devices.Device) is
+   begin
+      Device_Base (Device).My_Ptr := Udev_Device_New_From_Device_Id
+        (Context.My_Ptr,
+         +Id);
+   end New_Device_From_Device_Id;
+
+   procedure New_Device_From_Environment
+     (Context : Contexts.Context;
+      Device  : out Devices.Device) is
+   begin
+      Device_Base (Device).My_Ptr := Udev_Device_New_From_Environment
+        (Context.My_Ptr);
+   end New_Device_From_Environment;
 
 end C_Binding.Linux.Udev.Contexts;

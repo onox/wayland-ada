@@ -30,9 +30,11 @@ private
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
+--     type Chars_Ref (E : not null access constant chars_ptr) is
+--
 --     function "+" (Text : String) return chars_ptr;
-   -- Appends a Character'Val (0) character to a standard String.
-
+--     -- Appends a Character'Val (0) character to a standard String.
+--
    function "-" (Chars : chars_ptr) return String;
    -- Removes the last Character'Val (0) character and returns a String.
 
