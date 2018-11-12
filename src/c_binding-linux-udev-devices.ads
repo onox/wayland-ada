@@ -1,5 +1,6 @@
 with C_Binding.Linux.Udev.Contexts;
 
+--  kernel sys devices
 package C_Binding.Linux.Udev.Devices is
 
    type Device;
@@ -7,6 +8,13 @@ package C_Binding.Linux.Udev.Devices is
    procedure Get_Parent
      (Device : Devices.Device;
       Parent : out Devices.Device);
+
+   procedure Acquire
+     (Original  : Device;
+      Reference : out Device) with
+     Pre => Devices.Exists (Original);
+   --  Acquire a reference to an existing udev device object.
+   --  The reference count to Original goes up by 1.
 
    type Device is new Device_Base with private;
 
@@ -42,6 +50,11 @@ package C_Binding.Linux.Udev.Devices is
 
    function Sysname (Device : Devices.Device) return String_Result with
      Pre  => Device.Exists;
+
+   procedure Get_Context (Device  : Devices.Device;
+                          Context : out Contexts.Context) with
+     Pre => Device.Exists;
+   --  Get the Context the Device was created with.
 
 private
 

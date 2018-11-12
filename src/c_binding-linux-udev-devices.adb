@@ -1,16 +1,17 @@
 package body C_Binding.Linux.Udev.Devices is
 
---     function Udev_Device_Ref
---       (Arg1 : Udev_Device_Ptr) return Udev_Device_Ptr;
---     pragma Import (C, Udev_Device_Ref, "udev_device_ref");
+   function Udev_Device_Ref
+     (Arg1 : Udev_Device_Ptr) return Udev_Device_Ptr;
+   pragma Import (C, Udev_Device_Ref, "udev_device_ref");
 
    function Udev_Device_Unref
      (Arg1 : Udev_Device_Ptr) return Udev_Device_Ptr;
    pragma Import (C, Udev_Device_Unref, "udev_device_unref");
 
---     function Udev_Device_Get_Udev
---       (Arg1 : System.Address) return System.Address;
---     pragma Import (C, Udev_Device_Get_Udev, "udev_device_get_udev");
+   function Udev_Device_Get_Udev
+     (Arg1 : Udev_Device_Ptr) return Udev_Ptr;
+   pragma Import (C, Udev_Device_Get_Udev, "udev_device_get_udev");
+   --  Retrieve the udev library context the device was created with.
 
    function Udev_Device_New_From_Syspath
      (Udev    : Udev_Ptr;
@@ -173,6 +174,12 @@ package body C_Binding.Linux.Udev.Devices is
 --        Arg2 : Interfaces.C.Strings.Chars_Ptr) return Int;
 --     pragma Import (C, Udev_Device_Has_Tag, "udev_device_has_tag");
 
+   procedure Acquire (Original  : Device;
+                      Reference : out Device) is
+   begin
+      Reference.My_Ptr := Udev_Device_Ref (Original.My_Ptr);
+   end Acquire;
+
    procedure Get_Parent
      (Device : Devices.Device;
       Parent : out Devices.Device) is
@@ -242,5 +249,11 @@ package body C_Binding.Linux.Udev.Devices is
    begin
       return Get_String_Result (Text, "Devtype failure");
    end Sysname;
+
+   procedure Get_Context (Device  : Devices.Device;
+                          Context : out Contexts.Context) is
+   begin
+      Context_Base (Context).My_Ptr := Udev_Device_Get_Udev (Device.My_Ptr);
+   end Get_Context;
 
 end C_Binding.Linux.Udev.Devices;
