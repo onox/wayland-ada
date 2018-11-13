@@ -1,5 +1,7 @@
 package body C_Binding.Linux.Udev.Devices is
 
+   use type int;
+
    function Udev_Device_Ref
      (Arg1 : Udev_Device_Ptr) return Udev_Device_Ptr;
    pragma Import (C, Udev_Device_Ref, "udev_device_ref");
@@ -84,65 +86,81 @@ package body C_Binding.Linux.Udev.Devices is
    --  for which no udev rules are defined are never reported initialized.
 
    function Udev_Device_Get_Devlinks_List_Entry
-     (Arg1 : System.Address) return System.Address;
+     (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
    pragma Import
      (C,
       Udev_Device_Get_Devlinks_List_Entry,
       "udev_device_get_devlinks_list_entry");
    --  On success, returns a pointer to the first entry of the retrieved list.
-   --  If that list is empty, or if an error occurred, NULL is returned.
+   --  If that list is empty, or if an error occurred, null is returned.
 
---     function Udev_Device_Get_Properties_List_Entry
---       (Arg1 : System.Address) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_Get_Properties_List_Entry,
---        "udev_device_get_properties_list_entry");
+   function Udev_Device_Get_Properties_List_Entry
+     (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_Get_Properties_List_Entry,
+      "udev_device_get_properties_list_entry");
 
---     function Udev_Device_Get_Tags_List_Entry
---       (Arg1 : System.Address) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_Get_Tags_List_Entry,
---        "udev_device_get_tags_list_entry");
+   function Udev_Device_Get_Tags_List_Entry
+     (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_Get_Tags_List_Entry,
+      "udev_device_get_tags_list_entry");
 
---     function Udev_Device_Get_Sysattr_List_Entry
---       (Arg1 : System.Address) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_Get_Sysattr_List_Entry,
---        "udev_device_get_sysattr_list_entry");
+   function Udev_Device_Get_Sysattr_List_Entry
+     (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_Get_Sysattr_List_Entry,
+      "udev_device_get_sysattr_list_entry");
 
---     function Udev_Device_Get_Property_Value
---       (
---        Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr
---       ) return Interfaces.C.Strings.Chars_Ptr;
---     pragma Import
---       (C, Udev_Device_Get_Property_Value, "udev_device_get_property_value");
+   function Udev_Device_Get_Property_Value
+     (
+      Device : Udev_Device_Ptr;
+      Key    : C_String
+     ) return Interfaces.C.Strings.Chars_Ptr;
+   pragma Import
+     (C, Udev_Device_Get_Property_Value, "udev_device_get_property_value");
+   --  On success, returns a pointer to a constant string of the requested
+   --  value. On error, null is returned.
 
    function Udev_Device_Get_Driver
      (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import (C, Udev_Device_Get_Driver, "udev_device_get_driver");
 
---     function Udev_Device_Get_Devnum
---       (Arg1 : System.Address) return Unsigned_Long;
---     pragma Import (C, Udev_Device_Get_Devnum, "udev_device_get_devnum");
+   function Udev_Device_Get_Devnum
+     (
+      Device : Udev_Device_Ptr
+     ) return Unsigned_Long;  --  Returnerar typen dev_t
+   pragma Import (C, Udev_Device_Get_Devnum, "udev_device_get_devnum");
+   --  On success, returns the device type of the passed device.
+   --  On failure, a device type with minor and major number
+   --  set to 0 is returned.
 
---     function Udev_Device_Get_Action
---       (Arg1 : System.Address) return Interfaces.C.Strings.Chars_Ptr;
---     pragma Import (C, Udev_Device_Get_Action, "udev_device_get_action");
+   function Udev_Device_Get_Action
+     (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
+   pragma Import (C, Udev_Device_Get_Action, "udev_device_get_action");
 
---     function Udev_Device_Get_Seqnum
---       (Arg1 : System.Address) return Interfaces.Integer_64;
---     pragma Import (C, Udev_Device_Get_Seqnum, "udev_device_get_seqnum");
+   function Udev_Device_Get_Seqnum
+     (Device : Udev_Device_Ptr) return Interfaces.Integer_64;
+   pragma Import (C, Udev_Device_Get_Seqnum, "udev_device_get_seqnum");
+   --  This is only valid if the device was received through a monitor.
+   --  Devices read from sys do not have a sequence number.
+   --  Returns kernel event sequence number,
+   --  or 0 if there is no sequence number available.
 
---     function Udev_Device_Get_Usec_Since_Initialized
---       (Arg1 : System.Address) return Interfaces.Integer_64;
---     pragma Import
---       (C,
---        Udev_Device_Get_Usec_Since_Initialized,
---        "udev_device_get_usec_since_initialized");
+   function Udev_Device_Get_Usec_Since_Initialized
+     (Device : Udev_Device_Ptr) return Interfaces.Integer_64;
+   pragma Import
+     (C,
+      Udev_Device_Get_Usec_Since_Initialized,
+      "udev_device_get_usec_since_initialized");
+   --  Return the number of microseconds passed since udev set up
+   --  the device for the first time.
+   --  This is only implemented for devices with need to store properties
+   --  in the udev database. All other devices return 0 here.
+   --  Returns the number of microseconds since the device was first seen.
 
    function Udev_Device_Get_Sysattr_Value
      (
@@ -151,18 +169,27 @@ package body C_Binding.Linux.Udev.Devices is
      ) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import
      (C, Udev_Device_Get_Sysattr_Value, "udev_device_get_sysattr_value");
+   --  The retrieved value is cached in the device. Repeated calls will
+   --  return the same value and not open the attribute again.
+   --  Returns content of a sys attribute file,
+   --  or null if there is no sys attribute value.
 
---     function Udev_Device_Set_Sysattr_Value
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import
---       (C, Udev_Device_Set_Sysattr_Value, "udev_device_set_sysattr_value");
+   function Udev_Device_Set_Sysattr_Value
+     (Device  : Udev_Device_Ptr;
+      Sysattr : C_String;
+      Value   : C_String) return Int;
+   pragma Import
+     (C, Udev_Device_Set_Sysattr_Value, "udev_device_set_sysattr_value");
+   --  On success, returns an integer greater than, or equal to, 0.
+   --  On failure, a negative error code is returned.
 
---     function Udev_Device_Has_Tag
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import (C, Udev_Device_Has_Tag, "udev_device_has_tag");
+   function Udev_Device_Has_Tag
+     (Device : Udev_Device_Ptr;
+      Tag    : C_String) return Int;
+   pragma Import (C, Udev_Device_Has_Tag, "udev_device_has_tag");
+   --  On success, returns 1 or 0, depending on whether the device has
+   --  the given tag or not.
+   --  On failure, a negative error code is returned.
 
    procedure Acquire (Original  : Device;
                       Reference : out Device) is
@@ -288,5 +315,101 @@ package body C_Binding.Linux.Udev.Devices is
       end case;
       return Result;
    end Is_Initialized;
+
+   procedure Devlinks_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) is
+   begin
+      List_Entry_Base (List_Entry).My_Ptr
+        := Udev_Device_Get_Devlinks_List_Entry (Device.My_Ptr);
+   end Devlinks_List_Entry;
+
+   procedure Properties_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) is
+   begin
+      List_Entry_Base (List_Entry).My_Ptr
+        := Udev_Device_Get_Properties_List_Entry (Device.My_Ptr);
+   end Properties_List_Entry;
+
+   procedure Tags_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) is
+   begin
+      List_Entry_Base (List_Entry).My_Ptr
+        := Udev_Device_Get_Tags_List_Entry (Device.My_Ptr);
+   end Tags_List_Entry;
+
+   procedure Sysattr_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) is
+   begin
+      List_Entry_Base (List_Entry).My_Ptr
+        := Udev_Device_Get_Sysattr_List_Entry (Device.My_Ptr);
+   end Sysattr_List_Entry;
+
+   function Property_Value
+     (Device : Devices.Device;
+      Key    : String) return String_Result
+   is
+      Text : constant Interfaces.C.Strings.Chars_Ptr
+        := Udev_Device_Get_Property_Value (Device.My_Ptr, +Key);
+   begin
+      return Get_String_Result (Text, "Property_Value failure");
+   end Property_Value;
+
+   function Devnum
+     (Device : Devices.Device) return Interfaces.Unsigned_64 is
+   begin
+      return Interfaces.Unsigned_64 (Udev_Device_Get_Devnum (Device.My_Ptr));
+   end Devnum;
+
+   function Action (Device : Devices.Device) return String_Result is
+      Text : constant Interfaces.C.Strings.Chars_Ptr
+        := Udev_Device_Get_Action (Device.My_Ptr);
+   begin
+      return Get_String_Result (Text, "Action failure");
+   end Action;
+
+   function Sequence_Number (Device : Devices.Device) return Long_Integer is
+   begin
+      return Long_Integer (Udev_Device_Get_Seqnum (Device.My_Ptr));
+   end Sequence_Number;
+
+   function Microseconds_Since_Initialized
+     (Device : Devices.Device) return Long_Integer is
+   begin
+      return Long_Integer
+        (Udev_Device_Get_Usec_Since_Initialized (Device.My_Ptr));
+   end Microseconds_Since_Initialized;
+
+   function Set_Sysattr
+     (Device  : Devices.Device;
+      Sysattr : String;
+      Value   : String) return Success_Flag is
+   begin
+      if
+        Udev_Device_Set_Sysattr_Value
+          (Device.My_Ptr, +Sysattr, +Value) >= 0
+      then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Set_Sysattr;
+
+   function Has_Tag
+     (Device : Devices.Device;
+      Tag    : String) return Tag_Status
+   is
+      Result : Tag_Status;
+   begin
+      case Udev_Device_Has_Tag (Device.My_Ptr, +Tag) is
+         when 1 => Result := Tag_Is_Present;
+         when 0 => Result := Tag_is_Missing;
+         when others => Result := Unknown;
+      end case;
+      return Result;
+   end Has_Tag;
 
 end C_Binding.Linux.Udev.Devices;

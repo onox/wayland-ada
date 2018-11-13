@@ -119,17 +119,19 @@ package C_Binding.Linux is
    --  #define  __S_IWRITE  0200   /* Write by owner.  */
    --  #define  __S_IEXEC   0100   /* Execute by owner.  */
 
-   type File_Permission is (
-                            Owner_Read,  Owner_Write,  Owner_Execute,
-                            Group_Read,  Group_Write,  Group_Execute,
-                            Others_Read, Others_Write, Others_Execute
-                           );
+   type File_Permission is
+     (
+      Owner_Read,  Owner_Write,  Owner_Execute,
+      Group_Read,  Group_Write,  Group_Execute,
+      Others_Read, Others_Write, Others_Execute
+     );
 
    type File_Permissions is array (File_Permission) of Boolean;
 
-   type File_Mode is (
-                      Read_Only, Write_Only, Read_Write
-                     );
+   type File_Mode is
+     (
+      Read_Only, Write_Only, Read_Write
+     );
 
    -- Protections are chosen from these bits, OR'd together.  The
    -- implementation does not necessarily support PROT_EXEC or PROT_WRITE

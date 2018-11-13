@@ -1,4 +1,5 @@
 with C_Binding.Linux.Udev.Contexts;
+with C_Binding.Linux.Udev.List_Entries;
 
 --  kernel sys devices
 package C_Binding.Linux.Udev.Devices is
@@ -13,7 +14,7 @@ package C_Binding.Linux.Udev.Devices is
      (Device    : Devices.Device;
       Subsystem : String;
       Devtype   : String;
-      Parent : out Devices.Device);
+      Parent    : out Devices.Device);
 
    procedure Acquire
      (Original  : Device;
@@ -85,6 +86,66 @@ package C_Binding.Linux.Udev.Devices is
 
    function Is_Initialized
      (Device : Devices.Device) return Initialization_Status with
+     Pre  => Device.Exists;
+
+   procedure Devlinks_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) with
+     Pre => Device.Exists;
+
+   procedure Properties_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) with
+     Pre => Device.Exists;
+
+   procedure Tags_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) with
+     Pre => Device.Exists;
+
+   procedure Sysattr_List_Entry
+     (Device     : Devices.Device;
+      List_Entry : out List_Entries.List_Entry) with
+     Pre => Device.Exists;
+
+   function Property_Value
+     (Device : Devices.Device;
+      Key    : String) return String_Result with
+     Pre  => Device.Exists;
+
+   function Devnum
+     (Device : Devices.Device) return Interfaces.Unsigned_64 with
+     Pre  => Device.Exists;
+   --  TODO: dev_t, how to handle?
+
+   function Action (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Sequence_Number (Device : Devices.Device) return Long_Integer with
+     Pre  => Device.Exists;
+
+   function Microseconds_Since_Initialized
+     (Device : Devices.Device) return Long_Integer with
+     Pre  => Device.Exists;
+
+   function Set_Sysattr
+     (Device  : Devices.Device;
+      Sysattr : String;
+      Value   : String) return Success_Flag with
+     Pre  => Device.Exists;
+
+   type Tag_Status is
+     (
+      Tag_Is_Present,
+      Tag_is_Missing,
+
+      Unknown
+      --  Some error occurred and the tag status is unknown.
+     );
+
+   function Has_Tag
+     (Device : Devices.Device;
+      Tag    : String) return Tag_Status with
      Pre  => Device.Exists;
 
 private
