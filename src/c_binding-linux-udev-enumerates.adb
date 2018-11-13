@@ -2,9 +2,9 @@ package body C_Binding.Linux.Udev.Enumerates is
 
    use type int;
 
---     function Udev_Enumerate_Ref
---       (Arg1 : Udev_Enumerate_Ptr) return Udev_Enumerate_Ptr;
---     pragma Import (C, Udev_Enumerate_Ref, "udev_enumerate_ref");
+   function Udev_Enumerate_Ref
+     (Enumerate : Udev_Enumerate_Ptr) return Udev_Enumerate_Ptr;
+   pragma Import (C, Udev_Enumerate_Ref, "udev_enumerate_ref");
    --  Acquire a udev enumerate object.
    --  Returns the argument that it was passed, unmodified.
 
@@ -14,9 +14,9 @@ package body C_Binding.Linux.Udev.Enumerates is
    --  Release a udev enumerate object.
    --  Always returns null.
 
---     function Udev_Enumerate_Get_Udev
---       (Arg1 : System.Address) return System.Address;
---     pragma Import (C, Udev_Enumerate_Get_Udev, "udev_enumerate_get_udev");
+   function Udev_Enumerate_Get_Udev
+     (Enumerate : Udev_Enumerate_Ptr) return Udev_Ptr;
+   pragma Import (C, Udev_Enumerate_Get_Udev, "udev_enumerate_get_udev");
 
    function Udev_Enumerate_New
      (Udev : Udev_Ptr) return Udev_Enumerate_Ptr;
@@ -33,40 +33,41 @@ package body C_Binding.Linux.Udev.Enumerates is
       Udev_Enumerate_Add_Match_Subsystem,
       "udev_enumerate_add_match_subsystem");
 
---     function Udev_Enumerate_Add_Nomatch_Subsystem
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import
---       (C,
---        Udev_Enumerate_Add_Nomatch_Subsystem,
---        "udev_enumerate_add_nomatch_subsystem");
+   function Udev_Enumerate_Add_Nomatch_Subsystem
+     (Enum      : Udev_Enumerate_Ptr;
+      Subsystem : C_String) return Int;
+   pragma Import
+     (C,
+      Udev_Enumerate_Add_Nomatch_Subsystem,
+      "udev_enumerate_add_nomatch_subsystem");
+   --  0 on success, otherwise a negative error value.
 
---     function Udev_Enumerate_Add_Match_Sysattr
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import
---       (C,
---        Udev_Enumerate_Add_Match_Sysattr,
---        "udev_enumerate_add_match_sysattr");
+   function Udev_Enumerate_Add_Match_Sysattr
+     (Enum    : Udev_Enumerate_Ptr;
+      Sysattr : C_String;
+      Value   : C_String) return Int;
+   pragma Import
+     (C,
+      Udev_Enumerate_Add_Match_Sysattr,
+      "udev_enumerate_add_match_sysattr");
 
---     function Udev_Enumerate_Add_Nomatch_Sysattr
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import
---       (C,
---        Udev_Enumerate_Add_Nomatch_Sysattr,
---        "udev_enumerate_add_nomatch_sysattr");
+   function Udev_Enumerate_Add_Nomatch_Sysattr
+     (Enum    : Udev_Enumerate_Ptr;
+      Sysattr : C_String;
+      Value   : C_String) return Int;
+   pragma Import
+     (C,
+      Udev_Enumerate_Add_Nomatch_Sysattr,
+      "udev_enumerate_add_nomatch_sysattr");
 
---     function Udev_Enumerate_Add_Match_Property
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return Int;
---     pragma Import
---       (C,
---        Udev_Enumerate_Add_Match_Property,
---        "udev_enumerate_add_match_property");
+   function Udev_Enumerate_Add_Match_Property
+     (Enum     : Udev_Enumerate_Ptr;
+      Property : C_String;
+      Value    : C_String) return Int;
+   pragma Import
+     (C,
+      Udev_Enumerate_Add_Match_Property,
+      "udev_enumerate_add_match_property");
 
 --     function Udev_Enumerate_Add_Match_Sysname
 --       (Arg1 : System.Address;
@@ -121,6 +122,14 @@ package body C_Binding.Linux.Udev.Enumerates is
    --  the list of found devices. If the list is empty,
    --  or on failure, null is returned.
 
+   procedure Acquire
+     (Original  : Enumerate;
+      Reference : out Enumerate) is
+   begin
+      Reference.My_Ptr := Udev_Enumerate_Ref (Original.My_Ptr);
+   end Acquire;
+
+
    function Exists (Enum : Enumerate) return Boolean is
      (Enum.My_Ptr /= null);
 
@@ -162,11 +171,78 @@ package body C_Binding.Linux.Udev.Enumerates is
       end if;
    end Scan_Devices;
 
-   procedure Get_List_Entry (Enum : Enumerate;
-                             LE   : out List_Entries.List_Entry) is
+   procedure Get_List_Entry
+     (Enum : Enumerate;
+      LE   : out List_Entries.List_Entry) is
    begin
       List_Entry_Base (LE).My_Ptr
         := Udev_Enumerate_Get_List_Entry (Enum.My_Ptr);
    end Get_List_Entry;
+
+   procedure Context
+     (Enum    : Enumerate;
+      Context : out Contexts.Context) is
+   begin
+      Context_Base (Context).My_Ptr := Udev_Enumerate_Get_Udev (Enum.My_Ptr);
+   end Context;
+
+   function Add_Nomatch_Subsystem
+     (Enum      : Enumerate;
+      Subsystem : String) return Success_Flag is
+   begin
+      if
+        Udev_Enumerate_Add_Nomatch_Subsystem
+          (Enum.My_Ptr, +Subsystem) = 0
+      then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Add_Nomatch_Subsystem;
+
+   function Add_Match_Sysattr
+     (Enum    : Enumerate;
+      Sysattr : String;
+      Value   : String) return Success_Flag is
+   begin
+      if
+        Udev_Enumerate_Add_Match_Sysattr
+          (Enum.My_Ptr, +Sysattr, +Value) = 0
+      then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Add_Match_Sysattr;
+
+   function Add_Nomatch_Sysattr
+     (Enum    : Enumerate;
+      Sysattr : String;
+      Value   : String) return Success_Flag is
+   begin
+      if
+        Udev_Enumerate_Add_Nomatch_Sysattr
+          (Enum.My_Ptr, +Sysattr, +Value) = 0
+      then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Add_Nomatch_Sysattr;
+
+   function Add_Match_Property
+     (Enum     : Enumerate;
+      Property : String;
+      Value    : String) return Success_Flag is
+   begin
+      if
+        Udev_Enumerate_Add_Match_Property
+          (Enum.My_Ptr, +Property, +Value) = 0
+      then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Add_Match_Property;
 
 end C_Binding.Linux.Udev.Enumerates;

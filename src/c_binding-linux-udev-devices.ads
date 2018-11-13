@@ -58,8 +58,9 @@ package C_Binding.Linux.Udev.Devices is
    function Sysname (Device : Devices.Device) return String_Result with
      Pre  => Device.Exists;
 
-   procedure Get_Context (Device  : Devices.Device;
-                          Context : out Contexts.Context) with
+   procedure Get_Context
+     (Device  : Devices.Device;
+      Context : out Contexts.Context) with
      Pre => Device.Exists;
    --  Get the Context the Device was created with.
 
