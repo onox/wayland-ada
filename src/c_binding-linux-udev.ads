@@ -24,10 +24,10 @@ package C_Binding.Linux.Udev is
       Failure
      );
 
-   type Context_Base is tagged limited private;
-   type Device_Base is tagged limited private;
-   type Monitor_Base is tagged limited private;
-   type List_Entry_Base is tagged limited private;
+   type Context_Base is abstract tagged limited private;
+   type Device_Base is abstract tagged limited private;
+   type Monitor_Base is abstract tagged limited private;
+   type List_Entry_Base is abstract tagged limited private;
 
 private
 

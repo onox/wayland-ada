@@ -27,24 +27,32 @@ package body C_Binding.Linux.Udev.Devices is
    function Udev_Device_Get_Parent
      (Device : Udev_Device_Ptr) return Udev_Device_Ptr;
    pragma Import (C, Udev_Device_Get_Parent, "udev_device_get_parent");
+   --  On success, returns a pointer to the parent device.
+   --  No additional reference to this device is acquired,
+   --  but the child device owns a reference to such a parent device.
+   --  On failure, null is returned.
 
---     function Udev_Device_Get_Parent_With_Subsystem_Devtype
---       (Arg1 : System.Address;
---        Arg2 : Interfaces.C.Strings.Chars_Ptr;
---        Arg3 : Interfaces.C.Strings.Chars_Ptr) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_Get_Parent_With_Subsystem_Devtype,
---        "udev_device_get_parent_with_subsystem_devtype");
+   function Udev_Device_Get_Parent_With_Subsystem_Devtype
+     (Device    : Udev_Device_Ptr;
+      Subsystem : C_String;
+      Devtype   : C_String) return Udev_Device_Ptr;
+   pragma Import
+     (C,
+      Udev_Device_Get_Parent_With_Subsystem_Devtype,
+      "udev_device_get_parent_with_subsystem_devtype");
+   --  On success, returns a pointer to the parent device.
+   --  No additional reference to this device is acquired,
+   --  but the child device owns a reference to such a parent device.
+   --  On failure, null is returned.
 
    function Udev_Device_Get_Devpath
      (Arg1 : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import (C, Udev_Device_Get_Devpath, "udev_device_get_devpath");
 
---     function Udev_Device_Get_Subsystem
---       (Arg1 : System.Address) return Interfaces.C.Strings.Chars_Ptr;
---     pragma Import
---       (C, Udev_Device_Get_Subsystem, "udev_device_get_subsystem");
+   function Udev_Device_Get_Subsystem
+     (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
+   pragma Import
+     (C, Udev_Device_Get_Subsystem, "udev_device_get_subsystem");
 
    function Udev_Device_Get_Devtype
      (Arg1 : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
@@ -58,25 +66,31 @@ package body C_Binding.Linux.Udev.Devices is
      (Arg1 : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import (C, Udev_Device_Get_Sysname, "udev_device_get_sysname");
 
---     function Udev_Device_Get_Sysnum
---       (Arg1 : System.Address) return Interfaces.C.Strings.Chars_Ptr;
---     pragma Import (C, Udev_Device_Get_Sysnum, "udev_device_get_sysnum");
+   function Udev_Device_Get_Sysnum
+     (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
+   pragma Import (C, Udev_Device_Get_Sysnum, "udev_device_get_sysnum");
 
---     function Udev_Device_Get_Devnode
---       (Arg1 : System.Address) return Interfaces.C.Strings.Chars_Ptr;
---     pragma Import (C, Udev_Device_Get_Devnode, "udev_device_get_devnode");
+   function Udev_Device_Get_Devnode
+     (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
+   pragma Import (C, Udev_Device_Get_Devnode, "udev_device_get_devnode");
 
---     function Udev_Device_Get_Is_Initialized
---       (Arg1 : System.Address) return Int;
---     pragma Import
---       (C, Udev_Device_Get_Is_Initialized, "udev_device_get_is_initialized");
+   function Udev_Device_Get_Is_Initialized
+     (Device : Udev_Device_Ptr) return Int;
+   pragma Import
+     (C, Udev_Device_Get_Is_Initialized, "udev_device_get_is_initialized");
+   --  On success, returns either 1 or 0, depending on whether the passed
+   --  device has already been initialized by udev or not.
+   --  On failure, a negative error code is returned. Note that devices
+   --  for which no udev rules are defined are never reported initialized.
 
---     function Udev_Device_Get_Devlinks_List_Entry
---       (Arg1 : System.Address) return System.Address;
---     pragma Import
---       (C,
---        Udev_Device_Get_Devlinks_List_Entry,
---        "udev_device_get_devlinks_list_entry");
+   function Udev_Device_Get_Devlinks_List_Entry
+     (Arg1 : System.Address) return System.Address;
+   pragma Import
+     (C,
+      Udev_Device_Get_Devlinks_List_Entry,
+      "udev_device_get_devlinks_list_entry");
+   --  On success, returns a pointer to the first entry of the retrieved list.
+   --  If that list is empty, or if an error occurred, NULL is returned.
 
 --     function Udev_Device_Get_Properties_List_Entry
 --       (Arg1 : System.Address) return System.Address;
@@ -163,6 +177,16 @@ package body C_Binding.Linux.Udev.Devices is
       Parent.My_Ptr := Udev_Device_Get_Parent (Device.My_Ptr);
    end Get_Parent;
 
+   procedure Get_Parent
+     (Device    : Devices.Device;
+      Subsystem : String;
+      Devtype   : String;
+      Parent    : out Devices.Device) is
+   begin
+      Parent.My_Ptr := Udev_Device_Get_Parent_With_Subsystem_Devtype
+        (Device.My_Ptr, +Subsystem, +Devtype);
+   end Get_Parent;
+
    function Exists (Device : Devices.Device) return Boolean is
      (Device.My_Ptr /= null);
 
@@ -231,5 +255,38 @@ package body C_Binding.Linux.Udev.Devices is
    begin
       Context_Base (Context).My_Ptr := Udev_Device_Get_Udev (Device.My_Ptr);
    end Get_Context;
+
+   function Subsystem (Device : Devices.Device) return String_Result is
+      Text : constant Interfaces.C.Strings.Chars_Ptr
+        := Udev_Device_Get_Subsystem (Device.My_Ptr);
+   begin
+      return Get_String_Result (Text, "Subsystem failure");
+   end Subsystem;
+
+   function Sysnum (Device : Devices.Device) return String_Result is
+      Text : constant Interfaces.C.Strings.Chars_Ptr
+        := Udev_Device_Get_Sysnum (Device.My_Ptr);
+   begin
+      return Get_String_Result (Text, "Sysnum failure");
+   end Sysnum;
+
+   function Devnode (Device : Devices.Device) return String_Result is
+      Text : constant Interfaces.C.Strings.Chars_Ptr
+        := Udev_Device_Get_Devnode (Device.My_Ptr);
+   begin
+      return Get_String_Result (Text, "Devnode failure");
+   end Devnode;
+
+   function Is_Initialized
+     (Device : Devices.Device) return Initialization_Status is
+      Result : Initialization_Status;
+   begin
+      case Udev_Device_Get_Is_Initialized (Device.My_Ptr) is
+         when 1      => Result := Initialized;
+         when 0      => Result := Not_Initialized;
+         when others => Result := Unknown;
+      end case;
+      return Result;
+   end Is_Initialized;
 
 end C_Binding.Linux.Udev.Devices;

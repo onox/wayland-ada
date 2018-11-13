@@ -348,6 +348,9 @@ package C_Binding.Linux is
 
    MAP_FAILED : constant Void_Ptr;
 
+   -- Share changes.
+   MAP_SHARED : constant := 16#01#;
+
 private
 
    use type Void_Ptr;
@@ -357,9 +360,6 @@ private
    --
    -- Sharing types (must choose one and only one of these).
    --
-
-   -- Share changes.
-   MAP_SHARED : constant := 16#01#;
 
    -- Changes are private.
    MAP_PRIVATE : constant := 16#02#;

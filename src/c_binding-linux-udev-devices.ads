@@ -9,6 +9,12 @@ package C_Binding.Linux.Udev.Devices is
      (Device : Devices.Device;
       Parent : out Devices.Device);
 
+   procedure Get_Parent
+     (Device    : Devices.Device;
+      Subsystem : String;
+      Devtype   : String;
+      Parent : out Devices.Device);
+
    procedure Acquire
      (Original  : Device;
       Reference : out Device) with
@@ -55,6 +61,31 @@ package C_Binding.Linux.Udev.Devices is
                           Context : out Contexts.Context) with
      Pre => Device.Exists;
    --  Get the Context the Device was created with.
+
+   function Subsystem
+     (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Sysnum
+     (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   function Devnode
+     (Device : Devices.Device) return String_Result with
+     Pre  => Device.Exists;
+
+   type Initialization_Status is
+     (
+      Initialized,
+      Not_Initialized,
+      Unknown
+      --  Some error has occurred and therefore not possible to determine
+      --  initialization status.
+     );
+
+   function Is_Initialized
+     (Device : Devices.Device) return Initialization_Status with
+     Pre  => Device.Exists;
 
 private
 
