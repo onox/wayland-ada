@@ -4,3 +4,8 @@ bin/examples/find_compositor/find_compositor
 bin/examples/hdante_hello_world/hdante_hello_world
 lib/
 bin/xml_parser/xml_parser
+bin/all_executables-loc.xml
+bin/gnatinspect.db
+bin/gpsauto.cgpr
+bin/xml_parser/posix-wayland.adb
+bin/xml_parser/posix-wayland.ads
