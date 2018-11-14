@@ -1,5 +1,6 @@
 with C_Binding.Linux.Udev.Devices;
 with C_Binding.Linux.Udev.Monitors;
+with C_Binding.Linux.Udev.Queues;
 with System.Address_To_Access_Conversions;
 
 package body C_Binding.Linux.Udev.Contexts is
@@ -110,8 +111,12 @@ package body C_Binding.Linux.Udev.Contexts is
       Udev_Device_New_From_Environment,
       "udev_device_new_from_environment");
 
-   procedure Acquire (Original  : Contexts.Context;
-                      Reference : out Contexts.Context) is
+   function Udev_Queue_New (Udev : Udev_Ptr) return Udev_Queue_Ptr;
+   pragma Import (C, Udev_Queue_New, "udev_queue_new");
+
+   procedure Acquire
+     (Original  : Contexts.Context;
+      Reference : out Contexts.Context) is
    begin
       Reference.My_Ptr := Udev_Ref (Original.My_Ptr);
    end Acquire;
@@ -249,5 +254,12 @@ package body C_Binding.Linux.Udev.Contexts is
       Device_Base (Device).My_Ptr := Udev_Device_New_From_Environment
         (Context.My_Ptr);
    end New_Device_From_Environment;
+
+   procedure New_Queue
+     (Context : Contexts.Context;
+      Queue   : out Queues.Queue) is
+   begin
+      Queue_Base (Queue).My_Ptr := Udev_Queue_New (Context.My_Ptr);
+   end New_Queue;
 
 end C_Binding.Linux.Udev.Contexts;

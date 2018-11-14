@@ -1,5 +1,3 @@
-with C_Binding.Linux.Udev.Contexts;
-
 package body C_Binding.Linux.Udev.Monitors is
 
    use type int;
@@ -14,9 +12,9 @@ package body C_Binding.Linux.Udev.Monitors is
    pragma Import (C, Udev_Monitor_Unref, "udev_monitor_unref");
    --  Release a udev monitor object.
 
---     function Udev_Monitor_Get_Udev
---       (Monitor : Udev_Monitor_Ptr) return Udev_Ptr;
---     pragma Import (C, Udev_Monitor_Get_Udev, "udev_monitor_get_udev");
+   function Udev_Monitor_Get_Udev
+     (Monitor : Udev_Monitor_Ptr) return Udev_Ptr;
+   pragma Import (C, Udev_Monitor_Get_Udev, "udev_monitor_get_udev");
 
    function Udev_Monitor_Enable_Receiving
      (Monitor : Udev_Monitor_Ptr) return Int;
@@ -157,12 +155,12 @@ package body C_Binding.Linux.Udev.Monitors is
       Reference.My_Ptr := Udev_Monitor_Ref (Original.My_Ptr);
    end Acquire;
 
---     procedure Context
---       (Monitor : Monitors.Monitor;
---        Context : out Contexts.Context) is
---     begin
---        Context_Base (Context).My_Ptr := Udev_Monitor_Get_Udev (Monitor.My_Ptr);
---     end Context;
+   procedure Context
+     (Monitor : Monitors.Monitor;
+      Context : out Contexts.Context) is
+   begin
+      Context_Base (Context).My_Ptr := Udev_Monitor_Get_Udev (Monitor.My_Ptr);
+   end Context;
 
    function Set_Receive_Buffer_Size
      (Monitor : Monitors.Monitor;

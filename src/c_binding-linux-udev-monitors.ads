@@ -1,6 +1,5 @@
 with C_Binding.Linux.Udev.Devices;
-
---limited with C_Binding.Linux.Udev.Contexts;
+with C_Binding.Linux.Udev.Contexts;
 
 package C_Binding.Linux.Udev.Monitors is
 
@@ -32,9 +31,9 @@ package C_Binding.Linux.Udev.Monitors is
      (Monitor : Monitors.Monitor;
       Device  : out Devices.Device);
 
---     procedure Context
---       (Monitor : Monitors.Monitor;
---        Context : out Contexts.Context);
+   procedure Context
+     (Monitor : Monitors.Monitor;
+      Context : out Contexts.Context);
 
    function Set_Receive_Buffer_Size
      (

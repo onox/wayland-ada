@@ -1,5 +1,6 @@
 limited with C_Binding.Linux.Udev.Monitors;
 limited with C_Binding.Linux.Udev.Devices;
+limited with C_Binding.Linux.Udev.Queues;
 
 package C_Binding.Linux.Udev.Contexts is
 
@@ -60,6 +61,10 @@ package C_Binding.Linux.Udev.Contexts is
    procedure New_Device_From_Environment
      (Context : Contexts.Context;
       Device  : out Devices.Device);
+
+   procedure New_Queue
+     (Context : Contexts.Context;
+      Queue   : out Queues.Queue);
 
    function Log_Priority (Context : Contexts.Context) return Integer;
 
