@@ -29,6 +29,11 @@ package C_Binding.Linux.Udev is
    type List_Entry_Base is abstract tagged limited private;
    type Queue_Base      is abstract tagged limited private;
 
+   type Hwdb_Base       is abstract tagged limited private;
+   --  Abbreviations are generally avoided when working with Ada,
+   --  but hwdb (short for hardware database) is used here because this type
+   --  can never used directly by a user of this API.
+
 private
 
    function Get_String_Result
@@ -66,11 +71,19 @@ private
 
    type Udev_Queue_Ptr is access Udev_Queue;
 
+   type Udev_Hwdb is null record;
+   --  Opaque object representing the hardware database.
+
+   type Udev_Hwdb_Ptr is access Udev_Hwdb;
+
    function Udev_Util_Encode_String
      (Arg1 : Interfaces.C.Strings.Chars_Ptr;
       Arg2 : Interfaces.C.Strings.Chars_Ptr;
       Arg3 : Unsigned_Long) return Int;
    pragma Import (C, Udev_Util_Encode_String, "udev_util_encode_string");
+   --  Encode all potentially unsafe characters of a string to
+   --  the corresponding 2 char hex value prefixed by '\x'.
+   --
    --  What to do with this C-function?
 
    type Monitor_Base is tagged limited record
@@ -91,6 +104,10 @@ private
 
    type Queue_Base is tagged limited record
       My_Ptr : Udev_Queue_Ptr;
+   end record;
+
+   type Hwdb_Base is tagged limited record
+      My_Ptr : Udev_Hwdb_Ptr;
    end record;
 
 end C_Binding.Linux.Udev;

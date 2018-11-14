@@ -1,6 +1,7 @@
 with C_Binding.Linux.Udev.Devices;
 with C_Binding.Linux.Udev.Monitors;
 with C_Binding.Linux.Udev.Queues;
+with C_Binding.Linux.Udev.Hardware_Databases;
 with System.Address_To_Access_Conversions;
 
 package body C_Binding.Linux.Udev.Contexts is
@@ -113,6 +114,9 @@ package body C_Binding.Linux.Udev.Contexts is
 
    function Udev_Queue_New (Udev : Udev_Ptr) return Udev_Queue_Ptr;
    pragma Import (C, Udev_Queue_New, "udev_queue_new");
+
+   function Udev_Hwdb_New (Udev : Udev_Ptr) return Udev_Hwdb_Ptr;
+   pragma Import (C, Udev_Hwdb_New, "udev_hwdb_new");
 
    procedure Acquire
      (Original  : Contexts.Context;
@@ -261,5 +265,12 @@ package body C_Binding.Linux.Udev.Contexts is
    begin
       Queue_Base (Queue).My_Ptr := Udev_Queue_New (Context.My_Ptr);
    end New_Queue;
+
+   procedure New_Hardware_Database
+     (Context  : Contexts.Context;
+      Database : out Hardware_Databases.Database) is
+   begin
+      Hwdb_Base (Database).My_Ptr := Udev_Hwdb_New (Context.My_Ptr);
+   end New_Hardware_Database;
 
 end C_Binding.Linux.Udev.Contexts;
