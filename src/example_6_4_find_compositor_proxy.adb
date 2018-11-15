@@ -1,19 +1,18 @@
-with Posix.Wayland_Client;
+with Wayland_Client;
 with Ada.Text_IO;
 
 -- See section 6.4 at:
 -- https://jan.newmarch.name/Wayland/ProgrammingClient/
 procedure Example_6_4_Find_Compositor_Proxy is
 
-   package Wl renames Posix.Wayland_Client;
-
    procedure Put_Line (Text : String) renames Ada.Text_IO.Put_Line;
 
-   procedure Global_Registry_Handler (Compositor : not null Wl.Compositor_Ptr;
-                                      Registry   : Wl.Registry;
-                                      Id         : Wl.Unsigned_32;
-                                      Name       : String;
-                                      Version    : Wl.Unsigned_32) is
+   procedure Global_Registry_Handler
+     (Compositor : not null Wayland_Client.Compositor_Ptr;
+      Registry   : Wayland_Client.Registry;
+      Id         : Wayland_Client.Unsigned_32;
+      Name       : String;
+      Version    : Wayland_Client.Unsigned_32) is
    begin
       Put_Line ("Got a registry event for " & Name & " id" & Id'Image);
 
@@ -22,26 +21,27 @@ procedure Example_6_4_Find_Compositor_Proxy is
       end if;
    end Global_Registry_Handler;
 
-   procedure Global_Registry_Remover (Data     : not null Wl.Compositor_Ptr;
-                                      Registry : Wl.Registry;
-                                      Id       : Wl.Unsigned_32) is
+   procedure Global_Registry_Remover
+     (Data     : not null Wayland_Client.Compositor_Ptr;
+      Registry : Wayland_Client.Registry;
+      Id       : Wayland_Client.Unsigned_32) is
    begin
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   Compositor : aliased Wl.Compositor;
+   Compositor : aliased Wayland_Client.Compositor;
 
-   package Subscriber is new Wl.Registry_Subscriber
-     (Data_Type             => Wl.Compositor_Ptr,
+   package Subscriber is new Wayland_Client.Registry_Subscriber
+     (Data_Type             => Wayland_Client.Compositor_Ptr,
       Data                  => Compositor'Unchecked_Access,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display  : Wl.Display;
-   Registry : Wl.Registry;
+   Display  : Wayland_Client.Display;
+   Registry : Wayland_Client.Registry;
 
 begin
-   Display.Connect (Wl.Default_Display_Name);
+   Display.Connect (Wayland_Client.Default_Display_Name);
    if not Display.Is_Connected then
       Put_Line ("Can't connect to display");
       return;

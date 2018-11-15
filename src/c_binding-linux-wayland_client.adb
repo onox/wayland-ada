@@ -13,7 +13,8 @@ package body C_Binding.Linux.Wayland_Client is
 
       function Display_Connect (Name : C_String) return Display_Ptr is
 
-         function wl_display_connect (Name : in C_String) return Display_Ptr with
+         function Wl_Display_Connect
+           (Name : in C_String) return Display_Ptr with
            Convention    => C,
            Import        => True,
            External_Name => "wl_display_connect";
@@ -63,25 +64,30 @@ package body C_Binding.Linux.Wayland_Client is
         Convention    => C,
         External_Name => "wl_proxy_get_version";
 
-      function Display_Add_Listener (Display : Display_Ptr;
-                                     Listener : Display_Listener_Ptr;
-                                     Data : Void_Ptr) return Interfaces.C.int is
+      function Display_Add_Listener
+        (Display  : Display_Ptr;
+         Listener : Display_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Display.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Display.all'Access, Listener.all'Address, Data);
       end Display_Add_Listener;
 
-      procedure Display_Set_User_Data (Display : Display_Ptr;
-                                       Data : Void_Ptr) is
+      procedure Display_Set_User_Data
+        (Display : Display_Ptr;
+         Data    : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Display.all'Access, Data);
       end Display_Set_User_Data;
 
-      function Display_Get_User_Data (Display : Display_Ptr) return Void_Ptr is
+      function Display_Get_User_Data
+        (Display : Display_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Display.all'Access);
       end Display_Get_User_Data;
 
-      function Display_Get_Version (Display : Display_Ptr) return Unsigned_32 is
+      function Display_Get_Version
+        (Display : Display_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Display.all'Access);
       end Display_Get_Version;
@@ -92,28 +98,35 @@ package body C_Binding.Linux.Wayland_Client is
       end Display_Destroy;
 
       function Display_Sync (Display : Display_Ptr) return Callback_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Display.all'Access,
-                                                     WL_DISPLAY_SYNC,
-                                                     Callback_Interface'Access,
-                                                     0);
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor
+             (Display.all'Access,
+              WL_DISPLAY_SYNC,
+              Callback_Interface'Access,
+              0);
       begin
          return (if P /= null then P.all'Access else null);
       end Display_Sync;
 
-      function Display_Get_Registry (Display : Display_Ptr) return Registry_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Display.all'Access,
-                                                     WL_DISPLAY_GET_REGISTRY,
-                                                     Registry_Interface'Access,
-                                                     0);
+      function Display_Get_Registry
+        (Display : Display_Ptr) return Registry_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Display.all'Access,
+                                         WL_DISPLAY_GET_REGISTRY,
+                                         Registry_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Display_Get_Registry;
 
-      function Registry_Add_Listener (Registry : Registry_Ptr;
-                                      Listener : Registry_Listener_Ptr;
-                                      Data : Void_Ptr) return Interfaces.C.int is
+      function Registry_Add_Listener
+        (Registry : Registry_Ptr;
+         Listener : Registry_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Registry.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Registry.all'Access, Listener.all'Address, Data);
       end Registry_Add_Listener;
 
       procedure Registry_Set_User_Data (Registry : Registry_Ptr;
@@ -122,12 +135,14 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_set_user_data (Registry.all'Access, Data);
       end Registry_Set_User_Data;
 
-      function Registry_Get_User_Data (Registry : Registry_Ptr) return Void_Ptr is
+      function Registry_Get_User_Data
+        (Registry : Registry_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Registry.all'Access);
       end Registry_Get_User_Data;
 
-      function Registry_Get_Version (Registry : Registry_Ptr) return Unsigned_32 is
+      function Registry_Get_Version
+        (Registry : Registry_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Registry.all'Access);
       end Registry_Get_Version;
@@ -152,25 +167,30 @@ package body C_Binding.Linux.Wayland_Client is
                                                      0);
       end Registry_Bind;
 
-      function Callback_Add_Listener (Callback : Callback_Ptr;
-                                      Listener : Callback_Listener_Ptr;
-                                      Data : Void_Ptr) return Interfaces.C.int is
+      function Callback_Add_Listener
+        (Callback : Callback_Ptr;
+         Listener : Callback_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Callback.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Callback.all'Access, Listener.all'Address, Data);
       end Callback_Add_Listener;
 
-      procedure Callback_Set_User_Data (Callback : Callback_Ptr;
-                                        Data : Void_Ptr) is
+      procedure Callback_Set_User_Data
+        (Callback : Callback_Ptr;
+         Data     : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Callback.all'Access, Data);
       end Callback_Set_User_Data;
 
-      function Callback_Get_User_Data (Callback : Callback_Ptr) return Void_Ptr is
+      function Callback_Get_User_Data
+        (Callback : Callback_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Callback.all'Access);
       end Callback_Get_User_Data;
 
-      function Callback_Get_Version (Callback : Callback_Ptr) return Unsigned_32 is
+      function Callback_Get_Version
+        (Callback : Callback_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Callback.all'Access);
       end Callback_Get_Version;
@@ -180,18 +200,21 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Callback.all'Access);
       end Callback_Destroy;
 
-      procedure Compositor_Set_User_Data (Compositor : Compositor_Ptr;
-                                          Data : Void_Ptr) is
+      procedure Compositor_Set_User_Data
+        (Compositor : Compositor_Ptr;
+         Data       : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Compositor.all'Access, Data);
       end Compositor_Set_User_Data;
 
-      function Compositor_Get_User_Data (Compositor : Compositor_Ptr) return Void_Ptr is
+      function Compositor_Get_User_Data
+        (Compositor : Compositor_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Compositor.all'Access);
       end Compositor_Get_User_Data;
 
-      function Compositor_Get_Version (Compositor : Compositor_Ptr) return Unsigned_32 is
+      function Compositor_Get_Version
+        (Compositor : Compositor_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Compositor.all'Access);
       end Compositor_Get_Version;
@@ -201,20 +224,26 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Compositor.all'Access);
       end Compositor_Destroy;
 
-      function Compositor_Create_Surface (Compositor : Compositor_Ptr) return Surface_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Compositor.all'Access,
-                                                     WL_COMPOSITOR_CREATE_SURFACE,
-                                                     Surface_Interface'Access,
-                                                     0);
+      function Compositor_Create_Surface
+        (Compositor : Compositor_Ptr) return Surface_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Compositor.all'Access,
+                                         WL_COMPOSITOR_CREATE_SURFACE,
+                                         Surface_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Compositor_Create_Surface;
 
-      function Compositor_Create_Region (Compositor : Compositor_Ptr) return Region_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Compositor.all'Access,
-                                                     WL_COMPOSITOR_CREATE_REGION,
-                                                     Region_Interface'Access,
-                                                     0);
+      function Compositor_Create_Region
+        (Compositor : Compositor_Ptr) return Region_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Compositor.all'Access,
+                                         WL_COMPOSITOR_CREATE_REGION,
+                                         Region_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Compositor_Create_Region;
@@ -225,12 +254,14 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_set_user_data (Shm_Pool.all'Access, Data);
       end Shm_Pool_Set_User_Data;
 
-      function Shm_Pool_Get_User_Data (Shm_Pool : Shm_Pool_Ptr) return Void_Ptr is
+      function Shm_Pool_Get_User_Data
+        (Shm_Pool : Shm_Pool_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Shm_Pool.all'Access);
       end Shm_Pool_Get_User_Data;
 
-      function Shm_Pool_Get_Version (Shm_Pool : Shm_Pool_Ptr) return Unsigned_32 is
+      function Shm_Pool_Get_Version
+        (Shm_Pool : Shm_Pool_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Shm_Pool.all'Access);
       end Shm_Pool_Get_Version;
@@ -243,22 +274,25 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Shm_Pool.all'Access);
       end Shm_Pool_Destroy;
 
-      function Shm_Pool_Create_Buffer (Shm_Pool : Shm_Pool_Ptr;
-                                       Offset : Integer;
-                                       Width : Integer;
-                                       Height : Integer;
-                                       Stride : Integer;
-                                       Format : Unsigned_32
-                                      ) return Buffer_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Shm_Pool.all'Access,
-                                                     WL_SHM_POOL_CREATE_BUFFER,
-                                                     Buffer_Interface'Access,
-                                                     0,
-                                                     Offset,
-                                                     Width,
-                                                     Height,
-                                                     Stride,
-                                                     Format    );
+      function Shm_Pool_Create_Buffer
+        (Shm_Pool : Shm_Pool_Ptr;
+         Offset   : Integer;
+         Width    : Integer;
+         Height   : Integer;
+         Stride   : Integer;
+         Format   : Unsigned_32
+        ) return Buffer_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Shm_Pool.all'Access,
+                                         WL_SHM_POOL_CREATE_BUFFER,
+                                         Buffer_Interface'Access,
+                                         0,
+                                         Offset,
+                                         Width,
+                                         Height,
+                                         Stride,
+                                         Format);
       begin
          return (if P /= null then P.all'Access else null);
       end Shm_Pool_Create_Buffer;
@@ -273,11 +307,13 @@ package body C_Binding.Linux.Wayland_Client is
                         Size    );
       end Shm_Pool_Resize;
 
-      function Shm_Add_Listener (Shm : Shm_Ptr;
-                                 Listener : Shm_Listener_Ptr;
-                                 Data : Void_Ptr) return Interfaces.C.int is
+      function Shm_Add_Listener
+        (Shm      : Shm_Ptr;
+         Listener : Shm_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Shm.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Shm.all'Access, Listener.all'Address, Data);
       end Shm_Add_Listener;
 
       procedure Shm_Set_User_Data (Shm : Shm_Ptr;
@@ -305,21 +341,24 @@ package body C_Binding.Linux.Wayland_Client is
                                 Fd : Integer;
                                 Size : Integer
                                ) return Shm_Pool_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Shm.all'Access,
-                                                     WL_SHM_CREATE_POOL,
-                                                     Shm_Pool_Interface'Access,
-                                                     0,
-                                                     Fd,
-                                                     Size    );
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Shm.all'Access,
+                                         WL_SHM_CREATE_POOL,
+                                         Shm_Pool_Interface'Access,
+                                         0,
+                                         Fd,
+                                         Size);
       begin
          return (if P /= null then P.all'Access else null);
       end Shm_Create_Pool;
 
-      function Buffer_Add_Listener (Buffer : Buffer_Ptr;
-                                    Listener : Buffer_Listener_Ptr;
-                                    Data : Void_Ptr) return Interfaces.C.int is
+      function Buffer_Add_Listener
+        (Buffer   : Buffer_Ptr;
+         Listener : Buffer_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Buffer.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Buffer.all'Access, Listener.all'Address, Data);
       end Buffer_Add_Listener;
 
       procedure Buffer_Set_User_Data (Buffer : Buffer_Ptr;
@@ -346,26 +385,30 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Buffer.all'Access);
       end Buffer_Destroy;
 
-
-      function Data_Offer_Add_Listener (Data_Offer : Data_Offer_Ptr;
-                                        Listener : Data_Offer_Listener_Ptr;
-                                        Data : Void_Ptr) return Interfaces.C.int is
+      function Data_Offer_Add_Listener
+        (Data_Offer : Data_Offer_Ptr;
+         Listener   : Data_Offer_Listener_Ptr;
+         Data       : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Data_Offer.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Data_Offer.all'Access, Listener.all'Address, Data);
       end Data_Offer_Add_Listener;
 
-      procedure Data_Offer_Set_User_Data (Data_Offer : Data_Offer_Ptr;
-                                          Data : Void_Ptr) is
+      procedure Data_Offer_Set_User_Data
+        (Data_Offer : Data_Offer_Ptr;
+         Data       : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Data_Offer.all'Access, Data);
       end Data_Offer_Set_User_Data;
 
-      function Data_Offer_Get_User_Data (Data_Offer : Data_Offer_Ptr) return Void_Ptr is
+      function Data_Offer_Get_User_Data
+        (Data_Offer : Data_Offer_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Data_Offer.all'Access);
       end Data_Offer_Get_User_Data;
 
-      function Data_Offer_Get_Version (Data_Offer : Data_Offer_Ptr) return Unsigned_32 is
+      function Data_Offer_Get_Version
+        (Data_Offer : Data_Offer_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Data_Offer.all'Access);
       end Data_Offer_Get_Version;
@@ -403,13 +446,14 @@ package body C_Binding.Linux.Wayland_Client is
 
       procedure Data_Offer_Finish (Data_Offer : Data_Offer_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access), WL_DATA_OFFER_FINISH);
+         Proxy_Marshal
+           (Proxy_Ptr'(Data_Offer.all'Access), WL_DATA_OFFER_FINISH);
       end Data_Offer_Finish;
 
-      procedure Data_Offer_Set_Actions (Data_Offer : Data_Offer_Ptr;
-                                        Dnd_Actions : Unsigned_32;
-                                        Preferred_Action : Unsigned_32
-                                       ) is
+      procedure Data_Offer_Set_Actions
+        (Data_Offer       : Data_Offer_Ptr;
+         Dnd_Actions      : Unsigned_32;
+         Preferred_Action : Unsigned_32) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access),
                         WL_DATA_OFFER_SET_ACTIONS,
@@ -417,25 +461,30 @@ package body C_Binding.Linux.Wayland_Client is
                         Preferred_Action    );
       end Data_Offer_Set_Actions;
 
-      function Data_Source_Add_Listener (Data_Source : Data_Source_Ptr;
-                                         Listener : Data_Source_Listener_Ptr;
-                                         Data : Void_Ptr) return Interfaces.C.int is
+      function Data_Source_Add_Listener
+        (Data_Source : Data_Source_Ptr;
+         Listener    : Data_Source_Listener_Ptr;
+         Data        : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Data_Source.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Data_Source.all'Access, Listener.all'Address, Data);
       end Data_Source_Add_Listener;
 
-      procedure Data_Source_Set_User_Data (Data_Source : Data_Source_Ptr;
-                                           Data : Void_Ptr) is
+      procedure Data_Source_Set_User_Data
+        (Data_Source : Data_Source_Ptr;
+         Data        : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Data_Source.all'Access, Data);
       end Data_Source_Set_User_Data;
 
-      function Data_Source_Get_User_Data (Data_Source : Data_Source_Ptr) return Void_Ptr is
+      function Data_Source_Get_User_Data
+        (Data_Source : Data_Source_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Data_Source.all'Access);
       end Data_Source_Get_User_Data;
 
-      function Data_Source_Get_Version (Data_Source : Data_Source_Ptr) return Unsigned_32 is
+      function Data_Source_Get_Version
+        (Data_Source : Data_Source_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Data_Source.all'Access);
       end Data_Source_Get_Version;
@@ -467,25 +516,30 @@ package body C_Binding.Linux.Wayland_Client is
                         Dnd_Actions    );
       end Data_Source_Set_Actions;
 
-      function Data_Device_Add_Listener (Data_Device : Data_Device_Ptr;
-                                         Listener : Data_Device_Listener_Ptr;
-                                         Data : Void_Ptr) return Interfaces.C.int is
+      function Data_Device_Add_Listener
+        (Data_Device : Data_Device_Ptr;
+         Listener    : Data_Device_Listener_Ptr;
+         Data        : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Data_Device.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Data_Device.all'Access, Listener.all'Address, Data);
       end Data_Device_Add_Listener;
 
-      procedure Data_Device_Set_User_Data (Data_Device : Data_Device_Ptr;
-                                           Data : Void_Ptr) is
+      procedure Data_Device_Set_User_Data
+        (Data_Device : Data_Device_Ptr;
+         Data        : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Data_Device.all'Access, Data);
       end Data_Device_Set_User_Data;
 
-      function Data_Device_Get_User_Data (Data_Device : Data_Device_Ptr) return Void_Ptr is
+      function Data_Device_Get_User_Data
+        (Data_Device : Data_Device_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Data_Device.all'Access);
       end Data_Device_Get_User_Data;
 
-      function Data_Device_Get_Version (Data_Device : Data_Device_Ptr) return Unsigned_32 is
+      function Data_Device_Get_Version
+        (Data_Device : Data_Device_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Data_Device.all'Access);
       end Data_Device_Get_Version;
@@ -495,12 +549,12 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Data_Device.all'Access);
       end Data_Device_Destroy;
 
-      procedure Data_Device_Start_Drag (Data_Device : Data_Device_Ptr;
-                                        Source : Data_Source_Ptr;
-                                        Origin : Surface_Ptr;
-                                        Icon : Surface_Ptr;
-                                        Serial : Unsigned_32
-                                       ) is
+      procedure Data_Device_Start_Drag
+        (Data_Device : Data_Device_Ptr;
+         Source      : Data_Source_Ptr;
+         Origin      : Surface_Ptr;
+         Icon        : Surface_Ptr;
+         Serial      : Unsigned_32) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Data_Device.all'Access),
                         WL_DATA_DEVICE_START_DRAG,
@@ -510,10 +564,10 @@ package body C_Binding.Linux.Wayland_Client is
                         Serial    );
       end Data_Device_Start_Drag;
 
-      procedure Data_Device_Set_Selection (Data_Device : Data_Device_Ptr;
-                                           Source : Data_Source_Ptr;
-                                           Serial : Unsigned_32
-                                          ) is
+      procedure Data_Device_Set_Selection
+        (Data_Device : Data_Device_Ptr;
+         Source      : Data_Source_Ptr;
+         Serial      : Unsigned_32) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Data_Device.all'Access),
                         WL_DATA_DEVICE_SET_SELECTION,
@@ -523,47 +577,58 @@ package body C_Binding.Linux.Wayland_Client is
 
       procedure Data_Device_Release (Data_Device : Data_Device_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Data_Device.all'Access), WL_DATA_DEVICE_RELEASE);
+         Proxy_Marshal
+           (Proxy_Ptr'(Data_Device.all'Access), WL_DATA_DEVICE_RELEASE);
       end Data_Device_Release;
 
-      procedure Data_Device_Manager_Set_User_Data (Data_Device_Manager : Data_Device_Manager_Ptr;
-                                                   Data : Void_Ptr) is
+      procedure Data_Device_Manager_Set_User_Data
+        (Data_Device_Manager : Data_Device_Manager_Ptr;
+         Data                : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Data_Device_Manager.all'Access, Data);
       end Data_Device_Manager_Set_User_Data;
 
-      function Data_Device_Manager_Get_User_Data (Data_Device_Manager : Data_Device_Manager_Ptr) return Void_Ptr is
+      function Data_Device_Manager_Get_User_Data
+        (Data_Device_Manager : Data_Device_Manager_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Data_Device_Manager.all'Access);
       end Data_Device_Manager_Get_User_Data;
 
-      function Data_Device_Manager_Get_Version (Data_Device_Manager : Data_Device_Manager_Ptr) return Unsigned_32 is
+      function Data_Device_Manager_Get_Version
+        (Data_Device_Manager : Data_Device_Manager_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Data_Device_Manager.all'Access);
       end Data_Device_Manager_Get_Version;
 
-      procedure Data_Device_Manager_Destroy (Data_Device_Manager : Data_Device_Manager_Ptr) is
+      procedure Data_Device_Manager_Destroy
+        (Data_Device_Manager : Data_Device_Manager_Ptr) is
       begin
          wl_proxy_destroy (Data_Device_Manager.all'Access);
       end Data_Device_Manager_Destroy;
 
-      function Data_Device_Manager_Create_Data_Source (Data_Device_Manager : Data_Device_Manager_Ptr) return Data_Source_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Data_Device_Manager.all'Access,
-                                                     WL_DATA_DEVICE_MANAGER_CREATE_DATA_SOURCE,
-                                                     Data_Source_Interface'Access,
-                                                     0);
+      function Data_Device_Manager_Create_Data_Source
+        (
+         Data_Device_Manager : Data_Device_Manager_Ptr
+        ) return Data_Source_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Data_Device_Manager.all'Access,
+                                         WL_DATA_DEVICE_MANAGER_CREATE_DATA_SOURCE,
+                                         Data_Source_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Data_Device_Manager_Create_Data_Source;
 
-      function Data_Device_Manager_Get_Data_Device (Data_Device_Manager : Data_Device_Manager_Ptr;
-                                                    Seat : Seat_Ptr
-                                                   ) return Data_Device_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Data_Device_Manager.all'Access,
-                                                     WL_DATA_DEVICE_MANAGER_GET_DATA_DEVICE,
-                                                     Data_Device_Interface'Access,
-                                                     0,
-                                                     Seat.all'Address    );
+      function Data_Device_Manager_Get_Data_Device
+        (Data_Device_Manager : Data_Device_Manager_Ptr;
+         Seat                : Seat_Ptr) return Data_Device_Ptr is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Data_Device_Manager.all'Access,
+                                         WL_DATA_DEVICE_MANAGER_GET_DATA_DEVICE,
+                                         Data_Device_Interface'Access,
+                                         0,
+                                         Seat.all'Address);
       begin
          return (if P /= null then P.all'Access else null);
       end Data_Device_Manager_Get_Data_Device;
@@ -589,37 +654,45 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Shell.all'Access);
       end Shell_Destroy;
 
-      function Shell_Get_Shell_Surface (Shell : Shell_Ptr;
-                                        Surface : Surface_Ptr
-                                       ) return Shell_Surface_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Shell.all'Access,
-                                                     WL_SHELL_GET_SHELL_SURFACE,
-                                                     Shell_Surface_Interface'Access,
-                                                     0,
-                                                     Surface.all'Address    );
+      function Shell_Get_Shell_Surface
+        (Shell   : Shell_Ptr;
+         Surface : Surface_Ptr
+        ) return Shell_Surface_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Shell.all'Access,
+                                         WL_SHELL_GET_SHELL_SURFACE,
+                                         Shell_Surface_Interface'Access,
+                                         0,
+                                         Surface.all'Address);
       begin
          return (if P /= null then P.all'Access else null);
       end Shell_Get_Shell_Surface;
 
-      function Shell_Surface_Add_Listener (Shell_Surface : Shell_Surface_Ptr;
-                                           Listener : Shell_Surface_Listener_Ptr;
-                                           Data : Void_Ptr) return Interfaces.C.int is
+      function Shell_Surface_Add_Listener
+        (Shell_Surface : Shell_Surface_Ptr;
+         Listener      : Shell_Surface_Listener_Ptr;
+         Data          : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Shell_Surface.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Shell_Surface.all'Access, Listener.all'Address, Data);
       end Shell_Surface_Add_Listener;
 
-      procedure Shell_Surface_Set_User_Data (Shell_Surface : Shell_Surface_Ptr;
-                                             Data : Void_Ptr) is
+      procedure Shell_Surface_Set_User_Data
+        (Shell_Surface : Shell_Surface_Ptr;
+         Data          : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Shell_Surface.all'Access, Data);
       end Shell_Surface_Set_User_Data;
 
-      function Shell_Surface_Get_User_Data (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr is
+      function Shell_Surface_Get_User_Data
+        (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Shell_Surface.all'Access);
       end Shell_Surface_Get_User_Data;
 
-      function Shell_Surface_Get_Version (Shell_Surface : Shell_Surface_Ptr) return Unsigned_32 is
+      function Shell_Surface_Get_Version
+        (Shell_Surface : Shell_Surface_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Shell_Surface.all'Access);
       end Shell_Surface_Get_Version;
@@ -662,17 +735,20 @@ package body C_Binding.Linux.Wayland_Client is
                         Edges    );
       end Shell_Surface_Resize;
 
-      procedure Shell_Surface_Set_Toplevel (Shell_Surface : Shell_Surface_Ptr) is
+      procedure Shell_Surface_Set_Toplevel
+        (Shell_Surface : Shell_Surface_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access), WL_SHELL_SURFACE_SET_TOPLEVEL);
+         Proxy_Marshal
+           (Proxy_Ptr'(Shell_Surface.all'Access),
+            WL_SHELL_SURFACE_SET_TOPLEVEL);
       end Shell_Surface_Set_Toplevel;
 
-      procedure Shell_Surface_Set_Transient (Shell_Surface : Shell_Surface_Ptr;
-                                             Parent : Surface_Ptr;
-                                             X : Integer;
-                                             Y : Integer;
-                                             Flags : Unsigned_32
-                                            ) is
+      procedure Shell_Surface_Set_Transient
+        (Shell_Surface : Shell_Surface_Ptr;
+         Parent        : Surface_Ptr;
+         X             : Integer;
+         Y             : Integer;
+         Flags         : Unsigned_32) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_TRANSIENT,
@@ -682,27 +758,27 @@ package body C_Binding.Linux.Wayland_Client is
                         Flags    );
       end Shell_Surface_Set_Transient;
 
-      procedure Shell_Surface_Set_Fullscreen (Shell_Surface : Shell_Surface_Ptr;
-                                              Method : Unsigned_32;
-                                              Framerate : Unsigned_32;
-                                              Output : Output_Ptr
-                                             ) is
+      procedure Shell_Surface_Set_Fullscreen
+        (Shell_Surface : Shell_Surface_Ptr;
+         Method        : Unsigned_32;
+         Framerate     : Unsigned_32;
+         Output        : Output_Ptr) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_FULLSCREEN,
                         Method,
                         Framerate,
-                        Output.all'Address    );
+                        Output.all'Address);
       end Shell_Surface_Set_Fullscreen;
 
-      procedure Shell_Surface_Set_Popup (Shell_Surface : Shell_Surface_Ptr;
-                                         Seat : Seat_Ptr;
-                                         Serial : Unsigned_32;
-                                         Parent : Surface_Ptr;
-                                         X : Integer;
-                                         Y : Integer;
-                                         Flags : Unsigned_32
-                                        ) is
+      procedure Shell_Surface_Set_Popup
+        (Shell_Surface : Shell_Surface_Ptr;
+         Seat          : Seat_Ptr;
+         Serial        : Unsigned_32;
+         Parent        : Surface_Ptr;
+         X             : Integer;
+         Y             : Integer;
+         Flags         : Unsigned_32) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_POPUP,
@@ -714,38 +790,40 @@ package body C_Binding.Linux.Wayland_Client is
                         Flags    );
       end Shell_Surface_Set_Popup;
 
-      procedure Shell_Surface_Set_Maximized (Shell_Surface : Shell_Surface_Ptr;
-                                             Output : Output_Ptr
-                                            ) is
+      procedure Shell_Surface_Set_Maximized
+        (Shell_Surface : Shell_Surface_Ptr;
+         Output        : Output_Ptr) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_MAXIMIZED,
                         Output.all'Address    );
       end Shell_Surface_Set_Maximized;
 
-      procedure Shell_Surface_Set_Title (Shell_Surface : Shell_Surface_Ptr;
-                                         Title : chars_ptr
-                                        ) is
+      procedure Shell_Surface_Set_Title
+        (Shell_Surface : Shell_Surface_Ptr;
+         Title         : Chars_Ptr) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_TITLE,
                         Title    );
       end Shell_Surface_Set_Title;
 
-      procedure Shell_Surface_Set_Class (Shell_Surface : Shell_Surface_Ptr;
-                                         Class_V : chars_ptr
-                                        ) is
+      procedure Shell_Surface_Set_Class
+        (Shell_Surface : Shell_Surface_Ptr;
+         Class_V       : Chars_Ptr) is
       begin
          Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access),
                         WL_SHELL_SURFACE_SET_CLASS,
                         Class_V    );
       end Shell_Surface_Set_Class;
 
-      function Surface_Add_Listener (Surface : Surface_Ptr;
-                                     Listener : Surface_Listener_Ptr;
-                                     Data : Void_Ptr) return Interfaces.C.int is
+      function Surface_Add_Listener
+        (Surface  : Surface_Ptr;
+         Listener : Surface_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Surface.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Surface.all'Access, Listener.all'Address, Data);
       end Surface_Add_Listener;
 
       procedure Surface_Set_User_Data (Surface : Surface_Ptr;
@@ -754,12 +832,14 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_set_user_data (Surface.all'Access, Data);
       end Surface_Set_User_Data;
 
-      function Surface_Get_User_Data (Surface : Surface_Ptr) return Void_Ptr is
+      function Surface_Get_User_Data
+        (Surface : Surface_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Surface.all'Access);
       end Surface_Get_User_Data;
 
-      function Surface_Get_Version (Surface : Surface_Ptr) return Unsigned_32 is
+      function Surface_Get_Version
+        (Surface : Surface_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Surface.all'Access);
       end Surface_Get_Version;
@@ -802,10 +882,11 @@ package body C_Binding.Linux.Wayland_Client is
       end Surface_Damage;
 
       function Surface_Frame (Surface : Surface_Ptr) return Callback_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Surface.all'Access,
-                                                     WL_SURFACE_FRAME,
-                                                     Callback_Interface'Access,
-                                                     0);
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Surface.all'Access,
+                                         WL_SURFACE_FRAME,
+                                         Callback_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Surface_Frame;
@@ -870,7 +951,8 @@ package body C_Binding.Linux.Wayland_Client is
                                   Listener : Seat_Listener_Ptr;
                                   Data : Void_Ptr) return Interfaces.C.int is
       begin
-         return wl_proxy_add_listener (Seat.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Seat.all'Access, Listener.all'Address, Data);
       end Seat_Add_Listener;
 
       procedure Seat_Set_User_Data (Seat : Seat_Ptr;
@@ -895,28 +977,31 @@ package body C_Binding.Linux.Wayland_Client is
       end Seat_Destroy;
 
       function Seat_Get_Pointer (Seat : Seat_Ptr) return Pointer_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Seat.all'Access,
-                                                     WL_SEAT_GET_POINTER,
-                                                     Pointer_Interface'Access,
-                                                     0);
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Seat.all'Access,
+                                         WL_SEAT_GET_POINTER,
+                                         Pointer_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Seat_Get_Pointer;
 
       function Seat_Get_Keyboard (Seat : Seat_Ptr) return Keyboard_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Seat.all'Access,
-                                                     WL_SEAT_GET_KEYBOARD,
-                                                     Keyboard_Interface'Access,
-                                                     0);
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Seat.all'Access,
+                                         WL_SEAT_GET_KEYBOARD,
+                                         Keyboard_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Seat_Get_Keyboard;
 
       function Seat_Get_Touch (Seat : Seat_Ptr) return Touch_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Seat.all'Access,
-                                                     WL_SEAT_GET_TOUCH,
-                                                     Touch_Interface'Access,
-                                                     0);
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Seat.all'Access,
+                                         WL_SEAT_GET_TOUCH,
+                                         Touch_Interface'Access,
+                                         0);
       begin
          return (if P /= null then P.all'Access else null);
       end Seat_Get_Touch;
@@ -926,25 +1011,30 @@ package body C_Binding.Linux.Wayland_Client is
          Proxy_Marshal (Proxy_Ptr'(Seat.all'Access), WL_SEAT_RELEASE);
       end Seat_Release;
 
-      function Pointer_Add_Listener (Pointer : Pointer_Ptr;
-                                     Listener : Pointer_Listener_Ptr;
-                                     Data : Void_Ptr) return Interfaces.C.int is
+      function Pointer_Add_Listener
+        (Pointer  : Pointer_Ptr;
+         Listener : Pointer_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Pointer.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Pointer.all'Access, Listener.all'Address, Data);
       end Pointer_Add_Listener;
 
-      procedure Pointer_Set_User_Data (Pointer : Pointer_Ptr;
-                                       Data : Void_Ptr) is
+      procedure Pointer_Set_User_Data
+        (Pointer : Pointer_Ptr;
+         Data    : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Pointer.all'Access, Data);
       end Pointer_Set_User_Data;
 
-      function Pointer_Get_User_Data (Pointer : Pointer_Ptr) return Void_Ptr is
+      function Pointer_Get_User_Data
+        (Pointer : Pointer_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Pointer.all'Access);
       end Pointer_Get_User_Data;
 
-      function Pointer_Get_Version (Pointer : Pointer_Ptr) return Unsigned_32 is
+      function Pointer_Get_Version
+        (Pointer : Pointer_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Pointer.all'Access);
       end Pointer_Get_Version;
@@ -974,11 +1064,13 @@ package body C_Binding.Linux.Wayland_Client is
          Proxy_Marshal (Proxy_Ptr'(Pointer.all'Access), WL_POINTER_RELEASE);
       end Pointer_Release;
 
-      function Keyboard_Add_Listener (Keyboard : Keyboard_Ptr;
-                                      Listener : Keyboard_Listener_Ptr;
-                                      Data : Void_Ptr) return Interfaces.C.int is
+      function Keyboard_Add_Listener
+        (Keyboard : Keyboard_Ptr;
+         Listener : Keyboard_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Keyboard.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Keyboard.all'Access, Listener.all'Address, Data);
       end Keyboard_Add_Listener;
 
       procedure Keyboard_Set_User_Data (Keyboard : Keyboard_Ptr;
@@ -987,12 +1079,14 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_set_user_data (Keyboard.all'Access, Data);
       end Keyboard_Set_User_Data;
 
-      function Keyboard_Get_User_Data (Keyboard : Keyboard_Ptr) return Void_Ptr is
+      function Keyboard_Get_User_Data
+        (Keyboard : Keyboard_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Keyboard.all'Access);
       end Keyboard_Get_User_Data;
 
-      function Keyboard_Get_Version (Keyboard : Keyboard_Ptr) return Unsigned_32 is
+      function Keyboard_Get_Version
+        (Keyboard : Keyboard_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Keyboard.all'Access);
       end Keyboard_Get_Version;
@@ -1004,14 +1098,17 @@ package body C_Binding.Linux.Wayland_Client is
 
       procedure Keyboard_Release (Keyboard : Keyboard_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Keyboard.all'Access), WL_KEYBOARD_RELEASE);
+         Proxy_Marshal
+           (Proxy_Ptr'(Keyboard.all'Access), WL_KEYBOARD_RELEASE);
       end Keyboard_Release;
 
-      function Touch_Add_Listener (Touch : Touch_Ptr;
-                                   Listener : Touch_Listener_Ptr;
-                                   Data : Void_Ptr) return Interfaces.C.int is
+      function Touch_Add_Listener
+        (Touch    : Touch_Ptr;
+         Listener : Touch_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Touch.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Touch.all'Access, Listener.all'Address, Data);
       end Touch_Add_Listener;
 
       procedure Touch_Set_User_Data (Touch : Touch_Ptr;
@@ -1040,15 +1137,18 @@ package body C_Binding.Linux.Wayland_Client is
          Proxy_Marshal (Proxy_Ptr'(Touch.all'Access), WL_TOUCH_RELEASE);
       end Touch_Release;
 
-      function Output_Add_Listener (Output : Output_Ptr;
-                                    Listener : Output_Listener_Ptr;
-                                    Data : Void_Ptr) return Interfaces.C.int is
+      function Output_Add_Listener
+        (Output   : Output_Ptr;
+         Listener : Output_Listener_Ptr;
+         Data     : Void_Ptr) return Interfaces.C.Int is
       begin
-         return wl_proxy_add_listener (Output.all'Access, Listener.all'Address, Data);
+         return Wl_Proxy_Add_Listener
+           (Output.all'Access, Listener.all'Address, Data);
       end Output_Add_Listener;
 
-      procedure Output_Set_User_Data (Output : Output_Ptr;
-                                      Data : Void_Ptr) is
+      procedure Output_Set_User_Data
+        (Output : Output_Ptr;
+         Data   : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Output.all'Access, Data);
       end Output_Set_User_Data;
@@ -1128,18 +1228,21 @@ package body C_Binding.Linux.Wayland_Client is
                         Height    );
       end Region_Subtract;
 
-      procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr;
-                                             Data : Void_Ptr) is
+      procedure Subcompositor_Set_User_Data
+        (Subcompositor : Subcompositor_Ptr;
+         Data          : Void_Ptr) is
       begin
          wl_proxy_set_user_data (Subcompositor.all'Access, Data);
       end Subcompositor_Set_User_Data;
 
-      function Subcompositor_Get_User_Data (Subcompositor : Subcompositor_Ptr) return Void_Ptr is
+      function Subcompositor_Get_User_Data
+        (Subcompositor : Subcompositor_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Subcompositor.all'Access);
       end Subcompositor_Get_User_Data;
 
-      function Subcompositor_Get_Version (Subcompositor : Subcompositor_Ptr) return Unsigned_32 is
+      function Subcompositor_Get_Version
+        (Subcompositor : Subcompositor_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Subcompositor.all'Access);
       end Subcompositor_Get_Version;
@@ -1152,17 +1255,19 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_destroy (Subcompositor.all'Access);
       end Subcompositor_Destroy;
 
-
-      function Subcompositor_Get_Subsurface (Subcompositor : Subcompositor_Ptr;
-                                             Surface : Surface_Ptr;
-                                             Parent : Surface_Ptr
-                                            ) return Subsurface_Ptr is
-         P : Proxy_Ptr := Proxy_Marshal_Constructor (Subcompositor.all'Access,
-                                                     WL_SUBCOMPOSITOR_GET_SUBSURFACE,
-                                                     Subsurface_Interface'Access,
-                                                     0,
-                                                     Surface.all'Address,
-                                                     Parent.all'Address    );
+      function Subcompositor_Get_Subsurface
+        (Subcompositor : Subcompositor_Ptr;
+         Surface       : Surface_Ptr;
+         Parent        : Surface_Ptr
+        ) return Subsurface_Ptr
+      is
+         P : constant Proxy_Ptr
+           := Proxy_Marshal_Constructor (Subcompositor.all'Access,
+                                         WL_SUBCOMPOSITOR_GET_SUBSURFACE,
+                                         Subsurface_Interface'Access,
+                                         0,
+                                         Surface.all'Address,
+                                         Parent.all'Address);
       begin
          return (if P /= null then P.all'Access else null);
       end Subcompositor_Get_Subsurface;
@@ -1173,12 +1278,14 @@ package body C_Binding.Linux.Wayland_Client is
          wl_proxy_set_user_data (Subsurface.all'Access, Data);
       end Subsurface_Set_User_Data;
 
-      function Subsurface_Get_User_Data (Subsurface : Subsurface_Ptr) return Void_Ptr is
+      function Subsurface_Get_User_Data
+        (Subsurface : Subsurface_Ptr) return Void_Ptr is
       begin
          return wl_proxy_get_user_data (Subsurface.all'Access);
       end Subsurface_Get_User_Data;
 
-      function Subsurface_Get_Version (Subsurface : Subsurface_Ptr) return Unsigned_32 is
+      function Subsurface_Get_Version
+        (Subsurface : Subsurface_Ptr) return Unsigned_32 is
       begin
          return wl_proxy_get_version (Subsurface.all'Access);
       end Subsurface_Get_Version;
@@ -1223,12 +1330,14 @@ package body C_Binding.Linux.Wayland_Client is
 
       procedure Subsurface_Set_Sync (Subsurface : Subsurface_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), WL_SUBSURFACE_SET_SYNC);
+         Proxy_Marshal
+           (Proxy_Ptr'(Subsurface.all'Access), WL_SUBSURFACE_SET_SYNC);
       end Subsurface_Set_Sync;
 
       procedure Subsurface_Set_Desync (Subsurface : Subsurface_Ptr) is
       begin
-         Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), WL_SUBSURFACE_SET_DESYNC);
+         Proxy_Marshal
+           (Proxy_Ptr'(Subsurface.all'Access), WL_SUBSURFACE_SET_DESYNC);
       end Subsurface_Set_Desync;
 
 
@@ -1267,7 +1376,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Code      : Unsigned_32;
                                 Message   : chars_ptr)
       is
-         D : Wayland_Client.Display
+         D : constant Wayland_Client.Display
            := (
                My_Display                  => Display,
                My_Fd                       =>
@@ -1286,7 +1395,7 @@ package body C_Binding.Linux.Wayland_Client is
                                     Display : Wl_Thin.Display_Ptr;
                                     Id      : Unsigned_32)
       is
-         D : Wayland_Client.Display
+         D : constant Wayland_Client.Display
            := (
                My_Display                  => Display,
                My_Fd                       =>
@@ -1327,21 +1436,23 @@ package body C_Binding.Linux.Wayland_Client is
       package Conversion is new
         System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Object_Added (Data        : Void_Ptr;
-                                       Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Unsigned_32;
-                                       Interface_V : Wayland_Client.chars_ptr;
-                                       Version     : Unsigned_32) with
+      procedure Internal_Object_Added
+        (Data        : Void_Ptr;
+         Registry    : Wl_Thin.Registry_Ptr;
+         Id          : Unsigned_32;
+         Interface_V : Wayland_Client.Chars_Ptr;
+         Version     : Unsigned_32) with
         Convention => C,
         Global     => null;
 
-      procedure Internal_Object_Added (Data        : Void_Ptr;
-                                       Registry    : Wl_Thin.Registry_Ptr;
-                                       Id          : Unsigned_32;
-                                       Interface_V : Wayland_Client.chars_ptr;
-                                       Version     : Unsigned_32)
+      procedure Internal_Object_Added
+        (Data        : Void_Ptr;
+         Registry    : Wl_Thin.Registry_Ptr;
+         Id          : Unsigned_32;
+         Interface_V : Wayland_Client.Chars_Ptr;
+         Version     : Unsigned_32)
       is
-         R : Wayland_Client.Registry := (My_Registry => Registry);
+         R : constant Wayland_Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Added (Data_Ptr (Conversion.To_Pointer (Data)),
                               R,
@@ -1359,7 +1470,7 @@ package body C_Binding.Linux.Wayland_Client is
                                          Registry : Wl_Thin.Registry_Ptr;
                                          Id       : Unsigned_32)
       is
-         R : Wayland_Client.Registry := (My_Registry => Registry);
+         R : constant Wayland_Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Removed (Data_Ptr (Conversion.To_Pointer (Data)), R, Id);
       end Internal_Object_Removed;
@@ -1404,7 +1515,7 @@ package body C_Binding.Linux.Wayland_Client is
                                Callback      : Wl_Thin.Callback_Ptr;
                                Callback_Data : Unsigned_32)
       is
-         C : Wayland_Client.Callback := (My_Callback => Callback);
+         C : constant Wayland_Client.Callback := (My_Callback => Callback);
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), C, Callback_Data);
       end Internal_Done;
@@ -1444,9 +1555,10 @@ package body C_Binding.Linux.Wayland_Client is
                                  Shm    : Wl_Thin.Shm_Ptr;
                                  Format : Unsigned_32)
       is
-         S : Wayland_Client.Shm := (My_Shm => Shm);
+         S : constant Wayland_Client.Shm := (My_Shm => Shm);
       begin
-         Shm_Events.Format (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
+         Shm_Events.Format
+           (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
       end Internal_Format;
 
       Listener : aliased Wl_Thin.Shm_Listener_T
@@ -1482,7 +1594,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Release (Data   : Void_Ptr;
                                   Buffer : Wl_Thin.Buffer_Ptr)
       is
-         B : Wayland_Client.Buffer := (My_Buffer => Buffer);
+         B : constant Wayland_Client.Buffer := (My_Buffer => Buffer);
       begin
          Release (Data_Ptr (Conversion.To_Pointer (Data)), B);
       end Internal_Release;
@@ -1533,9 +1645,10 @@ package body C_Binding.Linux.Wayland_Client is
                                 Data_Offer : Wl_Thin.Data_Offer_Ptr;
                                 Mime_Type  : chars_ptr)
       is
-         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+         D : constant Wayland_Client.Data_Offer
+           := (My_Data_Offer => Data_Offer);
 
-         M : String := Interfaces.C.Strings.Value (Mime_Type);
+         M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
       end Internal_Offer;
@@ -1545,7 +1658,8 @@ package body C_Binding.Linux.Wayland_Client is
          Data_Offer     : Wl_Thin.Data_Offer_Ptr;
          Source_Actions : Unsigned_32)
       is
-         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+         D : constant Wayland_Client.Data_Offer
+           := (My_Data_Offer => Data_Offer);
       begin
          Data_Offer_Events.Source_Actions
            (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -1557,7 +1671,8 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Offer : Wl_Thin.Data_Offer_Ptr;
                                  Dnd_Action : Unsigned_32)
       is
-         D : Wayland_Client.Data_Offer := (My_Data_Offer => Data_Offer);
+         D : constant Wayland_Client.Data_Offer
+           := (My_Data_Offer => Data_Offer);
       begin
          Action (Data_Ptr (Conversion.To_Pointer (Data)),
                  D,
@@ -1626,9 +1741,10 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Source : Wl_Thin.Data_Source_Ptr;
                                  Mime_Type   : chars_ptr)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
 
-         M : String := Interfaces.C.Strings.Value (Mime_Type);
+         M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Target (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
       end Internal_Target;
@@ -1638,9 +1754,10 @@ package body C_Binding.Linux.Wayland_Client is
                                Mime_Type   : chars_ptr;
                                Fd          : Integer)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
 
-         M : String := Interfaces.C.Strings.Value (Mime_Type);
+         M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Send (Data_Ptr (Conversion.To_Pointer (Data)), D, M, Fd);
       end Internal_Send;
@@ -1648,7 +1765,8 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Cancelled (Data        : Void_Ptr;
                                     Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
       begin
          Cancelled (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Cancelled;
@@ -1657,7 +1775,8 @@ package body C_Binding.Linux.Wayland_Client is
         (Data        : Void_Ptr;
          Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
       begin
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Dnd_Drop_Performed;
@@ -1665,7 +1784,8 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Dnd_Finished (Data        : Void_Ptr;
                                        Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
       begin
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Dnd_Finished;
@@ -1674,7 +1794,8 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Source : Wl_Thin.Data_Source_Ptr;
                                  Dnd_Action  : Unsigned_32)
       is
-         D : Wayland_Client.Data_Source := (My_Data_Source => Data_Source);
+         D : constant Wayland_Client.Data_Source
+           := (My_Data_Source => Data_Source);
       begin
          Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
       end Internal_Action;
@@ -1749,7 +1870,8 @@ package body C_Binding.Linux.Wayland_Client is
                                      Data_Device : Wl_Thin.Data_Device_Ptr;
                                      Id          : Unsigned_32)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
       begin
          Data_Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
       end Internal_Data_Offer;
@@ -1762,9 +1884,12 @@ package body C_Binding.Linux.Wayland_Client is
                                 Y           : Fixed;
                                 Id          : Wl_Thin.Data_Offer_Ptr)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
-         S : Wayland_Client.Surface := (My_Surface => Surface);
-         Offer : Wayland_Client.Data_Offer := (My_Data_Offer => Id);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
+         S : constant Wayland_Client.Surface
+           := (My_Surface => Surface);
+         Offer : constant Wayland_Client.Data_Offer
+           := (My_Data_Offer => Id);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)),
                 D,
@@ -1778,7 +1903,8 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Leave (Data        : Void_Ptr;
                                 Data_Device : Wl_Thin.Data_Device_Ptr)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Leave;
@@ -1789,7 +1915,8 @@ package body C_Binding.Linux.Wayland_Client is
                                  X           : Fixed;
                                  Y           : Fixed)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
       begin
          Motion (Data_Ptr (Conversion.To_Pointer (Data)), D, Time, X, Y);
       end Internal_Motion;
@@ -1797,7 +1924,8 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Drop (Data        : Void_Ptr;
                                Data_Device : Wl_Thin.Data_Device_Ptr)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
       begin
          Drop (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Drop;
@@ -1806,8 +1934,10 @@ package body C_Binding.Linux.Wayland_Client is
                                     Data_Device : Wl_Thin.Data_Device_Ptr;
                                     Id          : Wl_Thin.Data_Offer_Ptr)
       is
-         D : Wayland_Client.Data_Device := (My_Data_Device => Data_Device);
-         Offer : Wayland_Client.Data_Offer := (My_Data_Offer => Id);
+         D : constant Wayland_Client.Data_Device
+           := (My_Data_Device => Data_Device);
+         Offer : constant Wayland_Client.Data_Offer
+           := (My_Data_Offer => Id);
       begin
          Selection (Data_Ptr (Conversion.To_Pointer (Data)), D, Offer);
       end Internal_Selection;
@@ -1867,7 +1997,8 @@ package body C_Binding.Linux.Wayland_Client is
          Surface : Wl_Thin.Shell_Surface_Ptr;
          Serial  : Unsigned_32)
       is
-         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
+         S : constant Wayland_Client.Shell_Surface
+           := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Ping (Data_Ptr (Conversion.To_Pointer (Data)),
                              S,
@@ -1881,7 +2012,8 @@ package body C_Binding.Linux.Wayland_Client is
          Width   : Integer;
          Height  : Integer)
       is
-         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
+         S : constant Wayland_Client.Shell_Surface
+           := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Configure (Data_Ptr (Conversion.To_Pointer (Data)),
                                   S,
@@ -1894,7 +2026,8 @@ package body C_Binding.Linux.Wayland_Client is
         (Data    : Void_Ptr;
          Surface : Wl_Thin.Shell_Surface_Ptr)
       is
-         S : Wayland_Client.Shell_Surface := (My_Shell_Surface => Surface);
+         S : constant Wayland_Client.Shell_Surface
+           := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Popup_Done (Data_Ptr (Conversion.To_Pointer (Data)), S);
       end Internal_Shell_Surface_Popup_Done;
@@ -1945,8 +2078,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface : Wl_Thin.Surface_Ptr;
                                 Output  : Wl_Thin.Output_Ptr)
       is
-         S : Wayland_Client.Surface := (My_Surface => Surface);
-         O : Wayland_Client.Output := (My_Output => Output);
+         S : constant Wayland_Client.Surface := (My_Surface => Surface);
+         O : constant Wayland_Client.Output := (My_Output => Output);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Enter;
@@ -1955,8 +2088,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface : Wl_Thin.Surface_Ptr;
                                 Output  : Wl_Thin.Output_Ptr)
       is
-         S : Wayland_Client.Surface := (My_Surface => Surface);
-         O : Wayland_Client.Output := (My_Output => Output);
+         S : constant Wayland_Client.Surface := (My_Surface => Surface);
+         O : constant Wayland_Client.Output := (My_Output => Output);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Leave;
@@ -1998,25 +2131,27 @@ package body C_Binding.Linux.Wayland_Client is
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32)
       is
-         S : Wayland_Client.Seat := (My_Seat => Seat);
+         S : constant Wayland_Client.Seat := (My_Seat => Seat);
       begin
          Seat_Capabilities (Data_Ptr (Conversion.To_Pointer (Data)),
                             S,
                             Capabilities);
       end Internal_Seat_Capabilities;
 
-      procedure Internal_Seat_Name (Data : Void_Ptr;
-                                    Seat : Wl_Thin.Seat_Ptr;
-                                    Name : Interfaces.C.Strings.chars_ptr) with
+      procedure Internal_Seat_Name
+        (Data : Void_Ptr;
+         Seat : Wl_Thin.Seat_Ptr;
+         Name : Interfaces.C.Strings.Chars_Ptr) with
         Convention => C;
 
-      procedure Internal_Seat_Name (Data : Void_Ptr;
-                                    Seat : Wl_Thin.Seat_Ptr;
-                                    Name : Interfaces.C.Strings.chars_ptr)
+      procedure Internal_Seat_Name
+        (Data : Void_Ptr;
+         Seat : Wl_Thin.Seat_Ptr;
+         Name : Interfaces.C.Strings.Chars_Ptr)
       is
-         N : String := Interfaces.C.Strings.Value (Name);
+         N : constant String := Interfaces.C.Strings.Value (Name);
 
-         S : Wayland_Client.Seat := (My_Seat => Seat);
+         S : constant Wayland_Client.Seat := (My_Seat => Seat);
       begin
          Seat_Name (Data_Ptr (Conversion.To_Pointer (Data)), S, N);
       end Internal_Seat_Name;
@@ -2124,8 +2259,8 @@ package body C_Binding.Linux.Wayland_Client is
          Surface_X : Wayland_Client.Fixed;
          Surface_Y : Wayland_Client.Fixed)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
-         S : Wayland_Client.Surface := (My_Surface => Surface);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         S : constant Wayland_Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Enter (Data_Ptr (Conversion.To_Pointer (Data)),
                         P,
@@ -2141,8 +2276,8 @@ package body C_Binding.Linux.Wayland_Client is
          Serial  : Unsigned_32;
          Surface : Wl_Thin.Surface_Ptr)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
-         S : Wayland_Client.Surface := (My_Surface => Surface);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         S : constant Wayland_Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Leave (Data_Ptr (Conversion.To_Pointer (Data)), P, Serial, S);
       end Internal_Pointer_Leave;
@@ -2154,7 +2289,7 @@ package body C_Binding.Linux.Wayland_Client is
          Surface_X : Wayland_Client.Fixed;
          Surface_Y : Wayland_Client.Fixed)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Motion (Data_Ptr (Conversion.To_Pointer (Data)),
                          P,
@@ -2171,7 +2306,7 @@ package body C_Binding.Linux.Wayland_Client is
          Button  : Unsigned_32;
          State   : Unsigned_32)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Button (Data_Ptr (Conversion.To_Pointer (Data)),
                          P,
@@ -2188,7 +2323,7 @@ package body C_Binding.Linux.Wayland_Client is
          Axis    : Unsigned_32;
          Value   : Wayland_Client.Fixed)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis (Data_Ptr (Conversion.To_Pointer (Data)),
                        P,
@@ -2200,7 +2335,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
                                         Pointer : Wl_Thin.Pointer_Ptr)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Frame (Data_Ptr (Conversion.To_Pointer (Data)), P);
       end Internal_Pointer_Frame;
@@ -2210,7 +2345,7 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer     : Wl_Thin.Pointer_Ptr;
          Axis_Source : Unsigned_32)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Source (Data_Ptr (Conversion.To_Pointer (Data)),
                               P,
@@ -2223,7 +2358,7 @@ package body C_Binding.Linux.Wayland_Client is
          Time    : Unsigned_32;
          Axis    : Unsigned_32)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
                             P,
@@ -2237,7 +2372,7 @@ package body C_Binding.Linux.Wayland_Client is
          Axis     : Unsigned_32;
          Discrete : Integer)
       is
-         P : Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
                                 P,
@@ -2331,7 +2466,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Fd       : Integer;
                                  Size     : Unsigned_32)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Keymap (Data_Ptr (Conversion.To_Pointer (Data)),
                  K,
@@ -2346,8 +2481,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface  : Wl_Thin.Surface_Ptr;
                                 Keys     : Wayland_Array_T)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
-         S : Wayland_Client.Surface  := (My_Surface => Surface);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         S : constant Wayland_Client.Surface  := (My_Surface => Surface);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)),
                 K,
@@ -2361,8 +2496,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Serial   : Unsigned_32;
                                 Surface  : Wl_Thin.Surface_Ptr)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
-         S : Wayland_Client.Surface  := (My_Surface => Surface);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         S : constant Wayland_Client.Surface  := (My_Surface => Surface);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)),
                 K,
@@ -2377,7 +2512,7 @@ package body C_Binding.Linux.Wayland_Client is
                               Key      : Unsigned_32;
                               State    : Unsigned_32)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)),
                               K,
@@ -2395,7 +2530,7 @@ package body C_Binding.Linux.Wayland_Client is
                                     Mods_Locked    : Unsigned_32;
                                     Group          : Unsigned_32)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Modifiers (Data_Ptr (Conversion.To_Pointer (Data)),
                     K,
@@ -2411,7 +2546,7 @@ package body C_Binding.Linux.Wayland_Client is
                                       Rate     : Integer;
                                       Delay_V  : Integer)
       is
-         K : Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)),
                       K,
@@ -2433,9 +2568,10 @@ package body C_Binding.Linux.Wayland_Client is
       is
          I : int;
       begin
-         I := Wl_Thin.Keyboard_Add_Listener (Keyboard => Keyboard.My_Keyboard,
-                                             Listener => Listener'Access,
-                                             Data     => Data.all'Address);
+         I := Wl_Thin.Keyboard_Add_Listener
+           (Keyboard => Keyboard.My_Keyboard,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
          if I = 0 then
             return Success;
          else
@@ -2505,8 +2641,8 @@ package body C_Binding.Linux.Wayland_Client is
                                X       : Fixed;
                                Y       : Fixed)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
-         S : Wayland_Client.Surface := (My_Surface => Surface);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         S : constant Wayland_Client.Surface := (My_Surface => Surface);
       begin
          Down (Data_Ptr (Conversion.To_Pointer (Data)),
                T,
@@ -2524,7 +2660,7 @@ package body C_Binding.Linux.Wayland_Client is
                              Time   : Unsigned_32;
                              Id     : Integer)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Up (Data_Ptr (Conversion.To_Pointer (Data)),
              T,
@@ -2540,7 +2676,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  X     : Fixed;
                                  Y     : Fixed)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Motion (Data_Ptr (Conversion.To_Pointer (Data)),
                  T,
@@ -2553,7 +2689,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Frame (Data  : Void_Ptr;
                                 Touch : Wl_Thin.Touch_Ptr)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Frame (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Frame;
@@ -2561,7 +2697,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Cancel (Data  : Void_Ptr;
                                  Touch : Wl_Thin.Touch_Ptr)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Cancel;
@@ -2572,7 +2708,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Major : Fixed;
                                 Minor : Fixed)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Shape (Data_Ptr (Conversion.To_Pointer (Data)),
                 T,
@@ -2586,7 +2722,7 @@ package body C_Binding.Linux.Wayland_Client is
                                       Id          : Integer;
                                       Orientation : Fixed)
       is
-         T : Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland_Client.Touch := (My_Touch => Touch);
       begin
          Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)),
                                    T,
@@ -2666,7 +2802,7 @@ package body C_Binding.Linux.Wayland_Client is
                                    Model           : chars_ptr;
                                    Transform       : Integer)
       is
-         O : Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland_Client.Output := (My_Output => Output);
          Ma : constant String := Interfaces.C.Strings.Value (Make);
          Mo : constant String := Interfaces.C.Strings.Value (Model);
       begin
@@ -2689,7 +2825,7 @@ package body C_Binding.Linux.Wayland_Client is
                                Height  : Integer;
                                Refresh : Integer)
       is
-         O : Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland_Client.Output := (My_Output => Output);
       begin
          Mode (Data_Ptr (Conversion.To_Pointer (Data)),
                O,
@@ -2702,7 +2838,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Done (Data   : Void_Ptr;
                                Output : Wl_Thin.Output_Ptr)
       is
-         O : Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland_Client.Output := (My_Output => Output);
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), O);
       end Internal_Done;
@@ -2711,7 +2847,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Output : Wl_Thin.Output_Ptr;
                                 Factor : Integer)
       is
-         O : Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland_Client.Output := (My_Output => Output);
       begin
          Scale (Data_Ptr (Conversion.To_Pointer (Data)), O, Factor);
       end Internal_Scale;
@@ -2761,10 +2897,11 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Disconnect;
 
-   function Check_For_Events (Display : Wayland_Client.Display;
-                              Timeout : Integer) return Check_For_Events_Status
+   function Check_For_Events
+     (Display : Wayland_Client.Display;
+      Timeout : Integer) return Check_For_Events_Status
    is
-      File_Descriptors : Linux.Poll_File_Descriptor_Array
+      File_Descriptors : constant Linux.Poll_File_Descriptor_Array
         := (1 => (Descriptor => Display.My_Fd,
                   Events     => Linux.POLLIN,
                   Revents    => 0));
@@ -2777,7 +2914,8 @@ package body C_Binding.Linux.Wayland_Client is
       end case;
    end Check_For_Events;
 
-   function Get_Version (Display : Wayland_Client.Display) return Unsigned_32 is
+   function Get_Version
+     (Display : Wayland_Client.Display) return Unsigned_32 is
    begin
       return Wl_Thin.Display_Get_Version (Display.My_Display);
    end Get_Version;
@@ -2785,7 +2923,8 @@ package body C_Binding.Linux.Wayland_Client is
    procedure Get_Registry (Display  : Wayland_Client.Display;
                            Registry : in out Wayland_Client.Registry) is
    begin
-      Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);
+      Registry.My_Registry
+        := Wl_Thin.Display_Get_Registry (Display.My_Display);
    end Get_Registry;
 
    procedure Destroy (Registry : in out Wayland_Client.Registry) is
@@ -2816,7 +2955,8 @@ package body C_Binding.Linux.Wayland_Client is
    function Read_Events
      (Display : Wayland_Client.Display) return Call_Result_Code
    is
-      I : constant Integer := Wl_Thin.Display_Read_Events (Display.My_Display);
+      I : constant Integer
+        := Wl_Thin.Display_Read_Events (Display.My_Display);
    begin
       if I = 0 then
          return Success;
@@ -2854,11 +2994,12 @@ package body C_Binding.Linux.Wayland_Client is
                         Id          : Unsigned_32;
                         Version     : Unsigned_32)
    is
-      P : Wl_Thin.Proxy_Ptr :=
-        Wl_Thin.Registry_Bind (Registry    => Registry.My_Registry,
-                               Name        => Id,
-                               Interface_V => Wl_Thin.Compositor_Interface'Access,
-                               New_Id      => Version);
+      P : constant Wl_Thin.Proxy_Ptr :=
+            Wl_Thin.Registry_Bind
+              (Registry    => Registry.My_Registry,
+               Name        => Id,
+               Interface_V => Wl_Thin.Compositor_Interface'Access,
+               New_Id      => Version);
 
    begin
       if P /= null then
@@ -2898,7 +3039,7 @@ package body C_Binding.Linux.Wayland_Client is
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
-      P : Wl_Thin.Proxy_Ptr :=
+      P : constant Wl_Thin.Proxy_Ptr :=
         Wl_Thin.Registry_Bind (Registry    => Registry.My_Registry,
                                Name        => Id,
                                Interface_V => Wl_Thin.Seat_Interface'Access,
@@ -2939,7 +3080,7 @@ package body C_Binding.Linux.Wayland_Client is
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
-      P : Wl_Thin.Proxy_Ptr :=
+      P : constant Wl_Thin.Proxy_Ptr :=
         Wl_Thin.Registry_Bind (Registry    => Registry.My_Registry,
                                Name        => Id,
                                Interface_V => Wl_Thin.Shell_Interface'Access,
@@ -2964,7 +3105,7 @@ package body C_Binding.Linux.Wayland_Client is
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
-      P : Wl_Thin.Proxy_Ptr :=
+      P : constant Wl_Thin.Proxy_Ptr :=
         Wl_Thin.Registry_Bind (Registry    => Registry.My_Registry,
                                Name        => Id,
                                Interface_V => Wl_Thin.Shm_Interface'Access,
@@ -2976,10 +3117,11 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Create_Pool (Shm             : Wayland_Client.Shm;
-                          File_Descriptor : File;
-                          Size            : Integer;
-                          Pool            : in out Wayland_Client.Shm_Pool) is
+   procedure Create_Pool
+     (Shm             : Wayland_Client.Shm;
+      File_Descriptor : File;
+      Size            : Integer;
+      Pool            : in out Wayland_Client.Shm_Pool) is
    begin
       Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool
         (Shm.My_Shm,
@@ -3022,7 +3164,8 @@ package body C_Binding.Linux.Wayland_Client is
       Wl_Thin.Shm_Pool_Resize (Pool.My_Shm_Pool, Size);
    end Resize;
 
-   function Get_Version (Pool : Wayland_Client.Shm_Pool) return Unsigned_32 is
+   function Get_Version
+     (Pool : Wayland_Client.Shm_Pool) return Unsigned_32 is
    begin
       return Wl_Thin.Shm_Pool_Get_Version (Pool.My_Shm_Pool);
    end Get_Version;
@@ -3035,7 +3178,8 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Buffer : Wayland_Client.Buffer) return Unsigned_32 is
+   function Get_Version
+     (Buffer : Wayland_Client.Buffer) return Unsigned_32 is
    begin
       return Wl_Thin.Buffer_Get_Version (Buffer.My_Buffer);
    end Get_Version;
@@ -3051,7 +3195,8 @@ package body C_Binding.Linux.Wayland_Client is
    function Has_Proxy (Offer : Wayland_Client.Data_Offer) return Boolean is
       (Offer.My_Data_Offer /= null);
 
-   function Get_Version (Offer : Wayland_Client.Data_Offer) return Unsigned_32 is
+   function Get_Version
+     (Offer : Wayland_Client.Data_Offer) return Unsigned_32 is
    begin
       return Wl_Thin.Data_Offer_Get_Version (Offer.My_Data_Offer);
    end Get_Version;
@@ -3068,10 +3213,11 @@ package body C_Binding.Linux.Wayland_Client is
                         Serial    : Unsigned_32;
                         Mime_Type : C_String) is
    begin
-      Wl_Thin.Proxy_Marshal (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
-                             WL_DATA_OFFER_ACCEPT,
-                             Serial,
-                             Mime_Type);
+      Wl_Thin.Proxy_Marshal
+        (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
+         WL_DATA_OFFER_ACCEPT,
+         Serial,
+         Mime_Type);
 
    end Do_Accept;
 
@@ -3087,7 +3233,8 @@ package body C_Binding.Linux.Wayland_Client is
                       Mime_Type       : C_String;
                       File_Descriptor : Integer) is
    begin
-      Wl_Thin.Data_Offer_Receive (Offer.My_Data_Offer, Mime_Type, File_Descriptor);
+      Wl_Thin.Data_Offer_Receive
+        (Offer.My_Data_Offer, Mime_Type, File_Descriptor);
    end Receive;
 
    procedure Finish (Offer : Data_Offer) is
@@ -3278,7 +3425,8 @@ package body C_Binding.Linux.Wayland_Client is
                             Width   : Integer;
                             Height  : Integer) is
    begin
-      Wl_Thin.Surface_Damage_Buffer (Surface.My_Surface, X, Y, Width, Height);
+      Wl_Thin.Surface_Damage_Buffer
+        (Surface.My_Surface, X, Y, Width, Height);
    end Damage_Buffer;
 
    procedure Destroy (Surface : in out Wayland_Client.Surface) is
@@ -3296,7 +3444,8 @@ package body C_Binding.Linux.Wayland_Client is
       end return;
    end Sync;
 
-   function Get_Version (Registry : Wayland_Client.Registry) return Unsigned_32 is
+   function Get_Version
+     (Registry : Wayland_Client.Registry) return Unsigned_32 is
    begin
       return Wl_Thin.Registry_Get_Version (Registry.My_Registry);
    end Get_Version;
@@ -3312,12 +3461,14 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Callback : Wayland_Client.Callback) return Unsigned_32 is
+   function Get_Version
+     (Callback : Wayland_Client.Callback) return Unsigned_32 is
    begin
       return Wl_Thin.Callback_Get_Version (Callback.My_Callback);
    end Get_Version;
 
-   function Get_Version (Pointer : Wayland_Client.Pointer) return Unsigned_32 is
+   function Get_Version
+     (Pointer : Wayland_Client.Pointer) return Unsigned_32 is
    begin
       return Wl_Thin.Pointer_Get_Version (Pointer.My_Pointer);
    end Get_Version;
@@ -3351,7 +3502,8 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Keyboard : Wayland_Client.Keyboard) return Unsigned_32 is
+   function Get_Version
+     (Keyboard : Wayland_Client.Keyboard) return Unsigned_32 is
    begin
       return Wl_Thin.Keyboard_Get_Version (Keyboard.My_Keyboard);
    end Get_Version;
@@ -3393,7 +3545,8 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Output : Wayland_Client.Output) return Unsigned_32 is
+   function Get_Version
+     (Output : Wayland_Client.Output) return Unsigned_32 is
    begin
       return Wl_Thin.Output_Get_Version (Output.My_Output);
    end Get_Version;
@@ -3414,7 +3567,8 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Region : Wayland_Client.Region) return Unsigned_32 is
+   function Get_Version
+     (Region : Wayland_Client.Region) return Unsigned_32 is
    begin
       return Wl_Thin.Region_Get_Version (Region.My_Region);
    end Get_Version;
@@ -3445,7 +3599,8 @@ package body C_Binding.Linux.Wayland_Client is
       Wl_Thin.Region_Subtract (Region.My_Region, X, Y, Width, Height);
    end Subtract;
 
-   function Get_Version (S : Wayland_Client.Subcompositor) return Unsigned_32 is
+   function Get_Version
+     (S : Wayland_Client.Subcompositor) return Unsigned_32 is
    begin
       return Wl_Thin.Subcompositor_Get_Version (S.My_Subcompositor);
    end Get_Version;
@@ -3458,18 +3613,21 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Get_Subsurface (Subcompositor : Wayland_Client.Subcompositor;
-                             Surface       : Wayland_Client.Surface;
-                             Parent        : Wayland_Client.Surface;
-                             Subsurface    : in out Wayland_Client.Subsurface) is
+   procedure Get_Subsurface
+     (Subcompositor : Wayland_Client.Subcompositor;
+      Surface       : Wayland_Client.Surface;
+      Parent        : Wayland_Client.Surface;
+      Subsurface    : in out Wayland_Client.Subsurface) is
    begin
       Subsurface.My_Subsurface :=
-        Wl_Thin.Subcompositor_Get_Subsurface (Subcompositor.My_Subcompositor,
-                                              Surface.My_Surface,
-                                              Parent.My_Surface);
+        Wl_Thin.Subcompositor_Get_Subsurface
+          (Subcompositor.My_Subcompositor,
+           Surface.My_Surface,
+           Parent.My_Surface);
    end Get_Subsurface;
 
-   function Get_Version (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 is
+   function Get_Version
+     (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 is
    begin
       return Wl_Thin.Subsurface_Get_Version (Subsurface.My_Subsurface);
    end Get_Version;

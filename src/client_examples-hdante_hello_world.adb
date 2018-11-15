@@ -1,6 +1,8 @@
-with Posix;
+with Linux;
+with C_Binding;
 with Wayland_Client;
 with Ada.Real_Time;
+with System;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -16,14 +18,14 @@ package body Client_Examples.Hdante_Hello_World is
 
    subtype Unsigned_32 is Wayland_Client.Unsigned_32;
 
-   use type Posix.S_FLag;
-   use type Posix.int;
-   use type Posix.C_String;
+   use type Linux.S_FLag;
+   use type C_Binding.int;
+   use type C_Binding.C_String;
 
    use type Unsigned_32;
 
-   use all type Posix.File_Mode;
-   use all type Posix.File_Permission;
+   use all type Linux.File_Mode;
+   use all type Linux.File_Permission;
 
    use all type Wayland_Client.Check_For_Events_Status;
    use all type Wayland_Client.Call_Result_Code;
@@ -139,7 +141,7 @@ package body Client_Examples.Hdante_Hello_World is
                                       Registry : Wayland_Client.Registry;
                                       Id       : Unsigned_32) is
    begin
-      Posix.Put_Line ("Got a registry losing event for" & Id'Image);
+      Linux.Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
    package Registry_Events is new Wayland_Client.Registry_Events
@@ -293,12 +295,12 @@ package body Client_Examples.Hdante_Hello_World is
    Pool          : Wayland_Client.Shm_Pool;
    Surface       : Wayland_Client.Surface;
    Shell_Surface : Wayland_Client.Shell_Surface;
-   Image         : Posix.File;
-   File_Status   : Posix.File_Status;
+   Image         : Linux.File;
+   File_Status   : Linux.File_Status;
 
-   File_Name : Posix.C_String := +"hello_world_image.bin";
+   File_Name : String := "hello_world_image.bin";
 
-   Memory_Map : Posix.Memory_Map;
+   Memory_Map : Linux.Memory_Map;
 
    Events_Status : Wayland_Client.Check_For_Events_Status;
 
@@ -370,9 +372,9 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Image.Map_Memory (Posix.Nil,
-                        Posix.unsigned_long (File_Status.Size),
-                        Posix.PROT_READ, Posix.MAP_SHARED, 0, Memory_Map);
+      Image.Map_Memory (System.Null_Address,
+                        C_Binding.unsigned_long (File_Status.Size),
+                        Linux.PROT_READ, Linux.MAP_SHARED, 0, Memory_Map);
 
       if Memory_Map.Has_Mapping then
          Shm.Create_Pool (Image,
