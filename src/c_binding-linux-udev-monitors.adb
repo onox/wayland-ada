@@ -84,6 +84,9 @@ package body C_Binding.Linux.Udev.Monitors is
    --
    --  Returns 0 on success, otherwise a negative error value.
 
+   function Exists (Monitor : Monitors.Monitor) return Boolean is
+     (Monitor.My_Ptr /= null);
+
    procedure Delete (Monitor : in out Monitors.Monitor) is
    begin
       Monitor.My_Ptr := Udev_Monitor_Unref (Monitor.My_Ptr);
@@ -212,5 +215,12 @@ package body C_Binding.Linux.Udev.Monitors is
          return Failure;
       end if;
    end Filter_Remove;
+
+   procedure Finalize (Monitor : in out Monitors.Monitor) is
+   begin
+      if Monitor.Exists then
+         Monitor.Delete;
+      end if;
+   end Finalize;
 
 end C_Binding.Linux.Udev.Monitors;

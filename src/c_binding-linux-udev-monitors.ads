@@ -61,7 +61,7 @@ private
 
    type Monitor is new Monitor_Base with null record;
 
-   function Exists (Monitor : Monitors.Monitor) return Boolean is
-     (Monitor.My_Ptr /= null);
+   overriding
+   procedure Finalize (Monitor : in out Monitors.Monitor);
 
 end C_Binding.Linux.Udev.Monitors;

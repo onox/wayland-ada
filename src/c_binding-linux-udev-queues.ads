@@ -57,4 +57,7 @@ private
 
    type Queue is new Queue_Base with null record;
 
+   overriding
+   procedure Finalize (Queue : in out Queues.Queue);
+
 end C_Binding.Linux.Udev.Queues;

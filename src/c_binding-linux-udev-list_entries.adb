@@ -29,6 +29,9 @@ package body C_Binding.Linux.Udev.List_Entries is
    --  representing the requested value. The string is bound to
    --  the lifetime of the list entry itself. On failure, null is returned.
 
+   function Exists (List_Entry : List_Entries.List_Entry) return Boolean is
+     (List_Entry.My_Ptr /= null);
+
    procedure Next (List_Entry : in out List_Entries.List_Entry) is
    begin
       List_Entry.My_Ptr := Udev_List_Entry_Get_Next (List_Entry.My_Ptr);

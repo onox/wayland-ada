@@ -12,7 +12,7 @@ package C_Binding.Linux.Udev.Enumerates is
       Reference : out Enumerate) with
      Pre => Enumerates.Exists (Original);
 
-   type Enumerate is tagged limited private;
+   type Enumerate is new Enumerate_Base with private;
 
    procedure Create (Enum    : out Enumerate;
                      Context : Contexts.Context);
@@ -93,8 +93,9 @@ package C_Binding.Linux.Udev.Enumerates is
 
 private
 
-   type Enumerate is tagged limited record
-      My_Ptr : Udev_Enumerate_Ptr;
-   end record;
+   type Enumerate is new Enumerate_Base with null record;
+
+   overriding
+   procedure Finalize (Enum : in out Enumerate);
 
 end C_Binding.Linux.Udev.Enumerates;

@@ -1,5 +1,7 @@
 with Interfaces.C.Strings;
 
+private with Ada.Finalization;
+
 --  Udev is "abbreviation" of Userspace /dev.
 --  API for enumerating and introspecting local devices.
 package C_Binding.Linux.Udev is
@@ -25,6 +27,7 @@ package C_Binding.Linux.Udev is
 
    type Context_Base    is abstract tagged limited private;
    type Device_Base     is abstract tagged limited private;
+   type Enumerate_Base  is abstract tagged limited private;
    type Monitor_Base    is abstract tagged limited private;
    type List_Entry_Base is abstract tagged limited private;
    type Queue_Base      is abstract tagged limited private;
@@ -86,27 +89,31 @@ private
    --
    --  What to do with this C-function?
 
-   type Monitor_Base is tagged limited record
+   type Monitor_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Monitor_Ptr;
    end record;
 
-   type Context_Base is tagged limited record
+   type Context_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Ptr;
    end record;
 
-   type Device_Base is tagged limited record
+   type Device_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Device_Ptr;
+   end record;
+
+   type Enumerate_Base is new Ada.Finalization.Limited_Controlled with record
+      My_Ptr : Udev_Enumerate_Ptr;
    end record;
 
    type List_Entry_Base is tagged limited record
       My_Ptr : Udev_List_Entry_Ptr;
    end record;
 
-   type Queue_Base is tagged limited record
+   type Queue_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Queue_Ptr;
    end record;
 
-   type Hwdb_Base is tagged limited record
+   type Hwdb_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Hwdb_Ptr;
    end record;
 

@@ -26,7 +26,4 @@ private
 
    type List_Entry is new List_Entry_Base with null record;
 
-   function Exists (List_Entry : List_Entries.List_Entry) return Boolean is
-     (List_Entry.My_Ptr /= null);
-
 end C_Binding.Linux.Udev.List_Entries;

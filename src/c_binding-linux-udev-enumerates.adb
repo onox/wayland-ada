@@ -338,4 +338,10 @@ package body C_Binding.Linux.Udev.Enumerates is
       end if;
    end Add_Syspath;
 
+   procedure Finalize (Enum : in out Enumerate) is
+   begin
+      if Enum.Exists then
+         Enum.Delete;
+      end if;
+   end Finalize;
 end C_Binding.Linux.Udev.Enumerates;

@@ -158,4 +158,11 @@ package body C_Binding.Linux.Udev.Queues is
         := Udev_Queue_Get_Queued_List_Entry (Queue.My_Ptr);
    end Queued_List_Entry;
 
+   procedure Finalize (Queue : in out Queues.Queue) is
+   begin
+      if Queue.Exists then
+         Queue.Delete;
+      end if;
+   end Finalize;
+
 end C_Binding.Linux.Udev.Queues;

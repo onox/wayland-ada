@@ -183,8 +183,9 @@ package body C_Binding.Linux.Udev.Contexts is
       is
          pragma Unreferenced (Args);  --  What to do with this?
 
-         C : constant Context := (My_Ptr => Udev);
+         C : Context;
       begin
+         C.My_Ptr := Udev;
          Log (C, Integer (Priority), -File, Integer (Line), -Fn, -Format);
       end Internal_Callback;
 
@@ -272,5 +273,12 @@ package body C_Binding.Linux.Udev.Contexts is
    begin
       Hwdb_Base (Database).My_Ptr := Udev_Hwdb_New (Context.My_Ptr);
    end New_Hardware_Database;
+
+   procedure Finalize (Context : in out Contexts.Context) is
+   begin
+      if Context.Exists then
+         Context.Delete;
+      end if;
+   end Finalize;
 
 end C_Binding.Linux.Udev.Contexts;

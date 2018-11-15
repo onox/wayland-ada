@@ -153,4 +153,7 @@ private
 
    type Device is new Device_Base with null record;
 
+   overriding
+   procedure Finalize (Device : in out Devices.Device);
+
 end C_Binding.Linux.Udev.Devices;

@@ -51,4 +51,11 @@ package body C_Binding.Linux.Udev.Hardware_Databases is
         := Udev_Hwdb_Get_Properties_List_Entry (Database.My_Ptr, +Modalias, 0);
    end Properties_List_Entry;
 
+   procedure Finalize (Database : in out Hardware_Databases.Database) is
+   begin
+      if Database.Exists then
+         Database.Delete;
+      end if;
+   end Finalize;
+
 end C_Binding.Linux.Udev.Hardware_Databases;

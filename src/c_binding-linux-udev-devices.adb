@@ -412,4 +412,11 @@ package body C_Binding.Linux.Udev.Devices is
       return Result;
    end Has_Tag;
 
+   procedure Finalize (Device : in out Devices.Device) is
+   begin
+      if Device.Exists then
+         Device.Delete;
+      end if;
+   end Finalize;
+
 end C_Binding.Linux.Udev.Devices;

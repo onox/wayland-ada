@@ -34,4 +34,7 @@ private
 
    type Database is new Hwdb_Base with null record;
 
+   overriding
+   procedure Finalize (Database : in out Hardware_Databases.Database);
+
 end C_Binding.Linux.Udev.Hardware_Databases;

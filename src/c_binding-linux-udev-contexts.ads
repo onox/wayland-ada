@@ -110,6 +110,9 @@ private
 
    type Context is new Context_Base with null record;
 
+   overriding
+   procedure Finalize (Context : in out Contexts.Context);
+
    function Exists (Context : Contexts.Context) return Boolean is
      (Context.My_Ptr /= null);
 
