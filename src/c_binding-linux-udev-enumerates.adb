@@ -139,22 +139,22 @@ package body C_Binding.Linux.Udev.Enumerates is
    --  the list of found devices. If the list is empty,
    --  or on failure, null is returned.
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Enumerate;
       Reference : out Enumerate) is
    begin
       Reference.My_Ptr := Udev_Enumerate_Ref (Original.My_Ptr);
-   end Acquire;
+   end Acquire_Reference;
 
    function Exists (Enum : Enumerate) return Boolean is
      (Enum.My_Ptr /= null);
 
-   procedure Create
+   procedure Create_Enumerate
      (Enum    : out Enumerate;
       Context : Contexts.Context) is
    begin
       Enum.My_Ptr := Udev_Enumerate_New (Context_Base (Context).My_Ptr);
-   end Create;
+   end Create_Enumerate;
 
    procedure Delete (Enum : in out Enumerate) is
    begin

@@ -7,15 +7,16 @@ package C_Binding.Linux.Udev.Enumerates is
 
    type Enumerate;
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Enumerate;
       Reference : out Enumerate) with
      Pre => Enumerates.Exists (Original);
 
-   type Enumerate is new Enumerate_Base with private;
+   procedure Create_Enumerate
+     (Enum    : out Enumerate;
+      Context : Contexts.Context);
 
-   procedure Create (Enum    : out Enumerate;
-                     Context : Contexts.Context);
+   type Enumerate is new Enumerate_Base with private;
 
    function Exists (Enum : Enumerate) return Boolean;
 

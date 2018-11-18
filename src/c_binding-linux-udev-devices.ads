@@ -16,22 +16,22 @@ package C_Binding.Linux.Udev.Devices is
       Devtype   : String;
       Parent    : out Devices.Device);
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Device;
       Reference : out Device) with
      Pre => Devices.Exists (Original);
    --  Acquire a reference to an existing udev device object.
    --  The reference count to Original goes up by 1.
 
-   type Device is new Device_Base with private;
-
-   procedure Create
+   procedure Create_Device
      (Device  : out Devices.Device;
       Context : Contexts.Context;
       Syspath : String);
    --  A Syspath is any subdirectory of /sys, with the restriction
    --  that a subdirectory of /sys/devices (or a symlink to one) represents
    --  a real device and as such must contain a uevent file.
+
+   type Device is new Device_Base with private;
 
    function Exists (Device : Devices.Device) return Boolean;
 

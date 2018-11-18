@@ -7,6 +7,7 @@ with C_Binding.Linux.Udev.List_Entries;
 --  the relevant properties to matching devices, but it can also be queried
 --  directly.
 package C_Binding.Linux.Udev.Hardware_Databases is
+   pragma Obsolescent;
 
    type Database;
 

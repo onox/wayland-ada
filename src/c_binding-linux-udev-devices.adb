@@ -191,11 +191,12 @@ package body C_Binding.Linux.Udev.Devices is
    --  the given tag or not.
    --  On failure, a negative error code is returned.
 
-   procedure Acquire (Original  : Device;
-                      Reference : out Device) is
+   procedure Acquire_Reference
+     (Original  : Device;
+      Reference : out Device) is
    begin
       Reference.My_Ptr := Udev_Device_Ref (Original.My_Ptr);
-   end Acquire;
+   end Acquire_Reference;
 
    procedure Get_Parent
      (Device : Devices.Device;
@@ -217,14 +218,14 @@ package body C_Binding.Linux.Udev.Devices is
    function Exists (Device : Devices.Device) return Boolean is
      (Device.My_Ptr /= null);
 
-   procedure Create
+   procedure Create_Device
      (Device  : out Devices.Device;
       Context : Contexts.Context;
       Syspath : String) is
    begin
       Device.My_Ptr := Udev_Device_New_From_Syspath
         (Context_Base (Context).My_Ptr, +Syspath);
-   end Create;
+   end Create_Device;
 
    procedure Delete (Device : in out Devices.Device) is
    begin

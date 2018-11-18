@@ -6,6 +6,7 @@ with C_Binding.Linux.Udev.List_Entries;
 --  of the event processing queue, and the current event sequence numbers
 --  from the kernel and the udev daemon.
 package C_Binding.Linux.Udev.Queues is
+   pragma Obsolescent;
 
    type Queue;
 

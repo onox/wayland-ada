@@ -7,22 +7,27 @@ package C_Binding.Linux.Udev.Contexts is
 
    type Context;
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Contexts.Context;
       Reference : out Contexts.Context) with
      Pre => Contexts.Exists (Original);
    --  Acquire a reference to an existing udev context object.
    --  The reference count to Original goes up by 1.
 
-   type Context is new Context_Base with private with
-     Default_Initial_Condition => not Context.Exists;
-   --  Represents a proxy to a udev context object that may or may not exist.
-
-   procedure Create (Context : out Contexts.Context);
-   --  Create a udev context object.
+   procedure Create_Context (Context : out Contexts.Context);
+   --  Create udev context object. This reads the udev configuration file,
+   --  and fills in the default values.
+   --
    --  On success, Context.Exists = True.
    --  On failure, Context.Exists = False.
+   --
    --  When successful, the reference count is 1.
+
+   type Context is new Context_Base with private with
+     Default_Initial_Condition => not Context.Exists;
+   --  Represents a udev context object that may or may not exist.
+   --  Before you can do anything with Udev the application must
+   --  have a "connection" to Udev. This type represents such a "connection".
 
    function Exists (Context : Contexts.Context) return Boolean;
 
@@ -34,7 +39,7 @@ package C_Binding.Linux.Udev.Contexts is
    --  Once the reference count hits 0,
    --  the context object is destroyed and freed.
 
-   procedure New_From_Netlink
+   procedure Create_Monitor
      (Context : Contexts.Context;
       Name    : String;
       Monitor : out Monitors.Monitor);
@@ -42,28 +47,28 @@ package C_Binding.Linux.Udev.Contexts is
    --  On success, Monitor.Exists = True.
    --  On failure, Monitor.Exists = False.
 
-   procedure New_Device_From_Devnum
+   procedure Create_Device
      (Context       : Contexts.Context;
       Block_Device  : Character;
       Device_Number : Interfaces.Unsigned_64;
       Device        : out Devices.Device);
 
-   procedure New_Device_From_Subsystem_Sysname
+   procedure Create_Device
      (Context   : Contexts.Context;
       Subsystem : String;
       Sysname   : String;
       Device    : out Devices.Device);
 
-   procedure New_Device_From_Device_Id
+   procedure Create_Device
      (Context : Contexts.Context;
       Id      : String;
       Device  : out Devices.Device);
 
-   procedure New_Device_From_Environment
+   procedure Create_Device
      (Context : Contexts.Context;
       Device  : out Devices.Device);
 
-   procedure New_Queue
+   procedure Create_Queue
      (Context : Contexts.Context;
       Queue   : out Queues.Queue);
 

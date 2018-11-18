@@ -151,12 +151,12 @@ package body C_Binding.Linux.Udev.Monitors is
         := Udev_Monitor_Receive_Device (Monitor.My_Ptr);
    end Receive_Device;
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Monitor;
       Reference : out Monitor) is
    begin
       Reference.My_Ptr := Udev_Monitor_Ref (Original.My_Ptr);
-   end Acquire;
+   end Acquire_Reference;
 
    procedure Context
      (Monitor : Monitors.Monitor;

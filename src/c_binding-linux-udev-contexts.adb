@@ -118,18 +118,18 @@ package body C_Binding.Linux.Udev.Contexts is
    function Udev_Hwdb_New (Udev : Udev_Ptr) return Udev_Hwdb_Ptr;
    pragma Import (C, Udev_Hwdb_New, "udev_hwdb_new");
 
-   procedure Acquire
+   procedure Acquire_Reference
      (Original  : Contexts.Context;
       Reference : out Contexts.Context) is
    begin
       Reference.My_Ptr := Udev_Ref (Original.My_Ptr);
-   end Acquire;
+   end Acquire_Reference;
 
-   procedure Create
+   procedure Create_Context
      (Context : out Contexts.Context) is
    begin
       Context.My_Ptr := Udev_New;
-   end Create;
+   end Create_Context;
 
    procedure Delete (Context : in out Contexts.Context) is
    begin
@@ -140,13 +140,14 @@ package body C_Binding.Linux.Udev.Contexts is
       --  Udev_Unref (..) always returns null.
    end Delete;
 
-   procedure New_From_Netlink (Context : Contexts.Context;
-                               Name    : String;
-                               Monitor : out Monitors.Monitor) is
+   procedure Create_Monitor
+     (Context : Contexts.Context;
+      Name    : String;
+      Monitor : out Monitors.Monitor) is
    begin
       Monitor_Base (Monitor).My_Ptr
         := Udev_Monitor_New_From_Netlink (Context.My_Ptr, +Name);
-   end New_From_Netlink;
+   end Create_Monitor;
 
    function Log_Priority (Context : Contexts.Context) return Integer is
    begin
@@ -218,7 +219,7 @@ package body C_Binding.Linux.Udev.Contexts is
 
    end Custom_Data;
 
-   procedure New_Device_From_Devnum
+   procedure Create_Device
      (Context       : Contexts.Context;
       Block_Device  : Character;
       Device_Number : Interfaces.Unsigned_64;
@@ -228,9 +229,9 @@ package body C_Binding.Linux.Udev.Contexts is
         (Context.My_Ptr,
          Char (Block_Device),
          unsigned_long (Device_Number));
-   end New_Device_From_Devnum;
+   end Create_Device;
 
-   procedure New_Device_From_Subsystem_Sysname
+   procedure Create_Device
      (Context   : Contexts.Context;
       Subsystem : String;
       Sysname   : String;
@@ -240,9 +241,9 @@ package body C_Binding.Linux.Udev.Contexts is
         (Context.My_Ptr,
          +Subsystem,
          +Sysname);
-   end New_Device_From_Subsystem_Sysname;
+   end Create_Device;
 
-   procedure New_Device_From_Device_Id
+   procedure Create_Device
      (Context : Contexts.Context;
       Id      : String;
       Device  : out Devices.Device) is
@@ -250,22 +251,22 @@ package body C_Binding.Linux.Udev.Contexts is
       Device_Base (Device).My_Ptr := Udev_Device_New_From_Device_Id
         (Context.My_Ptr,
          +Id);
-   end New_Device_From_Device_Id;
+   end Create_Device;
 
-   procedure New_Device_From_Environment
+   procedure Create_Device
      (Context : Contexts.Context;
       Device  : out Devices.Device) is
    begin
       Device_Base (Device).My_Ptr := Udev_Device_New_From_Environment
         (Context.My_Ptr);
-   end New_Device_From_Environment;
+   end Create_Device;
 
-   procedure New_Queue
+   procedure Create_Queue
      (Context : Contexts.Context;
       Queue   : out Queues.Queue) is
    begin
       Queue_Base (Queue).My_Ptr := Udev_Queue_New (Context.My_Ptr);
-   end New_Queue;
+   end Create_Queue;
 
    procedure New_Hardware_Database
      (Context  : Contexts.Context;

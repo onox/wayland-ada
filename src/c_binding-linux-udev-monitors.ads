@@ -5,7 +5,7 @@ package C_Binding.Linux.Udev.Monitors is
 
    type Monitor;
 
-    procedure Acquire
+    procedure Acquire_Reference
      (Original  : Monitor;
       Reference : out Monitor) with
      Pre => Monitors.Exists (Original);
@@ -19,7 +19,7 @@ package C_Binding.Linux.Udev.Monitors is
      Post => not Monitor.Exists;
 
    function Filter_Add_Match_Subsystem_Devtype
-     (Monitor : Monitors.Monitor;
+     (Monitor   : Monitors.Monitor;
       Subsystem : String;
       Devtype   : access String) return Success_Flag;
 

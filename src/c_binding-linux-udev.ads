@@ -2,8 +2,15 @@ with Interfaces.C.Strings;
 
 private with Ada.Finalization;
 
---  Udev is "abbreviation" of Userspace /dev.
---  API for enumerating and introspecting local devices.
+--  Udev is "abbreviation" of Userspace /dev and libudev is the name of a
+--  Linux specific library written in C that gives access to Linux
+--  device and hardware management. By using libudev an application
+--  can find out about:
+--
+--   - Installed hardware
+--   - When a USB device is inserted or removed
+--   - When a network cable is inserted or removed
+--
 package C_Binding.Linux.Udev is
    pragma Elaborate_Body;
 
