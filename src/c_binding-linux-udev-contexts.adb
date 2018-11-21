@@ -1,7 +1,7 @@
 with C_Binding.Linux.Udev.Devices;
+with C_Binding.Linux.Udev.Enumerates;
 with C_Binding.Linux.Udev.Monitors;
-with C_Binding.Linux.Udev.Queues;
-with C_Binding.Linux.Udev.Hardware_Databases;
+with C_Binding.Linux.Udev.List_Entries;
 with System.Address_To_Access_Conversions;
 
 package body C_Binding.Linux.Udev.Contexts is
@@ -54,6 +54,13 @@ package body C_Binding.Linux.Udev.Contexts is
       Userdata : System.Address);
    pragma Import (C, Udev_Set_Userdata, "udev_set_userdata");
    --  Store custom userdata in the library context.
+
+   function Udev_Enumerate_New
+     (Udev : Udev_Ptr) return Udev_Enumerate_Ptr;
+   pragma Import (C, Udev_Enumerate_New, "udev_enumerate_new");
+   --  Create a udev enumerate object.
+   --  On success, returns a pointer to the allocated udev monitor.
+   --  On failure, null is returned.
 
    function Udev_Monitor_New_From_Netlink
      (Arg1 : Udev_Ptr;
@@ -112,12 +119,6 @@ package body C_Binding.Linux.Udev.Contexts is
       Udev_Device_New_From_Environment,
       "udev_device_new_from_environment");
 
-   function Udev_Queue_New (Udev : Udev_Ptr) return Udev_Queue_Ptr;
-   pragma Import (C, Udev_Queue_New, "udev_queue_new");
-
-   function Udev_Hwdb_New (Udev : Udev_Ptr) return Udev_Hwdb_Ptr;
-   pragma Import (C, Udev_Hwdb_New, "udev_hwdb_new");
-
    procedure Acquire_Reference
      (Original  : Contexts.Context;
       Reference : out Contexts.Context) is
@@ -139,6 +140,13 @@ package body C_Binding.Linux.Udev.Contexts is
       --  Is unnecessary, but static code analyzers cannot know
       --  Udev_Unref (..) always returns null.
    end Delete;
+
+   procedure Create_Enumerate
+     (Context : Contexts.Context;
+      Enum    : out Enumerates.Enumerate) is
+   begin
+      Enumerate_Base (Enum).My_Ptr := Udev_Enumerate_New (Context.My_Ptr);
+   end Create_Enumerate;
 
    procedure Create_Monitor
      (Context : Contexts.Context;
@@ -261,25 +269,141 @@ package body C_Binding.Linux.Udev.Contexts is
         (Context.My_Ptr);
    end Create_Device;
 
-   procedure Create_Queue
-     (Context : Contexts.Context;
-      Queue   : out Queues.Queue) is
-   begin
-      Queue_Base (Queue).My_Ptr := Udev_Queue_New (Context.My_Ptr);
-   end Create_Queue;
-
-   procedure New_Hardware_Database
-     (Context  : Contexts.Context;
-      Database : out Hardware_Databases.Database) is
-   begin
-      Hwdb_Base (Database).My_Ptr := Udev_Hwdb_New (Context.My_Ptr);
-   end New_Hardware_Database;
-
    procedure Finalize (Context : in out Contexts.Context) is
    begin
       if Context.Exists then
          Context.Delete;
       end if;
    end Finalize;
+
+   procedure Generic_List_Devices is
+
+      procedure Create_Context;
+      procedure Create_Enumerate;
+      procedure Scan_Devices;
+      procedure List_Devices;
+
+      Context   : Udev.Contexts.Context;
+      Enumerate : Udev.Enumerates.Enumerate;
+
+      procedure Create_Context is
+      begin
+         Udev.Contexts.Create_Context (Context);
+         if Context.Exists then
+            Create_Enumerate;
+         else
+            Handle_Error ("Failed to create udev context");
+         end if;
+      end Create_Context;
+
+      procedure Create_Enumerate is
+      begin
+         Context.Create_Enumerate (Enumerate);
+         if Enumerate.Exists then
+            Scan_Devices;
+         else
+            Handle_Error ("Failed to create udev enumerate");
+         end if;
+      end Create_Enumerate;
+
+      procedure Scan_Devices is
+         Result : Udev.Success_Flag;
+      begin
+         Result := Enumerate.Scan_Devices;
+         if Result = Success then
+            List_Devices;
+         else
+            Handle_Error ("Failed to scan devices");
+         end if;
+      end Scan_Devices;
+
+      procedure List_Devices is
+
+         type Temp_Node;
+
+         type Device_Node
+           (Text : not null access constant String;
+            Parent : access Temp_Node) is null record;
+         --  Only the root node has Parent = null
+
+         type Temp_Node (Parent : not null access Device_Node) is null record;
+
+         procedure Extract_Device_Name
+           (List_Entry    : in out Udev.List_Entries.List_Entry;
+            Prev_Node     : access Device_Node;
+            Entries_Count : in out Natural)
+         is
+            Name : aliased constant String := List_Entry.Name.Value;
+            Intermediary : aliased Temp_Node (Prev_Node);
+            Node : aliased Device_Node (Name'Access, Intermediary'Access);
+         begin
+            --  Put_Line (Name);
+            List_Entry.Next;
+            if List_Entry.Exists then
+               Entries_Count := Entries_Count + 1;
+               Extract_Device_Name
+                 (List_Entry,
+                  Node'Access,
+                  Entries_Count);
+            else
+               declare
+                  Current_Node : access Device_Node := Node'Access;
+
+                  function Get_String return access constant String is
+                     Temp : constant access constant String
+                       := Current_Node.Text;
+                  begin
+                     if Current_Node.Parent /= null then
+                        Current_Node := Current_Node.Parent.Parent;
+                     end if;
+                     return Temp;
+                  end Get_String;
+
+                  Devices : constant Device_Array
+                    (1 .. Device_Index (Entries_Count))
+                      := (others => (Name => Get_String));
+               begin
+                  Handle_Devices (Devices);
+               end;
+            end if;
+         end Extract_Device_Name;
+
+         List_Entry : Udev.List_Entries.List_Entry;
+         Entries_Count : Natural := 2;
+      begin
+         Enumerate.Get_List_Entry (List_Entry);
+         if List_Entry.Exists then
+            declare
+               Name : aliased constant String := List_Entry.Name.Value;
+               Node : aliased Device_Node (Name'Access, null);
+            begin
+               --  Put_Line (Name);
+               List_Entry.Next;
+               if List_Entry.Exists then
+                  Extract_Device_Name
+                    (List_Entry,
+                     Node'Access,
+                     Entries_Count);
+               else
+                  declare
+                     Devices : constant Device_Array (1 .. 1)
+                       := (1 => (Name => Name'Access));
+                  begin
+                     Handle_Devices (Devices);
+                  end;
+               end if;
+            end;
+         else
+            declare
+               Devices : Device_Array (1 .. 0);
+            begin
+               Handle_Devices (Devices);
+            end;
+         end if;
+      end List_Devices;
+
+   begin
+      Create_Context;
+   end Generic_List_Devices;
 
 end C_Binding.Linux.Udev.Contexts;

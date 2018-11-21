@@ -1,7 +1,7 @@
 with C_Binding.Linux.Udev.Contexts;
 with C_Binding.Linux.Udev.List_Entries;
 
-limited with C_Binding.Linux.Udev.Devices;
+with C_Binding.Linux.Udev.Devices;
 
 package C_Binding.Linux.Udev.Enumerates is
 
@@ -11,10 +11,6 @@ package C_Binding.Linux.Udev.Enumerates is
      (Original  : Enumerate;
       Reference : out Enumerate) with
      Pre => Enumerates.Exists (Original);
-
-   procedure Create_Enumerate
-     (Enum    : out Enumerate;
-      Context : Contexts.Context);
 
    type Enumerate is new Enumerate_Base with private;
 
@@ -36,8 +32,9 @@ package C_Binding.Linux.Udev.Enumerates is
      (Enum : Enumerate) return Success_Flag with
      Pre => Enum.Exists;
 
-   procedure Get_List_Entry (Enum : Enumerate;
-                             LE   : out List_Entries.List_Entry);
+   procedure Get_List_Entry
+     (Enum : Enumerate;
+      LE   : out List_Entries.List_Entry);
 
    procedure Context
      (Enum    : Enumerate;

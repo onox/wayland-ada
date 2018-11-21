@@ -1,7 +1,6 @@
-limited with C_Binding.Linux.Udev.Monitors;
 limited with C_Binding.Linux.Udev.Devices;
-limited with C_Binding.Linux.Udev.Queues;
-limited with C_Binding.Linux.Udev.Hardware_Databases;
+limited with C_Binding.Linux.Udev.Enumerates;
+limited with C_Binding.Linux.Udev.Monitors;
 
 package C_Binding.Linux.Udev.Contexts is
 
@@ -39,6 +38,10 @@ package C_Binding.Linux.Udev.Contexts is
    --  Once the reference count hits 0,
    --  the context object is destroyed and freed.
 
+   procedure Create_Enumerate
+     (Context : Contexts.Context;
+      Enum    : out Enumerates.Enumerate);
+
    procedure Create_Monitor
      (Context : Contexts.Context;
       Name    : String;
@@ -58,6 +61,7 @@ package C_Binding.Linux.Udev.Contexts is
       Subsystem : String;
       Sysname   : String;
       Device    : out Devices.Device);
+   --  To see list of valid Subsystem names execute "ls /sys/class/"
 
    procedure Create_Device
      (Context : Contexts.Context;
@@ -67,14 +71,6 @@ package C_Binding.Linux.Udev.Contexts is
    procedure Create_Device
      (Context : Contexts.Context;
       Device  : out Devices.Device);
-
-   procedure Create_Queue
-     (Context : Contexts.Context;
-      Queue   : out Queues.Queue);
-
-   procedure New_Hardware_Database
-     (Context  : Contexts.Context;
-      Database : out Hardware_Databases.Database);
 
    function Log_Priority (Context : Contexts.Context) return Integer;
 
@@ -110,6 +106,22 @@ package C_Binding.Linux.Udev.Contexts is
         (Context : Contexts.Context) return Data_Ptr;
 
    end Custom_Data;
+
+   type Device_Index is new Positive;
+
+   Empty_String : aliased String := "";
+
+   type Device_Name
+     (Name : not null access constant String)
+   is limited null record;
+
+   type Device_Array is
+     array (Device_Index range <>) of Device_Name (Empty_String'Access);
+
+   generic
+      with procedure Handle_Error (Error_Message : String);
+      with procedure Handle_Devices (Devices : Device_Array);
+   procedure Generic_List_Devices;
 
 private
 

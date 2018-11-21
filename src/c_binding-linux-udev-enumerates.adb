@@ -1,5 +1,3 @@
-with C_Binding.Linux.Udev.Devices;
-
 package body C_Binding.Linux.Udev.Enumerates is
 
    use type int;
@@ -19,13 +17,6 @@ package body C_Binding.Linux.Udev.Enumerates is
    function Udev_Enumerate_Get_Udev
      (Enumerate : Udev_Enumerate_Ptr) return Udev_Ptr;
    pragma Import (C, Udev_Enumerate_Get_Udev, "udev_enumerate_get_udev");
-
-   function Udev_Enumerate_New
-     (Udev : Udev_Ptr) return Udev_Enumerate_Ptr;
-   pragma Import (C, Udev_Enumerate_New, "udev_enumerate_new");
-   --  Create a udev enumerate object.
-   --  On success, returns a pointer to the allocated udev monitor.
-   --  On failure, null is returned.
 
    function Udev_Enumerate_Add_Match_Subsystem
      (Enumerate : Udev_Enumerate_Ptr;
@@ -148,13 +139,6 @@ package body C_Binding.Linux.Udev.Enumerates is
 
    function Exists (Enum : Enumerate) return Boolean is
      (Enum.My_Ptr /= null);
-
-   procedure Create_Enumerate
-     (Enum    : out Enumerate;
-      Context : Contexts.Context) is
-   begin
-      Enum.My_Ptr := Udev_Enumerate_New (Context_Base (Context).My_Ptr);
-   end Create_Enumerate;
 
    procedure Delete (Enum : in out Enumerate) is
    begin
