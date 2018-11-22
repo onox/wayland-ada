@@ -276,10 +276,14 @@ package body C_Binding.Linux.Udev.Contexts is
       end if;
    end Finalize;
 
-   procedure Generic_List_Devices is
-
+   procedure Generic_List_Devices
+     (Subsystem : access constant String := null;
+      Devtype   : access constant String := null)
+   is
       procedure Create_Context;
       procedure Create_Enumerate;
+      procedure Match_Subsystem;
+      procedure Match_Devtype;
       procedure Scan_Devices;
       procedure List_Devices;
 
@@ -300,11 +304,41 @@ package body C_Binding.Linux.Udev.Contexts is
       begin
          Context.Create_Enumerate (Enumerate);
          if Enumerate.Exists then
-            Scan_Devices;
+            Match_Subsystem;
          else
             Handle_Error ("Failed to create udev enumerate");
          end if;
       end Create_Enumerate;
+
+      procedure Match_Subsystem is
+         Result : Success_Flag;
+      begin
+         if Subsystem /= null then
+            Result := Enumerate.Add_Match_Subsystem (Subsystem.all);
+         else
+            Result := Success;
+         end if;
+         if Result = Success then
+            Match_Devtype;
+         else
+            Handle_Error ("Failed to match subsystem "  & Subsystem.all);
+         end if;
+      end Match_Subsystem;
+
+      procedure Match_Devtype is
+         Result : Success_Flag;
+      begin
+         if Devtype /= null then
+            Result := Enumerate.Add_Match_Property ("DEVTYPE", Devtype.all);
+         else
+            Result := Success;
+         end if;
+         if Result = Success then
+            Scan_Devices;
+         else
+            Handle_Error ("Failed to match devtype "  & Devtype.all);
+         end if;
+      end Match_Devtype;
 
       procedure Scan_Devices is
          Result : Udev.Success_Flag;

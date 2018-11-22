@@ -121,7 +121,9 @@ package C_Binding.Linux.Udev.Contexts is
    generic
       with procedure Handle_Error (Error_Message : String);
       with procedure Handle_Devices (Devices : Device_Array);
-   procedure Generic_List_Devices;
+   procedure Generic_List_Devices
+     (Subsystem : access constant String := null;
+      Devtype   : access constant String := null);
 
 private
 
