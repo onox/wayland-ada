@@ -5,8 +5,6 @@ project Aida_UTF8 is
    for Source_Dirs use ("src");
 
    for Source_Files use (
-                         "aida-subprogram_call_result.ads",
-                         "aida-subprogram_call_result.adb",
                          "aida-utf8.ads",
                          "aida-utf8.adb",
                          "aida-utf8_code_point.ads",

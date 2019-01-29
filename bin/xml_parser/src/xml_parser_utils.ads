@@ -19,7 +19,7 @@ package Xml_Parser_Utils is
    function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String;
 
    function Number_Of_Args
-     (Request_Tag : Wayland_XML.Request_Tag) return Aida.Nat32_T;
+     (Request_Tag : Wayland_XML.Request_Tag) return Aida.Nat32;
 
    function Is_New_Id_Argument_Present
      (Request_Tag : Wayland_XML.Request_Tag) return Boolean;
@@ -55,8 +55,8 @@ package Xml_Parser_Utils is
    function Remove_Tabs (Text : String) return String;
 
    type Interval is record
-      First : Aida.Pos32_T;
-      Last  : Aida.Nat32_T;
+      First : Aida.Pos32;
+      Last  : Aida.Nat32;
    end record;
 
    package Interval_Vectors is new Ada.Containers.Vectors

@@ -252,7 +252,7 @@ package body Wayland_XML is
    end Set_Since;
 
    function Exists_Description (This : Request_Tag) return Boolean is
-      N : Aida.Nat32_T := 0;
+      N : Aida.Nat32 := 0;
    begin
       for Child of This.Children loop
          if

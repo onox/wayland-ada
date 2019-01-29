@@ -2,7 +2,6 @@ with Ada.Text_IO;
 with Ada.Exceptions;
 with Aida.Deepend_XML_DOM_Parser;
 with Aida.Text_IO;
-with Aida.Subprogram_Call_Result;
 with Dynamic_Pools;
 with Ada.Directories;
 with Aida.Sequential_Stream_IO;
@@ -102,7 +101,7 @@ procedure XML_Parser is
    procedure Identify_Protocol_Tag;
 
    procedure Parse_Contents is
-      Call_Result : Aida.Subprogram_Call_Result.T;
+      Call_Result : Aida.Call_Result;
    begin
       declare
          Parser : Aida.Deepend_XML_DOM_Parser.DOM_Parser_T;
@@ -251,10 +250,10 @@ procedure XML_Parser is
                Request_Tag.Set_Type_Attribute (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -298,10 +297,10 @@ procedure XML_Parser is
                Event_Tag.Set_Name (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -345,16 +344,16 @@ procedure XML_Parser is
                Entry_Tag.Set_Name (A.Value, Subpool);
             elsif A.Name = "value" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      if
                        A.Value (A.Value'First .. A.Value'First + 1) = "0x"
                      then
-                        Value := Aida.Int32_T'Value
+                        Value := Aida.Int32'Value
                           (
                            "16#" & A.Value
                              (A.Value'First + 2 .. A.Value'Last) & "#"
@@ -372,10 +371,10 @@ procedure XML_Parser is
                Entry_Tag.Set_Summary (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -416,10 +415,10 @@ procedure XML_Parser is
                end if;
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Int32 (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -467,10 +466,10 @@ procedure XML_Parser is
 
             if Node.Tag.Attributes.Element (2).Name = "version" then
                declare
-                  Value      : Aida.Int32_T;
+                  Value      : Aida.Int32;
                   Has_Failed : Boolean;
                begin
-                  Aida.String.To_Int32
+                  Aida.To_Int32
                     (Node.Tag.Attributes.Element (2).Value, Value, Has_Failed);
 
                   if Has_Failed then
@@ -1095,7 +1094,7 @@ procedure XML_Parser is
          is
             procedure Generate_Code_For_Opcodes is
 
-               I : Aida.Int32_T := 0;
+               I : Aida.Int32 := 0;
 
                procedure Generate_Code
                  (Request_Tag : Wayland_XML.Request_Tag)
@@ -1106,7 +1105,7 @@ procedure XML_Parser is
                begin
                   Ada.Text_IO.Put (File, Name);
                   Ada.Text_IO.Put
-                    (File, " : constant := " & Aida.Int32.To_String (I));
+                    (File, " : constant := " & Aida.To_String (I));
                   Put_Line (File, ";");
                   Put_Line (File, "");
 
@@ -1142,7 +1141,7 @@ procedure XML_Parser is
                      Ada.Text_IO.Put (File, Name);
                      Ada.Text_IO.Put
                        (File, " : constant := " &
-                          Aida.Int32.To_String
+                          Aida.To_String
                           (Event_Tag.Since_Attribute_As_Pos32));
                      Put_Line (File, ";");
                      Put_Line (File, "");
@@ -1177,7 +1176,7 @@ procedure XML_Parser is
                begin
                   if Request_Tag.Exists_Since then
                      Ada.Text_IO.Put (File, Name);
-                     Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
+                     Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (Request_Tag.Since_As_Pos32));
                      Put_Line (File, ";");
                      Put_Line (File, "");
                   else
@@ -1543,13 +1542,13 @@ procedure XML_Parser is
 --
 --                 procedure Generate_Code_For_Opcodes is
 --
---                    I : Aida.Int32_T := 0;
+--                    I : Aida.Int32 := 0;
 --
 --                    procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
 --                       Name : constant String := Xml_Parser_Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
 --                    begin
 --                       Ada.Text_IO.Put (File, Name);
---                       Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (I));
+--                       Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (I));
 --                       Put_Line (File, ";");
 --                       Put_Line (File, "");
 --
@@ -1580,7 +1579,7 @@ procedure XML_Parser is
 --                    begin
 --                       if Event_Tag.Exists_Since_Attribute then
 --                          Ada.Text_IO.Put (File, Name);
---                          Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Event_Tag.Since_Attribute_As_Pos32));
+--                          Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (Event_Tag.Since_Attribute_As_Pos32));
 --                          Put_Line (File, ";");
 --                          Put_Line (File, "");
 --                       else
@@ -1614,7 +1613,7 @@ procedure XML_Parser is
 --                    begin
 --                       if Request_Tag.Exists_Since then
 --                          Ada.Text_IO.Put (File, Name);
---                          Ada.Text_IO.Put (File, " : constant := " & Aida.Int32.To_String (Request_Tag.Since_As_Pos32));
+--                          Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (Request_Tag.Since_As_Pos32));
 --                          Put_Line (File, ";");
 --                          Put_Line (File, "");
 --                       else

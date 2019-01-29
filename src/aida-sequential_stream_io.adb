@@ -1,15 +1,15 @@
 package body Aida.Sequential_Stream_IO is
 
-   function Calculate_Hash32 (Filename : Standard.String) return Aida.Hash32_T with
+   function Calculate_Hash32 (Filename : String) return Aida.Hash32 with
      SPARK_Mode => On
    is
       File : File_Type;
 
       Element : Ada.Streams.Stream_Element;
 
-      H : Aida.Hash32_T := 0;
+      H : Aida.Hash32 := 0;
 
-      use type Aida.Hash32_T;
+      use type Aida.Hash32;
    begin
       Open (File => File,
             Mode => In_File,
@@ -17,7 +17,7 @@ package body Aida.Sequential_Stream_IO is
 
       while not End_Of_File (File) loop
          Read (File, Element);
-         H := 3*H + Aida.Hash32_T (Element);
+         H := 3*H + Aida.Hash32 (Element);
       end loop;
 
       Close (File);
@@ -29,9 +29,30 @@ package body Aida.Sequential_Stream_IO is
       return H;
    end Calculate_Hash32;
 
+   procedure Create (File : in out File_Type;
+                     Mode : File_Mode := Out_File;
+                     Name : String;
+                     Form : String := "") is
+   begin
+      case Mode is
+         when In_File  => File_IO.Create (File => File.File,
+                                          Mode => File_IO.In_File,
+                                          Name => Name,
+                                          Form => Form);
+         when Out_File  => File_IO.Create (File => File.File,
+                                           Mode => File_IO.Out_File,
+                                           Name => Name,
+                                           Form => Form);
+         when Append_File => File_IO.Create (File => File.File,
+                                             Mode => File_IO.Append_File,
+                                             Name => Name,
+                                             Form => Form);
+      end case;
+   end Create;
+
    procedure Open (File : in out File_Type;
                    Mode : File_Mode;
-                   Name : Standard.String) is
+                   Name : String) is
    begin
       case Mode is
          when In_File  => File_IO.Open (File => File.File,

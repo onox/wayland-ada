@@ -37,7 +37,7 @@ package body Xml_Parser_Utils is
    function Adaify_Name (Old_Name : String) return String is
       New_Name : Ada.Strings.Unbounded.Unbounded_String;
 
-      P : Aida.Int32_T := Old_Name'First;
+      P : Aida.Int32 := Old_Name'First;
 
       CP : Aida.UTF8_Code_Point.T := 0;
 
@@ -125,7 +125,7 @@ package body Xml_Parser_Utils is
    function Make_Upper_Case (Source : String) return String is
       Target : Ada.Strings.Unbounded.Unbounded_String;
 
-      P : Aida.Int32_T := Source'First;
+      P : Aida.Int32 := Source'First;
 
       CP : Aida.UTF8_Code_Point.T := 0;
    begin
@@ -178,8 +178,8 @@ package body Xml_Parser_Utils is
    end Arg_Type_As_String;
 
    function Number_Of_Args
-     (Request_Tag : Wayland_XML.Request_Tag) return Aida.Nat32_T is
-      N : Aida.Nat32_T := 0;
+     (Request_Tag : Wayland_XML.Request_Tag) return Aida.Nat32 is
+      N : Aida.Nat32 := 0;
    begin
       for Child of Request_Tag.Children loop
          if Child.Kind_Id = Child_Arg then
@@ -316,9 +316,9 @@ package body Xml_Parser_Utils is
    function Make (Text : String) return Interval_Identifier is
       Interval : Xml_Parser_Utils.Interval := (First => 1, Last => 0);
 
-      P           : Aida.Int32_T := Text'First;
-      Prev_P      : Aida.Int32_T := P;
-      Prev_Prev_P : Aida.Int32_T;
+      P           : Aida.Int32 := Text'First;
+      Prev_P      : Aida.Int32 := P;
+      Prev_Prev_P : Aida.Int32;
       CP          : Aida.UTF8_Code_Point.T;
 
       Is_Previous_New_Line : Boolean := False;
@@ -360,7 +360,7 @@ package body Xml_Parser_Utils is
    function Remove_Tabs (Text : String) return String is
       S : Ada.Strings.Unbounded.Unbounded_String;
 
-      P : Aida.Int32_T := Text'First;
+      P : Aida.Int32 := Text'First;
 
       CP : Aida.UTF8_Code_Point.T;
    begin

@@ -14,7 +14,7 @@ package Wayland_XML is
 
    Empty_String : aliased String := "";
 
-   type Version_Number is new Aida.Pos32_T;
+   type Version_Number is new Aida.Pos32;
 
    type Arg_Type_Attribute is
      (Type_Integer,
@@ -174,7 +174,7 @@ package Wayland_XML is
    type Description_Tag_Ptr is access all Description_Tag with
         Storage_Pool => Default_Subpool;
 
-   type Entry_Value is new Aida.Nat32_T;
+   type Entry_Value is new Aida.Nat32;
 
    type Entry_Tag is tagged limited private;
 
@@ -378,7 +378,7 @@ package Wayland_XML is
       Pre    => This.Exists_Since_Attribute;
 
    function Since_Attribute_As_Pos32
-     (This : Event_Tag) return Aida.Pos32_T with
+     (This : Event_Tag) return Aida.Pos32 with
       Global => null,
       Pre    => This.Exists_Since_Attribute;
 
@@ -404,7 +404,7 @@ package Wayland_XML is
    end record;
 
    package Request_Child_Vectors is new Ada.Containers.Vectors
-     (Index_Type   => Aida.Pos32_T,
+     (Index_Type   => Aida.Pos32,
       Element_Type => Request_Child,
       "="          => "=");
 
@@ -464,7 +464,7 @@ package Wayland_XML is
       Global => null,
       Pre    => This.Exists_Since;
 
-   function Since_As_Pos32 (This : Request_Tag) return Aida.Pos32_T with
+   function Since_As_Pos32 (This : Request_Tag) return Aida.Pos32 with
       Global => null,
       Pre    => This.Exists_Since;
 
@@ -781,7 +781,7 @@ private
 
    function Value_As_String
      (This : Entry_Tag) return String is
-     (Aida.Int32.To_String (Aida.Nat32_T (This.My_Value.Value)));
+     (Aida.To_String (Aida.Nat32 (This.My_Value.Value)));
 
    function Exists_Value
      (This : Entry_Tag) return Boolean is
@@ -858,8 +858,8 @@ private
      (This.My_Since_Attribute.Value);
 
    function Since_Attribute_As_Pos32
-     (This : Event_Tag) return Aida.Pos32_T is
-     (Aida.Pos32_T (This.My_Since_Attribute.Value));
+     (This : Event_Tag) return Aida.Pos32 is
+     (Aida.Pos32 (This.My_Since_Attribute.Value));
 
    function Exists_Since_Attribute
      (This : Event_Tag) return Boolean is
@@ -910,8 +910,8 @@ private
      (This.My_Since.Value);
 
    function Since_As_Pos32
-     (This : Request_Tag) return Aida.Pos32_T is
-     (Aida.Pos32_T (This.My_Since.Value));
+     (This : Request_Tag) return Aida.Pos32 is
+     (Aida.Pos32 (This.My_Since.Value));
 
    function Exists_Since
      (This : Request_Tag) return Boolean is
