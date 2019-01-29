@@ -1,14 +1,13 @@
 with Dynamic_Pools;
 with Ada.Containers.Vectors;
 with Aida.Deepend_XML_DOM_Parser;
+with Standard_Extensions; use Standard_Extensions;
+
+pragma Elaborate_All (Standard_Extensions);
+pragma Elaborate_All (Aida.Deepend_XML_DOM_Parser);
+pragma Elaborate_All (Dynamic_Pools);
 
 package Wayland_XML is
-
-   package Ac renames Ada.Containers;
-
-   Default_Subpool :
-     Dynamic_Pools.Dynamic_Pool renames
-     Aida.Deepend_XML_DOM_Parser.Default_Subpool;
 
    type String_Ptr is access all String with
         Storage_Pool => Default_Subpool;
@@ -253,7 +252,7 @@ package Wayland_XML is
       end case;
    end record;
 
-   package Enum_Child_Vectors is new Ac.Vectors
+   package Enum_Child_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Positive,
       Element_Type => Enum_Child,
       "="          => "=");
@@ -330,7 +329,7 @@ package Wayland_XML is
       end case;
    end record;
 
-   package Event_Child_Vectors is new Ac.Vectors
+   package Event_Child_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Positive,
       Element_Type => Event_Child,
       "="          => "=");
@@ -404,7 +403,7 @@ package Wayland_XML is
       end case;
    end record;
 
-   package Request_Child_Vectors is new Ac.Vectors
+   package Request_Child_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Aida.Pos32_T,
       Element_Type => Request_Child,
       "="          => "=");
@@ -503,7 +502,7 @@ package Wayland_XML is
       end case;
    end record;
 
-   package Interface_Child_Vectors is new Ac.Vectors
+   package Interface_Child_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Positive,
       Element_Type => Interface_Child,
       "="          => "=");
@@ -580,7 +579,7 @@ package Wayland_XML is
       end case;
    end record;
 
-   package Protocol_Child_Vectors is new Ac.Vectors
+   package Protocol_Child_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Positive,
       Element_Type => Protocol_Child,
       "="          => "=");

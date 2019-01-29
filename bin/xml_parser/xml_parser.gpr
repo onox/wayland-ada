@@ -1,18 +1,12 @@
-with "../../wayland_xml.gpr";
+with "../../aida_deepend.gpr";
 
 project Xml_Parser is
-   for Source_Dirs use ("../../src");
+   for Source_Dirs use ("src");
    for Object_Dir use "../../obj";
 
    for Exec_Dir use ".";
 
    for Main use ("xml_parser.adb");
-
-   for Source_Files use (
-                         "xml_parser.adb",
-                         "xml_parser_utils.ads",
-                         "xml_parser_utils.adb"
-                         );
 
    package Builder is
       for Switches ("Ada") use ("-j0");

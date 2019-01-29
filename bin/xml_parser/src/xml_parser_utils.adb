@@ -6,17 +6,18 @@ package body Xml_Parser_Utils is
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
    use all type Aida.UTF8_Code_Point.T;
-   use all type Wx.Arg_Type_Attribute;
-   use all type Wx.Request_Child_Kind_Id;
-   use all type Wx.Interface_Child_Kind_Id;
-   use all type Wx.Protocol_Child_Kind_Id;
+   use all type Wayland_XML.Arg_Type_Attribute;
+   use all type Wayland_XML.Request_Child_Kind_Id;
+   use all type Wayland_XML.Interface_Child_Kind_Id;
+   use all type Wayland_XML.Protocol_Child_Kind_Id;
 
    use type Ada.Containers.Count_Type;
 
    -- If input is "wl_hello" then output is "hello".
    -- This procedure strips away the first
    -- three characters if they are "wl_".
-   procedure Remove_Initial_Wl (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
+   procedure Remove_Initial_Wl
+     (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
    begin
       if Length (New_Name) = 3 and then New_Name = "Wl_" then
          Set_Unbounded_String (New_Name, "");
@@ -103,19 +104,19 @@ package body Xml_Parser_Utils is
 
       if To_String (New_Name) = "Class_" then
          Set_Unbounded_String (New_Name, "Class_V");
-         --          To handle the following case:
-         --          <request name="set_class">
-         --            ...
-         --            <arg name="class_" type="string" summary="surface class"/>
-         --          </request>
-         --          Identifiers in Ada cannot end with underscore "_".
+         --       To handle the following case:
+         --       <request name="set_class">
+         --         ...
+         --         <arg name="class_" type="string" summary="surface class"/>
+         --       </request>
+         --       Identifiers in Ada cannot end with underscore "_".
       end if;
 
       if To_String (New_Name) = "Delay" then
          Set_Unbounded_String (New_Name, "Delay_V");
-         --          To handle:
-         --          <arg name="delay" type="int" summary="delay in ..."/>
-         --          "delay" is a reserved word in Ada.
+         --       To handle:
+         --       <arg name="delay" type="int" summary="delay in ..."/>
+         --       "delay" is a reserved word in Ada.
       end if;
 
       return To_String (New_Name);
@@ -147,7 +148,7 @@ package body Xml_Parser_Utils is
       return To_String (Target);
    end Make_Upper_Case;
 
-   function Arg_Type_As_String (Arg_Tag : Wx.Arg_Tag) return String is
+   function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String is
       N : Ada.Strings.Unbounded.Unbounded_String;
    begin
       case Arg_Tag.Type_Attribute is
@@ -163,7 +164,8 @@ package body Xml_Parser_Utils is
             Set_Unbounded_String (N, "Unsigned_32");
          when Type_Object =>
             if Arg_Tag.Exists_Interface_Attribute then
-               Set_Unbounded_String (N, Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
+               Set_Unbounded_String
+                 (N, Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
             else
                Set_Unbounded_String (N, "Void_Ptr");
             end if;
@@ -175,7 +177,8 @@ package body Xml_Parser_Utils is
       return To_String (N);
    end Arg_Type_As_String;
 
-   function Number_Of_Args (Request_Tag : Wx.Request_Tag) return Aida.Nat32_T is
+   function Number_Of_Args
+     (Request_Tag : Wayland_XML.Request_Tag) return Aida.Nat32_T is
       N : Aida.Nat32_T := 0;
    begin
       for Child of Request_Tag.Children loop
@@ -186,7 +189,8 @@ package body Xml_Parser_Utils is
       return N;
    end Number_Of_Args;
 
-   function Is_New_Id_Argument_Present (Request_Tag : Wx.Request_Tag) return Boolean is
+   function Is_New_Id_Argument_Present
+     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
    begin
       for Child of Request_Tag.Children loop
          if Child.Kind_Id = Child_Arg
@@ -200,7 +204,8 @@ package body Xml_Parser_Utils is
       return False;
    end Is_New_Id_Argument_Present;
 
-   function Is_Interface_Specified (Request_Tag : Wx.Request_Tag) return Boolean is
+   function Is_Interface_Specified
+     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
    begin
       for Child of Request_Tag.Children loop
          if Child.Kind_Id = Child_Arg
@@ -215,7 +220,8 @@ package body Xml_Parser_Utils is
       return False;
    end Is_Interface_Specified;
 
-   function Find_Specified_Interface (Request_Tag : Wx.Request_Tag) return String is
+   function Find_Specified_Interface
+     (Request_Tag : Wayland_XML.Request_Tag) return String is
    begin
       for Child of Request_Tag.Children loop
          if Child.Kind_Id = Child_Arg
@@ -230,15 +236,17 @@ package body Xml_Parser_Utils is
       raise Interface_Not_Found_Exception;
    end Find_Specified_Interface;
 
-   function Interface_Ptr_Name (Interface_Tag : Wx.Interface_Tag) return String is
+   function Interface_Ptr_Name
+     (Interface_Tag : Wayland_XML.Interface_Tag) return String is
    begin
       return Adaify_Name (Interface_Tag.Name & "_Ptr");
    end Interface_Ptr_Name;
 
-   function Is_Request_Destructor (Request_Tag : Wx.Request_Tag) return Boolean is
+   function Is_Request_Destructor
+     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
       Result : Boolean := False;
 
-      V : Wx.Request_Child_Vectors.Vector;
+      V : Wayland_XML.Request_Child_Vectors.Vector;
    begin
       for Child of Request_Tag.Children loop
          if Child.Kind_Id = Child_Arg then
@@ -257,7 +265,8 @@ package body Xml_Parser_Utils is
       return Result;
    end Is_Request_Destructor;
 
-   function Exists_Destructor (Interface_Tag : Wx.Interface_Tag) return Boolean is
+   function Exists_Destructor
+     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean is
       Result : Boolean := False;
    begin
       for Child of Interface_Tag.Children loop
@@ -281,7 +290,8 @@ package body Xml_Parser_Utils is
       return Result;
    end Exists_Destructor;
 
-   function Exists_Any_Event_Tag (Interface_Tag : Wx.Interface_Tag) return Boolean is
+   function Exists_Any_Event_Tag
+     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean is
       Result : Boolean := False;
    begin
       for Child of Interface_Tag.Children loop
@@ -314,7 +324,9 @@ package body Xml_Parser_Utils is
       Is_Previous_New_Line : Boolean := False;
    begin
       return This : Interval_Identifier do
-         while Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P) loop
+         while
+           Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P)
+         loop
             Prev_Prev_P := Prev_P;
 
             Prev_P := P;
@@ -366,19 +378,20 @@ package body Xml_Parser_Utils is
       return To_String (S);
    end Remove_Tabs;
 
-   function Exists_Reference_To_Enum (Protocol_Tag   : Wx.Protocol_Tag;
-                                      Interface_Name : String;
-                                      Enum_Name      : String) return Boolean
+   function Exists_Reference_To_Enum
+     (Protocol_Tag   : Wayland_XML.Protocol_Tag;
+      Interface_Name : String;
+      Enum_Name      : String) return Boolean
    is
       Exists : Boolean := False;
 
       Searched_For : constant String := Interface_Name & "." & Enum_Name;
 
-      procedure Handle_Interface (Interface_Tag : Wx.Interface_Tag) is
+      procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
 
-         procedure Handle_Request (Request_Tag : Wx.Request_Tag) is
+         procedure Handle_Request (Request_Tag : Wayland_XML.Request_Tag) is
 
-            procedure Handle_Arg (Arg_Tag : Wx.Arg_Tag) is
+            procedure Handle_Arg (Arg_Tag : Wayland_XML.Arg_Tag) is
             begin
                if
                  Arg_Tag.Exists_Type_Attribute and then
@@ -408,11 +421,11 @@ package body Xml_Parser_Utils is
       begin
          for Child of Interface_Tag.Children loop
             case Child.Kind_Id is
-               when Child_Dummy       => null;
+               when Child_Dummy   => null;
                when Child_Description => null;
-               when Child_Request     => Handle_Request (Child.Request_Tag.all);
-               when Child_Event       => null;
-               when Child_Enum        => null;
+               when Child_Request => Handle_Request (Child.Request_Tag.all);
+               when Child_Event   => null;
+               when Child_Enum    => null;
             end case;
 
             if Exists then

@@ -164,7 +164,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Enum_Tag;
                            Item  : not null Wayland_XML.Description_Tag_Ptr)
    is
-      Child : Enum_Child := (Child_Description, Item);
+      Child : constant Enum_Child := (Child_Description, Item);
    begin
       This.My_Children.Append (Child);
    end Append_Child;
@@ -172,7 +172,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Enum_Tag;
                            Item  : not null Entry_Tag_Ptr)
    is
-      Child : Enum_Child := (Child_Entry, Item);
+      Child : constant Enum_Child := (Child_Entry, Item);
    begin
       This.My_Children.Append (Child);
    end Append_Child;
@@ -197,7 +197,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Event_Tag;
                            Item  : not null Wayland_XML.Description_Tag_Ptr)
    is
-      C : Event_Child := (Child_Description, Item);
+      C : constant Event_Child := (Child_Description, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -205,7 +205,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Event_Tag;
                            Item  : not null Wayland_XML.Arg_Tag_Ptr)
    is
-      C : Event_Child := (Child_Arg, Item);
+      C : constant Event_Child := (Child_Arg, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -222,7 +222,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Request_Tag;
                            Item  : not null Description_Tag_Ptr)
    is
-      C : Request_Child := (Child_Description, Item);
+      C : constant Request_Child := (Child_Description, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -230,7 +230,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Request_Tag;
                            Item  : not null Wayland_XML.Arg_Tag_Ptr)
    is
-      C : Request_Child := (Child_Arg, Item);
+      C : constant Request_Child := (Child_Arg, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -299,7 +299,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Interface_Tag;
                            Item  : not null Description_Tag_Ptr)
    is
-      C : Interface_Child := (Child_Description, Item);
+      C : constant Interface_Child := (Child_Description, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -307,7 +307,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Interface_Tag;
                            Item  : not null Request_Tag_Ptr)
    is
-      C : Interface_Child := (Child_Request, Item);
+      C : constant Interface_Child := (Child_Request, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -315,7 +315,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Interface_Tag;
                            Item  : not null Event_Tag_Ptr)
    is
-      C : Interface_Child := (Child_Event, Item);
+      C : constant Interface_Child := (Child_Event, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -323,7 +323,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Interface_Tag;
                            Item  : not null Enum_Tag_Ptr)
    is
-      C : Interface_Child := (Child_Enum, Item);
+      C : constant Interface_Child := (Child_Enum, Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -340,7 +340,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Protocol_Tag;
                            Item  : not null Wayland_XML.Copyright_Ptr)
    is
-      C : Protocol_Child := (Kind_Id       => Child_Copyright,
+      C : constant Protocol_Child := (Kind_Id       => Child_Copyright,
                              Copyright_Tag => Item);
    begin
       This.My_Children.Append (C);
@@ -349,7 +349,7 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Protocol_Tag;
                            Item  : not null Interface_Tag_Ptr)
    is
-      C : Protocol_Child := (Kind_Id       => Child_Interface,
+      C : constant Protocol_Child := (Kind_Id       => Child_Interface,
                              Interface_Tag => Item);
    begin
       This.My_Children.Append (C);
