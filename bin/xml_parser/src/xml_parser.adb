@@ -23,7 +23,7 @@ procedure XML_Parser is
    use type Wayland_XML.Event_Child;
    use type Wayland_XML.Request_Child;
 
-   use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id_T;
+   use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id;
    use all type Wayland_XML.Protocol_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
    use all type Wayland_XML.Enum_Child_Kind_Id;
@@ -250,10 +250,10 @@ procedure XML_Parser is
                Request_Tag.Set_Type_Attribute (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Integer (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -297,10 +297,10 @@ procedure XML_Parser is
                Event_Tag.Set_Name (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Integer (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -344,16 +344,16 @@ procedure XML_Parser is
                Entry_Tag.Set_Name (A.Value, Subpool);
             elsif A.Name = "value" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Integer (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      if
                        A.Value (A.Value'First .. A.Value'First + 1) = "0x"
                      then
-                        Value := Aida.Int32'Value
+                        Value := Integer'Value
                           (
                            "16#" & A.Value
                              (A.Value'First + 2 .. A.Value'Last) & "#"
@@ -371,10 +371,10 @@ procedure XML_Parser is
                Entry_Tag.Set_Summary (A.Value, Subpool);
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Integer (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -415,10 +415,10 @@ procedure XML_Parser is
                end if;
             elsif A.Name = "since" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32 (A.Value, Value, Has_Failed);
+                  Aida.To_Integer (A.Value, Value, Has_Failed);
 
                   if Has_Failed then
                      raise XML_Exception;
@@ -466,10 +466,10 @@ procedure XML_Parser is
 
             if Node.Tag.Attributes.Element (2).Name = "version" then
                declare
-                  Value      : Aida.Int32;
+                  Value      : Integer;
                   Has_Failed : Boolean;
                begin
-                  Aida.To_Int32
+                  Aida.To_Integer
                     (Node.Tag.Attributes.Element (2).Value, Value, Has_Failed);
 
                   if Has_Failed then
@@ -1094,7 +1094,7 @@ procedure XML_Parser is
          is
             procedure Generate_Code_For_Opcodes is
 
-               I : Aida.Int32 := 0;
+               I : Integer := 0;
 
                procedure Generate_Code
                  (Request_Tag : Wayland_XML.Request_Tag)
@@ -1542,7 +1542,7 @@ procedure XML_Parser is
 --
 --                 procedure Generate_Code_For_Opcodes is
 --
---                    I : Aida.Int32 := 0;
+--                    I : Integer := 0;
 --
 --                    procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
 --                       Name : constant String := Xml_Parser_Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
