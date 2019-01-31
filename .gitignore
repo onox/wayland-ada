@@ -7,5 +7,5 @@ bin/xml_parser/xml_parser
 bin/all_executables-loc.xml
 bin/gnatinspect.db
 bin/gpsauto.cgpr
-bin/xml_parser/posix-wayland.adb
-bin/xml_parser/posix-wayland.ads
+bin/xml_parser/c_binding-linux-wayland_client.adb
+bin/xml_parser/c_binding-linux-wayland_client.ads

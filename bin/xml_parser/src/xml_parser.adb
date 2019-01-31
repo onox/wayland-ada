@@ -43,12 +43,10 @@ procedure XML_Parser is
    Subpool : Dynamic_Pools.Subpool_Handle := Scoped_Subpool.Handle;
 
    procedure Read_Wayland_XML_File;
+   procedure Create_Wayland_Spec_File;
+   procedure Create_Wayland_Body_File;
 
-   procedure Create_Wayland_Spec_File
-     (Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr);
-
-   procedure Create_Wayland_Body_File
-     (Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr);
+   Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
 
    procedure Read_Wayland_XML_File is
 
@@ -128,8 +126,6 @@ procedure XML_Parser is
 
       pragma Unmodified (Root_Node);
 
-      Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
-
       procedure Identify_Protocol_Tag is
       begin
          if Root_Node.Id = XML_Tag and then Root_Node.Tag.Name = "protocol" then
@@ -148,8 +144,6 @@ procedure XML_Parser is
             Put_Line ("Root node is not <protocol> ???");
          end if;
       end Identify_Protocol_Tag;
-
-      pragma Unmodified (Protocol_Tag);
 
       procedure Identify_Protocol_Children is
 
@@ -542,24 +536,25 @@ procedure XML_Parser is
             end if;
          end loop;
 
-         Create_Wayland_Spec_File (Protocol_Tag);
+         Create_Wayland_Spec_File;
       end Identify_Protocol_Children;
 
    begin
       Check_Wayland_XML_File_Exists;
    end Read_Wayland_XML_File;
 
+   pragma Unmodified (Protocol_Tag);
+
    -- This procedure creates the posix-wayland.ads file.
-   procedure Create_Wayland_Spec_File
-     (Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr)
-   is
+   procedure Create_Wayland_Spec_File is
       File : Ada.Text_IO.File_Type;
 
       procedure Generate_Code_For_Header;
 
       procedure Create_File is
       begin
-         Ada.Text_IO.Create (File, Ada.Text_IO.Out_File, "posix-wayland.ads");
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "c_binding-linux-wayland_client.ads");
 
          Generate_Code_For_Header;
 
@@ -575,7 +570,7 @@ procedure XML_Parser is
          Put_Line (File, "private with Interfaces.C.Strings;");
          New_Line (File);
          Put_Line (File, "-- Auto-generated from Wayland.xml");
-         Put_Line (File, "package Posix.Wayland is");
+         Put_Line (File, "package C_Binding.Linux.Wayland_Client is");
          New_Line (File);
          Put_Line (File, "pragma Linker_Options (""-lwayland-client"");");
          Put_Line
@@ -2333,27 +2328,26 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Footer is
       begin
-         Put_Line (File, "end Posix.Wayland;");
+         Put_Line (File, "end C_Binding.Linux.Wayland_Client;");
       end Generate_Code_For_Footer;
 
    begin
       Create_File;
-      Create_Wayland_Body_File (Protocol_Tag);
+      Create_Wayland_Body_File;
    end Create_Wayland_Spec_File;
 
    -- This procedure creates the posix-wayland.ads file.
-   procedure Create_Wayland_Body_File
-     (Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr)
-   is
+   procedure Create_Wayland_Body_File is
       File : Ada.Text_IO.File_Type;
 
       procedure Create_Wl_Thin_Body_File;
 
       procedure Create_File is
       begin
-         Ada.Text_IO.Create (File, Ada.Text_IO.Out_File, "posix-wayland.adb");
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "c_binding-linux-wayland_client.adb");
 
-         Put_Line (File, "package body Posix.Wayland is");
+         Put_Line (File, "package body C_Binding.Linux.Wayland_Client is");
          New_Line (File);
 
          Create_Wl_Thin_Body_File;
@@ -3383,7 +3377,7 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Footer is
       begin
-         Put_Line (File, "end Posix.Wayland;");
+         Put_Line (File, "end C_Binding.Linux.Wayland_Client;");
       end Generate_Code_For_Footer;
 
    begin
