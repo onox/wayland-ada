@@ -1,10 +1,10 @@
 with Dynamic_Pools;
 with Ada.Containers.Vectors;
-with Aida.Deepend_XML_DOM_Parser;
 with Standard_Extensions; use Standard_Extensions;
+with Aida;
 
+pragma Elaborate_All (Aida);
 pragma Elaborate_All (Standard_Extensions);
-pragma Elaborate_All (Aida.Deepend_XML_DOM_Parser);
 pragma Elaborate_All (Dynamic_Pools);
 
 package Wayland_XML is
