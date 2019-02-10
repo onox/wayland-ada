@@ -42,7 +42,7 @@ package Xml_Parser_Utils is
      (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;
 
    function Exists_Reference_To_Enum
-     (Protocol_Tag   : Wayland_XML.Protocol_Tag;
+     (Protocol_Tag   : aliased Wayland_XML.Protocol_Tag;
       Interface_Name : String;
       Enum_Name      : String) return Boolean;
 

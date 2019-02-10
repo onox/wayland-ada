@@ -71,8 +71,8 @@ package body Aida.Deepend_XML_DOM_Parser is
               (This.Current_Nodes.Constant_Reference
                  (This.Current_Nodes.Last_Index).all.Id = XML_Tag)
             then
-               if This.Current_Nodes.Constant_Reference
-                 (This.Current_Nodes.Last_Index).all.Tag.Name = Tag_Name
+               if Name (This.Current_Nodes.Constant_Reference
+                 (This.Current_Nodes.Last_Index).all.Tag) = Tag_Name
                then
                   This.Current_Nodes.Delete_Last;
                   if This.Current_Nodes.Is_Empty then

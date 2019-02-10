@@ -31,8 +31,11 @@ procedure XML_Parser is
    use all type Wayland_XML.Event_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
+   use all type Wayland_XML.Protocol_Tag;
 
    use all type Aida.Deepend_XML_DOM_Parser.Node_Kind_Id;
+   use all type Aida.Deepend_XML_DOM_Parser.XML_Tag_T;
+   use all type Aida.Deepend_XML_DOM_Parser.Attribute;
    use all type Wayland_XML.Protocol_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
    use all type Wayland_XML.Enum_Child_Kind_Id;
@@ -137,14 +140,18 @@ procedure XML_Parser is
 
       procedure Identify_Protocol_Tag is
       begin
-         if Root_Node.Id = XML_Tag and then Root_Node.Tag.Name = "protocol" then
+         if
+           Root_Node.Id = XML_Tag
+           and then Name (Root_Node.Tag) = "protocol"
+         then
             Protocol_Tag := new (Subpool) Wayland_XML.Protocol_Tag;
             if
-              Root_Node.Tag.Attributes.Length = 1 and then
-              Root_Node.Tag.Attributes.Element (1).all.Name = "name"
+              Attributes (Root_Node.Tag).Length = 1 and then
+              Name (Attributes (Root_Node.Tag).Element (1).all) = "name"
             then
-               Protocol_Tag.Set_Name
-                 (Root_Node.Tag.Attributes.Element (1).all.Value, Subpool);
+               Set_Name
+                 (Protocol_Tag.all,
+                  Value (Attributes (Root_Node.Tag).Element (1).all), Subpool);
                Identify_Protocol_Children;
             else
                Put_Line ("<protocol> node does not have name attribute?");
@@ -163,11 +170,11 @@ procedure XML_Parser is
             Copyright_Tag : constant not null Wayland_XML.Copyright_Ptr
               := new (Subpool) Wayland_XML.Copyright_Tag;
          begin
-            if Node.Tag.Child_Nodes.Length = 1 then
-               if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
+            if Child_Nodes (Node.Tag).Length = 1 then
+               if Child_Nodes (Node.Tag).Element (1).Id = XML_Text then
                   Set_Text
                     (Copyright_Tag.all,
-                     Trim (Node.Tag.Child_Nodes.Element (1).Text), Subpool);
+                     Trim (Child_Nodes (Node.Tag).Element (1).Text), Subpool);
                else
                   raise XML_Exception;
                end if;
@@ -185,11 +192,11 @@ procedure XML_Parser is
             Description_Tag : constant not null Wayland_XML.Description_Tag_Ptr
               := new (Subpool) Wayland_XML.Description_Tag;
          begin
-            if Node.Tag.Attributes.Length = 1 then
-               if Node.Tag.Attributes.Element (1).Name = "summary" then
+            if Attributes (Node.Tag).Length = 1 then
+               if Name (Attributes (Node.Tag).Element (1).all) = "summary" then
                   Set_Summary
                     (Description_Tag.all,
-                     Node.Tag.Attributes.Element (1).Value, Subpool);
+                     Value (Attributes (Node.Tag).Element (1).all), Subpool);
                else
                   raise XML_Exception;
                end if;
@@ -197,15 +204,15 @@ procedure XML_Parser is
                raise XML_Exception;
             end if;
 
-            if Node.Tag.Child_Nodes.Length = 1 then
-               if Node.Tag.Child_Nodes.Element (1).Id = XML_Text then
+            if Child_Nodes (Node.Tag).Length = 1 then
+               if Child_Nodes (Node.Tag).Element (1).Id = XML_Text then
                   Set_Text
                     (Description_Tag.all,
-                     Trim (Node.Tag.Child_Nodes.Element (1).Text), Subpool);
+                     Trim (Child_Nodes (Node.Tag).Element (1).Text), Subpool);
                else
                   raise XML_Exception;
                end if;
-            elsif Node.Tag.Child_Nodes.Length > 1 then
+            elsif Child_Nodes (Node.Tag).Length > 1 then
                raise XML_Exception;
             end if;
 
@@ -220,25 +227,25 @@ procedure XML_Parser is
             Arg_Tag : constant not null Wayland_XML.Arg_Tag_Ptr
               := new (Subpool) Wayland_XML.Arg_Tag;
          begin
-            for A of Node.Tag.Attributes loop
-               if A.Name = "name" then
-                  Set_Name (Arg_Tag.all, A.Value, Subpool);
-               elsif A.Name = "type" then
-                  Set_Type_Attribute (Arg_Tag.all, A.Value);
-               elsif A.Name = "summary" then
-                  Set_Summary (Arg_Tag.all, A.Value, Subpool);
-               elsif A.Name = "interface" then
-                  Set_Interface_Attribute (Arg_Tag.all, A.Value, Subpool);
-               elsif A.Name = "allow-null" then
-                  if A.Value = "true" then
+            for A of Attributes (Node.Tag) loop
+               if Name (A.all) = "name" then
+                  Set_Name (Arg_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "type" then
+                  Set_Type_Attribute (Arg_Tag.all, Value (A.all));
+               elsif Name (A.all) = "summary" then
+                  Set_Summary (Arg_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "interface" then
+                  Set_Interface_Attribute (Arg_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "allow-null" then
+                  if Value (A.all) = "true" then
                      Set_Allow_Null (Arg_Tag.all, True);
-                  elsif A.Value = "false" then
+                  elsif Value (A.all) = "false" then
                      Set_Allow_Null (Arg_Tag.all, False);
                   else
                      raise XML_Exception;
                   end if;
-               elsif A.Name = "enum" then
-                  Set_Enum (Arg_Tag.all, A.Value, Subpool);
+               elsif Name (A.all) = "enum" then
+                  Set_Enum (Arg_Tag.all, Value (A.all), Subpool);
                else
                   raise XML_Exception;
                end if;
@@ -255,17 +262,20 @@ procedure XML_Parser is
             Request_Tag : constant not null Wayland_XML.Request_Tag_Ptr
               := new (Subpool) Wayland_XML.Request_Tag;
          begin
-            for A of Node.Tag.Attributes loop
-               if A.Name = "name" then
-                  Set_Name (Request_Tag.all, A.Value, Subpool);
-               elsif A.Name = "type" then
-                  Set_Type_Attribute (Request_Tag.all, A.Value, Subpool);
-               elsif A.Name = "since" then
+            for A of Attributes (Node.Tag) loop
+               if Name (A.all) = "name" then
+                  Set_Name (Request_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "type" then
+                  Set_Type_Attribute (Request_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "since" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
-                     Aida.To_Integer (A.Value, Value, Has_Failed);
+                     Aida.To_Integer
+                       (Aida.Deepend_XML_DOM_Parser.Value (A.all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
                         raise XML_Exception;
@@ -280,12 +290,12 @@ procedure XML_Parser is
                end if;
             end loop;
 
-            for Child of Node.Tag.Child_Nodes loop
+            for Child of Child_Nodes (Node.Tag) loop
                if Child.Id = XML_Tag then
-                  if Child.Tag.Name = "description" then
+                  if Name (Child.Tag) = "description" then
                      Append_Child
                        (Request_Tag.all, Identify_Description (Child));
-                  elsif Child.Tag.Name = "arg" then
+                  elsif Name (Child.Tag) = "arg" then
                      Append_Child (Request_Tag.all, Identify_Arg (Child));
                   else
                      raise XML_Exception;
@@ -306,15 +316,18 @@ procedure XML_Parser is
             Event_Tag : constant not null Wayland_XML.Event_Tag_Ptr
               := new (Subpool) Wayland_XML.Event_Tag;
          begin
-            for A of Node.Tag.Attributes loop
-               if A.Name = "name" then
-                  Set_Name (Event_Tag.all, A.Value, Subpool);
-               elsif A.Name = "since" then
+            for A of Attributes (Node.Tag) loop
+               if Name (A.all) = "name" then
+                  Set_Name (Event_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "since" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
-                     Aida.To_Integer (A.Value, Value, Has_Failed);
+                     Aida.To_Integer
+                       (Aida.Deepend_XML_DOM_Parser.Value (A.all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
                         raise XML_Exception;
@@ -328,12 +341,12 @@ procedure XML_Parser is
                end if;
             end loop;
 
-            for Child of Node.Tag.Child_Nodes loop
+            for Child of Child_Nodes (Node.Tag) loop
                if Child.Id = XML_Tag then
-                  if Child.Tag.Name = "description" then
+                  if Name (Child.Tag) = "description" then
                      Append_Child
                        (Event_Tag.all, Identify_Description (Child));
-                  elsif Child.Tag.Name = "arg" then
+                  elsif Name (Child.Tag) = "arg" then
                      Append_Child (Event_Tag.all, Identify_Arg (Child));
                   else
                      raise XML_Exception;
@@ -354,44 +367,54 @@ procedure XML_Parser is
             Entry_Tag : constant not null Wayland_XML.Entry_Tag_Ptr
               := new (Subpool) Wayland_XML.Entry_Tag;
          begin
-            for A of Node.Tag.Attributes loop
-               if A.Name = "name" then
-                  Set_Name (Entry_Tag.all, A.Value, Subpool);
-               elsif A.Name = "value" then
+            for A of Attributes (Node.Tag) loop
+               if Name (A.all) = "name" then
+                  Set_Name (Entry_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "value" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
-                     Aida.To_Integer (A.Value, Value, Has_Failed);
+                     Aida.To_Integer
+                       (Aida.Deepend_XML_DOM_Parser.Value (A.all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
-                        if
-                          A.Value (A.Value'First .. A.Value'First + 1) = "0x"
-                        then
-                           Value := Integer'Value
-                             (
-                              "16#" & A.Value
-                                (A.Value'First + 2 .. A.Value'Last) & "#"
-                             );
+                        declare
+                           S : constant String
+                             := Aida.Deepend_XML_DOM_Parser.Value (A.all);
+                        begin
+                           if
+                             S (S'First .. S'First + 1) = "0x"
+                           then
+                              Value := Integer'Value
+                                (
+                                 "16#" & S (S'First + 2 .. S'Last) & "#"
+                                );
 
-                           Set_Value
-                             (Entry_Tag.all, Wayland_XML.Entry_Value (Value));
-                        else
-                           raise XML_Exception;
-                        end if;
+                              Set_Value
+                                (Entry_Tag.all, Wayland_XML.Entry_Value (Value));
+                           else
+                              raise XML_Exception;
+                           end if;
+                        end;
                      else
                         Set_Value
                           (Entry_Tag.all, Wayland_XML.Entry_Value (Value));
                      end if;
                   end;
-               elsif A.Name = "summary" then
-                  Set_Summary (Entry_Tag.all, A.Value, Subpool);
-               elsif A.Name = "since" then
+               elsif Name (A.all) = "summary" then
+                  Set_Summary (Entry_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "since" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
-                     Aida.To_Integer (A.Value, Value, Has_Failed);
+                     Aida.To_Integer
+                       (Aida.Deepend_XML_DOM_Parser.Value (A.all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
                         raise XML_Exception;
@@ -404,7 +427,7 @@ procedure XML_Parser is
                end if;
             end loop;
 
-            if Node.Tag.Child_Nodes.Length > 0 then
+            if Child_Nodes (Node.Tag).Length > 0 then
                raise XML_Exception;
             end if;
 
@@ -419,23 +442,26 @@ procedure XML_Parser is
             Enum_Tag : constant not null Wayland_XML.Enum_Tag_Ptr
               := new (Subpool) Wayland_XML.Enum_Tag;
          begin
-            for A of Node.Tag.Attributes loop
-               if A.Name = "name" then
-                  Set_Name (Enum_Tag.all, A.Value, Subpool);
-               elsif A.Name = "bitfield" then
-                  if A.Value = "true" then
+            for A of Attributes (Node.Tag) loop
+               if Name (A.all) = "name" then
+                  Set_Name (Enum_Tag.all, Value (A.all), Subpool);
+               elsif Name (A.all) = "bitfield" then
+                  if Value (A.all) = "true" then
                      Set_Bitfield (Enum_Tag.all, True);
-                  elsif A.Value = "false" then
+                  elsif Value (A.all) = "false" then
                      Set_Bitfield (Enum_Tag.all, False);
                   else
                      raise XML_Exception;
                   end if;
-               elsif A.Name = "since" then
+               elsif Name (A.all) = "since" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
-                     Aida.To_Integer (A.Value, Value, Has_Failed);
+                     Aida.To_Integer
+                       (Aida.Deepend_XML_DOM_Parser.Value (A.all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
                         raise XML_Exception;
@@ -449,11 +475,11 @@ procedure XML_Parser is
                end if;
             end loop;
 
-            for Child of Node.Tag.Child_Nodes loop
+            for Child of Child_Nodes (Node.Tag) loop
                if Child.Id = XML_Tag then
-                  if Child.Tag.Name = "description" then
+                  if Name (Child.Tag) = "description" then
                      Append_Child (Enum_Tag.all, Identify_Description (Child));
-                  elsif Child.Tag.Name = "entry" then
+                  elsif Name (Child.Tag) = "entry" then
                      Append_Child (Enum_Tag.all, Identify_Entry (Child));
                   else
                      raise XML_Exception;
@@ -474,22 +500,25 @@ procedure XML_Parser is
             Interface_Tag : constant not null Wayland_XML.Interface_Tag_Ptr
               := new (Subpool) Wayland_XML.Interface_Tag;
          begin
-            if Node.Tag.Attributes.Length = 2 then
-               if Node.Tag.Attributes.Element (1).Name = "name" then
+            if Attributes (Node.Tag).Length = 2 then
+               if Name (Attributes (Node.Tag).Element (1).all) = "name" then
                   Set_Name
                     (Interface_Tag.all,
-                     Node.Tag.Attributes.Element (1).Value, Subpool);
+                     Value (Attributes (Node.Tag).Element (1).all), Subpool);
                else
                   raise XML_Exception;
                end if;
 
-               if Node.Tag.Attributes.Element (2).Name = "version" then
+               if Name (Attributes (Node.Tag).Element (2).all) = "version" then
                   declare
                      Value      : Integer;
                      Has_Failed : Boolean;
                   begin
                      Aida.To_Integer
-                       (Node.Tag.Attributes.Element (2).Value, Value, Has_Failed);
+                       (Aida.Deepend_XML_DOM_Parser.Value
+                          (Attributes (Node.Tag).Element (2).all),
+                        Value,
+                        Has_Failed);
 
                      if Has_Failed then
                         raise XML_Exception;
@@ -498,27 +527,27 @@ procedure XML_Parser is
                           (Interface_Tag.all,
                            Wayland_XML.Version_Number (Value));
 
-                        for Child of Node.Tag.Child_Nodes loop
+                        for Child of Child_Nodes (Node.Tag) loop
                            if Child.Id = XML_Tag then
-                              if Child.Tag.Name = "description" then
+                              if Name (Child.Tag) = "description" then
                                  Append_Child
                                    (
                                     Interface_Tag.all,
                                     Identify_Description (Child)
                                    );
-                              elsif Child.Tag.Name = "request" then
+                              elsif Name (Child.Tag) = "request" then
                                  Append_Child
                                    (
                                     Interface_Tag.all,
                                     Identify_Request (Child)
                                    );
-                              elsif Child.Tag.Name = "event" then
+                              elsif Name (Child.Tag) = "event" then
                                  Append_Child
                                    (
                                     Interface_Tag.all,
                                     Identify_Event (Child)
                                    );
-                              elsif Child.Tag.Name = "enum" then
+                              elsif Name (Child.Tag) = "enum" then
                                  Append_Child
                                    (
                                     Interface_Tag.all,
@@ -546,12 +575,12 @@ procedure XML_Parser is
          end Identify_Interface;
 
       begin
-         for Child of Root_Node.Tag.Child_Nodes loop
+         for Child of Child_Nodes (Root_Node.Tag) loop
             if Child.Id = XML_Tag then
-               if Child.Tag.Name = "interface" then
-                  Protocol_Tag.Append_Child (Identify_Interface (Child));
-               elsif Child.Tag.Name = "copyright" then
-                  Protocol_Tag.Append_Child (Identify_Copyright (Child));
+               if Name (Child.Tag) = "interface" then
+                  Append_Child (Protocol_Tag.all, Identify_Interface (Child));
+               elsif Name (Child.Tag) = "copyright" then
+                  Append_Child (Protocol_Tag.all, Identify_Copyright (Child));
                else
                   raise XML_Exception;
                end if;
@@ -624,7 +653,7 @@ procedure XML_Parser is
          end Handle_Interface;
 
       begin
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -679,7 +708,7 @@ procedure XML_Parser is
          end Handle_Interface;
 
       begin
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -771,7 +800,7 @@ procedure XML_Parser is
          end Handle_Interface;
 
       begin
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -1247,7 +1276,7 @@ procedure XML_Parser is
          end Handle_Interface;
 
       begin
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -1718,7 +1747,7 @@ procedure XML_Parser is
             end Handle_Interface;
 
          begin
-            for Child of Protocol_Tag.Children loop
+            for Child of Children (Protocol_Tag.all) loop
                case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -1750,7 +1779,7 @@ procedure XML_Parser is
             end Handle_Interface;
 
          begin
-            for Child of Protocol_Tag.Children loop
+            for Child of Children (Protocol_Tag.all) loop
                case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -2223,7 +2252,7 @@ procedure XML_Parser is
             end Handle_Interface;
 
          begin
-            for Child of Protocol_Tag.Children loop
+            for Child of Children (Protocol_Tag.all) loop
                case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -2255,7 +2284,7 @@ procedure XML_Parser is
          end Handle_Interface;
 
       begin
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
                when Child_Dummy =>
                   null;
@@ -2416,7 +2445,7 @@ procedure XML_Parser is
          Put_Line (File, "   (Value (I.My_Interface.Name));");
          New_Line (File);
 
-         for Child of Protocol_Tag.Children loop
+         for Child of Children (Protocol_Tag.all) loop
             case Child.Kind_Id is
             when Child_Dummy =>
                null;
@@ -2959,7 +2988,7 @@ procedure XML_Parser is
             end Handle_Interface;
 
          begin
-            for Child of Protocol_Tag.Children loop
+            for Child of Children (Protocol_Tag.all) loop
                case Child.Kind_Id is
                when Child_Dummy =>
                   null;

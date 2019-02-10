@@ -9,6 +9,7 @@ package body Xml_Parser_Utils is
    use all type Wayland_XML.Arg_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
+   use all type Wayland_XML.Protocol_Tag;
    use all type Wayland_XML.Arg_Type_Attribute;
    use all type Wayland_XML.Request_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
@@ -382,7 +383,7 @@ package body Xml_Parser_Utils is
    end Remove_Tabs;
 
    function Exists_Reference_To_Enum
-     (Protocol_Tag   : Wayland_XML.Protocol_Tag;
+     (Protocol_Tag   : aliased Wayland_XML.Protocol_Tag;
       Interface_Name : String;
       Enum_Name      : String) return Boolean
    is
@@ -440,7 +441,7 @@ package body Xml_Parser_Utils is
       end Handle_Interface;
 
    begin
-      for Child of Protocol_Tag.Children loop
+      for Child of Children (Protocol_Tag) loop
          case Child.Kind_Id is
             when Child_Dummy =>
                null;

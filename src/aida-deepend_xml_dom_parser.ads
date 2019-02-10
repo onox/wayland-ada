@@ -14,7 +14,7 @@ package Aida.Deepend_XML_DOM_Parser is
 
    Empty_String : aliased String := "";
 
-   type Attribute is tagged limited private;
+   type Attribute is limited private;
 
    function Name (This : Attribute) return String with
      Global => null;
@@ -61,7 +61,7 @@ package Aida.Deepend_XML_DOM_Parser is
    is limited null record with
      Implicit_Dereference => E;
 
-   type XML_Tag_T is tagged private;
+   type XML_Tag_T is private;
 
    function Attributes (This : aliased XML_Tag_T) return Attributes_Ref with
      Global    => null;
@@ -115,7 +115,7 @@ package Aida.Deepend_XML_DOM_Parser is
 
 private
 
-   type Attribute is tagged limited record
+   type Attribute is limited record
       My_Name  : String_Ptr;
       My_Value : String_Ptr;
    end record;
@@ -126,7 +126,7 @@ private
    function Value (This : Attribute) return String is
      (This.My_Value.all);
 
-   type XML_Tag_T is tagged record
+   type XML_Tag_T is record
       My_Name        : String_Ptr;
       My_Child_Nodes : aliased Node_Vectors.Vector;
       My_Attributes  : aliased Attribute_Vectors.Vector;

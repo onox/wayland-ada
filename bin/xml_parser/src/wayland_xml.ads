@@ -590,19 +590,19 @@ package Wayland_XML is
    is limited null record with
       Implicit_Dereference => E;
 
-   type Protocol_Tag is tagged limited private;
+   type Protocol_Tag is limited private;
 
    procedure Set_Name
      (This    : in out Protocol_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Protocol_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Protocol_Tag) return Boolean with
       Global => null;
@@ -944,7 +944,7 @@ private
      (This : aliased Interface_Tag) return Interface_Children_Ref is
      ((E => This.My_Children'Access));
 
-   type Protocol_Tag is tagged limited record
+   type Protocol_Tag is limited record
       My_Name     : Nullable_String_Ptr;
       My_Children : aliased Protocol_Child_Vectors.Vector;
    end record;
