@@ -28,19 +28,19 @@ package Wayland_XML is
 
    TYPE_ATTRIBUTE_EXCEPTION : exception;
 
-   type Arg_Tag is tagged limited private;
+   type Arg_Tag is limited private;
 
    procedure Set_Name
      (This    : in out Arg_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Arg_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Arg_Tag) return Boolean with
       Global => null;
@@ -48,12 +48,12 @@ package Wayland_XML is
       -- raises TYPE_ATTRIBUTE_EXCEPTION if Value cannot be interpreted
    procedure Set_Type_Attribute (This : in out Arg_Tag; Value : String) with
       Global => null,
-      Pre    => not This.Exists_Type_Attribute,
-      Post   => This.Exists_Type_Attribute;
+      Pre    => not Exists_Type_Attribute (This),
+      Post   => Exists_Type_Attribute (This);
 
    function Type_Attribute (This : Arg_Tag) return Arg_Type_Attribute with
       Global => null,
-      Pre    => This.Exists_Type_Attribute;
+      Pre    => Exists_Type_Attribute (This);
 
    function Exists_Type_Attribute (This : Arg_Tag) return Boolean with
       Global => null;
@@ -63,13 +63,13 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Interface_Attribute,
-      Post   => This.Exists_Interface_Attribute and
-      This.Interface_Attribute = Value;
+      Pre    => not Exists_Interface_Attribute (This),
+      Post   => Exists_Interface_Attribute (This) and
+      Interface_Attribute (This) = Value;
 
    function Interface_Attribute (This : Arg_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Interface_Attribute;
+      Pre    => Exists_Interface_Attribute (This);
 
    function Exists_Interface_Attribute (This : Arg_Tag) return Boolean with
       Global => null;
@@ -79,24 +79,24 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Summary,
-      Post   => This.Exists_Summary and This.Summary = Value;
+      Pre    => not Exists_Summary (This),
+      Post   => Exists_Summary (This) and Summary (This) = Value;
 
    function Summary (This : Arg_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Summary;
+      Pre    => Exists_Summary (This);
 
    function Exists_Summary (This : Arg_Tag) return Boolean with
       Global => null;
 
    procedure Set_Allow_Null (This : in out Arg_Tag; Value : Boolean) with
       Global => null,
-      Pre    => not This.Exists_Allow_Null,
-      Post   => This.Exists_Allow_Null and This.Allow_Null = Value;
+      Pre    => not Exists_Allow_Null (This),
+      Post   => Exists_Allow_Null (This) and Allow_Null (This) = Value;
 
    function Allow_Null (This : Arg_Tag) return Boolean with
       Global => null,
-      Pre    => This.Exists_Allow_Null;
+      Pre    => Exists_Allow_Null (This);
 
    function Exists_Allow_Null (This : Arg_Tag) return Boolean with
       Global => null;
@@ -106,32 +106,32 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Enum,
-      Post   => This.Exists_Enum and This.Enum = Value;
+      Pre    => not Exists_Enum (This),
+      Post   => Exists_Enum (This) and Enum (This) = Value;
 
    function Enum (This : Arg_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Enum;
+      Pre    => Exists_Enum (This);
 
    function Exists_Enum (This : Arg_Tag) return Boolean with
       Global => null;
 
    type Arg_Tag_Ptr is access all Arg_Tag with
-        Storage_Pool => Default_Subpool;
+     Storage_Pool => Default_Subpool;
 
-   type Copyright_Tag is tagged limited private;
+   type Copyright_Tag is limited private;
 
    procedure Set_Text
      (This    : in out Copyright_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Text,
-      Post   => This.Exists_Text and This.Text = Value;
+      Pre    => not Exists_Text (This),
+      Post   => Exists_Text (This) and Text (This) = Value;
 
    function Text (This : Copyright_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Text;
+      Pre    => Exists_Text (This);
 
    function Exists_Text (This : Copyright_Tag) return Boolean with
       Global => null;
@@ -139,19 +139,19 @@ package Wayland_XML is
    type Copyright_Ptr is access all Copyright_Tag with
         Storage_Pool => Default_Subpool;
 
-   type Description_Tag is tagged limited private;
+   type Description_Tag is limited private;
 
    procedure Set_Text
      (This    : in out Description_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Text,
-      Post   => This.Exists_Text and This.Text = Value;
+      Pre    => not Exists_Text (This),
+      Post   => Exists_Text (This) and Text (This) = Value;
 
    function Text (This : Description_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Text;
+      Pre    => Exists_Text (This);
 
    function Exists_Text (This : Description_Tag) return Boolean with
       Global => null;
@@ -161,12 +161,12 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Summary,
-      Post   => This.Exists_Summary and This.Summary = Value;
+      Pre    => not Exists_Summary (This),
+      Post   => Exists_Summary (This) and Summary (This) = Value;
 
    function Summary (This : Description_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Summary;
+      Pre    => Exists_Summary (This);
 
    function Exists_Summary (This : Description_Tag) return Boolean with
       Global => null;
@@ -176,19 +176,19 @@ package Wayland_XML is
 
    type Entry_Value is new Natural;
 
-   type Entry_Tag is tagged limited private;
+   type Entry_Tag is limited private;
 
    procedure Set_Name
      (This    : in out Entry_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Entry_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Entry_Tag) return Boolean with
       Global => null;
@@ -198,40 +198,40 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Summary,
-      Post   => This.Exists_Summary and This.Summary = Value;
+      Pre    => not Exists_Summary (This),
+      Post   => Exists_Summary (This) and Summary (This) = Value;
 
    function Summary (This : Entry_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Summary;
+      Pre    => Exists_Summary (This);
 
    function Exists_Summary (This : Entry_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Value (This : in out Entry_Tag; Value : Entry_Value) with
+   procedure Set_Value (This : in out Entry_Tag; V : Entry_Value) with
       Global => null,
-      Pre    => not This.Exists_Value,
-      Post   => This.Exists_Value and This.Value = Value;
+      Pre    => not Exists_Value (This),
+      Post   => Exists_Value (This) and Value (This) = V;
 
    function Value (This : Entry_Tag) return Entry_Value with
       Global => null,
-      Pre    => This.Exists_Value;
+      Pre    => Exists_Value (This);
 
    function Value_As_String (This : Entry_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Value;
+      Pre    => Exists_Value (This);
 
    function Exists_Value (This : Entry_Tag) return Boolean with
       Global => null;
 
    procedure Set_Since (This : in out Entry_Tag; Value : Version_Number) with
       Global => null,
-      Pre    => not This.Exists_Since,
-      Post   => This.Exists_Since and This.Since = Value;
+      Pre    => not Exists_Since (This),
+      Post   => Exists_Since (This) and Since (This) = Value;
 
    function Since (This : Entry_Tag) return Version_Number with
       Global => null,
-      Pre    => This.Exists_Since;
+      Pre    => Exists_Since (This);
 
    function Exists_Since (This : Entry_Tag) return Boolean with
       Global => null;
@@ -262,7 +262,7 @@ package Wayland_XML is
    is limited null record with
       Implicit_Dereference => E;
 
-   type Enum_Tag is tagged limited private;
+   type Enum_Tag is limited private;
 
    function Children (This : aliased Enum_Tag) return Enum_Children_Ref;
 
@@ -279,36 +279,36 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Enum_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Enum_Tag) return Boolean with
       Global => null;
 
    procedure Set_Bitfield (This : in out Enum_Tag; Value : Boolean) with
       Global => null,
-      Pre    => not This.Exists_Bitfield,
-      Post   => This.Exists_Bitfield and This.Bitfield = Value;
+      Pre    => not Exists_Bitfield (This),
+      Post   => Exists_Bitfield (This) and Bitfield (This) = Value;
 
    function Bitfield (This : Enum_Tag) return Boolean with
       Global => null,
-      Pre    => This.Exists_Bitfield;
+      Pre    => Exists_Bitfield (This);
 
    function Exists_Bitfield (This : Enum_Tag) return Boolean with
       Global => null;
 
    procedure Set_Since (This : in out Enum_Tag; Value : Version_Number) with
       Global => null,
-      Pre    => not This.Exists_Since,
-      Post   => This.Exists_Since and This.Since = Value;
+      Pre    => not Exists_Since (This),
+      Post   => Exists_Since (This) and Since (This) = Value;
 
    function Since (This : Enum_Tag) return Version_Number with
       Global => null,
-      Pre    => This.Exists_Since;
+      Pre    => Exists_Since (This);
 
    function Exists_Since (This : Enum_Tag) return Boolean with
       Global => null;
@@ -339,7 +339,7 @@ package Wayland_XML is
    is limited null record with
       Implicit_Dereference => E;
 
-   type Event_Tag is tagged limited private;
+   type Event_Tag is limited private;
 
    function Children (This : aliased Event_Tag) return Event_Children_Ref;
 
@@ -356,12 +356,12 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Event_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Event_Tag) return Boolean with
       Global => null;
@@ -369,18 +369,19 @@ package Wayland_XML is
    procedure Set_Since_Attribute
      (This  : in out Event_Tag;
       Value :        Version_Number) with
-      Global => null,
-      Pre    => not This.Exists_Since_Attribute,
-      Post   => This.Exists_Since_Attribute and This.Since_Attribute = Value;
+     Global => null,
+     Pre    => not Exists_Since_Attribute (This),
+     Post   =>
+       Exists_Since_Attribute (This) and Since_Attribute (This) = Value;
 
    function Since_Attribute (This : Event_Tag) return Version_Number with
       Global => null,
-      Pre    => This.Exists_Since_Attribute;
+      Pre    => Exists_Since_Attribute (This);
 
    function Since_Attribute_As_Pos32
      (This : Event_Tag) return Positive with
       Global => null,
-      Pre    => This.Exists_Since_Attribute;
+      Pre    => Exists_Since_Attribute (This);
 
    function Exists_Since_Attribute (This : Event_Tag) return Boolean with
       Global => null;
@@ -413,7 +414,7 @@ package Wayland_XML is
    is limited null record with
       Implicit_Dereference => E;
 
-   type Request_Tag is tagged limited private;
+   type Request_Tag is limited private;
 
    function Children (This : aliased Request_Tag) return Request_Children_Ref;
 
@@ -429,13 +430,13 @@ package Wayland_XML is
      (This    : in out Request_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
-      Global     => null,
-      Pre'Class  => not This.Exists_Name,
-      Post'Class => This.Exists_Name and This.Name = Value;
+     Global => null,
+     Pre    => not Exists_Name (This),
+     Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Request_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Request_Tag) return Boolean with
       Global => null;
@@ -445,38 +446,38 @@ package Wayland_XML is
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Type_Attribute,
-      Post   => This.Exists_Type_Attribute and This.Type_Attribute = Value;
+      Pre    => not Exists_Type_Attribute (This),
+      Post   => Exists_Type_Attribute (This) and Type_Attribute (This) = Value;
 
    function Type_Attribute (This : Request_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Type_Attribute;
+      Pre    => Exists_Type_Attribute (This);
 
    function Exists_Type_Attribute (This : Request_Tag) return Boolean with
       Global => null;
 
    procedure Set_Since (This : in out Request_Tag; Value : Version_Number) with
       Global => null,
-      Pre    => not This.Exists_Since,
-      Post   => This.Exists_Since and This.Since = Value;
+      Pre    => not Exists_Since (This),
+      Post   => Exists_Since (This) and Since (This) = Value;
 
    function Since (This : Request_Tag) return Version_Number with
       Global => null,
-      Pre    => This.Exists_Since;
+      Pre    => Exists_Since (This);
 
    function Since_As_Pos32 (This : Request_Tag) return Positive with
       Global => null,
-      Pre    => This.Exists_Since;
+      Pre    => Exists_Since (This);
 
    function Exists_Since (This : Request_Tag) return Boolean with
       Global => null;
 
-   function Description (This : Request_Tag) return String with
+   function Description (This : aliased Request_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Description;
+      Pre    => Exists_Description (This);
 
       -- Returns true if there is one unique description.
-   function Exists_Description (This : Request_Tag) return Boolean with
+   function Exists_Description (This : aliased Request_Tag) return Boolean with
       Global => null;
 
    type Request_Tag_Ptr is access all Request_Tag with
@@ -512,31 +513,31 @@ package Wayland_XML is
    is limited null record with
       Implicit_Dereference => E;
 
-   type Interface_Tag is tagged limited private;
+   type Interface_Tag is limited private;
 
    procedure Set_Name
      (This    : in out Interface_Tag;
       Value   :        String;
       Subpool :        Dynamic_Pools.Subpool_Handle) with
       Global => null,
-      Pre    => not This.Exists_Name,
-      Post   => This.Exists_Name and This.Name = Value;
+      Pre    => not Exists_Name (This),
+      Post   => Exists_Name (This) and Name (This) = Value;
 
    function Name (This : Interface_Tag) return String with
       Global => null,
-      Pre    => This.Exists_Name;
+      Pre    => Exists_Name (This);
 
    function Exists_Name (This : Interface_Tag) return Boolean with
       Global => null;
 
    procedure Set_Version (This : in out Interface_Tag; Value : Version_Number) with
       Global => null,
-      Pre    => not This.Exists_Version,
-      Post   => This.Exists_Version and This.Version = Value;
+      Pre    => not Exists_Version (This),
+      Post   => Exists_Version (This) and Version (This) = Value;
 
    function Version (This : Interface_Tag) return Version_Number with
       Global => null,
-      Pre    => This.Exists_Version;
+      Pre    => Exists_Version (This);
 
    function Exists_Version (This : Interface_Tag) return Boolean with
       Global => null;
@@ -667,7 +668,7 @@ private
       end case;
    end record;
 
-   type Arg_Tag is tagged limited record
+   type Arg_Tag is limited record
       My_Name                : Nullable_String_Ptr;
       My_Type_Attribute      : Nullable_Type_Attribute;
       My_Interface_Attribute : Nullable_String_Ptr;
@@ -720,7 +721,7 @@ private
      (This : Arg_Tag) return Boolean is
      (This.My_Enum.Exists);
 
-   type Copyright_Tag is tagged limited record
+   type Copyright_Tag is limited record
       My_Text : Nullable_String_Ptr;
    end record;
 
@@ -732,7 +733,7 @@ private
      (This : Copyright_Tag) return Boolean is
      (This.My_Text.Exists);
 
-   type Description_Tag is tagged limited record
+   type Description_Tag is limited record
       My_Text    : Nullable_String_Ptr;
       My_Summary : Nullable_String_Ptr;
    end record;
@@ -762,7 +763,7 @@ private
       end case;
    end record;
 
-   type Entry_Tag is tagged limited record
+   type Entry_Tag is limited record
       My_Name    : Nullable_String_Ptr;
       My_Value   : Nullable_Entry_Value;
       My_Summary : Nullable_String_Ptr;
@@ -801,7 +802,7 @@ private
      (This : Entry_Tag) return Boolean is
      (This.My_Since.Exists);
 
-   type Enum_Tag is tagged limited record
+   type Enum_Tag is limited record
       My_Name     : Nullable_String_Ptr;
       My_Bitfield : Nullable_Boolean;
       My_Since    : Nullable_Version;
@@ -841,7 +842,7 @@ private
       end case;
    end record;
 
-   type Event_Tag is tagged limited record
+   type Event_Tag is limited record
       My_Name            : Nullable_String_Ptr;
       My_Since_Attribute : Nullable_Since_Attribute;
       My_Children        : aliased Event_Child_Vectors.Vector;
@@ -878,7 +879,7 @@ private
       end case;
    end record;
 
-   type Request_Tag is tagged limited record
+   type Request_Tag is limited record
       My_Name           : Nullable_String_Ptr;
       My_Children       : aliased Request_Child_Vectors.Vector;
       My_Type_Attribute : Nullable_String_Ptr;
@@ -917,7 +918,7 @@ private
      (This : Request_Tag) return Boolean is
      (This.My_Since.Exists);
 
-   type Interface_Tag is tagged limited record
+   type Interface_Tag is limited record
       My_Name     : Nullable_String_Ptr;
       My_Version  : Nullable_Version;
       My_Children : aliased Interface_Child_Vectors.Vector;

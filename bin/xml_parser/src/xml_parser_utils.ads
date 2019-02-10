@@ -19,27 +19,27 @@ package Xml_Parser_Utils is
    function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String;
 
    function Number_Of_Args
-     (Request_Tag : Wayland_XML.Request_Tag) return Natural;
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Natural;
 
    function Is_New_Id_Argument_Present
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean;
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;
 
    function Is_Interface_Specified
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean with
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean with
      Pre => Is_New_Id_Argument_Present (Request_Tag);
 
    Interface_Not_Found_Exception : exception;
 
    -- will raise Interface_Not_Found_Exception is pre-condition is not met.
    function Find_Specified_Interface
-     (Request_Tag : Wayland_XML.Request_Tag) return String with
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return String with
      Pre => Is_Interface_Specified (Request_Tag);
 
    function Interface_Ptr_Name
      (Interface_Tag : Wayland_XML.Interface_Tag) return String;
 
    function Is_Request_Destructor
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean;
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;
 
    function Exists_Reference_To_Enum
      (Protocol_Tag   : Wayland_XML.Protocol_Tag;
@@ -47,10 +47,10 @@ package Xml_Parser_Utils is
       Enum_Name      : String) return Boolean;
 
    function Exists_Destructor
-     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean;
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean;
 
    function Exists_Any_Event_Tag
-     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean;
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean;
 
    function Remove_Tabs (Text : String) return String;
 

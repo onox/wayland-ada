@@ -1907,18 +1907,21 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Type is limited private;
       type Data_Ptr is access all Data_Type;
 
-      with procedure Enter (Data    : not null Data_Ptr;
-                            Surface : Wayland_Client.Surface;
-                            Output  : Wayland_Client.Output);
+      with procedure Enter
+        (Data    : not null Data_Ptr;
+         Surface : Wayland_Client.Surface;
+         Output  : Wayland_Client.Output);
 
-      with procedure Leave (Data    : not null Data_Ptr;
-                            Surface : Wayland_Client.Surface;
-                            Output  : Wayland_Client.Output);
+      with procedure Leave
+        (Data    : not null Data_Ptr;
+         Surface : Wayland_Client.Surface;
+         Output  : Wayland_Client.Output);
 
    package Surface_Events is
 
-      function Subscribe (Surface : in out Wayland_Client.Surface;
-                          Data    : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Surface : in out Wayland_Client.Surface;
+         Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Surface_Events;
 

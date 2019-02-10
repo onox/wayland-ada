@@ -105,11 +105,11 @@ package body Wayland_XML is
    end Set_Summary;
 
    procedure Set_Value (This  : in out Entry_Tag;
-                        Value : Entry_Value)
+                        V     : Entry_Value)
    is
    begin
       This.My_Value := (Exists => True,
-                        Value  => Value);
+                        Value  => V);
    end Set_Value;
 
    procedure Set_Summary (This    : in out Entry_Tag;
@@ -251,13 +251,13 @@ package body Wayland_XML is
                         Value  => Value);
    end Set_Since;
 
-   function Exists_Description (This : Request_Tag) return Boolean is
+   function Exists_Description (This : aliased Request_Tag) return Boolean is
       N : Natural := 0;
    begin
-      for Child of This.Children loop
+      for Child of Children (This) loop
          if
            Child.Kind_Id = Child_Description and then
-           Child.Description_Tag.Exists_Text
+           Exists_Text (Child.Description_Tag.all)
          then
             N := N + 1;
          end if;
@@ -266,17 +266,17 @@ package body Wayland_XML is
       return N = 1;
    end Exists_Description;
 
-   function Description (This : Request_Tag) return String is
+   function Description (This : aliased Request_Tag) return String is
       C : Request_Child;
    begin
-      for Child of This.Children loop
+      for Child of Children (This) loop
          if Child.Kind_Id = Child_Description then
             C := Child;
             exit;
          end if;
       end loop;
 
-      return C.Description_Tag.Text;
+      return Text (C.Description_Tag.all);
    end Description;
 
    procedure Set_Name (This    : in out Interface_Tag;

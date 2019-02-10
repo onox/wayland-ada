@@ -6,6 +6,9 @@ package body Xml_Parser_Utils is
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
    use all type Aida.UTF8_Code_Point.T;
+   use all type Wayland_XML.Arg_Tag;
+   use all type Wayland_XML.Request_Tag;
+   use all type Wayland_XML.Interface_Tag;
    use all type Wayland_XML.Arg_Type_Attribute;
    use all type Wayland_XML.Request_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
@@ -151,7 +154,7 @@ package body Xml_Parser_Utils is
    function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String is
       N : Ada.Strings.Unbounded.Unbounded_String;
    begin
-      case Arg_Tag.Type_Attribute is
+      case Type_Attribute (Arg_Tag) is
          when Type_Integer =>
             Set_Unbounded_String (N, "Integer");
          when Type_Unsigned_Integer =>
@@ -163,9 +166,9 @@ package body Xml_Parser_Utils is
          when Type_New_Id =>
             Set_Unbounded_String (N, "Unsigned_32");
          when Type_Object =>
-            if Arg_Tag.Exists_Interface_Attribute then
+            if Exists_Interface_Attribute (Arg_Tag) then
                Set_Unbounded_String
-                 (N, Adaify_Name (Arg_Tag.Interface_Attribute) & "_Ptr");
+                 (N, Adaify_Name (Interface_Attribute (Arg_Tag)) & "_Ptr");
             else
                Set_Unbounded_String (N, "Void_Ptr");
             end if;
@@ -178,10 +181,10 @@ package body Xml_Parser_Utils is
    end Arg_Type_As_String;
 
    function Number_Of_Args
-     (Request_Tag : Wayland_XML.Request_Tag) return Natural is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Natural is
       N : Natural := 0;
    begin
-      for Child of Request_Tag.Children loop
+      for Child of Children (Request_Tag) loop
          if Child.Kind_Id = Child_Arg then
             N := N + 1;
          end if;
@@ -190,12 +193,12 @@ package body Xml_Parser_Utils is
    end Number_Of_Args;
 
    function Is_New_Id_Argument_Present
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean is
    begin
-      for Child of Request_Tag.Children loop
+      for Child of Children (Request_Tag) loop
          if Child.Kind_Id = Child_Arg
-           and then Child.Arg_Tag.Exists_Type_Attribute
-           and then Child.Arg_Tag.Type_Attribute = Type_New_Id
+           and then Exists_Type_Attribute (Child.Arg_Tag.all)
+           and then Type_Attribute (Child.Arg_Tag.all) = Type_New_Id
          then
             return True;
          end if;
@@ -205,13 +208,13 @@ package body Xml_Parser_Utils is
    end Is_New_Id_Argument_Present;
 
    function Is_Interface_Specified
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean is
    begin
-      for Child of Request_Tag.Children loop
+      for Child of Children (Request_Tag) loop
          if Child.Kind_Id = Child_Arg
-           and then Child.Arg_Tag.Exists_Type_Attribute
-           and then Child.Arg_Tag.Type_Attribute = Type_New_Id
-           and then Child.Arg_Tag.Exists_Interface_Attribute
+           and then Exists_Type_Attribute (Child.Arg_Tag.all)
+           and then Type_Attribute (Child.Arg_Tag.all) = Type_New_Id
+           and then Exists_Interface_Attribute (Child.Arg_Tag.all)
          then
             return True;
          end if;
@@ -221,15 +224,15 @@ package body Xml_Parser_Utils is
    end Is_Interface_Specified;
 
    function Find_Specified_Interface
-     (Request_Tag : Wayland_XML.Request_Tag) return String is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return String is
    begin
-      for Child of Request_Tag.Children loop
+      for Child of Children (Request_Tag) loop
          if Child.Kind_Id = Child_Arg
-           and then Child.Arg_Tag.Exists_Type_Attribute
-           and then Child.Arg_Tag.Type_Attribute = Type_New_Id
-           and then Child.Arg_Tag.Exists_Interface_Attribute
+           and then Exists_Type_Attribute (Child.Arg_Tag.all)
+           and then Type_Attribute (Child.Arg_Tag.all) = Type_New_Id
+           and then Exists_Interface_Attribute (Child.Arg_Tag.all)
          then
-            return Child.Arg_Tag.Interface_Attribute;
+            return Interface_Attribute (Child.Arg_Tag.all);
          end if;
       end loop;
 
@@ -239,24 +242,24 @@ package body Xml_Parser_Utils is
    function Interface_Ptr_Name
      (Interface_Tag : Wayland_XML.Interface_Tag) return String is
    begin
-      return Adaify_Name (Interface_Tag.Name & "_Ptr");
+      return Adaify_Name (Name (Interface_Tag) & "_Ptr");
    end Interface_Ptr_Name;
 
    function Is_Request_Destructor
-     (Request_Tag : Wayland_XML.Request_Tag) return Boolean is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean is
       Result : Boolean := False;
 
       V : Wayland_XML.Request_Child_Vectors.Vector;
    begin
-      for Child of Request_Tag.Children loop
+      for Child of Children (Request_Tag) loop
          if Child.Kind_Id = Child_Arg then
             V.Append (Child);
          end if;
       end loop;
 
-      if Request_Tag.Exists_Type_Attribute
-        and then Request_Tag.Type_Attribute = "destructor"
-        and then Request_Tag.Name = "destroy"
+      if Exists_Type_Attribute (Request_Tag)
+        and then Type_Attribute (Request_Tag) = "destructor"
+        and then Name (Request_Tag) = "destroy"
         and then V.Length = 0
       then
          Result := True;
@@ -266,10 +269,10 @@ package body Xml_Parser_Utils is
    end Is_Request_Destructor;
 
    function Exists_Destructor
-     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean is
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean is
       Result : Boolean := False;
    begin
-      for Child of Interface_Tag.Children loop
+      for Child of Children (Interface_Tag) loop
          case Child.Kind_Id is
             when Child_Dummy =>
                null;
@@ -291,10 +294,10 @@ package body Xml_Parser_Utils is
    end Exists_Destructor;
 
    function Exists_Any_Event_Tag
-     (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean is
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean is
       Result : Boolean := False;
    begin
-      for Child of Interface_Tag.Children loop
+      for Child of Children (Interface_Tag) loop
          case Child.Kind_Id is
             when Child_Dummy =>
                null;
@@ -387,24 +390,26 @@ package body Xml_Parser_Utils is
 
       Searched_For : constant String := Interface_Name & "." & Enum_Name;
 
-      procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
-
-         procedure Handle_Request (Request_Tag : Wayland_XML.Request_Tag) is
-
+      procedure Handle_Interface
+        (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+      is
+         procedure Handle_Request
+           (Request_Tag : aliased Wayland_XML.Request_Tag)
+         is
             procedure Handle_Arg (Arg_Tag : Wayland_XML.Arg_Tag) is
             begin
                if
-                 Arg_Tag.Exists_Type_Attribute and then
-                 Arg_Tag.Type_Attribute = Type_Unsigned_Integer and then
-                 Arg_Tag.Exists_Enum and then
-                 Arg_Tag.Enum = Searched_For
+                 Exists_Type_Attribute (Arg_Tag) and then
+                 Type_Attribute (Arg_Tag) = Type_Unsigned_Integer and then
+                 Exists_Enum (Arg_Tag) and then
+                 Enum (Arg_Tag) = Searched_For
                then
                   Exists := True;
                end if;
             end Handle_Arg;
 
          begin
-            for Child of Request_Tag.Children loop
+            for Child of Children (Request_Tag) loop
                case Child.Kind_Id is
                   when Child_Dummy       => null;
                   when Child_Description => null;
@@ -419,7 +424,7 @@ package body Xml_Parser_Utils is
          end Handle_Request;
 
       begin
-         for Child of Interface_Tag.Children loop
+         for Child of Children (Interface_Tag) loop
             case Child.Kind_Id is
                when Child_Dummy   => null;
                when Child_Description => null;
