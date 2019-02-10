@@ -29,7 +29,7 @@ in charge of combining different surfaces into one output).
 A program to find a proxy for the compositor,
 while listing the other registry objects on the command line (See section 6.4
 at https://jan.newmarch.name/Wayland/ProgrammingClient/):
-```
+```ada
 package Application is
 
    procedure Main;
