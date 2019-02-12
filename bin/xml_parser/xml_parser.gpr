@@ -1,4 +1,4 @@
-with "../../aida_deepend.gpr";
+with "../../aida.gpr";
 
 project Xml_Parser is
    for Source_Dirs use ("src");

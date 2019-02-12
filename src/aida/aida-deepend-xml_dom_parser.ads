@@ -1,24 +1,18 @@
-with Dynamic_Pools;
 with Ada.Containers.Vectors;
+
 with Aida.Deepend_XML_SAX_Parser;
 
-pragma Elaborate_All (Dynamic_Pools);
 pragma Elaborate_All (Aida.Deepend_XML_SAX_Parser);
 
-package Aida.Deepend_XML_DOM_Parser is
+package Aida.Deepend.XML_DOM_Parser is
 
-   Default_Subpool : Dynamic_Pools.Dynamic_Pool (0);
-   -- Allocations are done in subpools, not the default subpool
+   type Attribute is limited private;
 
-   type String_Ptr is access all String with
-     Storage_Pool => Default_Subpool;
+   function Name (This : Attribute) return String with
+     Global => null;
 
-   Empty_String : aliased String := "";
-
-   type Attribute is limited record
-      Name  : String_Ptr;
-      Value : String_Ptr;
-   end record;
+   function Value (This : Attribute) return String with
+     Global => null;
 
    type Attribute_Ptr is access all Attribute with
      Storage_Pool => Default_Subpool;
@@ -45,11 +39,28 @@ package Aida.Deepend_XML_DOM_Parser is
      (Index_Type   => Positive,
       Element_Type => Node_Ptr);
 
-   type XML_Tag is record
-      Name        : String_Ptr;
-      Child_Nodes : aliased Node_Vectors.Vector;
-      Attributes  : aliased Attribute_Vectors.Vector;
-   end record;
+   type Attributes_Ref
+     (
+      Element : not null access constant Attribute_Vectors.Vector
+     )
+   is limited null record with Implicit_Dereference => Element;
+
+   type Child_Nodes_Ref
+     (
+      Element : not null access constant Node_Vectors.Vector
+     )
+   is limited null record with Implicit_Dereference => Element;
+
+   type XML_Tag is private;
+
+   function Attributes (This : aliased XML_Tag) return Attributes_Ref with
+     Global => null;
+
+   function Child_Nodes (This : aliased XML_Tag) return Child_Nodes_Ref with
+     Global => null;
+
+   function Name (This : XML_Tag) return String with
+     Global => null;
 
    type Node (Id : Node_Kind_Id := Node_Kind_Tag) is record
       case Id is
@@ -59,6 +70,8 @@ package Aida.Deepend_XML_DOM_Parser is
               Node_Kind_CDATA |
               Node_Kind_Text =>
             Text : not null String_Ptr := Empty_String'Access;
+            --  It would be cool to specify that this can only be set once.
+            --  To be improved in the future!
       end case;
    end record;
 
@@ -73,6 +86,17 @@ package Aida.Deepend_XML_DOM_Parser is
           XML_Message'Length > 0 and XML_Message'Last < Integer'Last - 4);
 
 private
+
+   type Attribute is limited record
+      My_Name  : String_Ptr;
+      My_Value : String_Ptr;
+   end record;
+
+   type XML_Tag is record
+      My_Name        : String_Ptr;
+      My_Child_Nodes : aliased Node_Vectors.Vector;
+      My_Attributes  : aliased Attribute_Vectors.Vector;
+   end record;
 
    type State_T is
      (
@@ -140,4 +164,4 @@ private
      Global => null,
      Pre    => not Call_Result.Has_Failed;
 
-end Aida.Deepend_XML_DOM_Parser;
+end Aida.Deepend.XML_DOM_Parser;

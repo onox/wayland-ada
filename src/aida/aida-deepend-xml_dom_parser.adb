@@ -2,7 +2,22 @@ with Aida.Deepend_XML_SAX_Parser;
 
 pragma Elaborate_All (Aida.Deepend_XML_SAX_Parser);
 
-package body Aida.Deepend_XML_DOM_Parser is
+package body Aida.Deepend.XML_DOM_Parser is
+
+   function Name (This : Attribute) return String is
+     (This.My_Name.all);
+
+   function Value (This : Attribute) return String is
+     (This.My_Value.all);
+
+   function Name (This : XML_Tag) return String is
+     (This.My_Name.all);
+
+   function Child_Nodes (This : aliased XML_Tag) return Child_Nodes_Ref is
+     ((Element => This.My_Child_Nodes'Access));
+
+   function Attributes (This : aliased XML_Tag) return Attributes_Ref is
+     ((Element => This.My_Attributes'Access));
 
    procedure Handle_Start_Tag
      (This        : in out SAX_Parser;
@@ -19,7 +34,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                   Current_Node : not null Node_Ptr
                     := new (This.Subpool) Node;
                begin
-                  Current_Node.Tag.Name
+                  Current_Node.Tag.My_Name
                     := new (This.Subpool) String'(Tag_Name);
                   This.Current_Nodes.Append (Current_Node);
                   This.Root_Node := Current_Node;
@@ -36,7 +51,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                   Current_Node : not null Node_Ptr
                     := new (This.Subpool) Node;
                begin
-                  Current_Node.Tag.Name
+                  Current_Node.Tag.My_Name
                     := new (This.Subpool) String'(Tag_Name);
 
                   if
@@ -45,7 +60,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                   then
                      This.Current_Nodes.Constant_Reference
                        (This.Current_Nodes.Last_Index).all.Tag.
-                       Child_Nodes.Append (Current_Node);
+                       My_Child_Nodes.Append (Current_Node);
 
                      This.Current_Nodes.Append (Current_Node);
                   else
@@ -72,7 +87,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                  (This.Current_Nodes.Last_Index).all.Id = Node_Kind_Tag)
             then
                if This.Current_Nodes.Constant_Reference
-                 (This.Current_Nodes.Last_Index).all.Tag.Name.all = Tag_Name
+                 (This.Current_Nodes.Last_Index).all.Tag.My_Name.all = Tag_Name
                then
                   This.Current_Nodes.Delete_Last;
                   if This.Current_Nodes.Is_Empty then
@@ -121,9 +136,9 @@ package body Aida.Deepend_XML_DOM_Parser is
                     This.Current_Nodes.Constant_Reference
                       (This.Current_Nodes.Last_Index).all.Id = Node_Kind_Tag
                   then
-                     This.Current_Nodes.Constant_Reference
+                     This.Current_Nodes
                        (This.Current_Nodes.Last_Index).all.Tag.
-                       Child_Nodes.Append (Current_Node);
+                       My_Child_Nodes.Append (Current_Node);
                   else
                      Call_Result.Initialize (-0944309962, -0212130363);
                   end if;
@@ -153,16 +168,18 @@ package body Aida.Deepend_XML_DOM_Parser is
                      Attr : not null Attribute_Ptr
                        := new (This.Subpool) Attribute;
                   begin
-                     Attr.Name  := new (This.Subpool) String'(Attribute_Name);
-                     Attr.Value := new (This.Subpool) String'(Attribute_Value);
+                     Attr.My_Name
+                       := new (This.Subpool) String'(Attribute_Name);
+                     Attr.My_Value
+                       := new (This.Subpool) String'(Attribute_Value);
 
                      if
                        This.Current_Nodes.Constant_Reference
                        (This.Current_Nodes.Last_Index).all.Id = Node_Kind_Tag
                      then
-                        This.Current_Nodes.Constant_Reference
+                        This.Current_Nodes
                           (This.Current_Nodes.Last_Index).all.Tag.
-                          Attributes.Append (Attr);
+                          My_Attributes.Append (Attr);
                      else
                         Call_Result.Initialize (0612916249, -0250963769);
                      end if;
@@ -206,7 +223,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                      then
                         This.Current_Nodes.Constant_Reference
                           (This.Current_Nodes.Last_Index).all.Tag.
-                          Child_Nodes.Append (Current_Node);
+                          My_Child_Nodes.Append (Current_Node);
                      else
                         Call_Result.Initialize (2066772500, 1193932906);
                      end if;
@@ -250,7 +267,7 @@ package body Aida.Deepend_XML_DOM_Parser is
                      then
                         This.Current_Nodes.Constant_Reference
                           (This.Current_Nodes.Last_Index).all.Tag.
-                          Child_Nodes.Append (Current_Node);
+                          My_Child_Nodes.Append (Current_Node);
                      else
                         Call_Result.Initialize (-2021174626, -1403249390);
                      end if;
@@ -282,4 +299,4 @@ package body Aida.Deepend_XML_DOM_Parser is
       Root_Node := Parser.Root_Node;
    end Parse;
 
-end Aida.Deepend_XML_DOM_Parser;
+end Aida.Deepend.XML_DOM_Parser;
