@@ -1,8 +1,8 @@
 with Ada.Containers.Vectors;
 
-with Aida.Deepend.XML_SAX_Parser;
+with Aida.XML_SAX_Parse;
 
-pragma Elaborate_All (Aida.Deepend.XML_SAX_Parser);
+pragma Elaborate_All (Aida.XML_SAX_Parse);
 
 package Aida.Deepend.XML_DOM_Parser is
 
@@ -97,71 +97,5 @@ private
       My_Child_Nodes : aliased Node_Vectors.Vector;
       My_Attributes  : aliased Attribute_Vectors.Vector;
    end record;
-
-   type State_T is
-     (
-      Expecting_Object_Start, -- seems to only apply to the root start tag
-      --  Expecting_Attribute_Or_Text_Or_Comment_Or_CDATA_Or_Object_Start_Or_Object_End,
-      Expecting_Default, -- Attribute_Or_Text_Or_Comment_Or_CDATA_Or_Object_Start_Or_Object_End
-      End_State
-     );
-
-   type SAX_Parser is new Aida.Deepend.XML_SAX_Parser.SAX_Parser with record
-      Current_Nodes : Node_Vectors.Vector;
-      -- The current node is the last Node pointed to in the container
-
-      Root_Node : Node_Ptr := null;
-      State     : State_T := Expecting_Object_Start;
-      Subpool   : Dynamic_Pools.Subpool_Handle;
-   end record;
-
-   overriding
-   procedure Handle_Start_Tag
-     (This        : in out SAX_Parser;
-      Tag_Name    : String;
-      Call_Result : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
-
-   overriding
-   procedure Handle_End_Tag
-     (This        : in out SAX_Parser;
-      Tag_Name    : String;
-      Call_Result : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
-
-   overriding
-   procedure Handle_Text
-     (This        : in out SAX_Parser;
-      Value       : String;
-      Call_Result : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
-
-   overriding
-   procedure Handle_Attribute
-     (This            : in out SAX_Parser;
-      Attribute_Name  : String;
-      Attribute_Value : String;
-      Call_Result     : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
-
-   overriding
-   procedure Handle_Comment
-     (This        : in out SAX_Parser;
-      Value       : String;
-      Call_Result : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
-
-   overriding
-   procedure Handle_CDATA
-     (This        : in out SAX_Parser;
-      Value       : String;
-      Call_Result : in out Aida.Call_Result) with
-     Global => null,
-     Pre    => not Call_Result.Has_Failed;
 
 end Aida.Deepend.XML_DOM_Parser;

@@ -1,11 +1,10 @@
 with Ada.Strings.Unbounded;
-with Aida.UTF8_Code_Point;
 with Aida.UTF8;
 
 package body Xml_Parser_Utils is
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
-   use all type Aida.UTF8_Code_Point.T;
+   use all type Aida.UTF8.Code_Point;
    use all type Wayland_XML.Arg_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
@@ -43,7 +42,7 @@ package body Xml_Parser_Utils is
 
       P : Integer := Old_Name'First;
 
-      CP : Aida.UTF8_Code_Point.T := 0;
+      CP : Aida.UTF8.Code_Point := 0;
 
       Is_Previous_Lowercase    : Boolean := False;
       Is_Previous_A_Number     : Boolean := False;
@@ -131,7 +130,7 @@ package body Xml_Parser_Utils is
 
       P : Integer := Source'First;
 
-      CP : Aida.UTF8_Code_Point.T := 0;
+      CP : Aida.UTF8.Code_Point := 0;
    begin
       Set_Unbounded_String (Target, "");
       while P <= Source'Last loop
@@ -323,7 +322,7 @@ package body Xml_Parser_Utils is
       P           : Integer := Text'First;
       Prev_P      : Integer := P;
       Prev_Prev_P : Integer;
-      CP          : Aida.UTF8_Code_Point.T;
+      CP          : Aida.UTF8.Code_Point;
 
       Is_Previous_New_Line : Boolean := False;
    begin
@@ -366,13 +365,13 @@ package body Xml_Parser_Utils is
 
       P : Integer := Text'First;
 
-      CP : Aida.UTF8_Code_Point.T;
+      CP : Aida.UTF8.Code_Point;
    begin
       while Aida.UTF8.Is_Valid_UTF8_Code_Point (Text, P) loop
          Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
 
          if CP /= 9 then
-            Ada.Strings.Unbounded.Append (S, Aida.UTF8_Code_Point.Image (CP));
+            Ada.Strings.Unbounded.Append (S, Aida.UTF8.Image (CP));
          else
             Ada.Strings.Unbounded.Append (S, "   ");
          end if;
