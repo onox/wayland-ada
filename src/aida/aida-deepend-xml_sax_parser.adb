@@ -6,7 +6,7 @@ with Aida.Text_IO;
 pragma Elaborate_All (Aida.UTF8_Code_Point);
 pragma Elaborate_All (Aida.UTF8);
 
-package body Aida.Deepend_XML_SAX_Parser is
+package body Aida.Deepend.XML_SAX_Parser is
 
    -- Known unsupported issues: Escaping of text (for example &amp;)
    -- The stack roof may be hit if the comments and texts in the XML are HUGE.
@@ -17,45 +17,46 @@ package body Aida.Deepend_XML_SAX_Parser is
    is
       use all type Aida.UTF8_Code_Point.T;
 
-      type Initial_State_Id_T is (Initial_State_Expecting_Less_Sign,
-                                  Initial_State_Expecting_Question_Mark,
-                                  Initial_State_Expecting_X,
-                                  Initial_State_Expecting_XM,
-                                  Initial_State_Expecting_XML,
-                                  Initial_State_Expecting_XML_S,
-                                  Initial_State_Expecting_XML_S_V,
-                                  Initial_State_Expecting_XML_S_VE,
-                                  Initial_State_Expecting_XML_S_VER,
-                                  Initial_State_Expecting_XML_S_VERS,
-                                  Initial_State_Expecting_XML_S_VERSI,
-                                  Initial_State_Expecting_XML_S_VERSIO,
-                                  Initial_State_Expecting_XML_S_VERSION,
-                                  Initial_State_Expecting_XML_S_VERSION_E,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_E,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_EN,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENC,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCO,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCOD,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODI,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODIN,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_U,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UT,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8_Q,
-                                  Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8_Q_Question_Mark,
-                                  End_State
-                                 );
+      type Initial_State_Id_T is
+        (Initial_State_Expecting_Less_Sign,
+         Initial_State_Expecting_Question_Mark,
+         Initial_State_Expecting_X,
+         Initial_State_Expecting_XM,
+         Initial_State_Expecting_XML,
+         Initial_State_Expecting_XML_S,
+         Initial_State_Expecting_XML_S_V,
+         Initial_State_Expecting_XML_S_VE,
+         Initial_State_Expecting_XML_S_VER,
+         Initial_State_Expecting_XML_S_VERS,
+         Initial_State_Expecting_XML_S_VERSI,
+         Initial_State_Expecting_XML_S_VERSIO,
+         Initial_State_Expecting_XML_S_VERSION,
+         Initial_State_Expecting_XML_S_VERSION_E,
+         Initial_State_Expecting_XML_S_VERSION_E_Q,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_E,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_EN,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENC,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCO,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCOD,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODI,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODIN,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_U,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UT,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8_Q,
+         Initial_State_Expecting_XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UTF_D_8_Q_Question_Mark,
+         End_State
+        );
 
       type State_Id_Type is (
                              Expecting_NL_Sign_Or_Space_Or_Less_Sign, -- NL = New Line
@@ -1061,4 +1062,4 @@ package body Aida.Deepend_XML_SAX_Parser is
       end loop;
    end Parse;
 
-end Aida.Deepend_XML_SAX_Parser;
+end Aida.Deepend.XML_SAX_Parser;

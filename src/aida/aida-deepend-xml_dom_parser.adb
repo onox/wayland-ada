@@ -1,7 +1,3 @@
-with Aida.Deepend_XML_SAX_Parser;
-
-pragma Elaborate_All (Aida.Deepend_XML_SAX_Parser);
-
 package body Aida.Deepend.XML_DOM_Parser is
 
    function Name (This : Attribute) return String is

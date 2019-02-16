@@ -1,8 +1,8 @@
 with Ada.Containers.Vectors;
 
-with Aida.Deepend_XML_SAX_Parser;
+with Aida.Deepend.XML_SAX_Parser;
 
-pragma Elaborate_All (Aida.Deepend_XML_SAX_Parser);
+pragma Elaborate_All (Aida.Deepend.XML_SAX_Parser);
 
 package Aida.Deepend.XML_DOM_Parser is
 
@@ -106,7 +106,7 @@ private
       End_State
      );
 
-   type SAX_Parser is new Aida.Deepend_XML_SAX_Parser.SAX_Parser with record
+   type SAX_Parser is new Aida.Deepend.XML_SAX_Parser.SAX_Parser with record
       Current_Nodes : Node_Vectors.Vector;
       -- The current node is the last Node pointed to in the container
 

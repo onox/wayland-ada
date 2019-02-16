@@ -3,7 +3,7 @@ with System.Storage_Pools.Subpools;
 
 pragma Elaborate_All (System.Storage_Pools.Subpools);
 
-package Aida.Deepend_XML_SAX_Parser is
+package Aida.Deepend.XML_SAX_Parser is
 
    use all type Ada.Containers.Count_Type;
 
@@ -51,4 +51,4 @@ package Aida.Deepend_XML_SAX_Parser is
        (not Call_Result.Has_Failed and
           Contents'Length > 0 and Contents'Last < Integer'Last - 4);
 
-end Aida.Deepend_XML_SAX_Parser;
+end Aida.Deepend.XML_SAX_Parser;
