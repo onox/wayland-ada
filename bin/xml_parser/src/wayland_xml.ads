@@ -1,18 +1,17 @@
 with Dynamic_Pools;
 with Ada.Containers.Vectors;
 with Standard_Extensions; use Standard_Extensions;
-with Aida;
+with Aida.Deepend;
 
-pragma Elaborate_All (Aida);
+pragma Elaborate_All (Aida.Deepend);
 pragma Elaborate_All (Standard_Extensions);
 pragma Elaborate_All (Dynamic_Pools);
 
 package Wayland_XML is
 
-   type String_Ptr is access all String with
-        Storage_Pool => Default_Subpool;
+   subtype String_Ptr is Aida.Deepend.String_Ptr;
 
-   Empty_String : aliased String := "";
+   Empty_String : String renames Aida.Deepend.Empty_String;
 
    type Version_Number is new Positive;
 
