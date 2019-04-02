@@ -1,9 +1,12 @@
 project Ubuntu_Posix is
 
+   for Languages use ("Ada", "C");
+
    for Source_Dirs use ("src");
 
    for Source_Files use
      (
+      "errno_wrapper.c",
       "c_binding.ads",
       "c_binding.adb",
       "c_binding-linux.ads",

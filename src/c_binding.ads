@@ -26,6 +26,12 @@ package C_Binding with Preelaborate is
    function "+" (Text : String) return C_String;
    -- Appends a 'Nul' character to a standard String and returns a C_String.
 
+  function C_errno return integer;
+  pragma import( C, C_errno, "C_errno" );
+
+  procedure C_reset_errno;
+  pragma import( C, C_reset_errno, "C_reset_errno" );
+
 private
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;

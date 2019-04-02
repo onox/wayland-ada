@@ -1,5 +1,9 @@
 package body C_Binding.Linux is
 
+   use type Stream_Element_Offset;
+   use type Interfaces.C.unsigned;
+   use type Interfaces.Unsigned_32;
+
    procedure Set_File_Descriptor
      (File  : in out Linux.File;
       Value : Integer) is
@@ -78,7 +82,7 @@ package body C_Binding.Linux is
       Status.My_Is_Valid := Result = 0;
    end Get_File_Status;
 
-   procedure Write (File : Linux.File; Bytes : Byte_Array) is
+   procedure Write (File : Linux.File; Bytes : Stream_Element_Array) is
       SSize : SSize_Type;
       pragma Unreferenced (SSize);
    begin
@@ -89,7 +93,7 @@ package body C_Binding.Linux is
            Count           => Bytes'Length);
    end Write;
 
-   function Read (File : Linux.File; Bytes : in out Byte_Array) return SSize_Type is
+   function Read (File : Linux.File; Bytes : in out Stream_Element_Array) return SSize_Type is
    begin
       return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
    end Read;
@@ -153,7 +157,7 @@ package body C_Binding.Linux is
 
    function Get_Line return String is
       SSize : SSize_Type;
-      B : Byte_Array (1..200);
+      B : Stream_Element_Array (1..200);
    begin
       SSize := Px_Thin.Read (File_Descriptor => Px_Thin.STDIN_FILENO,
                              Buffer          => B,
@@ -164,7 +168,8 @@ package body C_Binding.Linux is
             S : String (1..Integer (SSize));
          begin
             for I in Integer range 1..Integer (SSize) loop
-               S (I) := Character'Val (B (System.Storage_Elements.Storage_Offset (I)));
+               S (I)
+                 := Character'Val (B (Ada.Streams.Stream_Element_Offset (I)));
             end loop;
             return S (1..Integer (SSize - 1));
          end;
@@ -173,5 +178,72 @@ package body C_Binding.Linux is
       end if;
 
    end Get_Line;
+
+   procedure Send
+     (This     : Socket;
+      Elements : Ada.Streams.Stream_Element_Array;
+      Last     : out Stream_Element_Offset)
+   is
+      Written_Count : SSize_Type;
+   begin
+      Written_Count :=
+        Px_Thin.Write
+          (File_Descriptor => This.My_File_Descriptor,
+           Buffer          => Elements,
+           Count           => Elements'Length);
+      Last := Elements'First + Stream_Element_Offset (Written_Count) - 1;
+   end Send;
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => Interfaces.C.int,
+      Target => O_FLag);
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => O_FLag,
+      Target => Interfaces.C.int);
+
+   procedure Set_File_Descriptor_Flag_Non_Blocking
+     (File_Descriptor : in out Interfaces.C.int)
+   is
+      Temp : O_FLag := Convert_Unchecked (File_Descriptor);
+   begin
+      Temp := Temp or O_NONBLOCK;
+      File_Descriptor := Convert_Unchecked (Temp);
+   end Set_File_Descriptor_Flag_Non_Blocking;
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => Interfaces.C.unsigned,
+      Target => Interfaces.Unsigned_32);
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => Interfaces.Unsigned_32,
+      Target => Interfaces.C.unsigned);
+
+   function Is_Epoll_Error
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLERR) > 0;
+   end Is_Epoll_Error;
+
+   function Has_Hang_Up_Happened
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLHUP) > 0;
+   end Has_Hang_Up_Happened;
+
+   function Is_Data_Available_For_Reading
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLIN) > 0;
+   end Is_Data_Available_For_Reading;
 
 end C_Binding.Linux;
