@@ -1,3 +1,5 @@
+with "aida.gpr";
+
 project Ubuntu_Posix is
 
    for Languages use ("Ada", "C");
@@ -11,6 +13,10 @@ project Ubuntu_Posix is
       "c_binding.adb",
       "c_binding-linux.ads",
       "c_binding-linux.adb",
+      "c_binding-linux-sockets.ads",
+      "c_binding-linux-sockets-tcp.ads",
+      "c_binding-linux-sockets-tcp-connection_listeners.ads",
+      "c_binding-linux-sockets-tcp-connection_listeners.adb",
       "linux.ads"
      );
 
