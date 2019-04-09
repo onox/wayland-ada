@@ -26,12 +26,6 @@ package C_Binding.Linux.Udev is
       end case;
    end record;
 
-   type Success_Flag is
-     (
-      Success,
-      Failure
-     );
-
    type Context_Base    is abstract tagged limited private;
    type Device_Base     is abstract tagged limited private;
    type Enumerate_Base  is abstract tagged limited private;

@@ -141,7 +141,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       procedure Close_Socket is
          int_Result : Interfaces.C.int;
       begin
-         int_Result := Linux.Close (This.My_File_Descriptor);
+         int_Result := C_Close (This.My_File_Descriptor);
          if int_Result = -1 then
             Call_Result.Initialize (1417878614, -1955280056);
          end if;
@@ -150,5 +150,26 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
    begin
       Shutdown_Socket;
    end Shutdown_And_Close;
+
+   procedure Accept_New_Connection
+     (This   : Listener;
+      Socket : out General_Socket;
+      Flag   : out Success_Flag)
+   is
+      client_address : aliased Linux.Internet_Socket_Address;
+      client_length : aliased Interfaces.C.unsigned;
+   begin
+      Socket.My_File_Descriptor
+        := Linux.C_Accept
+          (This.My_File_Descriptor,
+           client_address'Access,
+           client_length'Access);
+
+      if Socket.My_File_Descriptor = -1 then
+         Flag := Failure;
+      else
+         Flag := Success;
+      end if;
+   end Accept_New_Connection;
 
 end C_Binding.Linux.Sockets.TCP.Connection_Listeners;

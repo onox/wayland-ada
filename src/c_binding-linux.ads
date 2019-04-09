@@ -22,6 +22,8 @@ package C_Binding.Linux is
 
    use type long;
 
+   subtype Success_Flag is C_Binding.Success_Flag;
+
    type Fds_Bits_Index is range 0 .. 1023;
    --  The interval is chosen 0 .. 1023 to be able to use file descriptors
    --  as index into the Fds_Bits_Array.
@@ -221,7 +223,7 @@ package C_Binding.Linux is
      Global => null,
      Pre    => File.Is_Closed;
 
-   procedure Close (File : in out Linux.File) with
+   function Close (File : in out Linux.File) return Success_Flag with
      Global => null,
      Pre    => File.Is_Open,
      Post   => File.Is_Closed;
@@ -677,10 +679,10 @@ package C_Binding.Linux is
    --  epoll_ctl() returns -1 and errno is set appropriately.
 
    function Epoll_Wait
-     (Epoll_Fd : Interfaces.C. int;
-      Events   : access Epoll_Event_Array;
+     (Epoll_Fd   : Interfaces.C. int;
+      Events     : access Epoll_Event_Array;
       Max_Events : Interfaces.C.int;
-      Timeout   : Interfaces.C.int) return Interfaces.C.int with
+      Timeout    : Interfaces.C.int) return Interfaces.C.int with
      Import        => True,
      Convention    => C,
      External_Name => "epoll_wait";
@@ -704,25 +706,11 @@ package C_Binding.Linux is
    --  causes epoll_wait() to block indefinitely, while specifying a timeout
    --  equal to zero cause epoll_wait() to return immediately, even if no
    --  events are available.
-
-   function Close
-     (File_Descriptor : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "close";
-   --  Closes a file descriptor, so that it no longer refers to any
-   --  file and may be reused.  Any record locks (see fcntl(2)) held on the
-   --  file it was associated with, and owned by the process, are removed
-   --  (regardless of the file descriptor that was used to obtain the lock).
    --
-   --  If fd is the last file descriptor referring to the underlying open
-   --  file description (see open(2)), the resources associated with the
-   --  open file description are freed; if the file descriptor was the last
-   --  reference to a file which has been removed using unlink(2), the file
-   --  is deleted.
-   --
-   --  Returns zero on success.  On error, -1 is returned, and errno
-   --  is set appropriately.
+   --  When successful, epoll_wait() returns the number of file descriptors
+   --  ready for the requested I/O, or zero if no file descriptor became
+   --  ready during the requested timeout milliseconds.  When an error
+   --  occurs, epoll_wait() returns -1 and errno is set appropriately.
 
    function C_Accept
      (
@@ -783,6 +771,16 @@ package C_Binding.Linux is
      Import        => True,
      Convention    => C,
      External_Name => "read";
+   --  On success, the number of bytes read is returned (zero indicates
+   --  end of file), and the file position is advanced by this number.
+   --  It is not an error if this number is smaller than the number of bytes
+   --  requested; this may happen for example because fewer bytes are actually
+   --  available right now (maybe because we were close to end-of-file,
+   --  or because we are reading from a pipe, or from a terminal),
+   --  or because read() was interrupted by a signal.
+   --  On error, -1 is returned, and errno is set appropriately.
+   --  In this case it is left unspecified whether the file position
+   --  (if any) changes.
 
    function Shutdown
      (Socket_Fd : Interfaces.C.int;
@@ -880,6 +878,25 @@ package C_Binding.Linux is
    SO_SNDLOWAT    : constant := 19;
    SO_RCVTIMEO    : constant := 20;
    SO_SNDTIMEO    : constant := 21;
+
+   function C_Close
+     (File_Descriptor : Interfaces.C.int) return Interfaces.C.int with
+     Import        => True,
+     Convention    => C,
+     External_Name => "close";
+   --  Closes a file descriptor, so that it no longer refers to any
+   --  file and may be reused.  Any record locks (see fcntl(2)) held on the
+   --  file it was associated with, and owned by the process, are removed
+   --  (regardless of the file descriptor that was used to obtain the lock).
+   --
+   --  If fd is the last file descriptor referring to the underlying open
+   --  file description (see open(2)), the resources associated with the
+   --  open file description are freed; if the file descriptor was the last
+   --  reference to a file which has been removed using unlink(2), the file
+   --  is deleted.
+   --
+   --  Returns zero on success.  On error, -1 is returned, and errno
+   --  is set appropriately.
 
 private
 
@@ -1038,11 +1055,6 @@ private
         Convention    => C,
         External_Name => "open";
 
-      procedure Close (File_Descriptor : Integer) with
-        Import        => True,
-        Convention    => C,
-        External_Name => "close";
-
       function Write
         (File_Descriptor : Integer;
          Buffer          : Stream_Element_Array;
@@ -1103,9 +1115,11 @@ private
       My_File_Descriptor : Integer := -1;
    end record;
 
-   function Is_Open (File : Linux.File) return Boolean is (File.My_File_Descriptor /= -1);
+   function Is_Open (File : Linux.File) return Boolean is
+     (File.My_File_Descriptor /= -1);
 
-   function Is_Closed (File : Linux.File) return Boolean is (File.My_File_Descriptor = -1);
+   function Is_Closed (File : Linux.File) return Boolean is
+     (File.My_File_Descriptor = -1);
 
    type File_Status is tagged limited record
       My_Status   : aliased Px_Thin.File_Status_T;

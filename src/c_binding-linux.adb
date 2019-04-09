@@ -65,9 +65,17 @@ package body C_Binding.Linux is
       File.My_File_Descriptor := Px_Thin.Open (+File_Name, M, P);
    end Open;
 
-   procedure Close (File : in out Linux.File) is
+   function Close (File : in out Linux.File) return Success_Flag is
+      Result : Interfaces.C.int;
+      Flag : Success_Flag;
    begin
-      Px_Thin.Close (File.My_File_Descriptor);
+      Result := C_Close (Interfaces.C.int (File.My_File_Descriptor));
+      if Result = -1 then
+         Flag := Failure;
+      else
+         Flag := Success;
+      end if;
+      return Flag;
    end Close;
 
    procedure Get_File_Status

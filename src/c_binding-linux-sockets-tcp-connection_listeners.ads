@@ -16,4 +16,9 @@ package C_Binding.Linux.Sockets.TCP.Connection_Listeners is
      (This        : in out Listener;
       Call_Result : in out Aida.Call_Result);
 
+   procedure Accept_New_Connection
+     (This   : Listener;
+      Socket : out General_Socket;
+      Flag   : out Success_Flag);
+
 end C_Binding.Linux.Sockets.TCP.Connection_Listeners;
