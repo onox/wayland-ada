@@ -174,17 +174,17 @@ package body C_Binding.Linux.Event_Polls is
       Shall_Continue_Reading : Boolean;
    begin
       N := Interfaces.C.int
-        (Linux.Read
+        (C_Read
            (This.My_Events (Index).Data.fd,
-            Buffer.all'Address,
+            Buffer.all,
             Buffer.all'Length));
       if N >= 0 then
          Shall_Continue_Reading := N > 0;
          Count := Ada.Streams.Stream_Element_Offset (N);
          while Shall_Continue_Reading loop
             N := Interfaces.C.int
-              (Linux.Read (This.My_Events (Index).Data.fd,
-               Buffer.all'Address,
+              (C_Read (This.My_Events (Index).Data.fd,
+               Buffer.all,
                Buffer.all'Length));
             if N = -1 then
                return (Id => Read_Failure);
@@ -201,22 +201,5 @@ package body C_Binding.Linux.Event_Polls is
          return (Id => Read_Failure);
       end if;
    end Read_Socket;
-
-   function Shutdown_Socket
-     (
-      This   : Event_List;
-      Index  : Epoll_Event_Index
-     ) return Success_Flag
-   is
-      int_Result : Interfaces.C.int;
-   begin
-      int_Result := Linux.Shutdown
-        (This.My_Events (Index).Data.fd, Linux.SHUT_RDWR);
-      if int_Result = -1 then
-         return Failure;
-      else
-         return Success;
-      end if;
-   end Shutdown_Socket;
 
 end C_Binding.Linux.Event_Polls;

@@ -32,10 +32,10 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
          Temp : aliased Boolean := True;
          int_Result : Interfaces.C.int;
       begin
-         int_Result := Linux.Set_Socket_Option
+         int_Result := C_Set_Socket_Option
            (This.My_File_Descriptor,
-            Linux.SOL_SOCKET,
-            Linux.SO_REUSEADDR,
+            SOL_SOCKET,
+            SO_REUSEADDR,
             Temp'Address,
             Integer'Size / 8);
 
@@ -130,7 +130,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
          int_Result : Interfaces.C.int;
       begin
          int_Result
-           := Linux.Shutdown (This.My_File_Descriptor, Linux.SHUT_RDWR);
+           := C_Shutdown (This.My_File_Descriptor, SHUT_RDWR);
          if int_Result = -1 then
             Call_Result.Initialize (1397807166, 2066031560);
          else

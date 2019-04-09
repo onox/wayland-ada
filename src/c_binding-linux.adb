@@ -103,7 +103,8 @@ package body C_Binding.Linux is
 
    function Read (File : Linux.File; Bytes : in out Stream_Element_Array) return SSize_Type is
    begin
-      return Px_Thin.Read (File.My_File_Descriptor, Bytes, Bytes'Length);
+      return C_Read
+        (Interfaces.C.int (File.My_File_Descriptor), Bytes, Bytes'Length);
    end Read;
 
    procedure Map_Memory
@@ -167,9 +168,9 @@ package body C_Binding.Linux is
       SSize : SSize_Type;
       B : Stream_Element_Array (1..200);
    begin
-      SSize := Px_Thin.Read (File_Descriptor => Px_Thin.STDIN_FILENO,
-                             Buffer          => B,
-                             Count           => Size_Type (200));
+      SSize := C_Read (File_Descriptor => Px_Thin.STDIN_FILENO,
+                       Buffer          => B,
+                       Count           => Size_Type (200));
 
       if SSize > 1 then
          declare

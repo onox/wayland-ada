@@ -11,6 +11,19 @@ package body C_Binding.Linux.Sockets.TCP is
       end if;
    end Close;
 
+   function Shutdown
+     (This : in out General_Socket) return Success_Flag
+   is
+      int_Result : Interfaces.C.int;
+   begin
+      int_Result := C_Shutdown (This.My_File_Descriptor, SHUT_RDWR);
+      if int_Result = -1 then
+         return Failure;
+      else
+         return Success;
+      end if;
+   end Shutdown;
+
    procedure Set_Socket_Non_Blocking
      (This        : in out General_Socket;
       Call_Result : in out Aida.Call_Result)
@@ -51,7 +64,7 @@ package body C_Binding.Linux.Sockets.TCP is
       Buffer : Stream_Element_Array;
       Count  : Natural) return Natural is
    begin
-      return Natural (Linux.Send
+      return Natural (C_Send
         (This.My_File_Descriptor, Buffer, Linux.Size_Type(Count)));
    end Send;
 

@@ -66,12 +66,6 @@ package C_Binding.Linux.Event_Polls is
       Buffer : access Ada.Streams.Stream_Element_Array
      ) return Read_Socket_Result;
 
-   function Shutdown_Socket
-     (
-      This   : Event_List;
-      Index  : Epoll_Event_Index
-     ) return Success_Flag;
-
    type Event_Poll_Watcher is limited private;
 
    function Initialize (This : in out Event_Poll_Watcher) return Success_Flag;

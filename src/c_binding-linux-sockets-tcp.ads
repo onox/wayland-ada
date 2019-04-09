@@ -6,6 +6,9 @@ package C_Binding.Linux.Sockets.TCP is
 
    function Close (This : in out General_Socket) return Success_Flag;
 
+   function Shutdown
+     (This : in out General_Socket) return Success_Flag;
+
    procedure Set_Socket_Non_Blocking
      (This        : in out General_Socket;
       Call_Result : in out Aida.Call_Result);
