@@ -2935,9 +2935,9 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Dispatch (Display : Wayland_Client.Display) return Int is
+   function Dispatch (Display : Wayland_Client.Display) return Integer is
    begin
-      return Wl_Thin.Display_Dispatch (Display.My_Display);
+      return Integer (Wl_Thin.Display_Dispatch (Display.My_Display));
    end Dispatch;
 
    function Dispatch_Pending
@@ -2971,19 +2971,19 @@ package body C_Binding.Linux.Wayland_Client is
    end Cancel_Read;
 
    procedure Dispatch (Display : Wayland_Client.Display) is
-      I : Int;
+      I : Integer;
       pragma Unreferenced (I);
    begin
       I := Display.Dispatch;
    end Dispatch;
 
-   function Roundtrip (Display : Wayland_Client.Display) return Int is
+   function Roundtrip (Display : Wayland_Client.Display) return Integer is
    begin
-      return Wl_Thin.Display_Roundtrip (Display.My_Display);
+      return Integer (Wl_Thin.Display_Roundtrip (Display.My_Display));
    end Roundtrip;
 
    procedure Roundtrip (Display : Wayland_Client.Display) is
-      I : Int;
+      I : Integer;
       pragma Unreferenced (I);
    begin
       I := Display.Roundtrip;

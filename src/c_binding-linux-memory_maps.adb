@@ -5,7 +5,7 @@ package body C_Binding.Linux.Memory_Maps is
       Address    : Void_Ptr;
       Length     : Ada.Streams.Stream_Element_Count;
       Protection : Memory_Protection;
-      Flags      : int;
+      Flags      : Integer;
       Offset     : Ada.Streams.Stream_Element_Count;
       This       : in out Memory_Map) is
    begin
@@ -13,7 +13,7 @@ package body C_Binding.Linux.Memory_Maps is
         := C_Mmap (Address,
                    Size_Type (Length),
                    Memory_Protection_To_Prot_Flag (Protection),
-                   Flags,
+                   Interfaces.C.int (Flags),
                    File.My_File_Descriptor,
                    Interfaces.C.long (Offset));
       This.My_Length := Size_Type (Length);

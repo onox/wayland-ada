@@ -38,7 +38,7 @@ package C_Binding.Linux.Memory_Maps is
       Address    : Void_Ptr;
       Length     : Ada.Streams.Stream_Element_Count;
       Protection : Memory_Protection;
-      Flags      : int;
+      Flags      : Integer;
       Offset     : Ada.Streams.Stream_Element_Count;
       This       : in out Memory_Map) with
      Global => null,

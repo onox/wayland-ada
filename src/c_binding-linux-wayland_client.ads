@@ -1,4 +1,5 @@
 with C_Binding.Linux.Files;
+with Interfaces;
 private with Interfaces.C.Strings;
 
 -- Auto-generated from Wayland.xml
@@ -1391,7 +1392,7 @@ package C_Binding.Linux.Wayland_Client is
                               Timeout : Integer) return Check_For_Events_Status;
    -- The timeout is given in milliseconds.
 
-   function Dispatch (Display : Wayland_Client.Display) return Int with
+   function Dispatch (Display : Wayland_Client.Display) return Integer with
      Pre => Display.Is_Connected;
    -- Process incoming events.
 
@@ -1425,7 +1426,7 @@ package C_Binding.Linux.Wayland_Client is
      Pre => Display.Is_Connected;
    -- Cancel read intention on display's fd.
 
-   function Roundtrip (Display : Wayland_Client.Display) return Int with
+   function Roundtrip (Display : Wayland_Client.Display) return Integer with
      Pre => Display.Is_Connected;
 
    procedure Roundtrip (Display : Wayland_Client.Display) with

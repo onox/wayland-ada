@@ -5,17 +5,11 @@ private with Ada.Unchecked_Conversion;
 --  name clash with the Ada binding to Posix named Florist.
 package C_Binding.Linux is
 
-   use type long;
-
    subtype Success_Flag is C_Binding.Success_Flag;
 
    type File_Base is limited private;
 
    type Socket_Base is limited private;
-
-   MAX_EPOLL_EVENTS : constant := 64;
-
-   subtype Epoll_Event_Index is Positive range 1 .. MAX_EPOLL_EVENTS;
 
    --
    -- Constants to be used with C_Binding.C_errno:
@@ -58,6 +52,7 @@ package C_Binding.Linux is
 
 private
 
+   use type long;
    use type Void_Ptr;
    use type Interfaces.C.int;
 

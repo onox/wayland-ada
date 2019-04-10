@@ -2,14 +2,9 @@ with C_Binding.Linux.Sockets.TCP.Connection_Listeners;
 
 package C_Binding.Linux.Event_Polls is
 
-   function Is_Epoll_Error
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
+   MAX_EPOLL_EVENTS : constant := 64;
 
-   function Has_Hang_Up_Happened
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
-
-   function Is_Data_Available_For_Reading
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
+   subtype Epoll_Event_Index is Positive range 1 .. MAX_EPOLL_EVENTS;
 
    type Check_For_Events_Result_Id is
      (
@@ -262,5 +257,14 @@ private
    --  ready for the requested I/O, or zero if no file descriptor became
    --  ready during the requested timeout milliseconds.  When an error
    --  occurs, epoll_wait() returns -1 and errno is set appropriately.
+
+   function Is_Epoll_Error
+     (Event_Flags : Interfaces.C.unsigned) return Boolean;
+
+   function Has_Hang_Up_Happened
+     (Event_Flags : Interfaces.C.unsigned) return Boolean;
+
+   function Is_Data_Available_For_Reading
+     (Event_Flags : Interfaces.C.unsigned) return Boolean;
 
 end C_Binding.Linux.Event_Polls;

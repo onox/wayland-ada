@@ -1,16 +1,10 @@
-with Interfaces.C.Strings;
 with System;
+
+private with Interfaces.C.Strings;
+private with Ada.Unchecked_Conversion;
 
 --  Contains type definitions common to all Ada bindings to C libraries.
 package C_Binding with Preelaborate is
-
-   subtype char is Interfaces.C.char;
-   subtype unsigned_long is Interfaces.C.unsigned_long;
-   subtype unsigned is Interfaces.C.unsigned;
-   subtype int is Interfaces.C.int;
-   subtype long is Interfaces.C.long;
-   subtype Unsigned_32 is Interfaces.Unsigned_32;
-   subtype Unsigned_16 is Interfaces.Unsigned_16;
 
    subtype Void_Ptr is System.Address;
 
@@ -39,6 +33,14 @@ package C_Binding with Preelaborate is
      );
 
 private
+
+   subtype char is Interfaces.C.char;
+   subtype unsigned_long is Interfaces.C.unsigned_long;
+   subtype unsigned is Interfaces.C.unsigned;
+   subtype int is Interfaces.C.int;
+   subtype long is Interfaces.C.long;
+   subtype Unsigned_32 is Interfaces.Unsigned_32;
+   subtype Unsigned_16 is Interfaces.Unsigned_16;
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
