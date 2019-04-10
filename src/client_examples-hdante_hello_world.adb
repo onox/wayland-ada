@@ -20,17 +20,17 @@ package body Client_Examples.Hdante_Hello_World is
 
    subtype Unsigned_32 is Wayland_Client.Unsigned_32;
 
-   use type Linux.S_FLag;
    use type C_Binding.int;
    use type C_Binding.C_String;
 
    use type Unsigned_32;
 
-   use all type Linux.File_Mode;
-   use all type Linux.File_Permission;
+   use all type Linux.Files.File_Mode;
+   use all type Linux.Files.File_Permission;
    use all type Linux.Files.File;
    use all type Linux.File_Status.Status;
    use all type Linux.Memory_Maps.Memory_Map;
+   use all type Linux.Memory_Maps.Memory_Protection;
 
    use all type Wayland_Client.Check_For_Events_Status;
    use all type Wayland_Client.Call_Result_Code;
@@ -146,7 +146,7 @@ package body Client_Examples.Hdante_Hello_World is
                                       Registry : Wayland_Client.Registry;
                                       Id       : Unsigned_32) is
    begin
-      Linux.Put_Line ("Got a registry losing event for" & Id'Image);
+      Linux.Text_IO.Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
    package Registry_Events is new Wayland_Client.Registry_Events
@@ -382,8 +382,9 @@ package body Client_Examples.Hdante_Hello_World is
       Get_Map_Memory
         (Image,
          System.Null_Address,
-         C_Binding.unsigned_long (Size (File_Status)),
-         Linux.PROT_READ, Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
+         Size (File_Status),
+         Page_Can_Be_Read,
+         Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
 
       if Memory_Map.Has_Mapping then
          Shm.Create_Pool (Image,

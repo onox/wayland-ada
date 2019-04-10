@@ -74,7 +74,10 @@ package body C_Binding.Linux.Files is
       return Flag;
    end Close;
 
-   procedure Write (This : File; Bytes : Stream_Element_Array) is
+   procedure Write
+     (This : File;
+      Bytes : Ada.Streams.Stream_Element_Array)
+   is
       SSize : SSize_Type;
       pragma Unreferenced (SSize);
    begin
@@ -86,10 +89,23 @@ package body C_Binding.Linux.Files is
    end Write;
 
    function Read
-     (This : File; Bytes : in out Stream_Element_Array) return SSize_Type is
+     (This : File;
+      Bytes : in out Ada.Streams.Stream_Element_Array) return Read_Result
+   is
+      Result : SSize_Type
+        := C_Read
+          (Interfaces.C.int (This.My_File_Descriptor), Bytes, Bytes'Length);
    begin
-      return C_Read
-        (Interfaces.C.int (This.My_File_Descriptor), Bytes, Bytes'Length);
+      case Result is
+         when SSize_Type'First .. -1 =>
+            return (Kind_Id => Read_Failure);
+         when 0 =>
+            return (Kind_Id => End_Of_File_Reached);
+         when 1 .. SSize_Type'Last =>
+            return (Kind_Id       => Read_Success,
+                    Element_Count =>
+                       Ada.Streams.Stream_Element_Count (Result));
+      end case;
    end Read;
 
 end C_Binding.Linux.Files;

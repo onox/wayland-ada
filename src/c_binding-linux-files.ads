@@ -1,5 +1,19 @@
 package C_Binding.Linux.Files is
 
+   type File_Permission is
+     (
+      Owner_Read,  Owner_Write,  Owner_Execute,
+      Group_Read,  Group_Write,  Group_Execute,
+      Others_Read, Others_Write, Others_Execute
+     );
+
+   type File_Permissions is array (File_Permission) of Boolean;
+
+   type File_Mode is
+     (
+      Read_Only, Write_Only, Read_Write
+     );
+
    type File is new File_Base;
    --with Default_Initial_Condition => Is_Closed (File);
    --  Represents a file on the hard disk.
@@ -21,13 +35,33 @@ package C_Binding.Linux.Files is
      Pre    => Is_Open (This),
      Post   => Is_Closed (This);
 
-   procedure Write (This : File; Bytes : Stream_Element_Array) with
+   procedure Write
+     (This : File;
+      Bytes : Ada.Streams.Stream_Element_Array) with
      Global => null,
      Pre    => Is_Open (This);
 
+   type Read_Result_Kind_Id is
+     (
+      Read_Success,
+      End_Of_File_Reached,
+      Read_Failure  --  Check errno
+     );
+
+   type Read_Result (Kind_Id : Read_Result_Kind_Id) is record
+      case Kind_Id is
+         when Read_Success =>
+            Element_Count : Ada.Streams.Stream_Element_Count;
+         when End_Of_File_Reached =>
+            null;
+         when Read_Failure =>
+            null;
+      end case;
+   end record;
+
    function Read
      (This  : File;
-      Bytes : in out Stream_Element_Array) return SSize_Type with
+      Bytes : in out Ada.Streams.Stream_Element_Array) return Read_Result with
      Global => null,
      Pre    => Is_Open (This);
 

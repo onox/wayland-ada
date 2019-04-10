@@ -15,7 +15,7 @@ package C_Binding.Linux.Sockets.TCP is
 
    function Send
      (This   : General_Socket;
-      Buffer : Stream_Element_Array;
+      Buffer : Ada.Streams.Stream_Element_Array;
       Count  : Natural) return Natural;
 
 end C_Binding.Linux.Sockets.TCP;

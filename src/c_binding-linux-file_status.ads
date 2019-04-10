@@ -4,6 +4,33 @@ package C_Binding.Linux.File_Status is
 
    use all type C_Binding.Linux.Files.File;
 
+   type Status_Time is record
+      Seconds      : Long_Integer;
+      Nano_Seconds : Long_Integer;
+   end record;
+
+   subtype Device_Id_Type is unsigned_long;
+
+   subtype Inode_Number_Type is unsigned_long;
+
+   subtype Hard_Link_Count_Type is unsigned_long;
+
+   subtype Mode_Type is unsigned;
+
+   subtype User_Id_Type is unsigned;
+
+   subtype Group_Id_Type is unsigned;
+
+   subtype Block_Size_Type is long;
+
+   subtype Block_Count_Type is long;
+
+   subtype Time_Sec is long;
+
+   subtype Time_Nano_Sec is long;
+
+   subtype Offset is long;
+
    type Status is limited private;
 
    procedure Get_File_Status
@@ -44,7 +71,7 @@ package C_Binding.Linux.File_Status is
      Global => null,
      Pre    => Is_Valid (This);
 
-   function Size (This : Status) return Offset with
+   function Size (This : Status) return Ada.Streams.Stream_Element_Count with
      Global => null,
      Pre    => Is_Valid (This);
    -- The file size in bytes.
@@ -58,20 +85,26 @@ package C_Binding.Linux.File_Status is
      Global => null,
      Pre    => Is_Valid (This);
 
-   function Last_Access_Time (This : Status) return Time with
+   function Last_Access_Time (This : Status) return Status_Time with
      Global => null,
      Pre    => Is_Valid (This);
 
-   function Modification_Time (This : Status) return Time with
+   function Modification_Time (This : Status) return Status_Time with
      Global => null,
      Pre    => Is_Valid (This);
 
    -- Last status change time
-   function Change_Time (This : Status) return Time with
+   function Change_Time (This : Status) return Status_Time with
      Global => null,
      Pre    => Is_Valid (This);
 
 private
+
+   type C_Time is record
+      Sec      : aliased Time_Sec;
+      Nano_Sec : aliased Time_Nano_Sec;
+   end record with
+     Convention => C_Pass_By_Copy;
 
    type File_Status_T is record
       -- ID of device containing file
@@ -100,20 +133,20 @@ private
       Block_Count : aliased Block_Count_Type;
 
       -- Time of last access
-      Access_Time : aliased Time;
+      Access_Time : aliased C_Time;
 
       -- Time of last modification
-      Modification_Time : aliased Time;
+      Modification_Time : aliased C_Time;
 
       -- Time of last status change
-      Change_Time : aliased Time;
+      Change_Time : aliased C_Time;
       Padding_1   : long;
       Padding_2   : long;
       Padding_3   : long;
    end record with
      Convention => C_Pass_By_Copy;
 
-   type Status is tagged limited record
+   type Status is limited record
       My_Status   : aliased File_Status_T;
       My_Is_Valid : Boolean := False;
    end record;
@@ -150,8 +183,8 @@ private
      (This.My_Status.Special_Device_Id);
 
    function Size
-     (This : Status) return Offset is
-     (This.My_Status.Size);
+     (This : Status) return Ada.Streams.Stream_Element_Count is
+     (Ada.Streams.Stream_Element_Count (This.My_Status.Size));
 
    function Block_Size
      (This : Status) return Block_Size_Type is
@@ -162,16 +195,20 @@ private
      (This.My_Status.Block_Count);
 
    function Last_Access_Time
-     (This : Status) return Time is
-     (This.My_Status.Access_Time);
+     (This : Status) return Status_Time is
+     ((Seconds      => Long_Integer (This.My_Status.Access_Time.Sec),
+       Nano_Seconds => Long_Integer (This.My_Status.Access_Time.Nano_Sec)));
 
    function Modification_Time
-     (This : Status) return Time is
-     (This.My_Status.Modification_Time);
+     (This : Status) return Status_Time is
+     ((Seconds      => Long_Integer (This.My_Status.Modification_Time.Sec),
+       Nano_Seconds =>
+          Long_Integer (This.My_Status.Modification_Time.Nano_Sec)));
 
    function Change_Time
-     (This : Status) return Time is
-     (This.My_Status.Change_Time);
+     (This : Status) return Status_Time is
+     ((Seconds      => Long_Integer (This.My_Status.Change_Time.Sec),
+       Nano_Seconds => Long_Integer (This.My_Status.Change_Time.Nano_Sec)));
 
    function C_Get_File_Status
      (Fd     : Interfaces.C.int;

@@ -26,6 +26,8 @@ project Ubuntu_Posix is
       "c_binding-linux-file_status.adb",
       "c_binding-linux-memory_maps.ads",
       "c_binding-linux-memory_maps.adb",
+      "c_binding-linux-text_io.ads",
+      "c_binding-linux-text_io.adb",
       "linux.ads"
      );
 

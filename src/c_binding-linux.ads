@@ -5,195 +5,9 @@ private with Ada.Unchecked_Conversion;
 --  name clash with the Ada binding to Posix named Florist.
 package C_Binding.Linux is
 
-   type S_FLag is new Unsigned_32;
-   type O_FLag is new Unsigned_32;
-   type Prot_FLag is new Unsigned_32;
-
    use type long;
 
    subtype Success_Flag is C_Binding.Success_Flag;
-
-   type Fds_Bits_Index is range 0 .. 1023;
-   --  The interval is chosen 0 .. 1023 to be able to use file descriptors
-   --  as index into the Fds_Bits_Array.
-
-   type Fds_Bits_Array is array (Fds_Bits_Index) of Boolean with Pack;
-
-   type fd_set is record
-      Fds_Bits : aliased Fds_Bits_Array;
-   end record with
-     Convention => C_Pass_By_Copy,
-     Size       => 1024;
-
-   type timeval is record
-      tv_sec  : aliased long;
-      tv_usec : aliased long; -- Microseconds!
-   end record with
-     Convention => C_Pass_By_Copy;
-
-   function C_Select
-     (File_Descriptor : Integer;
-      Readfds   : access fd_set;
-      Writefds  : access fd_set;
-      Exceptfds : access fd_set;
-      Time      : access timeval) return int;
-   pragma Import (C, C_Select, "select");
-   --  On success, returns the number of file descriptors contained
-   --  in the three returned descriptor sets (that is,
-   --  the total number of bits that are set in readfds, writefds, exceptfds)
-   --  which may be zero if the timeout expires before
-   --  anything interesting happens. On error, -1 is returned,
-   --  and errno is set appropriately; the sets and timeout become undefined,
-   --  so do not rely on their contents after an error.
-
-   type Poll_File_Descriptor is record
-      Descriptor : aliased Integer := -1;
-      Events     : aliased Unsigned_16 := 0;
-      Revents    : aliased Unsigned_16 := 0;
-   end record with
-     Convention => C_Pass_By_Copy;
-
-   type Poll_File_Descriptor_Array is array (Positive range <>) of
-     Poll_File_Descriptor with
-       Convention => C;
-
-   --
-   -- Non-primitive subprograms
-   --
-
-   -- Write to standard out. May be used instead of Ada.Text_IO.Put ().
-   procedure Put (Text : String) with
-     Global => null;
-
-   -- Write to standard out. May be used instead of Ada.Text_IO.Put_Line ().
-   procedure Put_Line (Text : String) with
-     Global => null;
-
-   function Get_Line return String;
-
-   function Poll
-     (File_Descriptors : Poll_File_Descriptor_Array;
-      Timeout          : Integer) return Integer;
-
-   --
-   -- Encoding of the file mode.
-   --
-
-   S_IFMT : constant S_FLag := 0170000; -- These bits determine file type.
-
-   --
-   -- File types
-   --
-
-   S_IFDIR  : constant S_FLag := 0040000; -- Directory.
-   S_IFCHR  : constant S_FLag := 0020000; -- Character device.
-   S_IFBLK  : constant S_FLag := 0060000; -- Block device.
-   S_IFREG  : constant S_FLag := 0100000; -- Regular file.
-   S_IFIFO  : constant S_FLag := 0010000; -- FIFO.
-   S_IFLNK  : constant S_FLag := 0120000; -- Symbolic link.
-   S_IFSOCK : constant S_FLag := 0140000; -- Socket.
-
-   POLLIN  : constant := 16#001#;
-   -- There is data to read.
-
-   POLLPRI : constant := 16#002#;
-   -- There is urgent data to read.
-
-   POLLOUT : constant := 16#004#;
-   -- Writing now will not block.
-
-   --  #define  __S_ISUID   04000  /* Set user ID on execution.  */
-   --  #define  __S_ISGID   02000  /* Set group ID on execution.  */
-   --  #define  __S_ISVTX   01000  /* Save swapped text after use (sticky).  */
-   --  #define  __S_IREAD   0400   /* Read by owner.  */
-   --  #define  __S_IWRITE  0200   /* Write by owner.  */
-   --  #define  __S_IEXEC   0100   /* Execute by owner.  */
-
-   type File_Permission is
-     (
-      Owner_Read,  Owner_Write,  Owner_Execute,
-      Group_Read,  Group_Write,  Group_Execute,
-      Others_Read, Others_Write, Others_Execute
-     );
-
-   type File_Permissions is array (File_Permission) of Boolean;
-
-   type File_Mode is
-     (
-      Read_Only, Write_Only, Read_Write
-     );
-
-   -- Protections are chosen from these bits, OR'd together.  The
-   -- implementation does not necessarily support PROT_EXEC or PROT_WRITE
-   -- without PROT_READ.  The only guarantees are that no writing will be
-   -- allowed without PROT_WRITE and no access will be allowed for PROT_NONE.
-
-   -- Page can be read.
-   PROT_READ : constant Prot_FLag := 16#1#;
-
-   -- Page can be written.
-   PROT_WRITE : constant Prot_FLag := 16#2#;
-
-   -- Page can be executed.
-   PROT_EXEC : constant Prot_FLag := 16#4#;
-
-   -- Page can not be accessed.
-   PROT_NONE : constant Prot_FLag := 16#0#;
-
-   -- Extend change to start of growsdown vma (mprotect only).
-   PROT_GROWSDOWN : constant Prot_FLag := 16#01000000#;
-
-   -- Extend change to start of growsup vma (mprotect only).
-   PROT_GROWSUP : constant Prot_FLag := 16#02000000#;
-
-   --
-   -- Flags to `msync'.
-   --
-
-   -- Sync memory asynchronously.
-   MS_ASYNC : constant := 1;
-
-   -- Synchronous memory sync.
-   MS_SYNC : constant := 4;
-
-   -- Invalidate the caches.
-   MS_INVALIDATE : constant := 2;
-
-   subtype Device_Id_Type is unsigned_long;
-
-   subtype Inode_Number_Type is unsigned_long;
-
-   subtype Hard_Link_Count_Type is unsigned_long;
-
-   subtype Mode_Type is unsigned;
-
-   subtype User_Id_Type is unsigned;
-
-   subtype Group_Id_Type is unsigned;
-
-   subtype Size_Type is unsigned_long;
-
-   subtype SSize_Type is long;
-
-   subtype Block_Size_Type is long;
-
-   subtype Block_Count_Type is long;
-
-   subtype Time_Sec is long;
-
-   subtype Time_Nano_Sec is long;
-
-   subtype Offset is long;
-
-   subtype Stream_Element        is Ada.Streams.Stream_Element;
-   subtype Stream_Element_Array  is Ada.Streams.Stream_Element_Array;
-   subtype Stream_Element_Offset is Ada.Streams.Stream_Element_Offset;
-
-   type Time is record
-      Sec      : aliased Time_Sec;
-      Nano_Sec : aliased Time_Nano_Sec;
-   end record with
-     Convention => C_Pass_By_Copy;
 
    type File_Base is limited private;
 
@@ -246,6 +60,90 @@ private
 
    use type Void_Ptr;
    use type Interfaces.C.int;
+
+   subtype Size_Type is unsigned_long;
+
+   subtype SSize_Type is long;
+
+   type Fds_Bits_Index is range 0 .. 1023;
+   --  The interval is chosen 0 .. 1023 to be able to use file descriptors
+   --  as index into the Fds_Bits_Array.
+
+   type Fds_Bits_Array is array (Fds_Bits_Index) of Boolean with Pack;
+
+   type fd_set is record
+      Fds_Bits : aliased Fds_Bits_Array;
+   end record with
+     Convention => C_Pass_By_Copy,
+     Size       => 1024;
+
+   type timeval is record
+      tv_sec  : aliased long;
+      tv_usec : aliased long; -- Microseconds!
+   end record with
+     Convention => C_Pass_By_Copy;
+
+   function C_Select
+     (File_Descriptor : Integer;
+      Readfds   : access fd_set;
+      Writefds  : access fd_set;
+      Exceptfds : access fd_set;
+      Time      : access timeval) return int;
+   pragma Import (C, C_Select, "select");
+   --  On success, returns the number of file descriptors contained
+   --  in the three returned descriptor sets (that is,
+   --  the total number of bits that are set in readfds, writefds, exceptfds)
+   --  which may be zero if the timeout expires before
+   --  anything interesting happens. On error, -1 is returned,
+   --  and errno is set appropriately; the sets and timeout become undefined,
+   --  so do not rely on their contents after an error.
+
+   type Poll_File_Descriptor is record
+      Descriptor : aliased Integer := -1;
+      Events     : aliased Unsigned_16 := 0;
+      Revents    : aliased Unsigned_16 := 0;
+   end record with
+     Convention => C_Pass_By_Copy;
+
+   type Poll_File_Descriptor_Array is
+     array (Positive range <>) of Poll_File_Descriptor with
+     Convention => C;
+
+   function Poll
+     (File_Descriptors : Poll_File_Descriptor_Array;
+      Timeout          : Integer) return Integer;
+   --  TODO: Make this function call available in public package
+
+   POLLIN  : constant := 16#001#;
+   -- There is data to read.
+
+   POLLPRI : constant := 16#002#;
+   -- There is urgent data to read.
+
+   POLLOUT : constant := 16#004#;
+   -- Writing now will not block.
+
+   type S_FLag is new Unsigned_32;
+   type O_FLag is new Unsigned_32;
+   type Prot_FLag is new Unsigned_32;
+
+   --
+   -- Encoding of the file mode.
+   --
+
+   S_IFMT : constant S_FLag := 0170000; -- These bits determine file type.
+
+   --
+   -- File types
+   --
+
+   S_IFDIR  : constant S_FLag := 0040000; -- Directory.
+   S_IFCHR  : constant S_FLag := 0020000; -- Character device.
+   S_IFBLK  : constant S_FLag := 0060000; -- Block device.
+   S_IFREG  : constant S_FLag := 0100000; -- Regular file.
+   S_IFIFO  : constant S_FLag := 0010000; -- FIFO.
+   S_IFLNK  : constant S_FLag := 0120000; -- Symbolic link.
+   S_IFSOCK : constant S_FLag := 0140000; -- Socket.
 
    Nil : Void_Ptr renames System.Null_Address;
 
@@ -353,7 +251,7 @@ private
 
    function C_Write
      (File_Descriptor : Interfaces.C.int;
-      Buffer          : Stream_Element_Array;
+      Buffer          : Ada.Streams.Stream_Element_Array;
       Count           : Size_Type) return SSize_Type with
      Import        => True,
      Convention    => C,
@@ -368,7 +266,7 @@ private
 
    function C_Read
      (File_Descriptor : Interfaces.C.int;
-      Buffer          : in out Stream_Element_Array;
+      Buffer          : in out Ada.Streams.Stream_Element_Array;
       Count           : Size_Type) return SSize_Type with
      Import        => True,
      Convention    => C,
@@ -384,36 +282,32 @@ private
    --  In this case it is left unspecified whether the file position
    --  (if any) changes.
 
-   package Px_Thin is
+   --
+   -- Standard file descriptors.
+   --
+   STDIN_FILENO  : constant := 0; -- Standard input.
+   STDOUT_FILENO : constant := 1; -- Standard output.
+   STDERR_FILENO : constant := 2; -- Standard error output.
 
-      --
-      -- Standard file descriptors.
-      --
-      STDIN_FILENO  : constant := 0; -- Standard input.
-      STDOUT_FILENO : constant := 1; -- Standard output.
-      STDERR_FILENO : constant := 2; -- Standard error output.
+   function C_Write
+     (File_Descriptor : Integer;
+      Buffer          : String;
+      Count           : Size_Type) return SSize_Type with
+     Import        => True,
+     Convention    => C,
+     External_Name => "write";
 
-      function Write
-        (File_Descriptor : Integer;
-         Buffer          : String;
-         Count           : Size_Type) return SSize_Type with
-        Import        => True,
-        Convention    => C,
-        External_Name => "write";
-
-      function Poll (File_Descriptors        : Poll_File_Descriptor_Array;
-                     File_Descriptors_Length : unsigned_long;
-                     Timeout                 : Integer) return Integer with
-        Import        => True,
-        Convention    => C,
-        External_Name => "poll";
-
-   end Px_Thin;
+   function C_Poll (File_Descriptors        : Poll_File_Descriptor_Array;
+                    File_Descriptors_Length : unsigned_long;
+                    Timeout                 : Integer) return Integer with
+     Import        => True,
+     Convention    => C,
+     External_Name => "poll";
 
    function Poll
      (File_Descriptors : Poll_File_Descriptor_Array;
       Timeout          : Integer) return Integer is
-      (Px_Thin.Poll (File_Descriptors, File_Descriptors'Length, Timeout));
+      (C_Poll (File_Descriptors, File_Descriptors'Length, Timeout));
 
    type File_Base is limited record
       My_File_Descriptor : Interfaces.C.int := -1;
