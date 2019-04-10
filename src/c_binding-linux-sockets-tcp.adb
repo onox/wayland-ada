@@ -36,7 +36,7 @@ package body C_Binding.Linux.Sockets.TCP is
       procedure Get_Connection_Flags is
       begin
          Connection_Flags
-           := Linux.File_Control (This.My_File_Descriptor, Linux.F_GETFL, 0);
+           := C_File_Control (This.My_File_Descriptor, F_GETFL, 0);
          if Connection_Flags = -1 then
             Call_Result.Initialize (1415633127, -1032210731);
          else
@@ -48,8 +48,8 @@ package body C_Binding.Linux.Sockets.TCP is
          int_Result : Interfaces.C.int;
       begin
          Linux.Set_File_Descriptor_Flag_Non_Blocking (Connection_Flags);
-         int_Result := Linux.File_Control
-           (This.My_File_Descriptor, Linux.F_SETFL, Connection_Flags);
+         int_Result := C_File_Control
+           (This.My_File_Descriptor, F_SETFL, Connection_Flags);
          if int_Result = -1 then
             Call_Result.Initialize (-1927227244, -0798468201);
          end if;
@@ -64,7 +64,7 @@ package body C_Binding.Linux.Sockets.TCP is
       Buffer : Stream_Element_Array;
       Count  : Natural) return Natural is
    begin
-      return Natural (C_Send
+      return Natural (C_Write
         (This.My_File_Descriptor, Buffer, Linux.Size_Type(Count)));
    end Send;
 

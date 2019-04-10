@@ -18,8 +18,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       procedure Create_Stream_Socket is
       begin
          --   This file descriptor will listen
-         This.My_File_Descriptor
-           := Linux.C_Socket (Linux.AF_INET, Linux.SOCK_STREAM, 0);
+         This.My_File_Descriptor := C_Socket (AF_INET, SOCK_STREAM, 0);
 
          if This.My_File_Descriptor = -1 then
             Call_Result.Initialize (0903341606, -1365917333);
@@ -47,7 +46,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       end Set_Socket_Option_Reuse_Address;
 
       procedure Bind_Descriptor_To_Port_And_Address is
-         Address : aliased Linux.Internet_Socket_Address
+         Address : aliased Internet_Socket_Address
            := (
                Address_Family => 0,
                Port_Number    => 0,
@@ -56,11 +55,11 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
               );
          Result : Interfaces.C.int;
       begin
-         Address.Address_Family := Linux.AF_INET;
-         Address.Address.Value := Linux.Get_Internet_Address ("0.0.0.0");
-         Address.Port_Number := Linux.Host_To_Network_Short (8080);
+         Address.Address_Family := AF_INET;
+         Address.Address.Value := C_Get_Internet_Address ("0.0.0.0");
+         Address.Port_Number := C_Host_To_Network_Short (8080);
 
-         Result := Linux.Bind
+         Result := C_Bind
            (This.My_File_Descriptor,
             Address'Access,
             Address'Size/8);
@@ -76,7 +75,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       procedure Get_Socket_Flags is
       begin
          listenfd_flags
-           := Linux.File_Control (This.My_File_Descriptor, Linux.F_GETFL, 0);
+           := C_File_Control (This.My_File_Descriptor, F_GETFL, 0);
 
          if listenfd_flags = -1 then
             Call_Result.Initialize (-0066197735, -1774369458);
@@ -91,8 +90,8 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
          Linux.Set_File_Descriptor_Flag_Non_Blocking (listenfd_flags);
 
          int_Result
-           := Linux.File_Control
-             (This.My_File_Descriptor, Linux.F_SETFL, listenfd_flags);
+           := C_File_Control
+             (This.My_File_Descriptor, F_SETFL, listenfd_flags);
 
          if int_Result = -1 then
             Call_Result.Initialize (1664842403, -1360419837);
@@ -104,7 +103,7 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       procedure Start_Listening_For_Connections is
          int_Result : Interfaces.C.int;
       begin
-         int_Result := Linux.Listen (This.My_File_Descriptor, 32);
+         int_Result := C_Listen (This.My_File_Descriptor, 32);
          if int_Result = -1 then
             Call_Result.Initialize (1535334882, -1524323957);
          end if;
@@ -156,11 +155,11 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       Socket : out General_Socket;
       Flag   : out Success_Flag)
    is
-      client_address : aliased Linux.Internet_Socket_Address;
+      client_address : aliased Internet_Socket_Address;
       client_length : aliased Interfaces.C.unsigned;
    begin
       Socket.My_File_Descriptor
-        := Linux.C_Accept
+        := C_Accept
           (This.My_File_Descriptor,
            client_address'Access,
            client_length'Access);

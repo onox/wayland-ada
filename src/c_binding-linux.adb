@@ -95,8 +95,8 @@ package body C_Binding.Linux is
       pragma Unreferenced (SSize);
    begin
       SSize :=
-        Px_Thin.Write
-          (File_Descriptor => File.My_File_Descriptor,
+        C_Write
+          (File_Descriptor => Interfaces.C.int (File.My_File_Descriptor),
            Buffer          => Bytes,
            Count           => Bytes'Length);
    end Write;
@@ -188,21 +188,6 @@ package body C_Binding.Linux is
 
    end Get_Line;
 
-   procedure Send
-     (This     : Socket;
-      Elements : Ada.Streams.Stream_Element_Array;
-      Last     : out Stream_Element_Offset)
-   is
-      Written_Count : SSize_Type;
-   begin
-      Written_Count :=
-        Px_Thin.Write
-          (File_Descriptor => This.My_File_Descriptor,
-           Buffer          => Elements,
-           Count           => Elements'Length);
-      Last := Elements'First + Stream_Element_Offset (Written_Count) - 1;
-   end Send;
-
    function Convert_Unchecked is new Ada.Unchecked_Conversion
      (Source => Interfaces.C.int,
       Target => O_FLag);
@@ -219,40 +204,5 @@ package body C_Binding.Linux is
       Temp := Temp or O_NONBLOCK;
       File_Descriptor := Convert_Unchecked (Temp);
    end Set_File_Descriptor_Flag_Non_Blocking;
-
-   function Convert_Unchecked is new Ada.Unchecked_Conversion
-     (Source => Interfaces.C.unsigned,
-      Target => Interfaces.Unsigned_32);
-
-   function Convert_Unchecked is new Ada.Unchecked_Conversion
-     (Source => Interfaces.Unsigned_32,
-      Target => Interfaces.C.unsigned);
-
-   function Is_Epoll_Error
-     (Event_Flags : Interfaces.C.unsigned) return Boolean
-   is
-      Temp : constant Interfaces.Unsigned_32
-        := Convert_Unchecked (Event_Flags);
-   begin
-      return (Temp and EPOLLERR) > 0;
-   end Is_Epoll_Error;
-
-   function Has_Hang_Up_Happened
-     (Event_Flags : Interfaces.C.unsigned) return Boolean
-   is
-      Temp : constant Interfaces.Unsigned_32
-        := Convert_Unchecked (Event_Flags);
-   begin
-      return (Temp and EPOLLHUP) > 0;
-   end Has_Hang_Up_Happened;
-
-   function Is_Data_Available_For_Reading
-     (Event_Flags : Interfaces.C.unsigned) return Boolean
-   is
-      Temp : constant Interfaces.Unsigned_32
-        := Convert_Unchecked (Event_Flags);
-   begin
-      return (Temp and EPOLLIN) > 0;
-   end Is_Data_Available_For_Reading;
 
 end C_Binding.Linux;

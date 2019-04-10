@@ -9,13 +9,6 @@ package C_Binding.Linux is
    type File_Status;
    type Memory_Map;
 
---     type unsigned       is mod 2 ** Integer'Size;
---     type unsigned_long  is mod 2 ** Long_Integer'Size;
---     type int is new Integer;
---     type long is new Long_Integer;
---     type Unsigned_32 is mod 2 ** 32;
---     for Unsigned_32'Size use 32;
-
    type S_FLag is new Unsigned_32;
    type O_FLag is new Unsigned_32;
    type Prot_FLag is new Unsigned_32;
@@ -359,375 +352,13 @@ package C_Binding.Linux is
 
    type Socket_Base is limited private;
 
-   type Socket is tagged limited private;
-
-   procedure Send
-     (This     : Socket;
-      Elements : Ada.Streams.Stream_Element_Array;
-      Last     : out Stream_Element_Offset);
-
-   type Internet_Address is record
-      Value : aliased Interfaces.C.unsigned;  --  load with inet_aton()
-   end record;
-   pragma Convention (C_Pass_By_Copy, Internet_Address);
-
-   type Internet_Socket_Pad_Array is
-     array (0 .. 7) of aliased Interfaces.C.unsigned_char;
-
-   type Internet_Socket_Address is record
-      Address_Family : aliased Interfaces.C.short;
-      Port_Number    : aliased Interfaces.C.unsigned_short;
-      Address        : aliased Internet_Address;
-      Padding        : aliased Internet_Socket_Pad_Array;
-   end record;
-   pragma Convention (C_Pass_By_Copy, Internet_Socket_Address);
-
-   type Epoll_Data (discr : Interfaces.C.unsigned := 0) is record
-      case discr is
-         when 0 =>
-            ptr : System.Address;
-         when 1 =>
-            fd : aliased Interfaces.C.int;
-         when 2 =>
-            u32 : aliased Interfaces.Unsigned_32;
-         when others =>
-            u64 : aliased Interfaces.Unsigned_64;
-      end case;
-   end record;
-   pragma Convention (C_Pass_By_Copy, Epoll_Data);
-   pragma Unchecked_Union (Epoll_Data);
-
-   type Epoll_Event is record
-      Events : aliased Interfaces.C.unsigned;
-      Data   : aliased Epoll_Data;
-   end record;
-   pragma Convention (C_Pass_By_Copy, Epoll_Event);
-
-   function Is_Epoll_Error
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
-
-   function Has_Hang_Up_Happened
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
-
-   function Is_Data_Available_For_Reading
-     (Event_Flags : Interfaces.C.unsigned) return Boolean;
-
-   EPOLL_CTL_ADD : constant := 1;
-   --  Add fd to the interest list and associate the settings
-   --  specified in event with the internal file linked to fd.
-
-   EPOLL_CTL_DEL : constant := 2;
-   -- Remove (deregister) the target file descriptor fd from the
-   -- interest list.  The event argument is ignored and can be NULL
-   -- (but see BUGS below).
-
-   EPOLL_CTL_MOD : constant := 3;
-   --  Change the settings associated with fd in the interest list to
-   --  the new settings specified in event.
-
-   EPOLLIN        : constant := 1;
-   --  The associated file is available for read(2) operations.
-
-   EPOLLPRI       : constant Interfaces.C.unsigned := 2;
-   --  There is an exceptional condition on the file descriptor.
-
-   EPOLLOUT       : constant Interfaces.C.unsigned := 4;
-   --  The associated file is available for write(2) operations.
-
-   EPOLLRDNORM    : constant Interfaces.C.unsigned := 64;
-   EPOLLRDBAND    : constant Interfaces.C.unsigned := 128;
-   EPOLLWRNORM    : constant Interfaces.C.unsigned := 256;
-   EPOLLWRBAND    : constant Interfaces.C.unsigned := 512;
-   EPOLLMSG       : constant Interfaces.C.unsigned := 1024;
-
-   EPOLLERR       : constant := 8;
-   --  Error condition happened on the associated file descriptor.
-   --  This event is also reported for the write end of a pipe when
-   --  the read end has been closed.  epoll_wait(2) will always
-   --  report for this event; it is not necessary to set it in
-   --  events.
-
-   EPOLLHUP       : constant := 16;
-   --  Hang up happened on the associated file descriptor.
-   --  epoll_wait(2) will always wait for this event; it is not
-   --  necessary to set it in events.
-   --
-   --  Note that when reading from a channel such as a pipe or a
-   --  stream socket, this event merely indicates that the peer
-   --  closed its end of the channel.  Subsequent reads from the
-   --  channel will return 0 (end of file) only after all outstanding
-   --  data in the channel has been consumed.
-
-   EPOLLRDHUP     : constant Interfaces.C.unsigned := 8192;
-   --  Stream socket peer closed connection, or shut down writing
-   --  half of connection.  (This flag is especially useful for writ-
-   --  ing simple code to detect peer shutdown when using Edge Trig-
-   --  gered monitoring.)
-
-   EPOLLEXCLUSIVE : constant Interfaces.C.unsigned := 268435456;
-   EPOLLWAKEUP    : constant Interfaces.C.unsigned := 536870912;
-   EPOLLONESHOT   : constant Interfaces.C.unsigned := 1073741824;
-   EPOLLET        : constant Interfaces.C.unsigned := 2147483648;
-
    MAX_EPOLL_EVENTS : constant := 64;
 
    subtype Epoll_Event_Index is Positive range 1 .. MAX_EPOLL_EVENTS;
 
-   type Epoll_Event_Array is array (Epoll_Event_Index) of aliased Epoll_Event;
-   --  This array cannot be defined as
-   --     array (Positive range <>)
-   --  because it will then not be possible to pass an instance of this
-   --  array as a subprogram argument in an Ada binding to a C library
-   --  because the type definition would be incompatible with C.
-
-   function C_Socket
-     (Domain   : Interfaces.C.int;
-      Kind     : Interfaces.C.int;
-      Protocol : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "socket";
-   --  Creates an endpoint for communication and returns a file
-   --  descriptor that refers to that endpoint.  The file descriptor
-   --  returned by a successful call will be the lowest-numbered file
-   --  descriptor not currently open for the process.
    --
-   --  The domain argument specifies a communication domain; this selects
-   --  the protocol family which will be used for communication.
+   -- Constants to be used with C_Binding.C_errno:
    --
-   --  Some socket types may not be implemented by all protocol families.
-   --
-   --  Since Linux 2.6.27, the type argument serves a second purpose: in
-   --  addition to specifying a socket type, it may include the bitwise OR
-   --  of any of the following values, to modify the behavior of socket():
-   --  The protocol specifies a particular protocol to be used with the
-   --  socket.  Normally only a single protocol exists to support a
-   --  particular socket type within a given protocol family, in which case
-   --  protocol can be specified as 0.  However, it is possible that many
-   --  protocols may exist, in which case a particular protocol must be
-   --  specified in this manner.  The protocol number to use is specific to
-   --  the "communication domain" in which communication is to take place;
-   --  see protocols(5).  See getprotoent(3) on how to map protocol name
-   --  strings to protocol numbers.
-   --
-   --  Sockets of type SOCK_STREAM are full-duplex byte streams.  They do
-   --  not preserve record boundaries.  A stream socket must be in a
-   --  connected state before any data may be sent or received on it.  A
-   --  connection to another socket is created with a connect(2) call.  Once
-   --  connected, data may be transferred using read(2) and write(2) calls
-   --  or some variant of the send(2) and recv(2) calls.  When a session has
-   --  been completed a close(2) may be performed.  Out-of-band data may
-   --  also be transmitted as described in send(2) and received as described
-   --  in recv(2).
-   --
-   --  The communications protocols which implement a SOCK_STREAM ensure
-   --  that data is not lost or duplicated.  If a piece of data for which
-   --  the peer protocol has buffer space cannot be successfully transmitted
-   --  within a reasonable length of time, then the connection is considered
-   --  to be dead.  When SO_KEEPALIVE is enabled on the socket the protocol
-   --  checks in a protocol-specific manner if the other end is still alive.
-   --  A SIGPIPE signal is raised if a process sends or receives on a broken
-   --  stream; this causes naive processes, which do not handle the signal,
-   --  to exit.  SOCK_SEQPACKET sockets employ the same system calls as
-   --  SOCK_STREAM sockets.  The only difference is that read(2) calls will
-   --  return only the amount of data requested, and any data remaining in
-   --  the arriving packet will be discarded.  Also all message boundaries
-   --  in incoming datagrams are preserved.
-   --
-   --  SOCK_DGRAM and SOCK_RAW sockets allow sending of datagrams to
-   --  correspondents named in sendto(2) calls.  Datagrams are generally
-   --  received with recvfrom(2), which returns the next datagram along with
-   --  the address of its sender.
-   --
-   --  On success, a file descriptor for the new socket is returned. On
-   --  error, -1 is returned, and errno is set appropriately.
-
-   --
-   -- Address Families
-   --
-
-   AF_Unix : constant := 1;
-   --  Local communication (pipes and file-domain)
-
-   AF_INET : constant := 2;
-   --  IPv4 Internet protocols
-
-   SOCK_STREAM : constant := 1;
-   -- Sequenced, reliable, connection-based byte streams.
-
-   SOCK_DGRAM : constant := 2;
-   -- Connectionless, unreliable datagrams of fixed maximum length.
-
-   function Get_Internet_Address
-     (Ipv4 : String) return Interfaces.C.unsigned with
-     Import        => True,
-     Convention    => C,
-     External_Name => "inet_addr";
-   --  Converts the Internet host address from IPv4 numbers-and-dots notation
-   --  into binary data in network byte order. If the input is invalid,
-   --  INADDR_NONE (usually -1) is returned. Use of this function is
-   --  problematic because -1 is a valid address (255.255.255.255).
-   --  Avoid its use in favor of inet_aton(), inet_pton(3), or getaddrinfo(3)
-   --  which provide a cleaner way to indicate error return.
-
-   function Host_To_Network_Short
-     (Host : Interfaces.C.unsigned_short) return Interfaces.C.unsigned_short
-     with
-       Import        => True,
-       Convention    => C,
-       External_Name => "htons";
-   --  Converts the unsigned short integer hostshort from host byte order to
-   --  network byte order.
-
-   function Bind
-     (Socket_FD : Interfaces.C.int;
-      Address   : access Linux.Internet_Socket_Address;
-      Address_Length : Interfaces.C.unsigned) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "bind";
-   --  When a socket is created with socket(2), it exists in a name space
-   --  (address family) but has no address assigned to it.  bind() assigns
-   --  the address specified by addr to the socket referred to by the file
-   --  descriptor sockfd.  addrlen specifies the size, in bytes, of the
-   --  address structure pointed to by addr.  Traditionally, this operation
-   --  is called "assigning a name to a socket".
-
-   function File_Control
-     (File_Descriptor : Interfaces.C.int;
-      Command         : Interfaces.C.int;
-      Argument        : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "fcntl";
-   --  Performs one of the operations described below on the open
-   --  file descriptor fd.  The operation is determined by cmd.
-   --
-   --  fcntl() can take an optional third argument.  Whether or not this
-   --  argument is required is determined by cmd.  The required argument
-   --  type is indicated in parentheses after each cmd name (in most cases,
-   --  the required type is int, and we identify the argument using the name
-   --  arg), or void is specified if the argument is not required.
-
-   F_DUPFD : constant := 0;
-   --  dup
-
-   F_GETFD : constant := 1;
-   --  get close_on_exec
-
-   F_SETFD : constant := 2;
-   --  set/clear close_on_exec
-
-   F_GETFL : constant := 3;
-   --  get file->f_flags
-
-   F_SETFL : constant := 4;
-   --  set file->f_flags
-
-   procedure Set_File_Descriptor_Flag_Non_Blocking
-     (File_Descriptor : in out Interfaces.C.int);
-
-   function Listen
-     (Socket_File_Descriptor : Interfaces.C.int;
-      Backlog                : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "listen";
-   --  listen() marks the socket referred to by sockfd as a passive socket,
-   --  that is, as a socket that will be used to accept incoming connection
-   --  requests using accept(2).
-   --
-   --  The sockfd argument is a file descriptor that refers to a socket of
-   --  type SOCK_STREAM or SOCK_SEQPACKET.
-   --
-   --  The backlog argument defines the maximum length to which the queue of
-   --  pending connections for sockfd may grow. If a connection request arrives
-   --  when the queue is full, the client may receive an error with
-   --  an indication of ECONNREFUSED or, if the underlying protocol supports
-   --  retransmission, the request may be ignored so that a later reattempt
-   --  at connection succeeds.
-   --
-   --  On success, zero is returned. On error, -1 is returned,
-   --  and errno is set appropriately.
-
-   function Epoll_Create1
-     (Flags : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_create1";
-   --  Creates an epoll instance.
-   --
-   --  If flags is 0, then, other than the fact that the obsolete size
-   --  argument is dropped, epoll_create1() is the same as epoll_create().
-   --  The following value can be included in flags
-   --  to obtain different behavior:
-
-   function Epoll_Control
-     (Epoll_Fd        : Interfaces.C.int;
-      Operation       : Interfaces.C.int;
-      File_Descriptor : Interfaces.C.int;
-      Event           : access Epoll_Event) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_ctl";
-   --  This system call is used to add, modify, or remove entries in the
-   --  interest list of the epoll(7) instance referred to by the file
-   --  descriptor epfd.  It requests that the operation op be performed for
-   --  the target file descriptor, fd.
-   --
-   --  When successful, epoll_ctl() returns zero.  When an error occurs,
-   --  epoll_ctl() returns -1 and errno is set appropriately.
-
-   function Epoll_Wait
-     (Epoll_Fd   : Interfaces.C. int;
-      Events     : access Epoll_Event_Array;
-      Max_Events : Interfaces.C.int;
-      Timeout    : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_wait";
-   --  The epoll_wait() system call waits for events on the epoll(7)
-   --  instance referred to by the file descriptor epfd.  The memory area
-   --  pointed to by events will contain the events that will be available
-   --  for the caller.  Up to maxevents are returned by epoll_wait().  The
-   --  maxevents argument must be greater than zero.
-   --
-   --  The timeout argument specifies the number of milliseconds that
-   --  epoll_wait() will block.  Time is measured against the
-   --  CLOCK_MONOTONIC clock.  The call will block until either:
-   --
-   --    *  a file descriptor delivers an event;
-   --    *  the call is interrupted by a signal handler; or
-   --    *  the timeout expires.
-   --
-   --  Note that the timeout interval will be rounded up to the system clock
-   --  granularity, and kernel scheduling delays mean that the blocking
-   --  interval may overrun by a small amount.  Specifying a timeout of -1
-   --  causes epoll_wait() to block indefinitely, while specifying a timeout
-   --  equal to zero cause epoll_wait() to return immediately, even if no
-   --  events are available.
-   --
-   --  When successful, epoll_wait() returns the number of file descriptors
-   --  ready for the requested I/O, or zero if no file descriptor became
-   --  ready during the requested timeout milliseconds.  When an error
-   --  occurs, epoll_wait() returns -1 and errno is set appropriately.
-
-   function C_Accept
-     (
-      Socket_Fd      : Interfaces.C.int;
-      Address        : access Internet_Socket_Address;
-      Address_Length : access Interfaces.C.unsigned
-     ) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-       External_Name => "accept";
-   --  The accept() system call is used with connection-based socket types
-   --  (SOCK_STREAM, SOCK_SEQPACKET).  It extracts the first connection
-   --  request on the queue of pending connections for the listening socket,
-   --  sockfd, creates a new connected socket, and returns a new file
-   --  descriptor referring to that socket.  The newly created socket is not
-   --  in the listening state.  The original socket sockfd is unaffected by
-   --  this call.
 
    EPERM   : constant :=  1;  -- Operation not permitted
    ENOENT  : constant :=  2;  -- No such file or directory
@@ -851,6 +482,9 @@ private
 
    O_ASYNC : constant O_FLag := 8#20000#;
 
+   procedure Set_File_Descriptor_Flag_Non_Blocking
+     (File_Descriptor : in out Interfaces.C.int);
+
    function C_Close
      (File_Descriptor : Interfaces.C.int) return Interfaces.C.int with
      Import        => True,
@@ -870,13 +504,20 @@ private
    --  Returns zero on success.  On error, -1 is returned, and errno
    --  is set appropriately.
 
-   function C_Send
+   function C_Write
      (File_Descriptor : Interfaces.C.int;
       Buffer          : Stream_Element_Array;
       Count           : Size_Type) return SSize_Type with
      Import        => True,
      Convention    => C,
      External_Name => "write";
+   --  Writes up to Count bytes from the buffer
+   --  to the file referred to by the file descriptor.
+   --  The number of bytes written may be less than count if,
+   --  for example, there is insufficient space on
+   --  the underlying physical medium, or the RLIMIT_FSIZE resource limit
+   --  is encountered (see setrlimit(2)), or the call was interrupted
+   --  by a signal handler after having written less than count bytes.
 
    function C_Read
      (File_Descriptor : Interfaces.C.int;
@@ -965,21 +606,6 @@ private
         Import        => True,
         Convention    => C,
         External_Name => "open";
-
-      function Write
-        (File_Descriptor : Integer;
-         Buffer          : Stream_Element_Array;
-         Count           : Size_Type) return SSize_Type with
-        Import        => True,
-        Convention    => C,
-        External_Name => "write";
-      --  Writes up to Count bytes from the buffer
-      --  to the file referred to by the file descriptor.
-      --  The number of bytes written may be less than count if,
-      --  for example, there is insufficient space on
-      --  the underlying physical medium, or the RLIMIT_FSIZE resource limit
-      --  is encountered (see setrlimit(2)), or the call was interrupted
-      --  by a signal handler after having written less than count bytes.
 
       function Write
         (File_Descriptor : Integer;
@@ -1125,10 +751,6 @@ private
 
    type Socket_Base is limited record
       My_File_Descriptor : Interfaces.C.int := -1;
-   end record;
-
-   type Socket is tagged limited record
-      My_File_Descriptor : Integer := -1;
    end record;
 
 end C_Binding.Linux;

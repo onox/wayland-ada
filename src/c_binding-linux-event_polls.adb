@@ -1,11 +1,47 @@
 package body C_Binding.Linux.Event_Polls is
 
    use type Ada.Streams.Stream_Element_Offset;
+   use type Interfaces.Unsigned_32;
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => Interfaces.C.unsigned,
+      Target => Interfaces.Unsigned_32);
+
+   function Convert_Unchecked is new Ada.Unchecked_Conversion
+     (Source => Interfaces.Unsigned_32,
+      Target => Interfaces.C.unsigned);
+
+   function Is_Epoll_Error
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLERR) > 0;
+   end Is_Epoll_Error;
+
+   function Has_Hang_Up_Happened
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLHUP) > 0;
+   end Has_Hang_Up_Happened;
+
+   function Is_Data_Available_For_Reading
+     (Event_Flags : Interfaces.C.unsigned) return Boolean
+   is
+      Temp : constant Interfaces.Unsigned_32
+        := Convert_Unchecked (Event_Flags);
+   begin
+      return (Temp and EPOLLIN) > 0;
+   end Is_Data_Available_For_Reading;
 
    function Initialize (This : in out Event_Poll_Watcher) return Success_Flag is
       Flag : Success_Flag;
    begin
-      This.My_File_Descriptor := Linux.Epoll_Create1 (0);
+      This.My_File_Descriptor := C_Epoll_Create1 (0);
       if This.My_File_Descriptor = -1 then
          Flag := Failure;
       else
@@ -21,17 +57,17 @@ package body C_Binding.Linux.Event_Polls is
    is
       Result : Interfaces.C.int;
 
-      Event : aliased Linux.Epoll_Event;
+      Event : aliased Epoll_Event;
 
       Flag : Success_Flag;
    begin
       --  add this clients descriptor to our event_poll watcher
       Event.Data.fd := File_Descriptor;
-      Event.Events := Linux.EPOLLIN;
+      Event.Events := EPOLLIN;
       Result
-        := Linux.Epoll_Control
+        := C_Epoll_Control
           (This.My_File_Descriptor,
-           Linux.EPOLL_CTL_ADD,
+           EPOLL_CTL_ADD,
            File_Descriptor,
            Event'Access);
 
@@ -68,9 +104,9 @@ package body C_Binding.Linux.Event_Polls is
       Flag : Success_Flag;
    begin
       Result
-        := Linux.Epoll_Control
+        := C_Epoll_Control
           (This.My_File_Descriptor,
-           Linux.EPOLL_CTL_DEL,
+           EPOLL_CTL_DEL,
            File_Descriptor,
            null);
 
@@ -107,7 +143,7 @@ package body C_Binding.Linux.Event_Polls is
    is
       N : Interfaces.C.int;
    begin
-      N := Linux.Epoll_Wait
+      N := C_Epoll_Wait
         (This.My_File_Descriptor,
          List.My_Events'Access,
          List.My_Events'Length,
@@ -127,22 +163,21 @@ package body C_Binding.Linux.Event_Polls is
      (This  : Event_List;
       Index : Epoll_Event_Index) return Boolean is
    begin
-      return Linux.Is_Epoll_Error (This.My_Events (Index).Events);
+      return Is_Epoll_Error (This.My_Events (Index).Events);
    end Is_Epoll_Error;
 
    function Has_Hang_Up_Happened
      (This  : Event_List;
       Index : Epoll_Event_Index) return Boolean is
    begin
-      return Linux.Has_Hang_Up_Happened (This.My_Events (Index).Events);
+      return Has_Hang_Up_Happened (This.My_Events (Index).Events);
    end Has_Hang_Up_Happened;
 
    function Is_Data_Available_For_Reading
      (This  : Event_List;
       Index : Epoll_Event_Index) return Boolean is
    begin
-      return Linux.Is_Data_Available_For_Reading
-        (This.My_Events (Index).Events);
+      return Is_Data_Available_For_Reading (This.My_Events (Index).Events);
    end Is_Data_Available_For_Reading;
 
    procedure Get_Socket
