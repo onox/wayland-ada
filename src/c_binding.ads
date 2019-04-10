@@ -8,18 +8,6 @@ package C_Binding with Preelaborate is
 
    subtype Void_Ptr is System.Address;
 
-   Nul : constant Character := Character'Val (0);
-
-   type C_String is new String with
-     Dynamic_Predicate => C_String'Length > 0
-     and then C_String (C_String'Last) = Nul;
-
-   function "-" (Text : C_String) return String;
-   -- Removes the last 'Nul' character and returns a normal String.
-
-   function "+" (Text : String) return C_String;
-   -- Appends a 'Nul' character to a standard String and returns a C_String.
-
    function C_errno return integer;
    pragma import( C, C_errno, "C_errno" );
 
@@ -32,7 +20,19 @@ package C_Binding with Preelaborate is
       Failure
      );
 
+   Nul : constant Character := Character'Val (0);
+
+   type C_String is new String with
+     Dynamic_Predicate => C_String'Length > 0
+     and then C_String (C_String'Last) = Nul;
+
 private
+
+   function "-" (Text : C_String) return String;
+   -- Removes the last 'Nul' character and returns a normal String.
+
+   function "+" (Text : String) return C_String;
+   -- Appends a 'Nul' character to a standard String and returns a C_String.
 
    subtype char is Interfaces.C.char;
    subtype unsigned_long is Interfaces.C.unsigned_long;

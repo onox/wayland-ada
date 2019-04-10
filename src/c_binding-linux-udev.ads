@@ -38,6 +38,8 @@ package C_Binding.Linux.Udev is
    --  but hwdb (short for hardware database) is used here because this type
    --  can never used directly by a user of this API.
 
+   subtype Success_Flag is C_Binding.Success_Flag;
+
 private
 
    function Get_String_Result
