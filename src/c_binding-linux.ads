@@ -5,10 +5,6 @@ private with Ada.Unchecked_Conversion;
 --  name clash with the Ada binding to Posix named Florist.
 package C_Binding.Linux is
 
-   type File;
-   type File_Status;
-   type Memory_Map;
-
    type S_FLag is new Unsigned_32;
    type O_FLag is new Unsigned_32;
    type Prot_FLag is new Unsigned_32;
@@ -34,7 +30,6 @@ package C_Binding.Linux is
       tv_usec : aliased long; -- Microseconds!
    end record with
      Convention => C_Pass_By_Copy;
-
 
    function C_Select
      (File_Descriptor : Integer;
@@ -200,155 +195,7 @@ package C_Binding.Linux is
    end record with
      Convention => C_Pass_By_Copy;
 
-   type File is tagged limited private with
-     Default_Initial_Condition => Is_Closed (File);
-   --  Represents a file on the hard disk.
-
-   procedure Set_File_Descriptor
-     (File  : in out Linux.File;
-      Value : Integer);
-
-   procedure Open
-     (File        : in out Linux.File;
-      File_Name   : in     String;
-      Mode        : in     File_Mode;
-      Permissions : in     File_Permissions) with
-     Global => null,
-     Pre    => File.Is_Closed;
-
-   function Close (File : in out Linux.File) return Success_Flag with
-     Global => null,
-     Pre    => File.Is_Open,
-     Post   => File.Is_Closed;
-
-   procedure Write (File : Linux.File; Bytes : Stream_Element_Array) with
-     Global => null,
-     Pre    => File.Is_Open;
-
-   function Read
-     (File  : Linux.File;
-      Bytes : in out Stream_Element_Array) return SSize_Type with
-     Global => null,
-     Pre    => File.Is_Open;
-
-   function File_Descriptor (File : Linux.File) return Integer with
-     Global => null,
-     Pre    => File.Is_Open;
-
-   procedure Get_File_Status
-     (File   : in     Linux.File;
-      Status : in out File_Status) with
-     Global => null,
-     Pre    => File.Is_Open;
-
-   procedure Map_Memory
-     (File    : in Linux.File;
-      Address : Void_Ptr;
-      Len     : Size_Type;
-      Prot    : Prot_FLag;
-      Flags   : int;
-      Offset  : Linux.Offset;
-      Memory_Map : in out Linux.Memory_Map) with
-     Global => null,
-     Pre    => not Has_Mapping (Memory_Map);
-
-   function Is_Open (File : Linux.File) return Boolean with
-     Global => null;
-
-   function Is_Closed (File : Linux.File) return Boolean with
-     Global => null;
-
-   type File_Status is tagged limited private;
-
-   function Is_Valid (Status : File_Status) return Boolean with
-     Global => null;
-
-   function Device_Id (Status : File_Status) return Device_Id_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Inode_Number (Status : File_Status) return Inode_Number_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Hard_Link_Count
-     (Status : File_Status) return Hard_Link_Count_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Mode (Status : File_Status) return Mode_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function User_Id (Status : File_Status) return User_Id_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Group_Id (Status : File_Status) return Group_Id_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Special_Device_Id (Status : File_Status) return Device_Id_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Size (Status : File_Status) return Offset with
-     Global => null,
-     Pre    => Status.Is_Valid;
-   -- The file size in bytes.
-
-   function Block_Size (Status : File_Status) return Block_Size_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   -- Number of 512B blocks allocated
-   function Block_Count (Status : File_Status) return Block_Size_Type with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Last_Access_Time (Status : File_Status) return Time with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   function Modification_Time (Status : File_Status) return Time with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   -- Last status change time
-   function Change_Time (Status : File_Status) return Time with
-     Global => null,
-     Pre    => Status.Is_Valid;
-
-   type Memory_Map is tagged limited private;
-
-   function Has_Mapping (Map : Linux.Memory_Map) return Boolean with
-     Global => null;
-
-   function Mapping (Map : Linux.Memory_Map) return Void_Ptr with
-     Global => null,
-     Pre    => Map.Has_Mapping;
-
-   -- Returns 0 on success, otherwise -1.
-   function Unmap_Memory (Map : in out Linux.Memory_Map) return Integer with
-     Global => null,
-     Post   => (if Unmap_Memory'Result = 0 then not Map.Has_Mapping);
-
-   -- Returns 0 on success, otherwise -1.
-   function Memory_Unmap (Address : Void_Ptr;
-                          Length  : Size_Type) return Integer with
-     Global => null;
-
-   --
-   -- Standard file descriptors.
-   --
-   STDIN  : constant File; -- Standard input.
-   STDOUT : constant File; -- Standard output.
-   STDERR : constant File; -- Standard error output.
-
-   MAP_FAILED : constant Void_Ptr;
-
-   -- Share changes.
-   MAP_SHARED : constant := 16#01#;
+   type File_Base is limited private;
 
    type Socket_Base is limited private;
 
@@ -539,73 +386,12 @@ private
 
    package Px_Thin is
 
+      --
       -- Standard file descriptors.
+      --
       STDIN_FILENO  : constant := 0; -- Standard input.
       STDOUT_FILENO : constant := 1; -- Standard output.
       STDERR_FILENO : constant := 2; -- Standard error output.
-
-      type File_Status_T is record
-         -- ID of device containing file
-         Device_Id : aliased Device_Id_Type;
-
-         Inode_Number    : aliased Inode_Number_Type;
-         Hard_Link_Count : aliased Hard_Link_Count_Type;
-
-         -- Protection
-         Mode : aliased Mode_Type;
-
-         User_Id   : aliased User_Id_Type;
-         Group_Id  : aliased Group_Id_Type;
-         Padding_0 : aliased int;
-
-         -- Device ID (if special file)
-         Special_Device_Id : aliased Device_Id_Type;
-
-         -- Total size, in bytes
-         Size : aliased Offset;
-
-         -- Blocksize for file system I/O
-         Block_Size : aliased Block_Size_Type;
-
-         -- Number of 512B blocks allocated
-         Block_Count : aliased Block_Count_Type;
-
-         -- Time of last access
-         Access_Time : aliased Time;
-
-         -- Time of last modification
-         Modification_Time : aliased Time;
-
-         -- Time of last status change
-         Change_Time : aliased Time;
-         Padding_1   : long;
-         Padding_2   : long;
-         Padding_3   : long;
-      end record with
-        Convention => C_Pass_By_Copy;
-
-      function Get_File_Status
-        (Fd     : Integer;
-         Status : access File_Status_T) return Integer with
-        Import        => True,
-        Convention    => C,
-        External_Name => "fstat";
-
-      -- Establishes a connection between a file and a file descriptor.
-      -- The file descriptor handle (a non-negative number)
-      -- is returned upon success, otherwise -1.
-      --
-      -- Applications shall specify exactly one of the first three flags:
-      -- O_RDONLY, O_WRONLY and O_RDWR. And then any combination of O_APPEND,
-      -- O_CREAT, O_DSYNC, O_EXCL, O_NOCTTY, O_NONBLOCK, O_RSYNC,
-      -- O_SYNC, O_TRUNC.
-      function Open
-        (File_Name : C_String;
-         Flags     : O_FLag;
-         S_Flags   : S_FLag) return Integer with
-        Import        => True,
-        Convention    => C,
-        External_Name => "open";
 
       function Write
         (File_Descriptor : Integer;
@@ -614,22 +400,6 @@ private
         Import        => True,
         Convention    => C,
         External_Name => "write";
-
-      function Mmap
-        (Addr   : Void_Ptr;
-         Len    : Size_Type;
-         Prot   : Prot_FLag;
-         Flags  : int;
-         Fd     : Integer;
-         Offset : Linux.Offset) return Void_Ptr with
-        Import        => True,
-        Convention    => C,
-        External_Name => "mmap";
-
-      function Munmap (Addr : Void_Ptr; Length : Size_Type) return Integer with
-        Import        => True,
-        Convention    => C,
-        External_Name => "munmap";
 
       function Poll (File_Descriptors        : Poll_File_Descriptor_Array;
                      File_Descriptors_Length : unsigned_long;
@@ -640,114 +410,14 @@ private
 
    end Px_Thin;
 
-   type File is tagged limited record
-      My_File_Descriptor : Integer := -1;
-   end record;
-
-   function Is_Open (File : Linux.File) return Boolean is
-     (File.My_File_Descriptor /= -1);
-
-   function Is_Closed (File : Linux.File) return Boolean is
-     (File.My_File_Descriptor = -1);
-
-   type File_Status is tagged limited record
-      My_Status   : aliased Px_Thin.File_Status_T;
-      My_Is_Valid : Boolean := False;
-   end record;
-
-   function File_Descriptor (File : Linux.File) return Integer is
-     (File.My_File_Descriptor);
-
-   function Is_Valid
-     (Status : File_Status) return Boolean is
-     (Status.My_Is_Valid);
-
-   function Device_Id
-     (Status : File_Status) return Device_Id_Type is
-     (Status.My_Status.Device_Id);
-
-   function Inode_Number
-     (Status : File_Status) return Inode_Number_Type is
-     (Status.My_Status.Inode_Number);
-
-   function Hard_Link_Count
-     (Status : File_Status) return Hard_Link_Count_Type is
-     (Status.My_Status.Hard_Link_Count);
-
-   function Mode
-     (Status : File_Status) return Mode_Type is (Status.My_Status.Mode);
-
-   function User_Id
-     (Status : File_Status) return User_Id_Type is
-     (Status.My_Status.User_Id);
-
-   function Group_Id
-     (Status : File_Status) return Group_Id_Type is
-     (Status.My_Status.Group_Id);
-
-   function Special_Device_Id
-     (Status : File_Status) return Device_Id_Type is
-     (Status.My_Status.Special_Device_Id);
-
-   function Size
-     (Status : File_Status) return Offset is
-     (Status.My_Status.Size);
-
-   function Block_Size
-     (Status : File_Status) return Block_Size_Type is
-     (Status.My_Status.Block_Size);
-
-   function Block_Count
-     (Status : File_Status) return Block_Size_Type is
-     (Status.My_Status.Block_Count);
-
-   function Last_Access_Time
-     (Status : File_Status) return Time is
-     (Status.My_Status.Access_Time);
-
-   function Modification_Time
-     (Status : File_Status) return Time is
-     (Status.My_Status.Modification_Time);
-
-   function Change_Time
-     (Status : File_Status) return Time is
-     (Status.My_Status.Change_Time);
-
-   function Conv is new Ada.Unchecked_Conversion (Source => long,
-                                                  Target => Void_Ptr);
-
-   MAP_FAILED_VALUE : constant long     := -1;
-   MAP_FAILED       : constant Void_Ptr := Conv (MAP_FAILED_VALUE);
-
-   type Memory_Map is tagged limited record
-      My_Mapping : Void_Ptr := MAP_FAILED;
-      My_Length  : Size_Type;
-   end record;
-
-   function Has_Mapping
-     (Map : Linux.Memory_Map) return Boolean is (Map.My_Mapping /= MAP_FAILED);
-
-   function Mapping (Map : Linux.Memory_Map) return Void_Ptr is (Map.My_Mapping);
-
-   STDIN  : constant File :=
-     (
-      My_File_Descriptor => Px_Thin.STDIN_FILENO
-     );
-
-   STDOUT : constant File :=
-     (
-      My_File_Descriptor => Px_Thin.STDOUT_FILENO
-     );
-
-   STDERR : constant File :=
-     (
-      My_File_Descriptor => Px_Thin.STDERR_FILENO
-     );
-
    function Poll
      (File_Descriptors : Poll_File_Descriptor_Array;
       Timeout          : Integer) return Integer is
       (Px_Thin.Poll (File_Descriptors, File_Descriptors'Length, Timeout));
+
+   type File_Base is limited record
+      My_File_Descriptor : Interfaces.C.int := -1;
+   end record;
 
    type Socket_Base is limited record
       My_File_Descriptor : Interfaces.C.int := -1;
