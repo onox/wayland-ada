@@ -3119,13 +3119,13 @@ package body C_Binding.Linux.Wayland_Client is
 
    procedure Create_Pool
      (Shm             : Wayland_Client.Shm;
-      File_Descriptor : File;
+      File_Descriptor : C_Binding.Linux.Files.File;
       Size            : Integer;
       Pool            : in out Wayland_Client.Shm_Pool) is
    begin
       Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool
         (Shm.My_Shm,
-         File_Descriptor.My_File_Descriptor,
+         Integer (File_Descriptor.My_File_Descriptor),
          Size);
    end Create_Pool;
 

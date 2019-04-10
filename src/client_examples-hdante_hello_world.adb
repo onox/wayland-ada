@@ -1,4 +1,6 @@
-with Linux;
+with Linux.Files;
+with Linux.File_Status;
+with Linux.Memory_Maps;
 with C_Binding;
 with Wayland_Client;
 with Ada.Real_Time;
@@ -26,6 +28,9 @@ package body Client_Examples.Hdante_Hello_World is
 
    use all type Linux.File_Mode;
    use all type Linux.File_Permission;
+   use all type Linux.Files.File;
+   use all type Linux.File_Status.Status;
+   use all type Linux.Memory_Maps.Memory_Map;
 
    use all type Wayland_Client.Check_For_Events_Status;
    use all type Wayland_Client.Call_Result_Code;
@@ -295,12 +300,12 @@ package body Client_Examples.Hdante_Hello_World is
    Pool          : Wayland_Client.Shm_Pool;
    Surface       : Wayland_Client.Surface;
    Shell_Surface : Wayland_Client.Shell_Surface;
-   Image         : Linux.File;
-   File_Status   : Linux.File_Status;
+   Image         : Linux.Files.File;
+   File_Status   : Linux.File_Status.Status;
 
    File_Name : String := "hello_world_image.bin";
 
-   Memory_Map : Linux.Memory_Map;
+   Memory_Map : Linux.Memory_Maps.Memory_Map;
 
    Events_Status : Wayland_Client.Check_For_Events_Status;
 
@@ -351,34 +356,38 @@ package body Client_Examples.Hdante_Hello_World is
          end case;
       end if;
 
-      Image.Open (File_Name,
-                  Mode        => Read_Write,
-                  Permissions => (
-                                  Owner_Read  => True,
-                                  Group_Read  => True,
-                                  Others_Read => True,
-                                  others      => False
-                                 ));
+      Linux.Files.Open
+        (Image,
+         File_Name,
+         Mode        => Read_Write,
+         Permissions => (
+                         Owner_Read  => True,
+                         Group_Read  => True,
+                         Others_Read => True,
+                         others      => False
+                        ));
 
-      if Image.Is_Closed then
+      if Linux.Files.Is_Closed (Image) then
          Put_Line ("Error opening surface image");
          return;
       end if;
 
-      Image.Get_File_Status (File_Status);
+      Get_File_Status (Image, File_Status);
 
-      if not File_Status.Is_Valid then
+      if not Is_Valid (File_Status) then
          Put_Line ("File does not exist?");
          return;
       end if;
 
-      Image.Map_Memory (System.Null_Address,
-                        C_Binding.unsigned_long (File_Status.Size),
-                        Linux.PROT_READ, Linux.MAP_SHARED, 0, Memory_Map);
+      Get_Map_Memory
+        (Image,
+         System.Null_Address,
+         C_Binding.unsigned_long (Size (File_Status)),
+         Linux.PROT_READ, Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
 
       if Memory_Map.Has_Mapping then
          Shm.Create_Pool (Image,
-                          Integer (File_Status.Size),
+                          Integer (Size (File_Status)),
                           Pool);
       else
          Put_Line ("Failed to map file");

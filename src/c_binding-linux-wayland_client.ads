@@ -1,3 +1,4 @@
+with C_Binding.Linux.Files;
 private with Interfaces.C.Strings;
 
 -- Auto-generated from Wayland.xml
@@ -859,7 +860,7 @@ package C_Binding.Linux.Wayland_Client is
      Pre => Has_Proxy (Registry);
 
    procedure Create_Pool (Shm             : Wayland_Client.Shm;
-                          File_Descriptor : File;
+                          File_Descriptor : C_Binding.Linux.Files.File;
                           Size            : Integer;
                           Pool            : in out Shm_Pool);
    -- Create a new Shm_Pool object.
