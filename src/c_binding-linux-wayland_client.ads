@@ -100,7 +100,7 @@ package C_Binding.Linux.Wayland_Client is
 
    Subsurface_Interface : constant Interface_Type;
 
-   Default_Display_Name : constant C_String := "wayland-0" & Nul;
+   Default_Display_Name : constant String := "wayland-0";
 
    Display_Error_Invalid_Object : constant Unsigned_32 := 0;
    -- server couldn't find object
@@ -710,7 +710,7 @@ package C_Binding.Linux.Wayland_Client is
    -- The details depend on the compositor implementation.
 
    procedure Set_Title (Surface : Shell_Surface;
-                        Title   : C_String) with
+                        Title   : String) with
      Pre => Surface.Has_Proxy;
    -- Set a short title for the surface.
    --
@@ -721,7 +721,7 @@ package C_Binding.Linux.Wayland_Client is
    -- The string must be encoded in UTF-8.
 
    procedure Set_Class (Surface : Shell_Surface;
-                        Class_V : C_String) with
+                        Class_V : String) with
      Pre => Surface.Has_Proxy;
    -- Set a class for the surface.
    --
@@ -1378,7 +1378,7 @@ package C_Binding.Linux.Wayland_Client is
    function Is_Connected (Display : Wayland_Client.Display) return Boolean;
 
    procedure Connect (Display : in out Wayland_Client.Display;
-                      Name    : C_String := Default_Display_Name) with
+                      Name    : String := Default_Display_Name) with
      Pre => not Display.Is_Connected;
    -- Attempts connecting with the Wayland server.
 
@@ -1503,7 +1503,7 @@ package C_Binding.Linux.Wayland_Client is
 
    procedure Do_Accept (Offer     : Data_Offer;
                         Serial    : Unsigned_32;
-                        Mime_Type : C_String) with
+                        Mime_Type : String) with
      Pre => Offer.Has_Proxy;
    -- Indicate that the client can accept the given mime type.
 
@@ -1513,7 +1513,7 @@ package C_Binding.Linux.Wayland_Client is
    -- Indicate that the client does not accept the given mime type.
 
    procedure Receive (Offer           : Data_Offer;
-                      Mime_Type       : C_String;
+                      Mime_Type       : String;
                       File_Descriptor : Integer) with
      Pre => Offer.Has_Proxy;
    -- To transfer the offered data, the client issues this request
@@ -1594,7 +1594,7 @@ package C_Binding.Linux.Wayland_Client is
      Pre => Source.Has_Proxy;
 
    procedure Offer (Source    : Data_Source;
-                    Mime_Type : C_String) with
+                    Mime_Type : String) with
      Pre => Source.Has_Proxy;
    -- This request adds a mime type to the set of mime types
    -- advertised to targets.  Can be called several times to offer

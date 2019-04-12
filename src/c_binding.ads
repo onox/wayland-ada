@@ -20,13 +20,13 @@ package C_Binding with Preelaborate is
       Failure
      );
 
+private
+
    Nul : constant Character := Character'Val (0);
 
    type C_String is new String with
      Dynamic_Predicate => C_String'Length > 0
      and then C_String (C_String'Last) = Nul;
-
-private
 
    function "-" (Text : C_String) return String;
    -- Removes the last 'Nul' character and returns a normal String.

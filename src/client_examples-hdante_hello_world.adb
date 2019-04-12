@@ -20,8 +20,6 @@ package body Client_Examples.Hdante_Hello_World is
 
    subtype Unsigned_32 is Wayland_Client.Unsigned_32;
 
-   use type C_Binding.C_String;
-
    use type Unsigned_32;
 
    use all type Linux.Files.File_Mode;

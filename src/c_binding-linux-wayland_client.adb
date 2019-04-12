@@ -2877,9 +2877,9 @@ package body C_Binding.Linux.Wayland_Client is
    end Output_Events;
 
    procedure Connect (Display : in out Wayland_Client.Display;
-                      Name    : C_String := Default_Display_Name) is
+                      Name    : String := Default_Display_Name) is
    begin
-      Display.My_Display := Wl_Thin.Display_Connect (Name);
+      Display.My_Display := Wl_Thin.Display_Connect (+Name);
       if Display.My_Display /= null then
          Display.My_Fd :=
            Wl_Thin.Display_Get_File_Descriptor (Display.My_Display);
@@ -3211,14 +3211,13 @@ package body C_Binding.Linux.Wayland_Client is
 
    procedure Do_Accept (Offer     : Data_Offer;
                         Serial    : Unsigned_32;
-                        Mime_Type : C_String) is
+                        Mime_Type : String) is
    begin
       Wl_Thin.Proxy_Marshal
         (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
          WL_DATA_OFFER_ACCEPT,
          Serial,
-         Mime_Type);
-
+         +Mime_Type);
    end Do_Accept;
 
    procedure Do_Not_Accept (Offer  : Data_Offer;
@@ -3230,11 +3229,11 @@ package body C_Binding.Linux.Wayland_Client is
    end Do_Not_Accept;
 
    procedure Receive (Offer           : Data_Offer;
-                      Mime_Type       : C_String;
+                      Mime_Type       : String;
                       File_Descriptor : Integer) is
    begin
       Wl_Thin.Data_Offer_Receive
-        (Offer.My_Data_Offer, Mime_Type, File_Descriptor);
+        (Offer.My_Data_Offer, +Mime_Type, File_Descriptor);
    end Receive;
 
    procedure Finish (Offer : Data_Offer) is
@@ -3344,21 +3343,21 @@ package body C_Binding.Linux.Wayland_Client is
    end Set_Maximized;
 
    procedure Set_Title (Surface : Shell_Surface;
-                        Title   : C_String) is
+                        Title   : String) is
    begin
       Wl_Thin.Proxy_Marshal
         (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
          WL_SHELL_SURFACE_SET_TITLE,
-         Title);
+         +Title);
    end Set_Title;
 
    procedure Set_Class (Surface : Shell_Surface;
-                        Class_V : C_String) is
+                        Class_V : String) is
    begin
       Wl_Thin.Proxy_Marshal
         (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
          WL_SHELL_SURFACE_SET_CLASS,
-         Class_V);
+         +Class_V);
    end Set_Class;
 
    procedure Attach (Surface : Wayland_Client.Surface;
@@ -3687,12 +3686,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Destroy;
 
    procedure Offer (Source    : Data_Source;
-                    Mime_Type : C_String) is
+                    Mime_Type : String) is
    begin
       Wl_Thin.Proxy_Marshal
         (Wl_Thin.Proxy_Ptr'(Source.My_Data_Source.all'Access),
          WL_DATA_SOURCE_OFFER,
-         Mime_Type);
+         +Mime_Type);
    end Offer;
 
    procedure Set_Actions (Source      : Data_Source;
