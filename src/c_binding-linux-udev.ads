@@ -14,6 +14,9 @@ private with Ada.Finalization;
 package C_Binding.Linux.Udev is
    pragma Elaborate_Body;
 
+   pragma Linker_Options ("-L/lib/x86_64-linux-gnu/");
+   pragma Linker_Options ("-ludev");
+
    subtype Max_Length is Natural range 0 .. 10_000;
 
    type String_Result

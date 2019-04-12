@@ -8,13 +8,13 @@ project Find_Compositor is
 
    for Exec_Dir use ".";
 
-   for Source_Files use (
-                         "example_6_4_find_compositor_proxy.adb",
-                         "client_examples-find_compositor-main.adb",
-                         "client_examples-find_compositor.ads",
-                         "client_examples-find_compositor.adb",
-                         "client_examples.ads"
-                         );
+   for Source_Files use
+     (
+      "client_examples-find_compositor-main.adb",
+      "client_examples-find_compositor.ads",
+      "client_examples-find_compositor.adb",
+      "client_examples.ads"
+     );
 
    for Main use ("client_examples-find_compositor-main.adb");
 
