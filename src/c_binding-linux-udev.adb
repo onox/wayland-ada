@@ -12,13 +12,13 @@ package body C_Binding.Linux.Udev is
          begin
             return
                 (Is_Success => True,
-                 Length     => Max_Length (Result'Length),
+                 Length     => Max_String_Length (Result'Length),
                  Value      => Result);
          end;
       else
          return
            (Is_Success => False,
-            Length     => Max_Length (Error'Length),
+            Length     => Max_String_Length (Error'Length),
             Error      => Error);
       end if;
    end Get_String_Result;

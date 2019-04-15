@@ -17,18 +17,6 @@ package C_Binding.Linux.Udev is
    pragma Linker_Options ("-L/lib/x86_64-linux-gnu/");
    pragma Linker_Options ("-ludev");
 
-   subtype Max_Length is Natural range 0 .. 10_000;
-
-   type String_Result
-     (Is_Success : Boolean := False;
-      Length     : Max_Length := 1)
-   is record
-      case Is_Success is
-         when True  => Value : String (1 .. Length);
-         when False => Error : String (1 .. Length);
-      end case;
-   end record;
-
    type Context_Base    is abstract tagged limited private;
    type Device_Base     is abstract tagged limited private;
    type Enumerate_Base  is abstract tagged limited private;

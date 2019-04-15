@@ -20,6 +20,18 @@ package C_Binding with Preelaborate is
       Failure
      );
 
+   subtype Max_String_Length is Natural range 0 .. 10_000;
+
+   type String_Result
+     (Is_Success : Boolean := False;
+      Length     : Max_String_Length := 1)
+   is record
+      case Is_Success is
+         when True  => Value : String (1 .. Length);
+         when False => Error : String (1 .. Length);
+      end case;
+   end record;
+
 private
 
    Nul : constant Character := Character'Val (0);
