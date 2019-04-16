@@ -1,4 +1,6 @@
 with Ada.Text_IO;
+with Ada.Streams;
+with Ada.Characters.Latin_1;
 with Aida;
 with Linux.Sockets.TCP_Client;
 with GnuTLS.Certificate_Credentials;
@@ -9,8 +11,12 @@ with Interfaces.C.Strings;
 
 package body Simple_Client is
 
+   use type Ada.Streams.Stream_Element_Offset;
+
    use all type GnuTLS.Success_Flag;
    use all type GnuTLS.X509.Add_The_Systems_Default_Trusted_CAs_Result_Kind_Id;
+   use all type GnuTLS.Sessions.Handshake_Result_Kind_Id;
+   use all type GnuTLS.Sessions.Send_Result_Kind_Id;
 
    Host_Name_Asdf : aliased Interfaces.C.char_array
      := Interfaces.C.To_C ("www.google.se");
@@ -31,6 +37,7 @@ package body Simple_Client is
       procedure Connect_To_Peer;
       procedure Associate_Client_Socket_With_Session;
       procedure Perform_TLS_handshake;
+      procedure Send_Message;
 
       procedure Check_GnuTLS_Version is
          Result : GnuTLS.String_Result
@@ -202,15 +209,42 @@ package body Simple_Client is
       end Associate_Client_Socket_With_Session;
 
       procedure Perform_TLS_handshake is
-         Flag : GnuTLS.Success_Flag
+         Result : GnuTLS.Sessions.Handshake_Result
            := GnuTLS.Sessions.Perform_Handshake (Session);
       begin
-         if Flag = Success then
+         if Result.Kind_Id = Handshake_Success then
             Ada.Text_IO.Put_Line ("handshake success!");
+            Ada.Text_IO.Put_Line (GnuTLS.Sessions.Description (Session));
+            Send_Message;
          else
             Ada.Text_IO.Put_Line ("TLS handshake failure");
          end if;
       end Perform_TLS_handshake;
+
+      procedure Send_Message is
+         Message : String
+           := "GET / HTTP/1.0"
+           & Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF
+           & Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
+
+         Data : Ada.Streams.Stream_Element_Array (1 .. Message'Length);
+      begin
+         for I in Message'Range loop
+            Data (Ada.Streams.Stream_Element_Offset (1 + I - Message'First))
+              := Ada.Streams.Stream_Element (Character'Pos (Message (I)));
+         end loop;
+
+         declare
+            Result : GnuTLS.Sessions.Send_Result
+              := GnuTLS.Sessions.Send (Session, Data);
+         begin
+            if Result.Kind_Id = Send_Success then
+               Ada.Text_IO.Put_Line ("Send success");
+            else
+               Ada.Text_IO.Put_Line ("Send failure");
+            end if;
+         end;
+      end Send_Message;
 
    begin
       Check_GnuTLS_Version;

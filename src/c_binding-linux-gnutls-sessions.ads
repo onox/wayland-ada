@@ -27,9 +27,55 @@ package C_Binding.Linux.GnuTLS.Sessions is
 
    procedure Set_Default_Handshake_Timeout (This : Session);
 
-   function Perform_Handshake (This : Session) return Success_Flag;
+   type Handshake_Result_Kind_Id is
+     (
+      Handshake_Success,
+      Certificate_Verification_Failure,
+      Handshake_Failure
+     );
+
+   type Handshake_Result
+     (
+      Kind_Id : Handshake_Result_Kind_Id;
+      Length  : Natural
+     )
+   is record
+      case Kind_Id is
+         when Handshake_Success =>
+            null;
+         when Certificate_Verification_Failure | Handshake_Failure =>
+            Error_Message : String (1 .. Length);
+      end case;
+   end record;
+
+   function Perform_Handshake (This : Session) return Handshake_Result;
+
+   function Description (This : Session) return String;
+   --  Probably makes heap allocations under the hood.
+   --  Therefore avoid use in performance critical code.
+
+   type Send_Result_Kind_Id is
+     (
+      Send_Success,
+      Send_Failure
+     );
+
+   type Send_Result (Kind_Id : Send_Result_Kind_Id) is record
+      case Kind_Id is
+         when Send_Success =>
+            Elements_Sent_Count : Ada.Streams.Stream_Element_Offset;
+         when Send_Failure =>
+            null;
+      end case;
+   end record;
+
+   function Send
+     (This : Session;
+      Data : Ada.Streams.Stream_Element_Array) return Send_Result;
 
 private
+
+   GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR : constant := -348;
 
    function C_Init
      (
@@ -272,5 +318,64 @@ private
    --  unknown error a descriptive string is sent instead of NULL.
    --
    --  Error codes are always a negative error code.
+   --
+   --  Returns a string explaining the GnuTLS error message.
+
+   function C_Session_Get_Description
+     (
+      Session : Opaque_Session_Ptr
+     ) return Interfaces.C.Strings.chars_ptr with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_session_get_desc";
+   --  This function returns a string describing the current session.
+   --  The string is null terminated and allocated using gnutls_malloc().
+   --
+   --  If initial negotiation is not complete when this function is called,
+   --  NULL will be returned.
+   --
+   --  Returns a description of the protocols and algorithms
+   --  in the current session.
+
+   function C_Session_Get_Description
+     (
+      Session : Opaque_Session_Ptr
+     ) return System.Address with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_session_get_desc";
+
+--     procedure C_Free (Address : System.Address) with
+--       Import        => True,
+--       Convention    => C,
+--       External_Name => "gnutls_free";
+
+   function C_Record_Send
+     (
+      Session   : Opaque_Session_Ptr;
+      Data      : System.Address;
+      Data_Size : Size_Type
+     ) return SSize_Type with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_record_send";
+   --  This function has the similar semantics with send().
+   --  The only difference is that it accepts a GnuTLS session,
+   --  and uses different error codes. Note that if the send buffer is full,
+   --  send() will block this function. See the send() documentation for
+   --  full information. You can replace the default push function
+   --  by using gnutls_transport_set_ptr2() with a call to send() with
+   --  a MSG_DONTWAIT flag if blocking is a problem. If the EINTR is returned
+   --  by the internal push function (the default is send()) then
+   --  GNUTLS_E_INTERRUPTED will be returned. If GNUTLS_E_INTERRUPTED
+   --  or GNUTLS_E_AGAIN is returned, you must call this function again,
+   --  with the same parameters; alternatively you could provide a NULL pointer
+   --  for data, and 0 for size. cf. gnutls_record_get_direction().
+   --  The errno value EMSGSIZE maps to GNUTLS_E_LARGE_PACKET.
+   --
+   --  Returns : The number of bytes sent, or a negative error code.
+   --  The number of bytes sent might be less than data_size.
+   --  The maximum number of bytes this function can send in a single call
+   --  depends on the negotiated maximum record size.
 
 end C_Binding.Linux.GnuTLS.Sessions;

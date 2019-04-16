@@ -2,6 +2,8 @@ with Ada.Unchecked_Conversion;
 
 package body C_Binding.Linux.GnuTLS.Sessions is
 
+   use type Interfaces.C.Strings.chars_ptr;
+
    function Convert_Unchecked is new Ada.Unchecked_Conversion
      (Source => Init_Flags,
       Target => Interfaces.C.unsigned);
@@ -88,17 +90,75 @@ package body C_Binding.Linux.GnuTLS.Sessions is
         (This.My_Session, GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
    end Set_Default_Handshake_Timeout;
 
-   function Perform_Handshake (This : Session) return Success_Flag is
-      Return_Code : Interfaces.C.int := C_Handshake (This.My_Session);
+   function Perform_Handshake (This : Session) return Handshake_Result is
+      Result : Interfaces.C.int := C_Handshake (This.My_Session);
    begin
-      while Return_Code < 0 and C_Error_Is_Fatal (Return_Code) = 0 loop
-         Return_Code := C_Handshake (This.My_Session);
+      while Result < 0 and C_Error_Is_Fatal (Result) = 0 loop
+         Result := C_Handshake (This.My_Session);
       end loop;
-      if Return_Code = GNUTLS_E_SUCCESS then
-         return Success;
+      if Result = GNUTLS_E_SUCCESS then
+         return (Kind_Id => Handshake_Success,
+                 Length  => 0);
       else
-         return Failure;
+         declare
+            Message : constant String
+              := Interfaces.C.Strings.Value (C_String_Error (Result));
+         begin
+            if Result = GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR then
+               return (Kind_Id       => Certificate_Verification_Failure,
+                       Length        => Message'Length,
+                       Error_Message => Message);
+            else
+               return (Kind_Id       => Handshake_Failure,
+                       Length        => Message'Length,
+                       Error_Message => Message);
+            end if;
+         end;
       end if;
    end Perform_Handshake;
+
+--     function Convert is new Ada.Unchecked_Conversion
+--       (Source => Interfaces.C.Strings.chars_ptr,
+--        Target => System.Address);
+
+   function Description (This : Session) return String is
+      Result : Interfaces.C.Strings.chars_ptr
+        := C_Session_Get_Description (This.My_Session);
+   begin
+      if Result /= Interfaces.C.Strings.Null_Ptr then
+         begin
+            declare
+               Text : constant String := Interfaces.C.Strings.Value (Result);
+            begin
+               Interfaces.C.Strings.Free (Result);
+               return Text;
+            end;
+         exception
+            when Error : others =>
+               Interfaces.C.Strings.Free (Result);
+               raise;
+         end;
+      else
+         return "";
+      end if;
+   end Description;
+
+   function Send
+     (This : Session;
+      Data : Ada.Streams.Stream_Element_Array) return Send_Result
+   is
+      Result : constant SSize_Type
+        := C_Record_Send (Session   => This.My_Session,
+                          Data      => Data (Data'First)'Address,
+                          Data_Size => Data'Length);
+   begin
+      if Result < 0 then
+         return (Kind_Id => Send_Failure);
+      else
+         return
+           (Kind_Id             => Send_Success,
+            Elements_Sent_Count => Ada.Streams.Stream_Element_Offset (Result));
+      end if;
+   end Send;
 
 end C_Binding.Linux.GnuTLS.Sessions;
