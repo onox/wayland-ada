@@ -108,6 +108,67 @@ private
    --  Avoid its use in favor of inet_aton(), inet_pton(3), or getaddrinfo(3)
    --  which provide a cleaner way to indicate error return.
 
+   function C_Get_Internet_Address
+     (
+      Address_Family : int;  --  Either AF_INET or AF_INET6
+      Source         : Interfaces.C.char_array;
+      Destination    : System.Address
+     ) return Interfaces.C.int with
+       Import        => True,
+       Convention    => C,
+       External_Name => "inet_pton";
+   --  Convert IPv4 and IPv6 addresses from text to binary form
+   --  This function converts the character string src into a network
+   --  address structure in the af address family, then copies the network
+   --  address structure to dst.  The af argument must be either AF_INET or
+   --  AF_INET6.  dst is written in network byte order.
+   --
+   --  The following address families are currently supported:
+   --
+   --  AF_INET
+   --         src points to a character string containing an IPv4 network
+   --         address in dotted-decimal format, "ddd.ddd.ddd.ddd", where ddd
+   --         is a decimal number of up to three digits in the range 0 to
+   --         255.  The address is converted to a struct in_addr and copied
+   --         to dst, which must be sizeof(struct in_addr) (4) bytes (32
+   --         bits) long.
+   --
+   --  AF_INET6
+   --         src points to a character string containing an IPv6 network
+   --         address.  The address is converted to a struct in6_addr and
+   --         copied to dst, which must be sizeof(struct in6_addr) (16)
+   --         bytes (128 bits) long.  The allowed formats for IPv6 addresses
+   --         follow these rules:
+   --
+   --         1. The preferred format is x:x:x:x:x:x:x:x.  This form
+   --            consists of eight hexadecimal numbers, each of which
+   --            expresses a 16-bit value (i.e., each x can be up to 4 hex
+   --            digits).
+   --
+   --         2. A series of contiguous zero values in the preferred format
+   --            can be abbreviated to ::.  Only one instance of :: can
+   --            occur in an address.  For example, the loopback address
+   --            0:0:0:0:0:0:0:1 can be abbreviated as ::1.  The wildcard
+   --            address, consisting of all zeros, can be written as ::.
+   --
+   --         3. An alternate format is useful for expressing IPv4-mapped
+   --            IPv6 addresses.  This form is written as
+   --            x:x:x:x:x:x:d.d.d.d, where the six leading xs are
+   --            hexadecimal values that define the six most-significant
+   --            16-bit pieces of the address (i.e., 96 bits), and the ds
+   --            express a value in dotted-decimal notation that defines the
+   --            least significant 32 bits of the address.  An example of
+   --            such an address is ::FFFF:204.152.189.116.
+   --
+   --         See RFC 2373 for further details on the representation of IPv6
+   --         addresses.
+   --
+   --  inet_pton() returns 1 on success (network address was successfully
+   --  converted).  0 is returned if src does not contain a character string
+   --  representing a valid network address in the specified address family.
+   --  If af does not contain a valid address family, -1 is returned and
+   --  errno is set to EAFNOSUPPORT.
+
    function C_Host_To_Network_Short
      (Host : Interfaces.C.unsigned_short) return Interfaces.C.unsigned_short
      with
@@ -290,5 +351,34 @@ private
    --
    --  On successful completion, shutdown() shall return 0; otherwise, -1
    --  shall be returned and errno set to indicate the error.
+
+   function C_Connect
+     (Socket_Fd      : Interfaces.C.int;
+      Address        : access Internet_Socket_Address;
+      Address_Length : Interfaces.C.unsigned) return Interfaces.C.int with
+     Import        => True,
+     Convention    => C,
+     External_Name => "connect";
+   --  The connect() system call connects the socket referred to by the file
+   --  descriptor sockfd to the address specified by addr.  The addrlen
+   --  argument specifies the size of addr.  The format of the address in
+   --  addr is determined by the address space of the socket sockfd; see
+   --  socket(2) for further details.
+   --
+   --  If the socket sockfd is of type SOCK_DGRAM, then addr is the address
+   --  to which datagrams are sent by default, and the only address from
+   --  which datagrams are received.  If the socket is of type SOCK_STREAM
+   --  or SOCK_SEQPACKET, this call attempts to make a connection to the
+   --  socket that is bound to the address specified by addr.
+   --
+   --  Generally, connection-based protocol sockets may successfully
+   --  connect() only once; connectionless protocol sockets may use
+   --  connect() multiple times to change their association.  Connectionless
+   --  sockets may dissolve the association by connecting to an address with
+   --  the sa_family member of sockaddr set to AF_UNSPEC (supported on Linux
+   --  since kernel 2.2).
+   --
+   --  If the connection or binding succeeds, zero is returned.
+   --  On error, -1 is returned, and errno is set appropriately.
 
 end C_Binding.Linux.Sockets;

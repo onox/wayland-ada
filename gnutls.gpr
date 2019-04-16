@@ -13,6 +13,7 @@ project GnuTLS is
       "c_binding-linux-gnutls-certificate_credentials.ads",
       "c_binding-linux-gnutls-certificate_credentials.adb",
       "c_binding-linux-gnutls-sessions.ads",
+      "c_binding-linux-gnutls-sessions.adb",
       "c_binding-linux-gnutls-x509.ads",
       "c_binding-linux-gnutls-x509.adb",
       "gnutls.ads"

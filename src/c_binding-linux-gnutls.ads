@@ -1,10 +1,12 @@
-private with Interfaces.C.Strings;
+with Interfaces.C.Strings;
 
 package C_Binding.Linux.GnuTLS is
 
    pragma Linker_Options ("-lgnutls");
 
    subtype String_Result is C_Binding.String_Result;
+
+   subtype Success_Flag is C_Binding.Success_Flag;
 
    function Check_Version (Version : String) return String_Result;
 
@@ -17,6 +19,39 @@ package C_Binding.Linux.GnuTLS is
 
    type Credentials_Base is limited private;
 
+   type Init_Flags is mod 2**6;
+   for Init_Flags'Size use Interfaces.C.unsigned'Size;
+   pragma Convention (C, Init_Flags);
+
+   Init_Server : constant Init_Flags := 2**0;
+   --  Connection end is a server
+
+   Init_Client : constant Init_Flags := 2**1;
+   --  Connection end is a client
+
+   Init_Datagram : constant Init_Flags := 2**2;
+   --  Connection is datagram oriented (DTLS)
+
+   Init_Nonblock : constant Init_Flags := 2**3;
+   --  Connection should not block (DTLS)
+
+   Init_No_Extensions : constant Init_Flags := 2**4;
+   --  Do not enable any TLS extensions by default
+
+   Init_No_Replay_Protection : constant Init_Flags := 2**5;
+   --  Disable any replay protection in DTLS
+
+   type Session_Base
+     (
+      Flags     : Init_Flags;
+      Host_Name : access Interfaces.C.Strings.chars_ptr
+      --  The C programming language specific type Interfaces.C.char_array
+      --  can be hidden if one uses Ada 2005's extended return.
+      --  The host name must exist during the whole session.
+      --  Look at the "gnutls_session_set_verify_cert" for more information.
+     )
+   is limited private;
+
 private
 
    type Opaque_Certificate_Credentials is null record;
@@ -26,6 +61,37 @@ private
    type Credentials_Base is limited record
       My_Credentials : aliased Opaque_Certificate_Credentials_Ptr;
    end record;
+
+   type Opaque_Session is null record;
+   type Opaque_Session_Ptr is access all Opaque_Session;
+
+   type Session_Base
+     (
+      Flags     : Init_Flags;
+      Host_Name : access Interfaces.C.Strings.chars_ptr
+     ) is limited record
+      My_Session : aliased Opaque_Session_Ptr;
+   end record;
+
+   type Credentials_Kind is
+     (
+      Certificate_Credential,
+      Anonymous_Credential,
+      SRP_Credential,
+      PSK_Credential,
+      IA_Credential
+     );
+
+   for Credentials_Kind use
+     (
+      Certificate_Credential => 1,
+      Anonymous_Credential   => 2,
+      SRP_Credential         => 3,
+      PSK_Credential         => 4,
+      IA_Credential          => 5
+     );
+
+   pragma Convention (C, Credentials_Kind);
 
    function C_Check_Version
      (

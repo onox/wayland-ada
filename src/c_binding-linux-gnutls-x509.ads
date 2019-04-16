@@ -57,7 +57,7 @@ private
 
    function C_Certificate_Set_x509_System_Trust
      (
-      Credentials : Opaque_Certificate_Credentials_Ptr
+      Credentials : access Opaque_Certificate_Credentials
      ) return Interfaces.C.int with
        Import        => True,
        Convention    => C,
@@ -73,7 +73,7 @@ private
 
    function C_Certificate_Set_x509_Key_File
      (
-      Credentials      : Opaque_Certificate_Credentials_Ptr;
+      Credentials      : access Opaque_Certificate_Credentials;
       Certificate_File : Interfaces.C.char_array;
       Key_File         : Interfaces.C.char_array;
       Format           : Certificate_Format

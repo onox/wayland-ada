@@ -16,6 +16,8 @@ project Ubuntu_Posix is
       "c_binding-linux-sockets.ads",
       "c_binding-linux-sockets-tcp.ads",
       "c_binding-linux-sockets-tcp.adb",
+      "c_binding-linux-sockets-tcp_client.ads",
+      "c_binding-linux-sockets-tcp_client.adb",
       "c_binding-linux-sockets-tcp-connection_listeners.ads",
       "c_binding-linux-sockets-tcp-connection_listeners.adb",
       "c_binding-linux-event_polls.ads",
