@@ -1,3 +1,5 @@
+with C_Binding.Linux.Sockets.TCP_Client;
+
 package C_Binding.Linux.GnuTLS.Sessions is
 
    type Session is new Session_Base;
@@ -18,6 +20,14 @@ package C_Binding.Linux.GnuTLS.Sessions is
      (This : Session) return Success_Flag;
 
    procedure Verify_Certificate_Using_Hostname (This : Session);
+
+   procedure Associate_With_Client_Socket
+     (This   : Session;
+      Socket : Linux.Sockets.TCP_Client.Client_Socket);
+
+   procedure Set_Default_Handshake_Timeout (This : Session);
+
+   function Perform_Handshake (This : Session) return Success_Flag;
 
 private
 
@@ -153,5 +163,114 @@ private
    --
    --  The gnutls_session_set_verify_cert() function is intended to be used
    --  by TLS clients to verify the server's certificate.
+
+   procedure C_Transport_Set_Int2
+     (Session             : Opaque_Session_Ptr;
+      Receiving_Socket_Fd : Interfaces.C.int;
+      Sending_Socket_Fd   : Interfaces.C.int) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "gnutls_transport_set_int2";
+   --  This function sets the first argument of the transport functions,
+   --  such as send() and recv() for the default callbacks using
+   --  the system's socket API. With this function you can set two different
+   --  descriptors for receiving and sending.
+   --
+   --  This function is equivalent to calling gnutls_transport_set_ptr2()
+   --  with the descriptors, but requires no casts.
+
+   GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT : constant := -1;
+
+   procedure C_Handshake_Set_Timeout
+     (Session      : Opaque_Session_Ptr;
+      Milliseconds : Interfaces.C.int) with
+     Import        => True,
+     Convention    => C,
+     External_Name => "gnutls_handshake_set_timeout";
+   --  This function sets the timeout for the TLS handshake process
+   --  to the provided value. Use an ms value of zero to disable timeout,
+   --  or GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT for a reasonable default value.
+   --  For the DTLS protocol, the more detailed
+   --  gnutls_dtls_set_timeouts() is provided.
+   --
+   --  This function requires to set a pull timeout callback.
+   --  See gnutls_transport_set_pull_timeout_function().
+
+   function C_Handshake
+     (
+      Session : Opaque_Session_Ptr
+     ) return Interfaces.C.int with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_handshake";
+   --  This function performs the handshake of the TLS/SSL protocol,
+   --  and initializes the TLS session parameters.
+   --
+   --  The non-fatal errors expected by this function are:
+   --  GNUTLS_E_INTERRUPTED, GNUTLS_E_AGAIN, GNUTLS_E_WARNING_ALERT_RECEIVED.
+   --  When this function is called for re-handshake under TLS 1.2 or earlier,
+   --  the non-fatal error code GNUTLS_E_GOT_APPLICATION_DATA may
+   --  also be returned.
+   --
+   --  The former two interrupt the handshake procedure due to
+   --  the transport layer being interrupted, and the latter because of a
+   --  "warning" alert that was sent by the peer (it is always a good idea
+   --  to check any received alerts). On these non-fatal errors call this
+   --  function again, until it returns 0; cf. gnutls_record_get_direction()
+   --  and gnutls_error_is_fatal(). In DTLS sessions the non-fatal error
+   --  GNUTLS_E_LARGE_PACKET is also possible, and indicates that the MTU
+   --  should be adjusted.
+   --
+   --  When this function is called by a server after a rehandshake request
+   --  under TLS 1.2 or earlier the GNUTLS_E_GOT_APPLICATION_DATA error code
+   --  indicates that some data were pending prior to peer initiating
+   --  the handshake. Under TLS 1.3 this function when called after
+   --  a successful handshake, is a no-op and always succeeds in server side;
+   --  in client side this function is equivalent to
+   --  gnutls_session_key_update() with GNUTLS_KU_PEER flag.
+   --
+   --  This function handles both full and abbreviated TLS handshakes
+   --  (resumption). For abbreviated handshakes, in client side,
+   --  the gnutls_session_set_data() should be called prior to this function
+   --  to set parameters from a previous session. In server side,
+   --  resumption is handled by either setting a DB back-end,
+   --  or setting up keys for session tickets.
+   --
+   --  GNUTLS_E_SUCCESS on a successful handshake,
+   --  otherwise a negative error code.
+
+   function C_Error_Is_Fatal
+     (
+      Error_Code : Interfaces.C.int
+     ) return Interfaces.C.int with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_error_is_fatal";
+   --  If a GnuTLS function returns a negative error code you may feed that
+   --  value to this function to see if the error condition is fatal
+   --  to a TLS session (i.e., must be terminated).
+   --
+   --  Note that you may also want to check the error code manually,
+   --  since some non-fatal errors to the protocol (such as a warning alert
+   --  or a rehandshake request) may be fatal for your program.
+   --
+   --  This function is only useful if you are dealing with errors
+   --  from functions that relate to a TLS session (e.g., record layer or
+   --  handshake layer handling functions).
+   --
+   --  Non-zero value on fatal errors or zero on non-fatal.
+
+   function C_String_Error
+     (
+      Error_Code : Interfaces.C.int
+     ) return Interfaces.C.Strings.chars_ptr with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_strerror";
+   --  This function is similar to strerror.  The difference is that it
+   --  accepts an error number returned by a gnutls function; In case of an
+   --  unknown error a descriptive string is sent instead of NULL.
+   --
+   --  Error codes are always a negative error code.
 
 end C_Binding.Linux.GnuTLS.Sessions;

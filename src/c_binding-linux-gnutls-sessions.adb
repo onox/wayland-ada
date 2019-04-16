@@ -72,4 +72,33 @@ package body C_Binding.Linux.GnuTLS.Sessions is
       end if;
    end Verify_Certificate_Using_Hostname;
 
+   procedure Associate_With_Client_Socket
+     (This   : Session;
+      Socket : Linux.Sockets.TCP_Client.Client_Socket) is
+   begin
+      C_Transport_Set_Int2
+        (This.My_Session,
+         Socket.My_File_Descriptor,
+         Socket.My_File_Descriptor);
+   end Associate_With_Client_Socket;
+
+   procedure Set_Default_Handshake_Timeout (This : Session) is
+   begin
+      C_Handshake_Set_Timeout
+        (This.My_Session, GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
+   end Set_Default_Handshake_Timeout;
+
+   function Perform_Handshake (This : Session) return Success_Flag is
+      Return_Code : Interfaces.C.int := C_Handshake (This.My_Session);
+   begin
+      while Return_Code < 0 and C_Error_Is_Fatal (Return_Code) = 0 loop
+         Return_Code := C_Handshake (This.My_Session);
+      end loop;
+      if Return_Code = GNUTLS_E_SUCCESS then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Perform_Handshake;
+
 end C_Binding.Linux.GnuTLS.Sessions;

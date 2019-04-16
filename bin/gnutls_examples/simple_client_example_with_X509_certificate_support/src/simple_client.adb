@@ -30,6 +30,7 @@ package body Simple_Client is
       procedure Prepare_For_Server_Certificate_Verification;
       procedure Connect_To_Peer;
       procedure Associate_Client_Socket_With_Session;
+      procedure Perform_TLS_handshake;
 
       procedure Check_GnuTLS_Version is
          Result : GnuTLS.String_Result
@@ -194,8 +195,22 @@ package body Simple_Client is
 
       procedure Associate_Client_Socket_With_Session is
       begin
-         Ada.Text_IO.Put_Line ("Success 5");
+         GnuTLS.Sessions.Associate_With_Client_Socket
+           (Session, Client_Socket);
+         GnuTLS.Sessions.Set_Default_Handshake_Timeout (Session);
+         Perform_TLS_handshake;
       end Associate_Client_Socket_With_Session;
+
+      procedure Perform_TLS_handshake is
+         Flag : GnuTLS.Success_Flag
+           := GnuTLS.Sessions.Perform_Handshake (Session);
+      begin
+         if Flag = Success then
+            Ada.Text_IO.Put_Line ("handshake success!");
+         else
+            Ada.Text_IO.Put_Line ("TLS handshake failure");
+         end if;
+      end Perform_TLS_handshake;
 
    begin
       Check_GnuTLS_Version;
