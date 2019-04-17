@@ -76,7 +76,15 @@ package C_Binding.Linux.GnuTLS.Sessions is
    type Receive_Result_Kind_Id is
      (
       Receive_Success,
-      Receive_Success_But_End_Of_File,
+
+      Receive_End_Of_File,
+      --  The Receive command was successfully executed but 0 bytes returned.
+      --  It should be interpreted as end of file reached.
+
+      Receive_Premature_Termination,
+      --  The Receive subprogram was called to read more data from the
+      --  connection but it has been terminated by the other party.
+
       Receive_Failure
      );
 
@@ -84,9 +92,9 @@ package C_Binding.Linux.GnuTLS.Sessions is
       case Kind_Id is
          when Receive_Success =>
             Elements_Count : Ada.Streams.Stream_Element_Offset;
-         when Receive_Success_But_End_Of_File =>
-            null;
-         when Receive_Failure =>
+         when Receive_Failure |
+              Receive_End_Of_File |
+              Receive_Premature_Termination =>
             null;
       end case;
    end record;
@@ -95,8 +103,27 @@ package C_Binding.Linux.GnuTLS.Sessions is
      (This : Session;
       Data : in out Ada.Streams.Stream_Element_Array) return Receive_Result;
 
+   type How_To_Shutdown is
+     (
+      Read_Write_Shutdown,
+      Write_Shutdown
+     );
+
+   for How_To_Shutdown use
+     (
+      Read_Write_Shutdown => 0,
+      Write_Shutdown      => 1
+     );
+
+   pragma Convention (C, How_To_Shutdown);
+
+   function Terminate_Connection
+     (This : Session;
+      How  : How_To_Shutdown) return Success_Flag;
+
 private
 
+   GNUTLS_E_PREMATURE_TERMINATION : constant := -110;
    GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR : constant := -348;
 
    function C_Init
@@ -428,5 +455,40 @@ private
    --  (for stream connections). A negative error code is returned in case
    --  of an error. The number of bytes received might be less than
    --  the requested data_size.
+
+   function C_Bye
+     (
+      Session : Opaque_Session_Ptr;
+      How     : How_To_Shutdown
+     ) return Interfaces.C.int with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_bye";
+   --  Terminates the current TLS/SSL connection. The connection should have
+   --  been initiated using gnutls_handshake() . how should be one of
+   --  GNUTLS_SHUT_RDWR , GNUTLS_SHUT_WR .
+   --
+   --  In case of GNUTLS_SHUT_RDWR the TLS session gets terminated and further
+   --  receives and sends will be disallowed. If the return value is zero you
+   --  may continue using the underlying transport layer. GNUTLS_SHUT_RDWR
+   --  sends an alert containing a close request and waits for the peer
+   --  to reply with the same message.
+   --
+   --  In case of GNUTLS_SHUT_WR the TLS session gets terminated and further
+   --  sends will be disallowed. In order to reuse the connection you should
+   --  wait for an EOF from the peer. GNUTLS_SHUT_WR sends an alert containing
+   --  a close request.
+   --
+   --  Note that not all implementations will properly terminate
+   --  a TLS connection. Some of them, usually for performance reasons,
+   --  will terminate only the underlying transport layer, and thus not
+   --  distinguishing between a malicious party prematurely terminating
+   --  the connection and normal termination.
+   --
+   --  This function may also return GNUTLS_E_AGAIN or GNUTLS_E_INTERRUPTED;
+   --  cf. gnutls_record_get_direction() .
+   --
+   --  Returns: GNUTLS_E_SUCCESS on success, or an error code,
+   --  see function documentation for entire semantics.
 
 end C_Binding.Linux.GnuTLS.Sessions;

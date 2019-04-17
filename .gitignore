@@ -9,3 +9,4 @@ bin/gnatinspect.db
 bin/gpsauto.cgpr
 bin/xml_parser/c_binding-linux-wayland_client.adb
 bin/xml_parser/c_binding-linux-wayland_client.ads
+bin/gnutls_examples/simple_client_example_with_X509_certificate_support/start

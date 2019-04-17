@@ -1,5 +1,4 @@
 with Ada.Unchecked_Conversion;
-
 package body C_Binding.Linux.GnuTLS.Sessions is
 
    use type Interfaces.C.Strings.chars_ptr;
@@ -173,14 +172,32 @@ package body C_Binding.Linux.GnuTLS.Sessions is
            Data_Size => Data'Length);
    begin
       if Result < 0 then
-         return (Kind_Id => Receive_Failure);
+         if Result = GNUTLS_E_PREMATURE_TERMINATION then
+            return (Kind_Id => Receive_Premature_Termination);
+         else
+            return (Kind_Id => Receive_Failure);
+         end if;
       elsif Result = 0 then
-         return (Kind_Id => Receive_Success_But_End_Of_File);
+         return (Kind_Id => Receive_End_Of_File);
       else
          return
            (Kind_Id        => Receive_Success,
             Elements_Count => Ada.Streams.Stream_Element_Offset (Result));
       end if;
    end Receive;
+
+   function Terminate_Connection
+     (This : Session;
+      How  : How_To_Shutdown) return Success_Flag
+   is
+      Result : constant Interfaces.C.int
+        := C_Bye (This.My_Session, How);
+   begin
+      if Result = GNUTLS_E_SUCCESS then
+         return Success;
+      else
+         return Failure;
+      end if;
+   end Terminate_Connection;
 
 end C_Binding.Linux.GnuTLS.Sessions;

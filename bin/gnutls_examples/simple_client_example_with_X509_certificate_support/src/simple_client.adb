@@ -218,6 +218,21 @@ package body Simple_Client is
             Ada.Text_IO.Put_Line ("handshake success!");
             Ada.Text_IO.Put_Line (GnuTLS.Sessions.Description (Session));
             Send_GET_Request;
+            declare
+               Flag : GnuTLS.Success_Flag
+                 := GnuTLS.Sessions.Terminate_Connection
+                   (Session, GnuTLS.Sessions.Read_Write_Shutdown);
+            begin
+               if Flag = Success then
+                  Ada.Text_IO.Put_Line
+                    ("Successfully signalled connection termination");
+               else
+                  Ada.Text_IO.Put_Line
+                    ("Expected: Failed to signal connection termination");
+                  --  This is normal because the server has already
+                  --  closed the connection.
+               end if;
+            end;
          else
             Ada.Text_IO.Put_Line ("TLS handshake failure");
          end if;
@@ -252,28 +267,40 @@ package body Simple_Client is
       procedure Receive_Response is
          Data_Max : constant := 2048;
          Data : Ada.Streams.Stream_Element_Array (1 .. Data_Max);
+         Shall_Continue : Boolean := True;
       begin
-         declare
-            Result : GnuTLS.Sessions.Receive_Result
-              := GnuTLS.Sessions.Receive (Session, Data);
-         begin
-            if Result.Kind_Id = Receive_Success then
-               Ada.Text_IO.Put_Line
-                 ("Receive success" & Result.Elements_Count'Img);
-               declare
-                  Response : String
-                    (1 .. Positive (Result.Elements_Count));
-               begin
-                  for I in Data'First .. Result.Elements_Count loop
-                     Response (Positive (1 + I - Data'First))
-                       := Character'Val (Data (I));
-                  end loop;
-                  Ada.Text_IO.Put_Line (Response);
-               end;
-            else
-               Ada.Text_IO.Put_Line ("Receive failure");
-            end if;
-         end;
+         while Shall_Continue loop
+            declare
+               Result : GnuTLS.Sessions.Receive_Result
+                 := GnuTLS.Sessions.Receive (Session, Data);
+            begin
+               case Result.Kind_Id is
+                  when Receive_Success =>
+                     Ada.Text_IO.Put_Line
+                       ("Receive success" & Result.Elements_Count'Img);
+                     declare
+                        Response : String
+                          (1 .. Positive (Result.Elements_Count));
+                     begin
+                        for I in Data'First .. Result.Elements_Count loop
+                           Response (Positive (1 + I - Data'First))
+                             := Character'Val (Data (I));
+                        end loop;
+                        Ada.Text_IO.Put_Line (Response);
+                     end;
+                  when Receive_End_Of_File =>
+                     Ada.Text_IO.Put_Line ("Receive failure. End of file.");
+                     Shall_Continue := False;
+                  when Receive_Premature_Termination =>
+                     Ada.Text_IO.Put_Line
+                       ("Detected end of the response for HTTP 1.0 request.");
+                     Shall_Continue := False;
+                  when Receive_Failure =>
+                     Ada.Text_IO.Put_Line ("Receive failure");
+                     Shall_Continue := False;
+               end case;
+            end;
+         end loop;
       end Receive_Response;
 
    begin
