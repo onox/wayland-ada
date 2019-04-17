@@ -17,6 +17,7 @@ package body Simple_Client is
    use all type GnuTLS.X509.Add_The_Systems_Default_Trusted_CAs_Result_Kind_Id;
    use all type GnuTLS.Sessions.Handshake_Result_Kind_Id;
    use all type GnuTLS.Sessions.Send_Result_Kind_Id;
+   use all type GnuTLS.Sessions.Receive_Result_Kind_Id;
 
    Host_Name_Asdf : aliased Interfaces.C.char_array
      := Interfaces.C.To_C ("www.google.se");
@@ -37,7 +38,8 @@ package body Simple_Client is
       procedure Connect_To_Peer;
       procedure Associate_Client_Socket_With_Session;
       procedure Perform_TLS_handshake;
-      procedure Send_Message;
+      procedure Send_GET_Request;
+      procedure Receive_Response;
 
       procedure Check_GnuTLS_Version is
          Result : GnuTLS.String_Result
@@ -215,13 +217,13 @@ package body Simple_Client is
          if Result.Kind_Id = Handshake_Success then
             Ada.Text_IO.Put_Line ("handshake success!");
             Ada.Text_IO.Put_Line (GnuTLS.Sessions.Description (Session));
-            Send_Message;
+            Send_GET_Request;
          else
             Ada.Text_IO.Put_Line ("TLS handshake failure");
          end if;
       end Perform_TLS_handshake;
 
-      procedure Send_Message is
+      procedure Send_GET_Request is
          Message : String
            := "GET / HTTP/1.0"
            & Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF
@@ -240,11 +242,39 @@ package body Simple_Client is
          begin
             if Result.Kind_Id = Send_Success then
                Ada.Text_IO.Put_Line ("Send success");
+               Receive_Response;
             else
                Ada.Text_IO.Put_Line ("Send failure");
             end if;
          end;
-      end Send_Message;
+      end Send_GET_Request;
+
+      procedure Receive_Response is
+         Data_Max : constant := 2048;
+         Data : Ada.Streams.Stream_Element_Array (1 .. Data_Max);
+      begin
+         declare
+            Result : GnuTLS.Sessions.Receive_Result
+              := GnuTLS.Sessions.Receive (Session, Data);
+         begin
+            if Result.Kind_Id = Receive_Success then
+               Ada.Text_IO.Put_Line
+                 ("Receive success" & Result.Elements_Count'Img);
+               declare
+                  Response : String
+                    (1 .. Positive (Result.Elements_Count));
+               begin
+                  for I in Data'First .. Result.Elements_Count loop
+                     Response (Positive (1 + I - Data'First))
+                       := Character'Val (Data (I));
+                  end loop;
+                  Ada.Text_IO.Put_Line (Response);
+               end;
+            else
+               Ada.Text_IO.Put_Line ("Receive failure");
+            end if;
+         end;
+      end Receive_Response;
 
    begin
       Check_GnuTLS_Version;

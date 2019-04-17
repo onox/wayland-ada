@@ -63,7 +63,7 @@ package C_Binding.Linux.GnuTLS.Sessions is
    type Send_Result (Kind_Id : Send_Result_Kind_Id) is record
       case Kind_Id is
          when Send_Success =>
-            Elements_Sent_Count : Ada.Streams.Stream_Element_Offset;
+            Elements_Count : Ada.Streams.Stream_Element_Offset;
          when Send_Failure =>
             null;
       end case;
@@ -72,6 +72,28 @@ package C_Binding.Linux.GnuTLS.Sessions is
    function Send
      (This : Session;
       Data : Ada.Streams.Stream_Element_Array) return Send_Result;
+
+   type Receive_Result_Kind_Id is
+     (
+      Receive_Success,
+      Receive_Success_But_End_Of_File,
+      Receive_Failure
+     );
+
+   type Receive_Result (Kind_Id : Receive_Result_Kind_Id) is record
+      case Kind_Id is
+         when Receive_Success =>
+            Elements_Count : Ada.Streams.Stream_Element_Offset;
+         when Receive_Success_But_End_Of_File =>
+            null;
+         when Receive_Failure =>
+            null;
+      end case;
+   end record;
+
+   function Receive
+     (This : Session;
+      Data : in out Ada.Streams.Stream_Element_Array) return Receive_Result;
 
 private
 
@@ -377,5 +399,34 @@ private
    --  The number of bytes sent might be less than data_size.
    --  The maximum number of bytes this function can send in a single call
    --  depends on the negotiated maximum record size.
+
+   function C_Record_Receive
+     (
+      Session   : Opaque_Session_Ptr;
+      Data      : System.Address;
+      Data_Size : Size_Type
+     ) return SSize_Type with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_record_recv";
+   --  This function has the similar semantics with recv(). The only difference
+   --  is that it accepts a GnuTLS session, and uses different error codes.
+   --  In the special case that a server requests a renegotiation,
+   --  the client may receive an error code of GNUTLS_E_REHANDSHAKE.
+   --  This message may be simply ignored, replied with an alert
+   --  GNUTLS_A_NO_RENEGOTIATION, or replied with a new handshake,
+   --  depending on the client's will. If EINTR is returned by
+   --  the internal push function (the default is recv()) then
+   --  GNUTLS_E_INTERRUPTED will be returned. If GNUTLS_E_INTERRUPTED or
+   --  GNUTLS_E_AGAIN is returned, you must call this function again to get
+   --  the data. See also gnutls_record_get_direction(). A server may also
+   --  receive GNUTLS_E_REHANDSHAKE when a client has initiated a handshake.
+   --  In that case the server can only initiate a handshake or
+   --  terminate the connection.
+   --
+   --  Returns : The number of bytes received and zero on EOF
+   --  (for stream connections). A negative error code is returned in case
+   --  of an error. The number of bytes received might be less than
+   --  the requested data_size.
 
 end C_Binding.Linux.GnuTLS.Sessions;
