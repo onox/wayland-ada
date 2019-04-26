@@ -1,8 +1,11 @@
 with Aida;
 
-package C_Binding.Linux.Sockets.TCP.Connection_Listeners is
+package C_Binding.Linux.Sockets.TCP_Server is
 
    type Listener is new Socket_Base;
+   --  This type of socket is a connection listener.
+   --  When clients connect to this socket,
+   --  new sockets are created using "accept".
 
    procedure Initialize
      (This        : in out Listener;
@@ -21,4 +24,8 @@ package C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       Socket : out General_Socket;
       Flag   : out Success_Flag);
 
-end C_Binding.Linux.Sockets.TCP.Connection_Listeners;
+   function "="(Left : General_Socket; Right : Listener) return Boolean;
+
+   function "="(Left : Listener; Right : General_Socket) return Boolean;
+
+end C_Binding.Linux.Sockets.TCP_Server;

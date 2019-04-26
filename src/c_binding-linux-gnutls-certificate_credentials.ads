@@ -6,9 +6,6 @@ package C_Binding.Linux.GnuTLS.Certificate_Credentials is
 
    type Credentials is new Credentials_Base;
 
---     function Initialize
---       (This : in out Credentials) return Success_Flag;
-
    generic
       with procedure Handle_Success;
       with procedure Handle_Failure;

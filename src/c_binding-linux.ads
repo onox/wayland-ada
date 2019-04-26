@@ -225,6 +225,27 @@ private
    --  the underlying physical medium, or the RLIMIT_FSIZE resource limit
    --  is encountered (see setrlimit(2)), or the call was interrupted
    --  by a signal handler after having written less than count bytes.
+   --
+   --  On success, the number of bytes written is returned (zero indicates
+   --  nothing was written).
+   --  On error, -1 is returned, and errno is set appropriately.
+   --
+   --  If count is zero and fd refers to a regular file, then write()
+   --  may return a failure status if one of the errors below is detected.
+   --  If no errors are detected, 0 will be returned without causing
+   --  any other effect. If count is zero and fd refers to a file other than
+   --  a regular file, the results are not specified.
+   --
+   --  A successful return from write() does not make any guarantee that data
+   --  has been committed to disk. In fact, on some buggy implementations,
+   --  it does not even guarantee that space has successfully been reserved
+   --  for the data. The only way to be sure is to call fsync(2) after you are
+   --  done writing all your data.
+   --
+   --  If a write() is interrupted by a signal handler before any bytes are
+   --  written, then the call fails with the error EINTR;
+   --  if it is interrupted after at least one byte has been written,
+   --  the call succeeds, and returns the number of bytes written.
 
    function C_Read
      (File_Descriptor : Interfaces.C.int;

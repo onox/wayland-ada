@@ -1,4 +1,4 @@
-package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
+package body C_Binding.Linux.Sockets.TCP_Server is
 
    use type Interfaces.C.unsigned;
 
@@ -171,4 +171,14 @@ package body C_Binding.Linux.Sockets.TCP.Connection_Listeners is
       end if;
    end Accept_New_Connection;
 
-end C_Binding.Linux.Sockets.TCP.Connection_Listeners;
+   function "="(Left : General_Socket; Right : Listener) return Boolean is
+   begin
+      return Left.My_File_Descriptor = Right.My_File_Descriptor;
+   end "=";
+
+   function "="(Left : Listener; Right : General_Socket) return Boolean is
+   begin
+      return Left.My_File_Descriptor = Right.My_File_Descriptor;
+   end "=";
+
+end C_Binding.Linux.Sockets.TCP_Server;

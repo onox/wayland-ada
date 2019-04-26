@@ -1,18 +1,5 @@
 package body C_Binding.Linux.GnuTLS.Certificate_Credentials is
 
---     function Initialize
---       (This : in out Certificate_Credentials) return Success_Flag
---     is
---        Result : constant Interfaces.C.int
---          := C_Certificate_Allocate_Credentials (This.My_Credentials);
---     begin
---        if Result = GNUTLS_E_SUCCESS then
---           return Success;
---        else
---           return Failure;
---        end if;
---     end Initialize;
-
    procedure Allocate_Credentials is
       Result : constant Interfaces.C.int
         := C_Certificate_Allocate_Credentials (This.My_Credentials'Access);

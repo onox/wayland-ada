@@ -1,3 +1,4 @@
+with Ada.Text_IO;
 package body C_Binding.Linux.GnuTLS.X509 is
 
    function Add_The_Systems_Default_Trusted_CAs
@@ -41,5 +42,24 @@ package body C_Binding.Linux.GnuTLS.X509 is
          return Failure;
       end if;
    end Set_Key_File;
+
+   function Set_Trust_CAs_File
+     (Credentials : Certificate_Credentials.Credentials;
+      Name        : String;  --  Certificate Authority File Name
+      Format      : Certificate_Format) return Set_Trust_CAs_File_Result
+   is
+      Result : constant Interfaces.C.int
+        := C_Set_X509_Trust_File
+          (Credentials.My_Credentials,
+           Interfaces.C.To_C (Name),
+           Format);
+   begin
+      if Result >= 0 then
+         return (Kind_Id                      => Set_Trust_CAs_File_Success,
+                 Processed_Certificates_Count => Natural (Result));
+      else
+         return (Kind_Id => Set_Trust_CAs_File_Failure);
+      end if;
+   end Set_Trust_CAs_File;
 
 end C_Binding.Linux.GnuTLS.X509;

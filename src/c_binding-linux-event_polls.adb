@@ -81,7 +81,7 @@ package body C_Binding.Linux.Event_Polls is
 
    function Add
      (This     : in out Event_Poll_Watcher;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Success_Flag is
    begin
       return Add (This, Listener.My_File_Descriptor);
@@ -89,7 +89,7 @@ package body C_Binding.Linux.Event_Polls is
 
    function Add
      (This   : in out Event_Poll_Watcher;
-      Socket : C_Binding.Linux.Sockets.TCP.General_Socket)
+      Socket : C_Binding.Linux.Sockets.General_Socket)
       return Success_Flag is
    begin
       return Add (This, Socket.My_File_Descriptor);
@@ -120,7 +120,7 @@ package body C_Binding.Linux.Event_Polls is
 
    function Delete
      (This     : in out Event_Poll_Watcher;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Success_Flag is
    begin
       return Delete (This, Listener.My_File_Descriptor);
@@ -183,7 +183,7 @@ package body C_Binding.Linux.Event_Polls is
    procedure Get_Socket
      (This   : Event_List;
       Index  : Epoll_Event_Index;
-      Socket : out C_Binding.Linux.Sockets.TCP.General_Socket) is
+      Socket : out C_Binding.Linux.Sockets.General_Socket) is
    begin
       Socket.My_File_Descriptor := This.My_Events (Index).Data.fd;
    end Get_Socket;
@@ -191,7 +191,7 @@ package body C_Binding.Linux.Event_Polls is
    function Is_Event_Origin
      (This  : Event_List;
       Index : Epoll_Event_Index;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Boolean is
    begin
       return This.My_Events (Index).Data.fd = Listener.My_File_Descriptor;

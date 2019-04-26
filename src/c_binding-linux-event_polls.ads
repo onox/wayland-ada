@@ -1,4 +1,4 @@
-with C_Binding.Linux.Sockets.TCP.Connection_Listeners;
+with C_Binding.Linux.Sockets.TCP_Server;
 
 package C_Binding.Linux.Event_Polls is
 
@@ -41,12 +41,12 @@ package C_Binding.Linux.Event_Polls is
    procedure Get_Socket
      (This   : Event_List;
       Index  : Epoll_Event_Index;
-      Socket : out C_Binding.Linux.Sockets.TCP.General_Socket);
+      Socket : out C_Binding.Linux.Sockets.General_Socket);
 
    function Is_Event_Origin
      (This  : Event_List;
       Index : Epoll_Event_Index;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Boolean;
 
    type Read_Socket_Result_Id is
@@ -76,17 +76,17 @@ package C_Binding.Linux.Event_Polls is
 
    function Add
      (This     : in out Event_Poll_Watcher;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Success_Flag;
 
    function Add
      (This   : in out Event_Poll_Watcher;
-      Socket : C_Binding.Linux.Sockets.TCP.General_Socket)
+      Socket : C_Binding.Linux.Sockets.General_Socket)
       return Success_Flag;
 
    function Delete
      (This     : in out Event_Poll_Watcher;
-      Listener : C_Binding.Linux.Sockets.TCP.Connection_Listeners.Listener)
+      Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
       return Success_Flag;
 
    function Delete
