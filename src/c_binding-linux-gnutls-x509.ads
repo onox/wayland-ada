@@ -2,6 +2,7 @@ with C_Binding.Linux.GnuTLS.Certificate_Credentials;
 
 --  At its core an X.509 certificate is a digital document that has been
 --  encoded and/or digitally signed according to RFC 5280.
+--  Please see the file /docs/rfc5280.txt for further details.
 --
 --  In fact, the term X.509 certificate usually refers to the IETF's
 --  PKIX Certificate and CRL Profile of the X.509 v3 certificate standard,
@@ -126,6 +127,52 @@ package C_Binding.Linux.GnuTLS.X509 is
       Name        : String;  --  Certificate Authority File Name
       Format      : Certificate_Format) return Set_Trust_CAs_File_Result;
 
+   type Set_CRL_File_Result_Kind_Id is
+     (
+      Set_CRL_File_Success,
+      Set_CRL_File_Failure
+     );
+
+   type Set_CRL_File_Result
+     (Kind_Id : Set_CRL_File_Result_Kind_Id)
+   is record
+      case Kind_Id is
+         when Set_CRL_File_Success =>
+            Processed_Certificates_Count : Natural;
+         when Set_CRL_File_Failure =>
+            null;
+      end case;
+   end record;
+
+   function Set_CRL_File
+     (Credentials : Certificate_Credentials.Credentials;
+      Name        : String;
+      Format      : Certificate_Format) return Set_CRL_File_Result;
+   --  CRL is short for Certificate Revocation List.
+   --
+   --  Important! RFC 5280 requires the CRL to be encoded using DER, not PEM!
+   --
+   --  Publish the CRL at a publicly accessible location
+   --  (eg, http://example.com/intermediate.crl.pem). Third-parties can
+   --  fetch the CRL from this location to check whether any certificates
+   --  they rely on have been revoked.
+   --  Is it best-practise that a web server publicly shares a
+   --  certificate revocation list?
+   --  When a certificate authority signs a certificate, it will normally
+   --  encode the CRL location into the certificate. Add crlDistributionPoints
+   --  to the appropriate sections. In our case, add it
+   --  to the [ server_cert ] section.
+   --  [ server_cert ]
+   --  # ... snipped ...
+   --  crlDistributionPoints = URI:http://example.com/intermediate.crl.pem
+   --
+   --
+   --  To make a private 4096-bit key (or is it public?)
+   --  openssl genrsa -out ca.key 4096
+   --
+   --  The key is saved in clear-text. To encrypt it with a password:
+   --  openssl genrsa -des3 -out ca.key 4096
+
 private
 
    function C_Certificate_Set_x509_System_Trust
@@ -193,6 +240,23 @@ private
    --
    --  Returns number of certificates processed,
    --  or a negative error code on error.
+
+   function C_Set_X509_CRL_File
+     (
+      Credentials : access Opaque_Certificate_Credentials;
+      CRL_File    : Interfaces.C.char_array;
+      Format      : Certificate_Format
+     ) return Interfaces.C.int with
+       Import        => True,
+       Convention    => C,
+       External_Name => "gnutls_certificate_set_x509_crl_file";
+   --  This function adds the trusted CRLs in order to verify client or server
+   --  certificates. In case of a client this is not required to be called
+   --  if the certificates are not verified using
+   --  gnutls_certificate_verify_peers2(). This function may be called
+   --  multiple times.
+   --
+   --  Returns number of CRLs processed or a negative error code on error.
 
 end C_Binding.Linux.GnuTLS.X509;
 --  Potentially good to know:

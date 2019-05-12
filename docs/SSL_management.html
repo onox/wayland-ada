@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <title>SSL management</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+
+  <body>
+    <div>
+      <h2>SSL management</h2>
+      <p>
+        This page documents some things I had to do to manage my
+        <a href="http://en.wikipedia.org/wiki/Transport_Layer_Security">SSL</a>
+        certificates and how I did them using
+        <a href="http://www.openssl.org/">OpenSSL</a>
+      </p>
+      <div id="contents">
+        <p>Contents</p>
+        <ul>
+          <li>
+            <a href="#creating-your-own-ca-and-certificate" id="id1"
+              >Creating your own CA and certificate</a
+            >
+            <ul>
+              <li>
+                <a href="#creating-the-root-certificate" id="id2"
+                  >Creating the root certificate</a
+                >
+              </li>
+              <li>
+                <a href="#creating-the-certificate-signing-request-csr" id="id3"
+                  >Creating the certificate signing request (CSR)</a
+                >
+              </li>
+              <li>
+                <a href="#creating-a-configuration-file" id="id4"
+                  >Creating a configuration file</a
+                >
+              </li>
+              <li>
+                <a href="#creating-the-index-files" id="id5"
+                  >Creating the index files</a
+                >
+              </li>
+              <li>
+                <a href="#generating-the-certificate-and-the-crl" id="id6"
+                  >Generating the certificate and the CRL</a
+                >
+              </li>
+              <li>
+                <a href="#checking-the-content-of-your-certificate" id="id7"
+                  >Checking the content of your certificate</a
+                >
+              </li>
+              <li>
+                <a href="#revoking-a-certificate" id="id8"
+                  >Revoking a certificate</a
+                >
+              </li>
+            </ul>
+          </li>
+          <li><a href="#references" id="id9">References</a></li>
+        </ul>
+      </div>
+      <div id="creating-your-own-ca-and-certificate">
+        <h3>Creating your own CA and certificate</h3>
+        <div id="creating-the-root-certificate">
+          <h4>Creating the root certificate</h4>
+          <p>
+            This creates the root certificate that you will use to sign
+            everything else:
+          </p>
+          <pre>
+openssl req -newkey rsa:4096 -sha512 -days 9999 -x509 -nodes -out example_root.cer
+</pre
+          >
+          <p>
+            This also create a <tt><span>privkey.pem</span></tt> file,
+            containing your root private key: keep this in a secure place !
+          </p>
+        </div>
+        <div id="creating-the-certificate-signing-request-csr">
+          <h4>Creating the certificate signing request (CSR)</h4>
+          <p>This will be used to sign your certificate:</p>
+          <pre>
+openssl req -newkey rsa:4096 -sha512 -nodes -out example_com.csr -keyout example_com.key
+</pre
+          >
+        </div>
+        <div id="creating-a-configuration-file">
+          <h4>Creating a configuration file</h4>
+          <p>
+            Certificate creation in openssl is so complicated that you need a
+            configuration file to indicate all the options. This is the one I
+            used:
+          </p>
+          <pre>
+# Mainly copied from:
+# http://swearingscience.com/2009/01/18/openssl-self-signed-ca/
+
+[ ca ]
+default_ca = myca
+
+[ crl_ext ]
+# issuerAltName=issuer:copy  #this would copy the issuer name to altname
+authorityKeyIdentifier=keyid:always
+
+ [ myca ]
+ dir = ./
+ new_certs_dir = $dir
+ unique_subject = no
+ certificate = $dir/example_root.cer
+ database = $dir/certindex
+ private_key = $dir/privkey.pem
+ serial = $dir/certserial
+ default_days = 9999
+ default_md = sha512
+ policy = myca_policy
+ x509_extensions = myca_extensions
+ crlnumber = $dir/crlnumber
+ default_crl_days = 9999
+
+ [ myca_policy ]
+ commonName = supplied
+ stateOrProvinceName = supplied
+ countryName = optional
+ emailAddress = optional
+ organizationName = supplied
+ organizationalUnitName = optional
+
+ [ myca_extensions ]
+ basicConstraints = CA:false
+ subjectKeyIdentifier = hash
+ authorityKeyIdentifier = keyid:always
+ keyUsage = digitalSignature,keyEncipherment
+ extendedKeyUsage = serverAuth
+ crlDistributionPoints = URI:http://certs.example.com/example_root.crl
+ subjectAltName  = @alt_names
+
+ [alt_names]
+ DNS.1 = example.com
+ DNS.2 = *.example.com
+</pre
+          >
+          <p>
+            The important lines are the DNS.1 and DNS.2 lines: put in all the
+            domains you want the certificate to be valid with (of course, you
+            can add DNS.3, DNS.4 etc... as you like). The star (<tt
+              ><span>*</span></tt
+            >) means all subdomains, so <tt><span>*.example.com</span></tt> will
+            match <tt><span>www.example.com</span></tt> as well as
+            <tt><span>very.complicated.example.com</span></tt>
+          </p>
+          <p>
+            Also pay attention to the <tt><span>default_md</span></tt> and
+            <tt><span>default_days</span></tt> variables.
+          </p>
+          <p>
+            Save your configuration files to e.g
+            <tt><span>example_root.conf</span></tt
+            >.
+          </p>
+        </div>
+        <div id="creating-the-index-files">
+          <h4>Creating the index files</h4>
+          <p>
+            Once you have created the configuration file, you should create an
+            empty index file, and a serial number file for the certificate index
+            and the revocation list:
+          </p>
+          <pre>
+touch certindex
+echo 000a &gt; certserial
+echo 000a &gt; crlnumber
+</pre
+          >
+        </div>
+        <div id="generating-the-certificate-and-the-crl">
+          <h4>Generating the certificate and the CRL</h4>
+          <p>Finally, generate your certificate:</p>
+          <pre>
+openssl ca -batch -config example_root.conf -notext -in example.com.csr -out example.com.cer
+</pre
+          >
+          <p>And generate your (empty) certificate revocation list:</p>
+          <pre>
+openssl ca -config example_root.conf -gencrl -keyfile privkey.pem -cert example_root.cer -out example_root.crl.pem
+
+openssl crl -inform PEM -in example_root.crl.pem -outform DER -out  example_root.crl &amp;&amp; rm example_root.crl.pem
+</pre
+          >
+          <p>
+            The last line is necessary because
+            <a href="http://www.ietf.org/rfc/rfc5280.txt">RFC 5280</a> requires
+            the CRL to be encoded using <tt><span>DER</span></tt
+            >.
+          </p>
+        </div>
+        <div id="checking-the-content-of-your-certificate">
+          <h4>Checking the content of your certificate</h4>
+          <p>
+            Use this command to see that the content of your certificate is what
+            you expect:
+          </p>
+          <pre>
+openssl x509 -text -noout &lt; example_com.cer
+</pre
+          >
+          <p>To check the fingerprint, use:</p>
+          <pre>
+openssl x509 -fingerprint -sha1 -noout &lt; example_com.cer
+</pre
+          >
+        </div>
+        <div id="revoking-a-certificate">
+          <h4>Revoking a certificate</h4>
+          <p>
+            To revoke a bad certificate (here
+            <tt><span>example.com.cer</span></tt
+            >), update your index using:
+          </p>
+          <pre>
+openssl ca -config example_root.conf -revoke example_com.cer -keyfile privkey.pem -cert example_root.cer
+</pre
+          >
+          <p>
+            Then re-generate the revocation list using the command mentionned
+            above.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

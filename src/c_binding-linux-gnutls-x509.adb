@@ -62,4 +62,24 @@ package body C_Binding.Linux.GnuTLS.X509 is
       end if;
    end Set_Trust_CAs_File;
 
+   function Set_CRL_File
+     (Credentials : Certificate_Credentials.Credentials;
+      Name        : String;
+      Format      : Certificate_Format) return Set_CRL_File_Result
+   is
+      Result : constant Interfaces.C.int
+        := C_Set_X509_CRL_File
+          (Credentials.My_Credentials,
+           Interfaces.C.To_C (Name),
+           Format);
+   begin
+      if Result >= 0 then
+         return (Kind_Id                      => Set_CRL_File_Success,
+                 Processed_Certificates_Count => Natural (Result));
+      else
+         Ada.Text_IO.Put_Line ("f:" & Result'Img);
+         return (Kind_Id => Set_CRL_File_Failure);
+      end if;
+   end Set_CRL_File;
+
 end C_Binding.Linux.GnuTLS.X509;

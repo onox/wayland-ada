@@ -5,6 +5,9 @@ with GnuTLS.X509;
 package body Simple_Server is
 
    use all type GnuTLS.X509.Set_Trust_CAs_File_Result_Kind_Id;
+   use all type GnuTLS.X509.Set_CRL_File_Result_Kind_Id;
+   use all type GnuTLS.Success_Flag;
+
 
    System_Certificates_File : constant String
      := "/etc/ssl/certs/ca-certificates.crt";
@@ -27,11 +30,18 @@ package body Simple_Server is
    --  /usr/local/share/ca-certificates are also included
    --  as implicitly trusted.
 
+   -- The following certificate is taken from:
+   --
+   --    http://fm4dd.com/openssl/certexamples.htm
+   --
+
    procedure Run is
 
       procedure Initialize_GnuTLS;
       procedure Allocate_Credentials;
       procedure Set_X509_Trust_File;
+      procedure Set_X509_Crl_File;
+      procedure Set_Key_File;
 
       procedure Initialize_GnuTLS is
 
@@ -75,11 +85,41 @@ package body Simple_Server is
               Format      => GnuTLS.X509.PEM_Text_Format);
       begin
          if Result.Kind_Id = Set_Trust_CAs_File_Success then
-            Ada.Text_IO.Put_Line ("succ");
+            Set_X509_Crl_File;
          else
-            Ada.Text_IO.Put_Line ("fail");
+            Ada.Text_IO.Put_Line ("Failed to set trust file");
          end if;
       end Set_X509_Trust_File;
+
+      --  Add instruction on how to generate crl.der.
+      procedure Set_X509_Crl_File is
+         Result : GnuTLS.X509.Set_CRL_File_Result
+           := GnuTLS.X509.Set_CRL_File
+             (Credentials => Credentials,
+              Name        => "crl.der",
+              Format      => GnuTLS.X509.DER_Binary_Format);
+      begin
+         if Result.Kind_Id = Set_CRL_File_Success then
+            Set_Key_File;
+         else
+            Ada.Text_IO.Put_Line ("Set X509 Crl file failed");
+         end if;
+      end Set_X509_Crl_File;
+
+      procedure Set_Key_File is
+         Flag : GnuTLS.Success_Flag
+           := GnuTLS.X509.Set_Key_File
+             (Credentials      => Credentials,
+              Certificate_File => "cert.pem",
+              Key_File         => "key.pem",
+              Format           => GnuTLS.X509.PEM_Text_Format);
+      begin
+         if Flag = Success then
+            Ada.Text_IO.Put_Line ("succ");
+         else
+            Ada.Text_IO.Put_Line ("Set key file failed");
+         end if;
+      end Set_Key_File;
 
    begin
       Ada.Text_IO.Put_Line ("Helo");
