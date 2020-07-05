@@ -2,36 +2,25 @@ with "aida.gpr";
 
 project Ubuntu_Posix is
 
-   for Languages use ("Ada", "C");
+   for Languages use ("Ada");
 
    for Source_Dirs use ("src");
 
    for Source_Files use
      (
-      "errno_wrapper.c",
       "c_binding.ads",
       "c_binding.adb",
       "c_binding-linux.ads",
       "c_binding-linux.adb",
-      "c_binding-linux-sockets.ads",
-      "c_binding-linux-sockets.adb",
-      "c_binding-linux-sockets-tcp_client.ads",
-      "c_binding-linux-sockets-tcp_client.adb",
-      "c_binding-linux-sockets-tcp_server.ads",
-      "c_binding-linux-sockets-tcp_server.adb",
-      "c_binding-linux-event_polls.ads",
-      "c_binding-linux-event_polls.adb",
+--      "c_binding-linux-event_polls.ads",
+--      "c_binding-linux-event_polls.adb",
       "c_binding-linux-files.ads",
-      "c_binding-linux-files.adb",
-      "c_binding-linux-file_status.ads",
-      "c_binding-linux-file_status.adb",
-      "c_binding-linux-memory_maps.ads",
-      "c_binding-linux-memory_maps.adb",
-      "c_binding-linux-text_io.ads",
-      "c_binding-linux-text_io.adb",
-      "c_binding-linux-posix_select.ads",
-      "c_binding-linux-posix_select.adb",
-      "linux.ads"
+      "c_binding-linux-files.adb"
+--      "c_binding-linux-file_status.ads",
+--      "c_binding-linux-file_status.adb",
+--      "c_binding-linux-memory_maps.ads",
+--      "c_binding-linux-memory_maps.adb",
+--      "linux.ads"
      );
 
    for Object_Dir use "obj";

@@ -8,12 +8,6 @@ package C_Binding with Preelaborate is
 
    subtype Void_Ptr is System.Address;
 
-   function C_errno return integer;
-   pragma import( C, C_errno, "C_errno" );
-
-   procedure C_reset_errno;
-   pragma import( C, C_reset_errno, "C_reset_errno" );
-
    type Success_Flag is
      (
       Success,

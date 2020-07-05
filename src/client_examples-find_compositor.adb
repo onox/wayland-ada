@@ -1,6 +1,8 @@
-with Wayland_Client;
+with C_Binding.Linux.Wayland_Client;
 
 package body Client_Examples.Find_Compositor is
+
+   package Wayland_Client renames C_Binding.Linux.Wayland_Client;
 
    use all type Wayland_Client.Call_Result_Code;
 
