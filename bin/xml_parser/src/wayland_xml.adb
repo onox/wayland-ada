@@ -1,21 +1,19 @@
 package body Wayland_XML is
 
    procedure Set_Summary (This    : in out Arg_Tag;
-                          Value   : String;
-                          Subpool : Dynamic_Pools.Subpool_Handle)
+                          Value   : String)
    is
    begin
       This.My_Summary := (Exists => True,
-                          Value  => new (Subpool) String'(Value));
+                          Value  => new String'(Value));
    end Set_Summary;
 
    procedure Set_Interface_Attribute (This    : in out Arg_Tag;
-                                      Value   : String;
-                                      Subpool : Dynamic_Pools.Subpool_Handle)
+                                      Value   : String)
    is
    begin
       This.My_Interface_Attribute := (Exists => True,
-                                      Value  => new (Subpool) String'(Value));
+                                      Value  => new String'(Value));
    end Set_Interface_Attribute;
 
    procedure Set_Type_Attribute (This    : in out Arg_Tag;
@@ -53,11 +51,10 @@ package body Wayland_XML is
    end Set_Type_Attribute;
 
    procedure Set_Name (This    : in out Arg_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle) is
+                       Value   : String) is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Set_Allow_Null (This  : in out Arg_Tag;
@@ -69,39 +66,35 @@ package body Wayland_XML is
    end Set_Allow_Null;
 
    procedure Set_Enum (This    : in out Arg_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Enum := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Enum;
 
    procedure Set_Text (This    : in out Copyright_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Text := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Text;
 
    procedure Set_Text (This    : in out Description_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Text := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Text;
 
    procedure Set_Summary (This    : in out Description_Tag;
-                          Value   : String;
-                          Subpool : Dynamic_Pools.Subpool_Handle)
+                          Value   : String)
    is
    begin
       This.My_Summary := (Exists => True,
-                          Value  => new (Subpool) String'(Value));
+                          Value  => new String'(Value));
    end Set_Summary;
 
    procedure Set_Value (This  : in out Entry_Tag;
@@ -113,21 +106,19 @@ package body Wayland_XML is
    end Set_Value;
 
    procedure Set_Summary (This    : in out Entry_Tag;
-                          Value   : String;
-                          Subpool : Dynamic_Pools.Subpool_Handle)
+                          Value   : String)
    is
    begin
       This.My_Summary := (Exists => True,
-                          Value  => new (Subpool) String'(Value));
+                          Value  => new String'(Value));
    end Set_Summary;
 
    procedure Set_Name (This    : in out Entry_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Set_Since (This  : in out Entry_Tag;
@@ -138,12 +129,11 @@ package body Wayland_XML is
    end Set_Since;
 
    procedure Set_Name (This    : in out Enum_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Set_Bitfield (This  : in out Enum_Tag;
@@ -178,12 +168,11 @@ package body Wayland_XML is
    end Append_Child;
 
    procedure Set_Name (This    : in out Event_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Set_Since_Attribute (This  : in out Event_Tag;
@@ -211,12 +200,11 @@ package body Wayland_XML is
    end Append_Child;
 
    procedure Set_Name (This    : in out Request_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Append_Child (This  : in out Request_Tag;
@@ -236,12 +224,11 @@ package body Wayland_XML is
    end Append_Child;
 
    procedure Set_Type_Attribute (This    : in out Request_Tag;
-                                 Value   : String;
-                                 Subpool : Dynamic_Pools.Subpool_Handle)
+                                 Value   : String)
    is
    begin
       This.My_Type_Attribute := (Exists => True,
-                                 Value  => new (Subpool) String'(Value));
+                                 Value  => new String'(Value));
    end Set_Type_Attribute;
 
    procedure Set_Since (This  : in out Request_Tag;
@@ -280,12 +267,11 @@ package body Wayland_XML is
    end Description;
 
    procedure Set_Name (This    : in out Interface_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Set_Version (This  : in out Interface_Tag;
@@ -329,12 +315,11 @@ package body Wayland_XML is
    end Append_Child;
 
    procedure Set_Name (This    : in out Protocol_Tag;
-                       Value   : String;
-                       Subpool : Dynamic_Pools.Subpool_Handle)
+                       Value   : String)
    is
    begin
       This.My_Name := (Exists => True,
-                       Value  => new (Subpool) String'(Value));
+                       Value  => new String'(Value));
    end Set_Name;
 
    procedure Append_Child (This  : in out Protocol_Tag;

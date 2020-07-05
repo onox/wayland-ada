@@ -1,17 +1,14 @@
-with Dynamic_Pools;
 with Ada.Containers.Vectors;
-with Standard_Extensions; use Standard_Extensions;
+--  with Standard_Extensions; use Standard_Extensions;
 with Aida.Deepend;
 
-pragma Elaborate_All (Aida.Deepend);
-pragma Elaborate_All (Standard_Extensions);
-pragma Elaborate_All (Dynamic_Pools);
+--  pragma Elaborate_All (Standard_Extensions);
 
 package Wayland_XML is
 
    subtype String_Ptr is Aida.Deepend.String_Ptr;
 
-   Empty_String : String renames Aida.Deepend.Empty_String;
+   Empty_String : aliased String := Aida.Deepend.Empty_String;
 
    type Version_Number is new Positive;
 
@@ -31,8 +28,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Arg_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -59,8 +55,7 @@ package Wayland_XML is
 
    procedure Set_Interface_Attribute
      (This    : in out Arg_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Interface_Attribute (This),
       Post   => Exists_Interface_Attribute (This) and
@@ -75,8 +70,7 @@ package Wayland_XML is
 
    procedure Set_Summary
      (This    : in out Arg_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Summary (This),
       Post   => Exists_Summary (This) and Summary (This) = Value;
@@ -102,8 +96,7 @@ package Wayland_XML is
 
    procedure Set_Enum
      (This    : in out Arg_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Enum (This),
       Post   => Exists_Enum (This) and Enum (This) = Value;
@@ -115,15 +108,13 @@ package Wayland_XML is
    function Exists_Enum (This : Arg_Tag) return Boolean with
       Global => null;
 
-   type Arg_Tag_Ptr is access all Arg_Tag with
-     Storage_Pool => Default_Subpool;
+   type Arg_Tag_Ptr is access all Arg_Tag;
 
    type Copyright_Tag is limited private;
 
    procedure Set_Text
      (This    : in out Copyright_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Text (This),
       Post   => Exists_Text (This) and Text (This) = Value;
@@ -135,15 +126,13 @@ package Wayland_XML is
    function Exists_Text (This : Copyright_Tag) return Boolean with
       Global => null;
 
-   type Copyright_Ptr is access all Copyright_Tag with
-        Storage_Pool => Default_Subpool;
+   type Copyright_Ptr is access all Copyright_Tag;
 
    type Description_Tag is limited private;
 
    procedure Set_Text
      (This    : in out Description_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Text (This),
       Post   => Exists_Text (This) and Text (This) = Value;
@@ -157,8 +146,7 @@ package Wayland_XML is
 
    procedure Set_Summary
      (This    : in out Description_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Summary (This),
       Post   => Exists_Summary (This) and Summary (This) = Value;
@@ -170,8 +158,7 @@ package Wayland_XML is
    function Exists_Summary (This : Description_Tag) return Boolean with
       Global => null;
 
-   type Description_Tag_Ptr is access all Description_Tag with
-        Storage_Pool => Default_Subpool;
+   type Description_Tag_Ptr is access all Description_Tag;
 
    type Entry_Value is new Natural;
 
@@ -179,8 +166,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Entry_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -194,8 +180,7 @@ package Wayland_XML is
 
    procedure Set_Summary
      (This    : in out Entry_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Summary (This),
       Post   => Exists_Summary (This) and Summary (This) = Value;
@@ -235,8 +220,7 @@ package Wayland_XML is
    function Exists_Since (This : Entry_Tag) return Boolean with
       Global => null;
 
-   type Entry_Tag_Ptr is access all Entry_Tag with
-        Storage_Pool => Default_Subpool;
+   type Entry_Tag_Ptr is access all Entry_Tag;
 
    type Enum_Child_Kind_Id is (Child_Dummy, Child_Description, Child_Entry);
 
@@ -275,8 +259,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Enum_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -312,8 +295,7 @@ package Wayland_XML is
    function Exists_Since (This : Enum_Tag) return Boolean with
       Global => null;
 
-   type Enum_Tag_Ptr is access all Enum_Tag with
-        Storage_Pool => Default_Subpool;
+   type Enum_Tag_Ptr is access all Enum_Tag;
 
    type Event_Child_Kind_Id is (Child_Dummy, Child_Description, Child_Arg);
 
@@ -352,8 +334,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Event_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -385,8 +366,7 @@ package Wayland_XML is
    function Exists_Since_Attribute (This : Event_Tag) return Boolean with
       Global => null;
 
-   type Event_Tag_Ptr is access all Event_Tag with
-        Storage_Pool => Default_Subpool;
+   type Event_Tag_Ptr is access all Event_Tag;
 
    type Request_Child_Kind_Id is (Child_Dummy, Child_Description, Child_Arg);
 
@@ -427,8 +407,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Request_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
      Global => null,
      Pre    => not Exists_Name (This),
      Post   => Exists_Name (This) and Name (This) = Value;
@@ -442,8 +421,7 @@ package Wayland_XML is
 
    procedure Set_Type_Attribute
      (This    : in out Request_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Type_Attribute (This),
       Post   => Exists_Type_Attribute (This) and Type_Attribute (This) = Value;
@@ -479,8 +457,7 @@ package Wayland_XML is
    function Exists_Description (This : aliased Request_Tag) return Boolean with
       Global => null;
 
-   type Request_Tag_Ptr is access all Request_Tag with
-        Storage_Pool => Default_Subpool;
+   type Request_Tag_Ptr is access all Request_Tag;
 
    type Interface_Child_Kind_Id is
      (Child_Dummy, Child_Description, Child_Request, Child_Event, Child_Enum);
@@ -516,8 +493,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Interface_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -560,8 +536,7 @@ package Wayland_XML is
      (This : in out Interface_Tag;
       Item :        not null Enum_Tag_Ptr);
 
-   type Interface_Tag_Ptr is access all Interface_Tag with
-        Storage_Pool => Default_Subpool;
+   type Interface_Tag_Ptr is access all Interface_Tag;
 
    type Protocol_Child_Kind_Id is
      (Child_Dummy, Child_Copyright, Child_Interface);
@@ -593,8 +568,7 @@ package Wayland_XML is
 
    procedure Set_Name
      (This    : in out Protocol_Tag;
-      Value   :        String;
-      Subpool :        Dynamic_Pools.Subpool_Handle) with
+      Value   :        String) with
       Global => null,
       Pre    => not Exists_Name (This),
       Post   => Exists_Name (This) and Name (This) = Value;
@@ -617,8 +591,7 @@ package Wayland_XML is
      (This : in out Protocol_Tag;
       Item :        not null Interface_Tag_Ptr);
 
-   type Protocol_Tag_Ptr is access all Protocol_Tag with
-        Storage_Pool => Default_Subpool;
+   type Protocol_Tag_Ptr is access all Protocol_Tag;
 
 private
 

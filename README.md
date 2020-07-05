@@ -181,15 +181,13 @@ Contact me if you want to help out: joakimds at kth dot se
 All software written by me (and potential contributors)
 is released to the public domain or the software
 license of your choice. This repository does however contain code that does
-not originate from me like code from Dmitry Kazakov's Simple Components,
-Brad Moore's Deepend and Trats-Based Containers from AdaCore.
+not originate from me like code from Dmitry Kazakov's Simple Components (Aida.UTF8).
 These software treasures retain their original license
 of their original authors.
 
 # Notes on the creation of the Wayland Ada binding
 
-The thin ada binding (the nested package Wl_Thin in the private part of
-the package Posix.Wayland_Client) is auto-generated from wayland.xml and
+The thin ada binding (the private package C_Binding.Wl_Thin) is auto-generated from wayland.xml and
 then the thick Ada binding is manually built on top of it.
 
 The reason the thick Ada binding is not also auto-generated is because it is
@@ -229,5 +227,3 @@ but stopping the discussion here.
 
 # Thanks to
 - Dmitry Kazakov for Simple Components. They are used in the wayland.xml-file parser application for reading UTF8-characters.
-
-- Brad Moore for providing Storage Pool (and Subpool) implementations available in the Deepend Open Source project.

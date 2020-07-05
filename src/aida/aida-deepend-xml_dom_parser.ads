@@ -14,8 +14,7 @@ package Aida.Deepend.XML_DOM_Parser is
    function Value (This : Attribute) return String with
      Global => null;
 
-   type Attribute_Ptr is access all Attribute with
-     Storage_Pool => Default_Subpool;
+   type Attribute_Ptr is access all Attribute;
 
    type Attribute_Index is new Positive;
 
@@ -33,7 +32,7 @@ package Aida.Deepend.XML_DOM_Parser is
      );
 
    type Node;
-   type Node_Ptr is access all Node with Storage_Pool => Default_Subpool;
+   type Node_Ptr is access all Node;
 
    package Node_Vectors is new Ada.Containers.Vectors
      (Index_Type   => Positive,
@@ -76,8 +75,7 @@ package Aida.Deepend.XML_DOM_Parser is
    end record;
 
    procedure Parse
-     (Subpool     : in out Dynamic_Pools.Subpool_Handle;
-      XML_Message : String;
+     (XML_Message : String;
       Call_Result : in out Aida.Call_Result;
       Root_Node   :    out Node_Ptr) with
      Global => null,

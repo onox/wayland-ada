@@ -24,9 +24,6 @@ package body Aida.Deepend.XML_DOM_Parser is
      ((Element => This.My_Attributes'Access));
 
    type Argument_Type
-     (
-      Subpool : Dynamic_Pools.Subpool_Handle
-     )
    is limited record
       Current_Nodes : Node_Vectors.Vector;
       -- The current node is the last Node pointed to in the container
@@ -48,10 +45,10 @@ package body Aida.Deepend.XML_DOM_Parser is
             then
                declare
                   Current_Node : not null Node_Ptr
-                    := new (Argument.Subpool) Node;
+                    := new Node;
                begin
                   Current_Node.Tag.My_Name
-                    := new (Argument.Subpool) String'(Tag_Name);
+                    := new String'(Tag_Name);
                   Argument.Current_Nodes.Append (Current_Node);
                   Argument.Root_Node := Current_Node;
                end;
@@ -65,10 +62,10 @@ package body Aida.Deepend.XML_DOM_Parser is
             then
                declare
                   Current_Node : not null Node_Ptr
-                    := new (Argument.Subpool) Node;
+                    := new Node;
                begin
                   Current_Node.Tag.My_Name
-                    := new (Argument.Subpool) String'(Tag_Name);
+                    := new String'(Tag_Name);
 
                   if
                     Argument.Current_Nodes.Constant_Reference
@@ -142,11 +139,11 @@ package body Aida.Deepend.XML_DOM_Parser is
             then
                declare
                   Current_Node : not null Node_Ptr
-                    := new (Argument.Subpool) Node (Node_Kind_Text);
+                    := new Node (Node_Kind_Text);
                begin
                   Current_Node.all
                     := (Id   => Node_Kind_Text,
-                        Text => new (Argument.Subpool) String'(Value));
+                        Text => new String'(Value));
 
                   if
                     Argument.Current_Nodes.Constant_Reference
@@ -182,12 +179,12 @@ package body Aida.Deepend.XML_DOM_Parser is
                then
                   declare
                      Attr : not null Attribute_Ptr
-                       := new (Argument.Subpool) Attribute;
+                       := new Attribute;
                   begin
                      Attr.My_Name
-                       := new (Argument.Subpool) String'(Attribute_Name);
+                       := new String'(Attribute_Name);
                      Attr.My_Value
-                       := new (Argument.Subpool) String'(Attribute_Value);
+                       := new String'(Attribute_Value);
 
                      if
                        Argument.Current_Nodes.Constant_Reference
@@ -227,11 +224,11 @@ package body Aida.Deepend.XML_DOM_Parser is
                then
                   declare
                      Current_Node : Node_Ptr
-                       := new (Argument.Subpool) Node (Node_Kind_Comment);
+                       := new Node (Node_Kind_Comment);
                   begin
                      Current_Node.all
                        := (Id   => Node_Kind_Comment,
-                           Text => new (Argument.Subpool) String'(Value));
+                           Text => new String'(Value));
 
                      if
                        Argument.Current_Nodes.Constant_Reference
@@ -271,11 +268,11 @@ package body Aida.Deepend.XML_DOM_Parser is
                then
                   declare
                      Current_Node : Node_Ptr
-                       := new (Argument.Subpool) Node (Node_Kind_CDATA);
+                       := new Node (Node_Kind_CDATA);
                   begin
                      Current_Node.all
                        := (Id   => Node_Kind_CDATA,
-                           Text => new (Argument.Subpool) String'(Value));
+                           Text => new String'(Value));
 
                      if
                        Argument.Current_Nodes.Constant_Reference
@@ -310,12 +307,11 @@ package body Aida.Deepend.XML_DOM_Parser is
       Handle_CDATA);
 
    procedure Parse
-     (Subpool     : in out Dynamic_Pools.Subpool_Handle;
-      XML_Message : String;
+     (XML_Message : String;
       Call_Result : in out Aida.Call_Result;
       Root_Node   :    out Node_Ptr)
    is
-      Argument : Argument_Type (Subpool);
+      Argument : Argument_Type;
    begin
       SAX_Parse (Argument, XML_Message, Call_Result);
 

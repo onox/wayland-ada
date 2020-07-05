@@ -1,16 +1,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
-with Aida.Deepend;
-with Dynamic_Pools;
-
-pragma Elaborate_All (Dynamic_Pools);
-pragma Elaborate_All (Aida.Deepend);
 
 package Standard_Extensions is
-
-   Default_Subpool :
-     Dynamic_Pools.Dynamic_Pool renames
-     Aida.Deepend.Default_Subpool;
 
    function Trim (Source : String) return String is
      (Ada.Strings.Fixed.Trim (Source, Ada.Strings.Both));
