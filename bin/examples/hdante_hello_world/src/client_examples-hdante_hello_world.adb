@@ -1,10 +1,12 @@
-with Linux.Files;
-with Linux.File_Status;
-with Linux.Memory_Maps;
-with C_Binding;
-with Wayland_Client;
-with Ada.Real_Time;
 with System;
+
+with Ada.Real_Time;
+with Ada.Text_IO;
+
+with C_Binding.Linux.Files;
+with C_Binding.Linux.File_Status;
+with C_Binding.Linux.Memory_Maps;
+with C_Binding.Linux.Wayland_Client;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -18,9 +20,15 @@ with System;
 -- and execute the executable from there.
 package body Client_Examples.Hdante_Hello_World is
 
+   package Wayland_Client renames C_Binding.Linux.Wayland_Client;
+
+   procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
+
    subtype Unsigned_32 is Wayland_Client.Unsigned_32;
 
    use type Unsigned_32;
+
+   package Linux renames C_Binding.Linux;
 
    use all type Linux.Files.File_Mode;
    use all type Linux.Files.File_Permission;
@@ -143,7 +151,7 @@ package body Client_Examples.Hdante_Hello_World is
                                       Registry : Wayland_Client.Registry;
                                       Id       : Unsigned_32) is
    begin
-      Linux.Text_IO.Put_Line ("Got a registry losing event for" & Id'Image);
+      Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
    package Registry_Events is new Wayland_Client.Registry_Events

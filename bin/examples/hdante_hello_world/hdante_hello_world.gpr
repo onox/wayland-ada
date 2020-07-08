@@ -5,7 +5,7 @@ project Hdante_Hello_World is
 
    for Create_Missing_Dirs use "True";
 
-   for Source_Dirs use ("../../../src");
+   for Source_Dirs use ("../../../src", "src");
 
    for Object_Dir use "obj";
 

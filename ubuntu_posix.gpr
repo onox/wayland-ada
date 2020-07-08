@@ -15,11 +15,13 @@ project Ubuntu_Posix is
 --      "c_binding-linux-event_polls.ads",
 --      "c_binding-linux-event_polls.adb",
       "c_binding-linux-files.ads",
-      "c_binding-linux-files.adb"
---      "c_binding-linux-file_status.ads",
---      "c_binding-linux-file_status.adb",
---      "c_binding-linux-memory_maps.ads",
---      "c_binding-linux-memory_maps.adb",
+      "c_binding-linux-files.adb",
+
+      --  Needed for hdante example
+      "c_binding-linux-file_status.ads",
+      "c_binding-linux-file_status.adb",
+      "c_binding-linux-memory_maps.ads",
+      "c_binding-linux-memory_maps.adb"
 --      "linux.ads"
      );
 
