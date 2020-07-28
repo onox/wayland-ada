@@ -1,5 +1,6 @@
 with System.Address_To_Access_Conversions;
 with C_Binding.Constants;
+
 package body C_Binding.Linux.Wayland_Client is
 
    use type int;
@@ -43,7 +44,7 @@ package body C_Binding.Linux.Wayland_Client is
            := (
                My_Display                  => Display,
                My_Fd                       =>
-                 Wl_Thin.Display_Get_File_Descriptor (Display)
+                 Wayland.API.Display_Get_File_Descriptor (Display)
               );
          M : constant String := Interfaces.C.Strings.Value (Message);
       begin
@@ -62,7 +63,7 @@ package body C_Binding.Linux.Wayland_Client is
            := (
                My_Display                  => Display,
                My_Fd                       =>
-                 Wl_Thin.Display_Get_File_Descriptor (Display)
+                 Wayland.API.Display_Get_File_Descriptor (Display)
               );
       begin
          Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -1545,7 +1546,7 @@ package body C_Binding.Linux.Wayland_Client is
       Display.My_Display := Wl_Thin.Display_Connect (+Name);
       if Display.My_Display /= null then
          Display.My_Fd :=
-           Wl_Thin.Display_Get_File_Descriptor (Display.My_Display);
+           Wayland.API.Display_Get_File_Descriptor (Display.My_Display);
          if Display.My_Fd = -1 then
             Display.Disconnect;
             Display.My_Display := null;
@@ -1600,26 +1601,26 @@ package body C_Binding.Linux.Wayland_Client is
 
    function Dispatch (Display : Wayland_Client.Display) return Integer is
    begin
-      return Integer (Wl_Thin.Display_Dispatch (Display.My_Display));
+      return Integer (Wayland.API.Display_Dispatch (Display.My_Display));
    end Dispatch;
 
    function Dispatch_Pending
      (Display : Wayland_Client.Display) return Integer is
    begin
-      return Wl_Thin.Display_Dispatch_Pending (Display.My_Display);
+      return Wayland.API.Display_Dispatch_Pending (Display.My_Display);
    end Dispatch_Pending;
 
    function Prepare_Read
      (Display : Wayland_Client.Display) return Integer is
    begin
-      return Wl_Thin.Display_Prepare_Read (Display.My_Display);
+      return Wayland.API.Display_Prepare_Read (Display.My_Display);
    end Prepare_Read;
 
    function Read_Events
      (Display : Wayland_Client.Display) return Call_Result_Code
    is
       I : constant Integer
-        := Wl_Thin.Display_Read_Events (Display.My_Display);
+        := Wayland.API.Display_Read_Events (Display.My_Display);
    begin
       if I = 0 then
          return Success;
@@ -1630,7 +1631,7 @@ package body C_Binding.Linux.Wayland_Client is
 
    procedure Cancel_Read (Display : Wayland_Client.Display) is
    begin
-      Wl_Thin.Display_Cancel_Read (Display.My_Display);
+      Wayland.API.Display_Cancel_Read (Display.My_Display);
    end Cancel_Read;
 
    procedure Dispatch (Display : Wayland_Client.Display) is
@@ -1642,7 +1643,7 @@ package body C_Binding.Linux.Wayland_Client is
 
    function Roundtrip (Display : Wayland_Client.Display) return Integer is
    begin
-      return Integer (Wl_Thin.Display_Roundtrip (Display.My_Display));
+      return Integer (Wayland.API.Display_Roundtrip (Display.My_Display));
    end Roundtrip;
 
    procedure Roundtrip (Display : Wayland_Client.Display) is
@@ -1876,8 +1877,9 @@ package body C_Binding.Linux.Wayland_Client is
                         Serial    : Unsigned_32;
                         Mime_Type : String) is
    begin
-      Wl_Thin.Proxy_Marshal
-        (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Wayland.API.Proxy (Offer.My_Data_Offer.all),
+--        (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
          WL_DATA_OFFER_ACCEPT,
          Serial,
          +Mime_Type);
@@ -2008,8 +2010,9 @@ package body C_Binding.Linux.Wayland_Client is
    procedure Set_Title (Surface : Shell_Surface;
                         Title   : String) is
    begin
-      Wl_Thin.Proxy_Marshal
-        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+--        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+        (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
          WL_SHELL_SURFACE_SET_TITLE,
          +Title);
    end Set_Title;
@@ -2017,8 +2020,9 @@ package body C_Binding.Linux.Wayland_Client is
    procedure Set_Class (Surface : Shell_Surface;
                         Class_V : String) is
    begin
-      Wl_Thin.Proxy_Marshal
-        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+--        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
+        (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
          WL_SHELL_SURFACE_SET_CLASS,
          +Class_V);
    end Set_Class;
@@ -2351,8 +2355,9 @@ package body C_Binding.Linux.Wayland_Client is
    procedure Offer (Source    : Data_Source;
                     Mime_Type : String) is
    begin
-      Wl_Thin.Proxy_Marshal
-        (Wl_Thin.Proxy_Ptr'(Source.My_Data_Source.all'Access),
+      Wayland.API.Proxy_Marshal
+--        (Wl_Thin.Proxy_Ptr'(Source.My_Data_Source.all'Access),
+        (Wayland.API.Proxy (Source.My_Data_Source.all),
          WL_DATA_SOURCE_OFFER,
          +Mime_Type);
    end Offer;

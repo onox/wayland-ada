@@ -3,6 +3,8 @@ with System;
 private with Interfaces.C.Strings;
 private with Ada.Unchecked_Conversion;
 
+with Wayland.API;
+
 --  Contains type definitions common to all Ada bindings to C libraries.
 package C_Binding with Preelaborate is
 
@@ -30,7 +32,7 @@ private
 
    Nul : constant Character := Character'Val (0);
 
-   type C_String is new String with
+   subtype C_String is Wayland.API.C_String with
      Dynamic_Predicate => C_String'Length > 0
      and then C_String (C_String'Last) = Nul;
 
@@ -45,7 +47,8 @@ private
    subtype unsigned is Interfaces.C.unsigned;
    subtype int is Interfaces.C.int;
    subtype long is Interfaces.C.long;
-   subtype Unsigned_32 is Interfaces.Unsigned_32;
+--   subtype Unsigned_32 is Interfaces.Unsigned_32;
+   subtype Unsigned_32 is Wayland.API.Unsigned_32;
    subtype Unsigned_16 is Interfaces.Unsigned_16;
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;

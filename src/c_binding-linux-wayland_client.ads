@@ -3,6 +3,8 @@ with Interfaces;
 private with Interfaces.C.Strings;
 private with C_Binding.Wl_Thin;
 
+with Wayland.API;
+
 -- Auto-generated from Wayland.xml
 package C_Binding.Linux.Wayland_Client is
 
@@ -38,7 +40,8 @@ package C_Binding.Linux.Wayland_Client is
                              Error
                             );
 
-   subtype Unsigned_32 is Interfaces.Unsigned_32;
+--   subtype Unsigned_32 is Interfaces.Unsigned_32;
+   subtype Unsigned_32 is Wayland.API.Unsigned_32;
 
    type Fixed is new Integer;
 

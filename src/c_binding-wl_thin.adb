@@ -4,92 +4,54 @@ use C_Binding.Constants;
 --  Mostly auto generated from Wayland.xml
 package body C_Binding.Wl_Thin is
 
-   procedure Wl_Proxy_Destroy (Registry : Proxy_Ptr) with
-      Convention    => C,
-      Import        => True,
-      External_Name => "wl_proxy_destroy";
+   use type Proxy_Ptr;
 
    function Display_Connect (Name : C_String) return Display_Ptr is
-
-      function Wl_Display_Connect (Name : in C_String) return Display_Ptr with
-         Convention    => C,
-         Import        => True,
-         External_Name => "wl_display_connect";
-
    begin
-      return Wl_Display_Connect (Name);
+      return Wayland.API.Display_Connect (Name);
    end Display_Connect;
 
    procedure Display_Disconnect (This : in out Display_Ptr) is
-
-      procedure Wl_Display_Disconnect (Display : Display_Ptr) with
-         Convention => C,
-         Import     => True;
-
+      use type Wayland.API.Display_Ptr;
    begin
       if This /= null then
-         Wl_Display_Disconnect (This);
+         Wayland.API.Display_Disconnect (This);
          This := null;
       end if;
    end Display_Disconnect;
 
-   function Wl_Proxy_Add_Listener
-     (Arg1 : Proxy_Ptr;
-      Arg2 : Void_Ptr;
-      Arg3 : Void_Ptr) return Interfaces.C.int with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_proxy_add_listener";
-      --  Returns 0 on success, otherwise -1 on failure.
-
-   procedure Wl_Proxy_Set_User_Data (Arg1 : Proxy_Ptr; Arg3 : Void_Ptr) with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_proxy_set_user_data";
-
-   function Wl_Proxy_Get_User_Data (Arg1 : Proxy_Ptr) return Void_Ptr with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_proxy_get_user_data";
-
-   function Wl_Proxy_Get_Version (Arg1 : Proxy_Ptr) return Unsigned_32 with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_proxy_get_version";
-
    function Display_Add_Listener
      (Display  : Display_Ptr;
       Listener : Display_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
-      return Wl_Proxy_Add_Listener (Display.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Display.all, Listener.all'Address, Data);
    end Display_Add_Listener;
 
    procedure Display_Set_User_Data (Display : Display_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Display.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Display.all, Data);
    end Display_Set_User_Data;
 
    function Display_Get_User_Data (Display : Display_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Display.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Display.all);
    end Display_Get_User_Data;
 
    function Display_Get_Version (Display : Display_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Display.all'Access);
+      return Wayland.API.Proxy_Get_Version (Display.all);
    end Display_Get_Version;
 
    procedure Display_Destroy (Display : Display_Ptr) is
    begin
-      Wl_Proxy_Destroy (Display.all'Access);
+      Wayland.API.Proxy_Destroy (Display.all);
    end Display_Destroy;
 
    function Display_Sync (Display : Display_Ptr) return Callback_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Display.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Display.all,
            Wl_Display_Sync,
            Callback_Interface'Access,
            0);
@@ -99,8 +61,8 @@ package body C_Binding.Wl_Thin is
 
    function Display_Get_Registry (Display : Display_Ptr) return Registry_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Display.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Display.all,
            Wl_Display_Get_Registry,
            Registry_Interface'Access,
            0);
@@ -111,30 +73,29 @@ package body C_Binding.Wl_Thin is
    function Registry_Add_Listener
      (Registry : Registry_Ptr;
       Listener : Registry_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
-      return Wl_Proxy_Add_Listener (Registry.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Registry.all, Listener.all'Address, Data);
    end Registry_Add_Listener;
 
    procedure Registry_Set_User_Data (Registry : Registry_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Registry.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Registry.all, Data);
    end Registry_Set_User_Data;
 
    function Registry_Get_User_Data (Registry : Registry_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Registry.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Registry.all);
    end Registry_Get_User_Data;
 
    function Registry_Get_Version (Registry : Registry_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Registry.all'Access);
+      return Wayland.API.Proxy_Get_Version (Registry.all);
    end Registry_Get_Version;
 
    procedure Registry_Destroy (Registry : Registry_Ptr) is
    begin
-      Wl_Proxy_Destroy (Registry.all'Access);
+      Wayland.API.Proxy_Destroy (Registry.all);
    end Registry_Destroy;
 
    function Registry_Bind
@@ -144,8 +105,8 @@ package body C_Binding.Wl_Thin is
       New_Id      : Unsigned_32) return Proxy_Ptr
    is
    begin
-      return Proxy_Marshal_Constructor_Versioned
-          (Registry.all'Access,
+      return Wayland.API.Proxy_Marshal_Constructor_Versioned
+          (Registry.all,
            Wl_Registry_Bind,
            Interface_V,
            New_Id,
@@ -161,53 +122,53 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Callback.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Callback.all, Listener.all'Address, Data);
    end Callback_Add_Listener;
 
    procedure Callback_Set_User_Data (Callback : Callback_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Callback.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Callback.all, Data);
    end Callback_Set_User_Data;
 
    function Callback_Get_User_Data (Callback : Callback_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Callback.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Callback.all);
    end Callback_Get_User_Data;
 
    function Callback_Get_Version (Callback : Callback_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Callback.all'Access);
+      return Wayland.API.Proxy_Get_Version (Callback.all);
    end Callback_Get_Version;
 
    procedure Callback_Destroy (Callback : Callback_Ptr) is
    begin
-      Wl_Proxy_Destroy (Callback.all'Access);
+      Wayland.API.Proxy_Destroy (Callback.all);
    end Callback_Destroy;
 
    procedure Compositor_Set_User_Data (Compositor : Compositor_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Compositor.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Compositor.all, Data);
    end Compositor_Set_User_Data;
 
    function Compositor_Get_User_Data (Compositor : Compositor_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Compositor.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Compositor.all);
    end Compositor_Get_User_Data;
 
    function Compositor_Get_Version (Compositor : Compositor_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Compositor.all'Access);
+      return Wayland.API.Proxy_Get_Version (Compositor.all);
    end Compositor_Get_Version;
 
    procedure Compositor_Destroy (Compositor : Compositor_Ptr) is
    begin
-      Wl_Proxy_Destroy (Compositor.all'Access);
+      Wayland.API.Proxy_Destroy (Compositor.all);
    end Compositor_Destroy;
 
    function Compositor_Create_Surface (Compositor : Compositor_Ptr) return Surface_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Compositor.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Compositor.all,
            Wl_Compositor_Create_Surface,
            Surface_Interface'Access,
            0);
@@ -217,8 +178,8 @@ package body C_Binding.Wl_Thin is
 
    function Compositor_Create_Region (Compositor : Compositor_Ptr) return Region_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Compositor.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Compositor.all,
            Wl_Compositor_Create_Region,
            Region_Interface'Access,
            0);
@@ -228,24 +189,24 @@ package body C_Binding.Wl_Thin is
 
    procedure Shm_Pool_Set_User_Data (Shm_Pool : Shm_Pool_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Shm_Pool.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Shm_Pool.all, Data);
    end Shm_Pool_Set_User_Data;
 
    function Shm_Pool_Get_User_Data (Shm_Pool : Shm_Pool_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Shm_Pool.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Shm_Pool.all);
    end Shm_Pool_Get_User_Data;
 
    function Shm_Pool_Get_Version (Shm_Pool : Shm_Pool_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Shm_Pool.all'Access);
+      return Wayland.API.Proxy_Get_Version (Shm_Pool.all);
    end Shm_Pool_Get_Version;
 
    procedure Shm_Pool_Destroy (Shm_Pool : Shm_Pool_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shm_Pool.all'Access), Wl_Shm_Pool_Destroy);
+      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wl_Shm_Pool_Destroy);
 
-      Wl_Proxy_Destroy (Shm_Pool.all'Access);
+      Wayland.API.Proxy_Destroy (Shm_Pool.all);
    end Shm_Pool_Destroy;
 
    function Shm_Pool_Create_Buffer
@@ -257,8 +218,8 @@ package body C_Binding.Wl_Thin is
       Format   : Unsigned_32) return Buffer_Ptr
    is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Shm_Pool.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Shm_Pool.all,
            Wl_Shm_Pool_Create_Buffer,
            Buffer_Interface'Access,
            0,
@@ -273,7 +234,7 @@ package body C_Binding.Wl_Thin is
 
    procedure Shm_Pool_Resize (Shm_Pool : Shm_Pool_Ptr; Size : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shm_Pool.all'Access), Wl_Shm_Pool_Resize, Size);
+      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wl_Shm_Pool_Resize, Size);
    end Shm_Pool_Resize;
 
    function Shm_Add_Listener
@@ -282,33 +243,33 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Shm.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Shm.all, Listener.all'Address, Data);
    end Shm_Add_Listener;
 
    procedure Shm_Set_User_Data (Shm : Shm_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Shm.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Shm.all, Data);
    end Shm_Set_User_Data;
 
    function Shm_Get_User_Data (Shm : Shm_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Shm.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Shm.all);
    end Shm_Get_User_Data;
 
    function Shm_Get_Version (Shm : Shm_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Shm.all'Access);
+      return Wayland.API.Proxy_Get_Version (Shm.all);
    end Shm_Get_Version;
 
    procedure Shm_Destroy (Shm : Shm_Ptr) is
    begin
-      Wl_Proxy_Destroy (Shm.all'Access);
+      Wayland.API.Proxy_Destroy (Shm.all);
    end Shm_Destroy;
 
    function Shm_Create_Pool (Shm : Shm_Ptr; Fd : Integer; Size : Integer) return Shm_Pool_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Shm.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Shm.all,
            Wl_Shm_Create_Pool,
            Shm_Pool_Interface'Access,
            0,
@@ -324,29 +285,29 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Buffer.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Buffer.all, Listener.all'Address, Data);
    end Buffer_Add_Listener;
 
    procedure Buffer_Set_User_Data (Buffer : Buffer_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Buffer.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Buffer.all, Data);
    end Buffer_Set_User_Data;
 
    function Buffer_Get_User_Data (Buffer : Buffer_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Buffer.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Buffer.all);
    end Buffer_Get_User_Data;
 
    function Buffer_Get_Version (Buffer : Buffer_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Buffer.all'Access);
+      return Wayland.API.Proxy_Get_Version (Buffer.all);
    end Buffer_Get_Version;
 
    procedure Buffer_Destroy (Buffer : Buffer_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Buffer.all'Access), Wl_Buffer_Destroy);
+      Wayland.API.Proxy_Marshal (Buffer.all, Wl_Buffer_Destroy);
 
-      Wl_Proxy_Destroy (Buffer.all'Access);
+      Wayland.API.Proxy_Destroy (Buffer.all);
    end Buffer_Destroy;
 
    function Data_Offer_Add_Listener
@@ -355,29 +316,29 @@ package body C_Binding.Wl_Thin is
       Data       : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Data_Offer.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Data_Offer.all, Listener.all'Address, Data);
    end Data_Offer_Add_Listener;
 
    procedure Data_Offer_Set_User_Data (Data_Offer : Data_Offer_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Data_Offer.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Data_Offer.all, Data);
    end Data_Offer_Set_User_Data;
 
    function Data_Offer_Get_User_Data (Data_Offer : Data_Offer_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Data_Offer.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Data_Offer.all);
    end Data_Offer_Get_User_Data;
 
    function Data_Offer_Get_Version (Data_Offer : Data_Offer_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Data_Offer.all'Access);
+      return Wayland.API.Proxy_Get_Version (Data_Offer.all);
    end Data_Offer_Get_Version;
 
    procedure Data_Offer_Destroy (Data_Offer : Data_Offer_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access), Wl_Data_Offer_Destroy);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Destroy);
 
-      Wl_Proxy_Destroy (Data_Offer.all'Access);
+      Wayland.API.Proxy_Destroy (Data_Offer.all);
    end Data_Offer_Destroy;
 
    procedure Data_Offer_Accept
@@ -386,7 +347,7 @@ package body C_Binding.Wl_Thin is
       Mime_Type  : Chars_Ptr)
    is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access), Wl_Data_Offer_Accept, Serial, Mime_Type);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Accept, Serial, Mime_Type);
    end Data_Offer_Accept;
 
    procedure Data_Offer_Receive
@@ -395,22 +356,21 @@ package body C_Binding.Wl_Thin is
       Fd         : Integer)
    is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access), Wl_Data_Offer_Receive, Mime_Type, Fd);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Receive, Mime_Type, Fd);
    end Data_Offer_Receive;
 
    procedure Data_Offer_Finish (Data_Offer : Data_Offer_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Offer.all'Access), Wl_Data_Offer_Finish);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Finish);
    end Data_Offer_Finish;
 
    procedure Data_Offer_Set_Actions
      (Data_Offer       : Data_Offer_Ptr;
       Dnd_Actions      : Unsigned_32;
-      Preferred_Action : Unsigned_32)
-   is
+      Preferred_Action : Unsigned_32) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Data_Offer.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Data_Offer.all,
          Wl_Data_Offer_Set_Actions,
          Dnd_Actions,
          Preferred_Action);
@@ -419,42 +379,41 @@ package body C_Binding.Wl_Thin is
    function Data_Source_Add_Listener
      (Data_Source : Data_Source_Ptr;
       Listener    : Data_Source_Listener_Ptr;
-      Data        : Void_Ptr) return Interfaces.C.int
-   is
+      Data        : Void_Ptr) return Interfaces.C.int is
    begin
-      return Wl_Proxy_Add_Listener (Data_Source.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Data_Source.all, Listener.all'Address, Data);
    end Data_Source_Add_Listener;
 
    procedure Data_Source_Set_User_Data (Data_Source : Data_Source_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Data_Source.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Data_Source.all, Data);
    end Data_Source_Set_User_Data;
 
    function Data_Source_Get_User_Data (Data_Source : Data_Source_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Data_Source.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Data_Source.all);
    end Data_Source_Get_User_Data;
 
    function Data_Source_Get_Version (Data_Source : Data_Source_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Data_Source.all'Access);
+      return Wayland.API.Proxy_Get_Version (Data_Source.all);
    end Data_Source_Get_Version;
 
    procedure Data_Source_Destroy (Data_Source : Data_Source_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Source.all'Access), Wl_Data_Source_Destroy);
+      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Destroy);
 
-      Wl_Proxy_Destroy (Data_Source.all'Access);
+      Wayland.API.Proxy_Destroy (Data_Source.all);
    end Data_Source_Destroy;
 
    procedure Data_Source_Offer (Data_Source : Data_Source_Ptr; Mime_Type : Chars_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Source.all'Access), Wl_Data_Source_Offer, Mime_Type);
+      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Offer, Mime_Type);
    end Data_Source_Offer;
 
    procedure Data_Source_Set_Actions (Data_Source : Data_Source_Ptr; Dnd_Actions : Unsigned_32) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Source.all'Access), Wl_Data_Source_Set_Actions, Dnd_Actions);
+      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Set_Actions, Dnd_Actions);
    end Data_Source_Set_Actions;
 
    function Data_Device_Add_Listener
@@ -463,27 +422,27 @@ package body C_Binding.Wl_Thin is
       Data        : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Data_Device.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Data_Device.all, Listener.all'Address, Data);
    end Data_Device_Add_Listener;
 
    procedure Data_Device_Set_User_Data (Data_Device : Data_Device_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Data_Device.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Data_Device.all, Data);
    end Data_Device_Set_User_Data;
 
    function Data_Device_Get_User_Data (Data_Device : Data_Device_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Data_Device.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Data_Device.all);
    end Data_Device_Get_User_Data;
 
    function Data_Device_Get_Version (Data_Device : Data_Device_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Data_Device.all'Access);
+      return Wayland.API.Proxy_Get_Version (Data_Device.all);
    end Data_Device_Get_Version;
 
    procedure Data_Device_Destroy (Data_Device : Data_Device_Ptr) is
    begin
-      Wl_Proxy_Destroy (Data_Device.all'Access);
+      Wayland.API.Proxy_Destroy (Data_Device.all);
    end Data_Device_Destroy;
 
    procedure Data_Device_Start_Drag
@@ -491,11 +450,10 @@ package body C_Binding.Wl_Thin is
       Source      : Data_Source_Ptr;
       Origin      : Surface_Ptr;
       Icon        : Surface_Ptr;
-      Serial      : Unsigned_32)
-   is
+      Serial      : Unsigned_32) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Data_Device.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Data_Device.all,
          Wl_Data_Device_Start_Drag,
          Source.all'Address,
          Origin.all'Address,
@@ -509,8 +467,8 @@ package body C_Binding.Wl_Thin is
       Serial      : Unsigned_32)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Data_Device.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Data_Device.all,
          Wl_Data_Device_Set_Selection,
          Source.all'Address,
          Serial);
@@ -518,42 +476,41 @@ package body C_Binding.Wl_Thin is
 
    procedure Data_Device_Release (Data_Device : Data_Device_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Data_Device.all'Access), Wl_Data_Device_Release);
+      Wayland.API.Proxy_Marshal (Data_Device.all, Wl_Data_Device_Release);
    end Data_Device_Release;
 
    procedure Data_Device_Manager_Set_User_Data
      (Data_Device_Manager : Data_Device_Manager_Ptr;
-      Data                : Void_Ptr)
-   is
+      Data                : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Data_Device_Manager.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Data_Device_Manager.all, Data);
    end Data_Device_Manager_Set_User_Data;
 
    function Data_Device_Manager_Get_User_Data
      (Data_Device_Manager : Data_Device_Manager_Ptr) return Void_Ptr
    is
    begin
-      return Wl_Proxy_Get_User_Data (Data_Device_Manager.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Data_Device_Manager.all);
    end Data_Device_Manager_Get_User_Data;
 
    function Data_Device_Manager_Get_Version
      (Data_Device_Manager : Data_Device_Manager_Ptr) return Unsigned_32
    is
    begin
-      return Wl_Proxy_Get_Version (Data_Device_Manager.all'Access);
+      return Wayland.API.Proxy_Get_Version (Data_Device_Manager.all);
    end Data_Device_Manager_Get_Version;
 
    procedure Data_Device_Manager_Destroy (Data_Device_Manager : Data_Device_Manager_Ptr) is
    begin
-      Wl_Proxy_Destroy (Data_Device_Manager.all'Access);
+      Wayland.API.Proxy_Destroy (Data_Device_Manager.all);
    end Data_Device_Manager_Destroy;
 
    function Data_Device_Manager_Create_Data_Source
      (Data_Device_Manager : Data_Device_Manager_Ptr) return Data_Source_Ptr
    is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Data_Device_Manager.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Data_Device_Manager.all,
            Wl_Data_Device_Manager_Create_Data_Source,
            Data_Source_Interface'Access,
            0);
@@ -566,8 +523,8 @@ package body C_Binding.Wl_Thin is
       Seat                : Seat_Ptr) return Data_Device_Ptr
    is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Data_Device_Manager.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Data_Device_Manager.all,
            Wl_Data_Device_Manager_Get_Data_Device,
            Data_Device_Interface'Access,
            0,
@@ -578,22 +535,22 @@ package body C_Binding.Wl_Thin is
 
    procedure Shell_Set_User_Data (Shell : Shell_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Shell.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Shell.all, Data);
    end Shell_Set_User_Data;
 
    function Shell_Get_User_Data (Shell : Shell_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Shell.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Shell.all);
    end Shell_Get_User_Data;
 
    function Shell_Get_Version (Shell : Shell_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Shell.all'Access);
+      return Wayland.API.Proxy_Get_Version (Shell.all);
    end Shell_Get_Version;
 
    procedure Shell_Destroy (Shell : Shell_Ptr) is
    begin
-      Wl_Proxy_Destroy (Shell.all'Access);
+      Wayland.API.Proxy_Destroy (Shell.all);
    end Shell_Destroy;
 
    function Shell_Get_Shell_Surface
@@ -601,8 +558,8 @@ package body C_Binding.Wl_Thin is
       Surface : Surface_Ptr) return Shell_Surface_Ptr
    is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Shell.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Shell.all,
            Wl_Shell_Get_Shell_Surface,
            Shell_Surface_Interface'Access,
            0,
@@ -617,32 +574,32 @@ package body C_Binding.Wl_Thin is
       Data          : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Shell_Surface.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Shell_Surface.all, Listener.all'Address, Data);
    end Shell_Surface_Add_Listener;
 
    procedure Shell_Surface_Set_User_Data (Shell_Surface : Shell_Surface_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Shell_Surface.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Shell_Surface.all, Data);
    end Shell_Surface_Set_User_Data;
 
    function Shell_Surface_Get_User_Data (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Shell_Surface.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Shell_Surface.all);
    end Shell_Surface_Get_User_Data;
 
    function Shell_Surface_Get_Version (Shell_Surface : Shell_Surface_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Shell_Surface.all'Access);
+      return Wayland.API.Proxy_Get_Version (Shell_Surface.all);
    end Shell_Surface_Get_Version;
 
    procedure Shell_Surface_Destroy (Shell_Surface : Shell_Surface_Ptr) is
    begin
-      Wl_Proxy_Destroy (Shell_Surface.all'Access);
+      Wayland.API.Proxy_Destroy (Shell_Surface.all);
    end Shell_Surface_Destroy;
 
    procedure Shell_Surface_Pong (Shell_Surface : Shell_Surface_Ptr; Serial : Unsigned_32) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access), Wl_Shell_Surface_Pong, Serial);
+      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Pong, Serial);
    end Shell_Surface_Pong;
 
    procedure Shell_Surface_Move
@@ -651,8 +608,8 @@ package body C_Binding.Wl_Thin is
       Serial        : Unsigned_32)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Move,
          Seat.all'Address,
          Serial);
@@ -665,8 +622,8 @@ package body C_Binding.Wl_Thin is
       Edges         : Unsigned_32)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Resize,
          Seat.all'Address,
          Serial,
@@ -675,7 +632,7 @@ package body C_Binding.Wl_Thin is
 
    procedure Shell_Surface_Set_Toplevel (Shell_Surface : Shell_Surface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access), Wl_Shell_Surface_Set_Toplevel);
+      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Toplevel);
    end Shell_Surface_Set_Toplevel;
 
    procedure Shell_Surface_Set_Transient
@@ -686,8 +643,8 @@ package body C_Binding.Wl_Thin is
       Flags         : Unsigned_32)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Set_Transient,
          Parent.all'Address,
          X,
@@ -702,8 +659,8 @@ package body C_Binding.Wl_Thin is
       Output        : Output_Ptr)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Set_Fullscreen,
          Method,
          Framerate,
@@ -720,8 +677,8 @@ package body C_Binding.Wl_Thin is
       Flags         : Unsigned_32)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Set_Popup,
          Seat.all'Address,
          Serial,
@@ -736,20 +693,20 @@ package body C_Binding.Wl_Thin is
       Output        : Output_Ptr)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Shell_Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
          Wl_Shell_Surface_Set_Maximized,
          Output.all'Address);
    end Shell_Surface_Set_Maximized;
 
    procedure Shell_Surface_Set_Title (Shell_Surface : Shell_Surface_Ptr; Title : Chars_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access), Wl_Shell_Surface_Set_Title, Title);
+      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Title, Title);
    end Shell_Surface_Set_Title;
 
    procedure Shell_Surface_Set_Class (Shell_Surface : Shell_Surface_Ptr; Class_V : Chars_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Shell_Surface.all'Access), Wl_Shell_Surface_Set_Class, Class_V);
+      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Class, Class_V);
    end Shell_Surface_Set_Class;
 
    function Surface_Add_Listener
@@ -758,39 +715,38 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Surface.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Surface.all, Listener.all'Address, Data);
    end Surface_Add_Listener;
 
    procedure Surface_Set_User_Data (Surface : Surface_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Surface.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Surface.all, Data);
    end Surface_Set_User_Data;
 
    function Surface_Get_User_Data (Surface : Surface_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Surface.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Surface.all);
    end Surface_Get_User_Data;
 
    function Surface_Get_Version (Surface : Surface_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Surface.all'Access);
+      return Wayland.API.Proxy_Get_Version (Surface.all);
    end Surface_Get_Version;
 
    procedure Surface_Destroy (Surface : Surface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Destroy);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Destroy);
 
-      Wl_Proxy_Destroy (Surface.all'Access);
+      Wayland.API.Proxy_Destroy (Surface.all);
    end Surface_Destroy;
 
    procedure Surface_Attach
      (Surface : Surface_Ptr;
       Buffer  : Buffer_Ptr;
       X       : Integer;
-      Y       : Integer)
-   is
+      Y       : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Attach, Buffer.all'Address, X, Y);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Attach, Buffer.all'Address, X, Y);
    end Surface_Attach;
 
    procedure Surface_Damage
@@ -798,16 +754,15 @@ package body C_Binding.Wl_Thin is
       X       : Integer;
       Y       : Integer;
       Width   : Integer;
-      Height  : Integer)
-   is
+      Height  : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Damage, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Damage, X, Y, Width, Height);
    end Surface_Damage;
 
    function Surface_Frame (Surface : Surface_Ptr) return Callback_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Surface.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Surface.all,
            Wl_Surface_Frame,
            Callback_Interface'Access,
            0);
@@ -817,33 +772,33 @@ package body C_Binding.Wl_Thin is
 
    procedure Surface_Set_Opaque_Region (Surface : Surface_Ptr; Region : Region_Ptr) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
          Wl_Surface_Set_Opaque_Region,
          Region.all'Address);
    end Surface_Set_Opaque_Region;
 
    procedure Surface_Set_Input_Region (Surface : Surface_Ptr; Region : Region_Ptr) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
          Wl_Surface_Set_Input_Region,
          Region.all'Address);
    end Surface_Set_Input_Region;
 
    procedure Surface_Commit (Surface : Surface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Commit);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Commit);
    end Surface_Commit;
 
    procedure Surface_Set_Buffer_Transform (Surface : Surface_Ptr; Transform : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Set_Buffer_Transform, Transform);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Set_Buffer_Transform, Transform);
    end Surface_Set_Buffer_Transform;
 
    procedure Surface_Set_Buffer_Scale (Surface : Surface_Ptr; Scale : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Surface.all'Access), Wl_Surface_Set_Buffer_Scale, Scale);
+      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Set_Buffer_Scale, Scale);
    end Surface_Set_Buffer_Scale;
 
    procedure Surface_Damage_Buffer
@@ -854,8 +809,8 @@ package body C_Binding.Wl_Thin is
       Height  : Integer)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Surface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
          Wl_Surface_Damage_Buffer,
          X,
          Y,
@@ -869,33 +824,33 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Seat.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Seat.all, Listener.all'Address, Data);
    end Seat_Add_Listener;
 
    procedure Seat_Set_User_Data (Seat : Seat_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Seat.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Seat.all, Data);
    end Seat_Set_User_Data;
 
    function Seat_Get_User_Data (Seat : Seat_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Seat.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Seat.all);
    end Seat_Get_User_Data;
 
    function Seat_Get_Version (Seat : Seat_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Seat.all'Access);
+      return Wayland.API.Proxy_Get_Version (Seat.all);
    end Seat_Get_Version;
 
    procedure Seat_Destroy (Seat : Seat_Ptr) is
    begin
-      Wl_Proxy_Destroy (Seat.all'Access);
+      Wayland.API.Proxy_Destroy (Seat.all);
    end Seat_Destroy;
 
    function Seat_Get_Pointer (Seat : Seat_Ptr) return Pointer_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Seat.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Seat.all,
            Wl_Seat_Get_Pointer,
            Pointer_Interface'Access,
            0);
@@ -905,8 +860,8 @@ package body C_Binding.Wl_Thin is
 
    function Seat_Get_Keyboard (Seat : Seat_Ptr) return Keyboard_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Seat.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Seat.all,
            Wl_Seat_Get_Keyboard,
            Keyboard_Interface'Access,
            0);
@@ -916,43 +871,46 @@ package body C_Binding.Wl_Thin is
 
    function Seat_Get_Touch (Seat : Seat_Ptr) return Touch_Ptr is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor (Seat.all'Access, Wl_Seat_Get_Touch, Touch_Interface'Access, 0);
+        Wayland.API.Proxy_Marshal_Constructor
+          (Seat.all,
+           Wl_Seat_Get_Touch,
+           Touch_Interface'Access,
+           0);
    begin
       return (if P /= null then P.all'Access else null);
    end Seat_Get_Touch;
 
    procedure Seat_Release (Seat : Seat_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Seat.all'Access), Wl_Seat_Release);
+      Wayland.API.Proxy_Marshal (Seat.all, Wl_Seat_Release);
    end Seat_Release;
 
    function Pointer_Add_Listener
      (Pointer  : Pointer_Ptr;
       Listener : Pointer_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
-      return Wl_Proxy_Add_Listener (Pointer.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Pointer.all, Listener.all'Address, Data);
    end Pointer_Add_Listener;
 
    procedure Pointer_Set_User_Data (Pointer : Pointer_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Pointer.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Pointer.all, Data);
    end Pointer_Set_User_Data;
 
    function Pointer_Get_User_Data (Pointer : Pointer_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Pointer.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Pointer.all);
    end Pointer_Get_User_Data;
 
    function Pointer_Get_Version (Pointer : Pointer_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Pointer.all'Access);
+      return Wayland.API.Proxy_Get_Version (Pointer.all);
    end Pointer_Get_Version;
 
    procedure Pointer_Destroy (Pointer : Pointer_Ptr) is
    begin
-      Wl_Proxy_Destroy (Pointer.all'Access);
+      Wayland.API.Proxy_Destroy (Pointer.all);
    end Pointer_Destroy;
 
    procedure Pointer_Set_Cursor
@@ -963,8 +921,8 @@ package body C_Binding.Wl_Thin is
       Hotspot_Y : Integer)
    is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Pointer.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Pointer.all,
          Wl_Pointer_Set_Cursor,
          Serial,
          Surface.all'Address,
@@ -974,7 +932,7 @@ package body C_Binding.Wl_Thin is
 
    procedure Pointer_Release (Pointer : Pointer_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Pointer.all'Access), Wl_Pointer_Release);
+      Wayland.API.Proxy_Marshal (Pointer.all, Wl_Pointer_Release);
    end Pointer_Release;
 
    function Keyboard_Add_Listener
@@ -983,32 +941,32 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Keyboard.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Keyboard.all, Listener.all'Address, Data);
    end Keyboard_Add_Listener;
 
    procedure Keyboard_Set_User_Data (Keyboard : Keyboard_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Keyboard.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Keyboard.all, Data);
    end Keyboard_Set_User_Data;
 
    function Keyboard_Get_User_Data (Keyboard : Keyboard_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Keyboard.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Keyboard.all);
    end Keyboard_Get_User_Data;
 
    function Keyboard_Get_Version (Keyboard : Keyboard_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Keyboard.all'Access);
+      return Wayland.API.Proxy_Get_Version (Keyboard.all);
    end Keyboard_Get_Version;
 
    procedure Keyboard_Destroy (Keyboard : Keyboard_Ptr) is
    begin
-      Wl_Proxy_Destroy (Keyboard.all'Access);
+      Wayland.API.Proxy_Destroy (Keyboard.all);
    end Keyboard_Destroy;
 
    procedure Keyboard_Release (Keyboard : Keyboard_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Keyboard.all'Access), Wl_Keyboard_Release);
+      Wayland.API.Proxy_Marshal (Keyboard.all, Wl_Keyboard_Release);
    end Keyboard_Release;
 
    function Touch_Add_Listener
@@ -1017,32 +975,32 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Touch.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Touch.all, Listener.all'Address, Data);
    end Touch_Add_Listener;
 
    procedure Touch_Set_User_Data (Touch : Touch_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Touch.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Touch.all, Data);
    end Touch_Set_User_Data;
 
    function Touch_Get_User_Data (Touch : Touch_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Touch.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Touch.all);
    end Touch_Get_User_Data;
 
    function Touch_Get_Version (Touch : Touch_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Touch.all'Access);
+      return Wayland.API.Proxy_Get_Version (Touch.all);
    end Touch_Get_Version;
 
    procedure Touch_Destroy (Touch : Touch_Ptr) is
    begin
-      Wl_Proxy_Destroy (Touch.all'Access);
+      Wayland.API.Proxy_Destroy (Touch.all);
    end Touch_Destroy;
 
    procedure Touch_Release (Touch : Touch_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Touch.all'Access), Wl_Touch_Release);
+      Wayland.API.Proxy_Marshal (Touch.all, Wl_Touch_Release);
    end Touch_Release;
 
    function Output_Add_Listener
@@ -1051,54 +1009,54 @@ package body C_Binding.Wl_Thin is
       Data     : Void_Ptr) return Interfaces.C.int
    is
    begin
-      return Wl_Proxy_Add_Listener (Output.all'Access, Listener.all'Address, Data);
+      return Wayland.API.Proxy_Add_Listener (Output.all, Listener.all'Address, Data);
    end Output_Add_Listener;
 
    procedure Output_Set_User_Data (Output : Output_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Output.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Output.all, Data);
    end Output_Set_User_Data;
 
    function Output_Get_User_Data (Output : Output_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Output.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Output.all);
    end Output_Get_User_Data;
 
    function Output_Get_Version (Output : Output_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Output.all'Access);
+      return Wayland.API.Proxy_Get_Version (Output.all);
    end Output_Get_Version;
 
    procedure Output_Destroy (Output : Output_Ptr) is
    begin
-      Wl_Proxy_Destroy (Output.all'Access);
+      Wayland.API.Proxy_Destroy (Output.all);
    end Output_Destroy;
 
    procedure Output_Release (Output : Output_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Output.all'Access), Wl_Output_Release);
+      Wayland.API.Proxy_Marshal (Output.all, Wl_Output_Release);
    end Output_Release;
 
    procedure Region_Set_User_Data (Region : Region_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Region.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Region.all, Data);
    end Region_Set_User_Data;
 
    function Region_Get_User_Data (Region : Region_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Region.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Region.all);
    end Region_Get_User_Data;
 
    function Region_Get_Version (Region : Region_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Region.all'Access);
+      return Wayland.API.Proxy_Get_Version (Region.all);
    end Region_Get_Version;
 
    procedure Region_Destroy (Region : Region_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Region.all'Access), Wl_Region_Destroy);
+      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Destroy);
 
-      Wl_Proxy_Destroy (Region.all'Access);
+      Wayland.API.Proxy_Destroy (Region.all);
    end Region_Destroy;
 
    procedure Region_Add
@@ -1109,7 +1067,7 @@ package body C_Binding.Wl_Thin is
       Height : Integer)
    is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Region.all'Access), Wl_Region_Add, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Add, X, Y, Width, Height);
    end Region_Add;
 
    procedure Region_Subtract
@@ -1120,29 +1078,29 @@ package body C_Binding.Wl_Thin is
       Height : Integer)
    is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Region.all'Access), Wl_Region_Subtract, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Subtract, X, Y, Width, Height);
    end Region_Subtract;
 
    procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Subcompositor.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Subcompositor.all, Data);
    end Subcompositor_Set_User_Data;
 
    function Subcompositor_Get_User_Data (Subcompositor : Subcompositor_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Subcompositor.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Subcompositor.all);
    end Subcompositor_Get_User_Data;
 
    function Subcompositor_Get_Version (Subcompositor : Subcompositor_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Subcompositor.all'Access);
+      return Wayland.API.Proxy_Get_Version (Subcompositor.all);
    end Subcompositor_Get_Version;
 
    procedure Subcompositor_Destroy (Subcompositor : Subcompositor_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Subcompositor.all'Access), Wl_Subcompositor_Destroy);
+      Wayland.API.Proxy_Marshal (Subcompositor.all, Wl_Subcompositor_Destroy);
 
-      Wl_Proxy_Destroy (Subcompositor.all'Access);
+      Wayland.API.Proxy_Destroy (Subcompositor.all);
    end Subcompositor_Destroy;
 
    function Subcompositor_Get_Subsurface
@@ -1151,8 +1109,8 @@ package body C_Binding.Wl_Thin is
       Parent        : Surface_Ptr) return Subsurface_Ptr
    is
       P : constant Proxy_Ptr :=
-        Proxy_Marshal_Constructor
-          (Subcompositor.all'Access,
+        Wayland.API.Proxy_Marshal_Constructor
+          (Subcompositor.all,
            Wl_Subcompositor_Get_Subsurface,
            Subsurface_Interface'Access,
            0,
@@ -1164,55 +1122,55 @@ package body C_Binding.Wl_Thin is
 
    procedure Subsurface_Set_User_Data (Subsurface : Subsurface_Ptr; Data : Void_Ptr) is
    begin
-      Wl_Proxy_Set_User_Data (Subsurface.all'Access, Data);
+      Wayland.API.Proxy_Set_User_Data (Subsurface.all, Data);
    end Subsurface_Set_User_Data;
 
    function Subsurface_Get_User_Data (Subsurface : Subsurface_Ptr) return Void_Ptr is
    begin
-      return Wl_Proxy_Get_User_Data (Subsurface.all'Access);
+      return Wayland.API.Proxy_Get_User_Data (Subsurface.all);
    end Subsurface_Get_User_Data;
 
    function Subsurface_Get_Version (Subsurface : Subsurface_Ptr) return Unsigned_32 is
    begin
-      return Wl_Proxy_Get_Version (Subsurface.all'Access);
+      return Wayland.API.Proxy_Get_Version (Subsurface.all);
    end Subsurface_Get_Version;
 
    procedure Subsurface_Destroy (Subsurface : Subsurface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), Wl_Subsurface_Destroy);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Destroy);
 
-      Wl_Proxy_Destroy (Subsurface.all'Access);
+      Wayland.API.Proxy_Destroy (Subsurface.all);
    end Subsurface_Destroy;
 
    procedure Subsurface_Set_Position (Subsurface : Subsurface_Ptr; X : Integer; Y : Integer) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), Wl_Subsurface_Set_Position, X, Y);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Position, X, Y);
    end Subsurface_Set_Position;
 
    procedure Subsurface_Place_Above (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Subsurface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Subsurface.all,
          Wl_Subsurface_Place_Above,
          Sibling.all'Address);
    end Subsurface_Place_Above;
 
    procedure Subsurface_Place_Below (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr) is
    begin
-      Proxy_Marshal
-        (Proxy_Ptr'(Subsurface.all'Access),
+      Wayland.API.Proxy_Marshal
+        (Subsurface.all,
          Wl_Subsurface_Place_Below,
          Sibling.all'Address);
    end Subsurface_Place_Below;
 
    procedure Subsurface_Set_Sync (Subsurface : Subsurface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), Wl_Subsurface_Set_Sync);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Sync);
    end Subsurface_Set_Sync;
 
    procedure Subsurface_Set_Desync (Subsurface : Subsurface_Ptr) is
    begin
-      Proxy_Marshal (Proxy_Ptr'(Subsurface.all'Access), Wl_Subsurface_Set_Desync);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Desync);
    end Subsurface_Set_Desync;
 
 end C_Binding.Wl_Thin;
