@@ -8,7 +8,7 @@ private package C_Binding.Wl_Thin is
    subtype Fixed is C_Binding.Linux.Wayland_Client.Fixed;
    subtype Wayland_Array_T is C_Binding.Linux.Wayland_Client.Wayland_Array_T;
 
-   -- Begin core parts
+   --  Begin core parts
 
    subtype Interface_T is Wayland.API.Interface_T;
 
@@ -20,7 +20,7 @@ private package C_Binding.Wl_Thin is
 
    procedure Display_Disconnect (This : in out Display_Ptr);
 
-   -- End core parts
+   --  End core parts
 
    Display_Interface : aliased Interface_T with
       Import        => True,

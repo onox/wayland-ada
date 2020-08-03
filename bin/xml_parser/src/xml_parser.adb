@@ -42,17 +42,40 @@ procedure XML_Parser is
    use all type Wayland_XML.Arg_Type_Attribute;
    use all type Wayland_XML.Request_Child_Kind_Id;
 
+   package SF renames Ada.Strings.Fixed;
+
    XML_Exception : exception;
 
    File_Name : constant String := "wayland.xml";
-
-   Allocation_Block_Size : constant := 1_000_000;
 
    procedure Read_Wayland_XML_File;
    procedure Create_Wayland_Spec_File;
    procedure Create_Wayland_Body_File;
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
+
+                     procedure Generate_Code_For_Arg
+                       (File : Ada.Text_IO.File_Type;
+                        Arg_Tag    : Wayland_XML.Arg_Tag;
+                        Max_Length : Natural;
+                        Is_Last    : Boolean) is
+                     begin
+                        declare
+                           Arg_Name      : constant String
+                             := Xml_Parser_Utils.Adaify_Variable_Name
+                               (Name (Arg_Tag));
+                           Arg_Type_Name : constant String :=
+                             Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
+
+                           Arg_Name_Aligned : constant String := SF.Head (Arg_Name, Max_Length, ' ');
+                        begin
+                           if Is_Last then
+                              Put (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ")");
+                           else
+                              Put_Line (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ";");
+                           end if;
+                        end;
+                     end Generate_Code_For_Arg;
 
    procedure Read_Wayland_XML_File is
 
@@ -632,12 +655,23 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Header;
 
+      procedure Create_Wl_Thin_Spec_File;
+
       procedure Create_File is
       begin
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File, "c_binding-linux-wayland_client.ads");
 
          Generate_Code_For_Header;
+
+         Ada.Text_IO.Close (File);
+
+         -----------------------------------------------------------------------
+
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "c_binding-wl_thin.ads");
+
+         Create_Wl_Thin_Spec_File;
 
          Ada.Text_IO.Close (File);
       end Create_File;
@@ -788,14 +822,22 @@ procedure XML_Parser is
                      Put (File, Name & " : constant Unsigned_32");
                   end if;
                   Put_Line (File, " := " & Value_As_String (Entry_Tag) & ";");
-                  Put_Line (File, "-- " & Summary (Entry_Tag));
+                  declare
+                     Summary_String : constant String := Summary (Entry_Tag);
+                  begin
+                     if Summary_String'Length > 0 then
+                        Put_Line (File, "   --  " & Summary_String);
+                     else
+                        Put_Line (File, "   --");
+                     end if;
+                  end;
                   New_Line (File);
                end Generate_Code_For_Enum_Value;
 
             begin
                if Is_Enum_Used then
                   Put_Line
-                    (File, "type " & Enum_Type_Name & " is new Unsigned_32;");
+                    (File, "   type " & Enum_Type_Name & " is new Unsigned_32;");
                   New_Line (File);
                end if;
 
@@ -1319,7 +1361,7 @@ procedure XML_Parser is
          Generate_Code_For_The_Private_Part;
       end Generate_Code_For_Numeric_Constants;
 
-      procedure Create_Wl_Thin_Spec_File;
+      procedure Generate_Use_Type_Declarions;
 
       procedure Generate_Code_For_The_Private_Part is
       begin
@@ -1333,10 +1375,8 @@ procedure XML_Parser is
          Put_Line (File, "   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;");
          New_Line (File);
 
-         Create_Wl_Thin_Spec_File;
+         Generate_Use_Type_Declarions;
       end Generate_Code_For_The_Private_Part;
-
-      procedure Generate_Use_Type_Declarions;
 
       procedure Create_Wl_Thin_Spec_File is
 
@@ -1344,291 +1384,35 @@ procedure XML_Parser is
 
          procedure Write_To_File is
          begin
-            Put_Line (File, "-- Mostly auto generated from Wayland.xml");
-            Put_Line (File, "package Wl_Thin is");
+            Put_Line (File, "limited with C_Binding.Linux.Wayland_Client;");
             Put_Line (File, "");
-            Put_Line (File, "-- Begin core parts");
+            Put_Line (File, "with Wayland.API;");
             Put_Line (File, "");
-            Put_Line (File, " type Proxy_T is limited private;");
+            Put_Line (File, "--  Mostly auto generated from Wayland.xml");
+            Put_Line (File, "private package C_Binding.Wl_Thin is");
             Put_Line (File, "");
-            Put_Line (File, " type Proxy_Ptr is access all Proxy_T;");
+            Put_Line (File, "   subtype Fixed is C_Binding.Linux.Wayland_Client.Fixed;");
+            Put_Line (File, "   subtype Wayland_Array_T is C_Binding.Linux.Wayland_Client.Wayland_Array_T;");
             Put_Line (File, "");
-            Put_Line (File, " type Display_Ptr;");
+            Put_Line (File, "   --  Begin core parts");
             Put_Line (File, "");
-            Put_Line (File, "function Display_Connect (Name : C_String) return Display_Ptr;");
+            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
             Put_Line (File, "");
-            Put_Line (File, " procedure Display_Disconnect");
-            Put_Line (File, "(");
-            Put_Line (File, " This : in out Display_Ptr");
-            Put_Line (File, ");");
+            Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
+            Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
+            Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
             Put_Line (File, "");
-            Put_Line (File, " type Interface_T is limited record");
-            Put_Line (File, "    Name         : Interfaces.C.Strings.chars_ptr;");
-            Put_Line (File, "    Version      : Interfaces.C.int;");
-            Put_Line (File, "    Method_Count : Interfaces.C.int;");
-            Put_Line (File, "    Methods      : Void_Ptr; -- Can be improved upon.");
-            Put_Line (File, "    Event_Count  : Interfaces.C.int;");
-            Put_Line (File, "    Events       : Void_Ptr; -- Can be improved upon.");
-            Put_Line (File, " end record with");
-            Put_Line (File, "   Convention => C_Pass_By_Copy;");
+            Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr;");
             Put_Line (File, "");
-            Put_Line (File, " type Interface_Ptr is access all Interface_T;");
+            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
             Put_Line (File, "");
-            Put_Line (File, " function Proxy_Marshal_Constructor (Proxy       : Proxy_Ptr;");
-            Put_Line (File, "Opcode      : Unsigned_32;");
-            Put_Line (File, "Interface_V : Interface_Ptr;");
-            Put_Line (File, "New_Id      : Unsigned_32) return Proxy_Ptr with");
-            Put_Line (File, "   Convention    => C,");
-            Put_Line (File, "   Import        => True,");
-            Put_Line (File, "   External_Name => ""wl_proxy_marshal_constructor"";");
-            Put_Line (File, "");
-            Put_Line (File, " function Proxy_Marshal_Constructor (");
-            Put_Line (File, "Proxy       : Proxy_Ptr;");
-            Put_Line (File, "Opcode      : Unsigned_32;");
-            Put_Line (File, "Interface_V : Interface_Ptr;");
-            Put_Line (File, "New_Id      : Unsigned_32;");
-            Put_Line (File, "Offset      : Integer;");
-            Put_Line (File, "Width       : Integer;");
-            Put_Line (File, "Height      : Integer;");
-            Put_Line (File, "Stride      : Integer;");
-            Put_Line (File, "Format      : Unsigned_32");
-            Put_Line (File, ") return Proxy_Ptr with");
-            Put_Line (File, " Convention    => C,");
-            Put_Line (File, " Import        => True,");
-            Put_Line (File, " External_Name => ""wl_proxy_marshal_constructor"";");
-            Put_Line (File, "");
-            Put_Line (File, " function Proxy_Marshal_Constructor_Versioned (Proxy          : Proxy_Ptr;");
-            Put_Line (File, "Opcode         : Unsigned_32;");
-            Put_Line (File, "Interface_V    : Interface_Ptr;");
-            Put_Line (File, "New_Id_1       : Unsigned_32;");
-            Put_Line (File, "Name           : Unsigned_32;");
-            Put_Line (File, "Interface_Name : Interfaces.C.Strings.chars_ptr;");
-            Put_Line (File, "New_Id_2       : Unsigned_32;");
-            Put_Line (File, "Version        : Unsigned_32) return Proxy_Ptr with");
-            Put_Line (File, "   Convention    => C,");
-            Put_Line (File, "   Import        => True,");
-            Put_Line (File, "External_Name => ""wl_proxy_marshal_constructor_versioned"";");
-            Put_Line (File, "");
-            Put_Line (File, "procedure Proxy_Marshal (Proxy : Proxy_Ptr;");
-            Put_Line (File, "Opcode      : Unsigned_32) with");
-            Put_Line (File, "   Convention    => C,");
-            Put_Line (File, "   Import        => True,");
-            Put_Line (File, "   External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, " function Display_Dispatch (Display : Display_Ptr) return Interfaces.C.int with");
-            Put_Line (File, "   Import => True,");
-            Put_Line (File, "   Convention => C,");
-            Put_Line (File, "   External_Name => ""wl_display_dispatch"";");
-            Put_Line (File, "");
-            Put_Line (File, " function Display_Roundtrip (Display : Display_Ptr) return Interfaces.C.int with");
-            Put_Line (File, "   Import => True,");
-            Put_Line (File, "   Convention => C,");
-            Put_Line (File, "   External_Name => ""wl_display_roundtrip"";");
-            Put_Line (File, "");
-            Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Put_Line (File, "      Opcode      : Unsigned_32;");
-            Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Put_Line (File, "      New_Id      : Unsigned_32;");
-            Put_Line (File, "      Offset      : Void_Ptr) return Proxy_Ptr with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Unsigned_32; Arg_1 : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line
-              (File,
-               "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Unsigned_32; Arg_1 : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Unsigned_32;");
-            Put_Line (File, "      Arg_2  : Interfaces.C.Strings.chars_ptr) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Unsigned_32;");
-            Put_Line (File, "      Arg_2  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Interfaces.C.Strings.chars_ptr;");
-            Put_Line (File, "      Arg_2  : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line
-              (File,
-               "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Unsigned_32; Arg_1 : Integer; Arg_2 : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal (Proxy : Proxy_Ptr; Opcode : Unsigned_32; Arg_1 : Void_Ptr) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_4  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_2  : Unsigned_32;");
-            Put_Line (File, "      Arg_3  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_2  : Integer;");
-            Put_Line (File, "      Arg_3  : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Unsigned_32;");
-            Put_Line (File, "      Arg_2  : Unsigned_32;");
-            Put_Line (File, "      Arg_3  : Void_Ptr) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Integer;");
-            Put_Line (File, "      Arg_2  : Integer;");
-            Put_Line (File, "      Arg_3  : Integer;");
-            Put_Line (File, "      Arg_4  : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_2  : Integer;");
-            Put_Line (File, "      Arg_3  : Integer;");
-            Put_Line (File, "      Arg_4  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_2  : Void_Ptr;");
-            Put_Line (File, "      Arg_3  : Void_Ptr;");
-            Put_Line (File, "      Arg_4  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Unsigned_32;");
-            Put_Line (File, "      Arg_2  : Void_Ptr;");
-            Put_Line (File, "      Arg_3  : Integer;");
-            Put_Line (File, "      Arg_4  : Integer) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Proxy_Marshal");
-            Put_Line (File, "     (Proxy  : Proxy_Ptr;");
-            Put_Line (File, "      Opcode : Unsigned_32;");
-            Put_Line (File, "      Arg_1  : Void_Ptr;");
-            Put_Line (File, "      Arg_2  : Unsigned_32;");
-            Put_Line (File, "      Arg_3  : Void_Ptr;");
-            Put_Line (File, "      Arg_4  : Integer;");
-            Put_Line (File, "      Arg_5  : Integer;");
-            Put_Line (File, "      Arg_6  : Unsigned_32) with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal"";");
-            Put_Line (File, "");
-            Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Put_Line (File, "      Opcode      : Unsigned_32;");
-            Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Put_Line (File, "      New_Id      : Unsigned_32;");
-            Put_Line (File, "      Arg_1       : Integer;");
-            Put_Line (File, "      Arg_2       : Integer) return Proxy_Ptr with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Put_Line (File, "");
-            Put_Line (File, "   function Proxy_Marshal_Constructor");
-            Put_Line (File, "     (Proxy       : Proxy_Ptr;");
-            Put_Line (File, "      Opcode      : Unsigned_32;");
-            Put_Line (File, "      Interface_V : Interface_Ptr;");
-            Put_Line (File, "      New_Id      : Unsigned_32;");
-            Put_Line (File, "      Arg_1       : Void_Ptr;");
-            Put_Line (File, "      Arg_2       : Void_Ptr) return Proxy_Ptr with");
-            Put_Line (File, "      Convention    => C,");
-            Put_Line (File, "      Import        => True,");
-            Put_Line (File, "      External_Name => ""wl_proxy_marshal_constructor"";");
-            Put_Line (File, "");
-            Put_Line (File, " -- End core parts");
-            Put_Line (File, "");
-            Put_Line (File, "type Wayland_Array_T is record");
-            Put_Line (File, "Size  : Unsigned_32;");
-            Put_Line (File, "Alloc : Unsigned_32;");
-            Put_Line (File, "Data : Void_Ptr;");
-            Put_Line (File, "end record with");
-            Put_Line (File, "   Convention => C_Pass_By_Copy;");
+            Put_Line (File, "   --  End core parts");
             Put_Line (File, "");
 
             Generate_Code_For_Interface_Constants;
 
-            Put_Line (File, "private");
             Put_Line (File, "");
-            Put_Line (File, "   type Proxy_T is limited null record;");
-            Put_Line (File, "");
-            Put_Line (File, "end Wl_Thin;");
+            Put_Line (File, "end C_Binding.Wl_Thin;");
          end Write_To_File;
 
 --           procedure Generate_Code_For_Numeric_Constants is
@@ -1765,13 +1549,13 @@ procedure XML_Parser is
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
-               Ada.Text_IO.Put (File, Name);
+               Ada.Text_IO.Put (File, "   " & Name);
                Put_Line (File, " : aliased Interface_T with");
-               Put_Line (File, "Import => True,");
-               Put_Line (File, "Convention => C,");
+               Put_Line (File, "      Import        => True,");
+               Put_Line (File, "      Convention    => C,");
                Put_Line
                  (File,
-                  "External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
+                  "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
                Put_Line (File, "");
             end Handle_Interface;
 
@@ -1799,8 +1583,7 @@ procedure XML_Parser is
                procedure Generate_Code_For_Interface_Ptr is
                   Name : constant String := Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag);
                begin
-                  Put_Line (File, "type " & Name & " is new Proxy_Ptr;");
-                  Put_Line (File, "");
+                  Put_Line (File, "   type " & Name & " is new Proxy_Ptr;");
                end Generate_Code_For_Interface_Ptr;
 
             begin
@@ -1815,6 +1598,7 @@ procedure XML_Parser is
                when Child_Copyright =>
                   null;
                when Child_Interface =>
+                  Put_Line (File, "");
                   Handle_Interface (Child.Interface_Tag.all);
                end case;
             end loop;
@@ -1879,25 +1663,6 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Subprogram
                     (Event_Tag : aliased Wayland_XML.Event_Tag)
                   is
-                     procedure Generate_Code_For_Argument
-                       (Arg_Tag : Wayland_XML.Arg_Tag;
-                        Is_Last : Boolean) is
-                     begin
-                        declare
-                           Arg_Name      : constant String
-                             := Xml_Parser_Utils.Adaify_Variable_Name
-                               (Name (Arg_Tag));
-                           Arg_Type_Name : constant String :=
-                             Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     end Generate_Code_For_Argument;
-
                      V : Wayland_XML.Event_Child_Vectors.Vector;
 
                      Subprogram_Name : constant String
@@ -1917,32 +1682,52 @@ procedure XML_Parser is
                         end case;
                      end loop;
 
-                     Put_Line (File, "type " & Subprogram_Name & " is access procedure (Data : Void_Ptr;");
-                     Ada.Text_IO.Put (File, "     " & Interface_Name & " : " & Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag));
+                     declare
+                        Max_Name_Length : Natural := Interface_Name'Length;
+                     begin
+                        for Child of V loop
+                           declare
+                              Arg_Name      : constant String
+                                := Xml_Parser_Utils.Adaify_Variable_Name (Name (Child.Arg_Tag.all));
+                           begin
+                              Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                           end;
+                        end loop;
 
-                     if V.Length = 0 then
-                        Put_Line (File, "");
-                     else
-                        Put_Line (File, ";");
-                     end if;
+                        Put_Line (File, "   type " & Subprogram_Name & " is access procedure");
 
-                     for Child of V loop
-                        case Child.Kind_Id is
-                        when Child_Dummy =>
-                           null;
-                        when Child_Description =>
-                           null;
-                        when Child_Arg =>
-                           Generate_Code_For_Argument
-                             (Child.Arg_Tag.all,
-                              Children (Event_Tag).Last_Element = Child);
-                        end case;
-                     end loop;
-                     Put_Line (File, "     ) with");
-                     Put_Line (File, "Convention => C;");
-                     Put_Line (File, "");
+                        declare
+                           Interface_Name_Aligned : constant String := SF.Head (Interface_Name, Max_Name_Length, ' ');
+                        begin
+                           Put_Line (File, "     (" & SF.Head ("Data", Max_Name_Length, ' ') & " : Void_Ptr;");
+                           Ada.Text_IO.Put (File, "      " & Interface_Name_Aligned & " : " & Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag));
+                        end;
+
+                        if V.Length = 0 then
+                           Put (File, ")");
+                        else
+                           Put_Line (File, ";");
+                        end if;
+
+                        for Child of V loop
+                           case Child.Kind_Id is
+                              when Child_Dummy =>
+                                 null;
+                           when Child_Description =>
+                              null;
+                           when Child_Arg =>
+                              Generate_Code_For_Arg
+                                (File,
+                                 Child.Arg_Tag.all,
+                                 Max_Name_Length,
+                                 Children (Event_Tag).Last_Element = Child);
+                           end case;
+                        end loop;
+                     end;
+
+                     New_Line (File);
+                     Put_Line (File, "   with Convention => C;");
                   end Generate_Code_For_Subprogram;
-
                begin
                   for Child of Children (Interface_Tag) loop
                      case Child.Kind_Id is
@@ -1953,6 +1738,7 @@ procedure XML_Parser is
                      when Child_Request =>
                         null;
                      when Child_Event =>
+                        Put_Line (File, "");
                         Generate_Code_For_Subprogram (Child.Event_Tag.all);
                      when Child_Enum =>
                         null;
@@ -1961,16 +1747,23 @@ procedure XML_Parser is
                end Generate_Code_For_Subprogram_Ptrs;
 
                procedure Generate_Code_For_Listener_Type_Definition is
+                  function Get_Name (Event_Tag   : Wayland_XML.Event_Tag) return String is
+                    (Xml_Parser_Utils.Adaify_Name (Name (Event_Tag)));
 
-                  procedure Generate_Code_For_Record_Component (Event_Tag : Wayland_XML.Event_Tag) is
-                     Component_Name      : constant String
-                       := Xml_Parser_Utils.Adaify_Name (Name (Event_Tag));
+                  procedure Generate_Code_For_Record_Component
+                    (Event_Tag   : Wayland_XML.Event_Tag;
+                     Name_Length : Natural)
+                  is
+                     Component_Name      : constant String := Get_Name (Event_Tag);
+
                      Component_Type_Name : constant String
                        := Xml_Parser_Utils.Adaify_Name
                          (Name (Interface_Tag) & "_" &
                               Name (Event_Tag) & "_Subprogram_Ptr");
+
+                     Component_Name_Aligned : constant String := SF.Head (Component_Name, Name_Length, ' ');
                   begin
-                     Put_Line (File, "   " & Component_Name & " : " & Component_Type_Name & ";");
+                     Put_Line (File, "      " & Component_Name_Aligned & " : " & Component_Type_Name & ";");
                   end Generate_Code_For_Record_Component;
 
                   Name     : constant String
@@ -1979,8 +1772,22 @@ procedure XML_Parser is
                   Ptr_Name : constant String
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Listener_Ptr");
+
+                  Max_Name_Length : Natural := 0;
                begin
-                  Put_Line (File, "type " & Name & " is record");
+                  Put_Line (File, "   type " & Name & " is record");
+
+                  for Child of Children (Interface_Tag) loop
+                     case Child.Kind_Id is
+                        when Child_Event =>
+                           declare
+                              Arg_Name : constant String := Get_Name (Child.Event_Tag.all);
+                           begin
+                              Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                           end;
+                        when others => null;
+                     end case;
+                  end loop;
 
                   for Child of Children (Interface_Tag) loop
                      case Child.Kind_Id is
@@ -1991,16 +1798,15 @@ procedure XML_Parser is
                      when Child_Request =>
                         null;
                      when Child_Event =>
-                        Generate_Code_For_Record_Component (Child.Event_Tag.all);
+                        Generate_Code_For_Record_Component (Child.Event_Tag.all, Max_Name_Length);
                      when Child_Enum =>
                         null;
                      end case;
                   end loop;
-                  Put_Line (File, "end record with");
-                  Put_Line (File, "   Convention => C_Pass_By_Copy;");
+                  Put_Line (File, "   end record");
+                  Put_Line (File, "     with Convention => C_Pass_By_Copy;");
                   Put_Line (File, "");
-                  Put_Line (File, "type " & Ptr_Name & " is access all " & Name & ";");
-                  Put_Line (File, "");
+                  Put_Line (File, "   type " & Ptr_Name & " is access all " & Name & ";");
                end Generate_Code_For_Listener_Type_Definition;
 
                procedure Generate_Code_For_Add_Listener_Subprogram_Declaration is
@@ -2013,11 +1819,15 @@ procedure XML_Parser is
                   Ptr_Listener_Name : constant String
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Listener_Ptr");
+
+                  Max_Name_Length : constant Natural := Natural'Max (Name'Length, 8);
+
+                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                begin
-                  Put_Line (File, "function " & Name & "_Add_Listener (" & Name & " : " & Ptr_Name & ";");
-                  Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
-                  Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int;");
-                  Put_Line (File, "");
+                  Put_Line (File, "   function " & Name & "_Add_Listener");
+                  Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
+                  Put_Line (File, "      " & Align ("Listener") & " : " & Ptr_Listener_Name & ";");
+                  Put_Line (File, "      " & Align ("Data") & " : Void_Ptr) return Interfaces.C.int;");
                end Generate_Code_For_Add_Listener_Subprogram_Declaration;
 
                procedure Generate_Code_For_Set_User_Data_Subprogram_Declaration is
@@ -2027,10 +1837,16 @@ procedure XML_Parser is
                   Ptr_Name : constant String
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
+
+                  use Ada.Strings.Fixed;
+
+                  Max_Name_Length : constant Natural := Natural'Max (Name'Length, 4);
+
+                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                begin
-                  Put_Line (File, "procedure " & Name & "_Set_User_Data (" & Name & " : " & Ptr_Name & ";");
-                  Put_Line (File, "Data : Void_Ptr);");
-                  Put_Line (File, "");
+                  Put_Line (File, "   procedure " & Name & "_Set_User_Data");
+                  Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
+                  Put_Line (File, "      " & Align ("Data") & " : Void_Ptr);");
                end Generate_Code_For_Set_User_Data_Subprogram_Declaration;
 
                procedure Generate_Code_For_Get_User_Data_Subprogram_Declaration is
@@ -2041,8 +1857,7 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
-                  Put_Line (File, "");
+                  Put_Line (File, "   function " & Name & "_Get_User_Data (" & Name & " : " & Ptr_Name & ") return Void_Ptr;");
                end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
 
                procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
@@ -2053,8 +1868,7 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Unsigned_32;");
-                  Put_Line (File, "");
+                  Put_Line (File, "   function " & Name & "_Get_Version (" & Name & " : " & Ptr_Name & ") return Unsigned_32;");
                end Generate_Code_For_Get_Version_Subprogram_Declaration;
 
                procedure Generate_Code_For_Destroy_Subprogram_Declaration is
@@ -2065,8 +1879,7 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
-                  Put_Line (File, "");
+                  Put_Line (File, "   procedure " & Name & "_Destroy (" & Name & " : " & Ptr_Name & ");");
                end Generate_Code_For_Destroy_Subprogram_Declaration;
 
                procedure Generate_Code_For_Requests is
@@ -2074,31 +1887,24 @@ procedure XML_Parser is
                   procedure Generate_Code_For_Subprogram_Declaration
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
-                     procedure Generate_Code_For_Arg
-                       (Arg_Tag : Wayland_XML.Arg_Tag; Is_Last : Boolean) is
-                     begin
-                        declare
-                           Arg_Name      : constant String
-                             := Xml_Parser_Utils.Adaify_Variable_Name
-                               (Name (Arg_Tag));
-                           Arg_Type_Name : constant String
-                             := Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     end Generate_Code_For_Arg;
-
                      procedure Generate_Comment (Text : String) is
                         Interval_Identifier : constant Xml_Parser_Utils.Interval_Identifier := Xml_Parser_Utils.Make (Text);
                      begin
                         for Interval of Interval_Identifier.Intervals loop
-                           Put_Line (File, "-- " & Ada.Strings.Fixed.Trim (Text (Interval.First .. Interval.Last), Ada.Strings.Both));
+                           declare
+                              Comment : constant String := Ada.Strings.Fixed.Trim (Text (Interval.First .. Interval.Last), Ada.Strings.Both);
+                           begin
+                              if Comment'Length > 0 then
+                                 Put_Line (File, "   --  " & Comment);
+                              else
+                                 Put_Line (File, "   --");
+                              end if;
+                           end;
                         end loop;
                      end Generate_Comment;
+
+                     function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
+                       (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
 
                      Subprogram_Name : constant String
                        := Xml_Parser_Utils.Adaify_Name
@@ -2111,20 +1917,24 @@ procedure XML_Parser is
                          (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                   begin
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
+                        Put_Line (File, "");
                         if Exists_Description (Request_Tag) then
                            Generate_Comment
                              (Xml_Parser_Utils.Remove_Tabs
                                 (Description (Request_Tag)));
                         end if;
+
                         if Xml_Parser_Utils.Is_Interface_Specified (Request_Tag) then
                            declare
                               Return_Type : constant String := Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
                            begin
                               if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
-                                 Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-
                                  declare
                                     V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                                    Max_Name_Length : Natural := Name'Length;
+
+                                    function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                                  begin
                                     for Child of Children (Request_Tag) loop
                                        case Child.Kind_Id is
@@ -2135,9 +1945,18 @@ procedure XML_Parser is
                                        when Child_Arg =>
                                           if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                              V.Append (Child);
+
+                                             declare
+                                                Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                             begin
+                                                Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                             end;
                                           end if;
                                        end case;
                                     end loop;
+
+                                    Put_Line (File, "   function " & Subprogram_Name);
+                                    Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                                     for Child of V loop
                                        case Child.Kind_Id is
@@ -2147,25 +1966,28 @@ procedure XML_Parser is
                                           null;
                                        when Child_Arg =>
                                           Generate_Code_For_Arg
-                                            (Child.Arg_Tag.all,
+                                            (File, Child.Arg_Tag.all,
+                                             Max_Name_Length,
                                              Child = Children (Request_Tag).Last_Element);
                                        end case;
                                     end loop;
                                  end;
 
-                                 Put_Line (File, "   ) return " & Return_Type & ";");
+                                 Put_Line (File, " return " & Return_Type & ";");
                               else
                                  Put_Line
                                    (File,
-                                    "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                                    "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
                               end if;
                            end;
                         else
                            if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
-                              Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-
                               declare
                                  V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                                 Max_Name_Length : Natural := Natural'Max (Name'Length, 11);
+
+                                 function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                               begin
                                  for Child of Children (Request_Tag) loop
                                     case Child.Kind_Id is
@@ -2176,9 +1998,18 @@ procedure XML_Parser is
                                     when Child_Arg =>
                                        if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                           V.Append (Child);
+
+                                          declare
+                                             Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                          begin
+                                             Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                          end;
                                        end if;
                                     end case;
                                  end loop;
+
+                                 Put_Line (File, "   function " & Subprogram_Name);
+                                 Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                                  for Child of V loop
                                     case Child.Kind_Id is
@@ -2188,21 +2019,23 @@ procedure XML_Parser is
                                        null;
                                     when Child_Arg =>
                                        Generate_Code_For_Arg
-                                         (Child.Arg_Tag.all,
+                                         (File, Child.Arg_Tag.all,
+                                          Max_Name_Length,
                                           Child = Children (Request_Tag).Last_Element);
                                     end case;
                                  end loop;
-                              end;
 
-                              Put_Line (File, "   Interface_V : Interface_Ptr;");
-                              Put_Line (File, "   New_Id : Unsigned_32) return Proxy_Ptr;");
+                                 Put_Line (File, "      " & Align ("Interface_V") & " : Interface_Ptr;");
+                                 Put_Line (File, "      " & Align ("New_Id") & " : Unsigned_32) return Proxy_Ptr;");
+                              end;
                            else
-                              Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
+                              Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr;");
                            end if;
                         end if;
                      elsif Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
                         null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
                      else
+                        Put_Line (File, "");
                         if Exists_Description (Request_Tag) then
                            Generate_Comment
                              (Xml_Parser_Utils.Remove_Tabs
@@ -2211,8 +2044,11 @@ procedure XML_Parser is
                         if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 0 then
                            declare
                               V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                              Max_Name_Length : Natural := Name'Length;
+
+                              function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                            begin
-                              Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                               for Child of Children (Request_Tag) loop
                                  case Child.Kind_Id is
                                  when Child_Dummy =>
@@ -2222,9 +2058,18 @@ procedure XML_Parser is
                                  when Child_Arg =>
                                     if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                        V.Append (Child);
+
+                                       declare
+                                          Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                       begin
+                                          Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                       end;
                                     end if;
                                  end case;
                               end loop;
+
+                              Put_Line (File, "   procedure " & Subprogram_Name);
+                              Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                               for Child of V loop
                                  case Child.Kind_Id is
@@ -2234,19 +2079,18 @@ procedure XML_Parser is
                                     null;
                                  when Child_Arg =>
                                     Generate_Code_For_Arg
-                                      (Child.Arg_Tag.all,
+                                      (File, Child.Arg_Tag.all,
+                                       Max_Name_Length,
                                        Child = Children (Request_Tag).Last_Element);
                                  end case;
                               end loop;
-                              Put_Line (File, "   );");
+                              Put_Line (File, ";");
                            end;
                         else
-                           Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ");");
+                           Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ");");
                         end if;
                      end if;
-                     Put_Line (File, "");
                   end Generate_Code_For_Subprogram_Declaration;
-
                begin
                   for Child of Children (Interface_Tag) loop
                      case Child.Kind_Id is
@@ -2269,13 +2113,19 @@ procedure XML_Parser is
                Generate_Code_For_Subprogram_Ptrs;
 
                if Xml_Parser_Utils.Exists_Any_Event_Tag (Interface_Tag) then
+                  Put_Line (File, "");
                   Generate_Code_For_Listener_Type_Definition;
+                  Put_Line (File, "");
                   Generate_Code_For_Add_Listener_Subprogram_Declaration;
                end if;
 
+               Put_Line (File, "");
                Generate_Code_For_Set_User_Data_Subprogram_Declaration;
+               Put_Line (File, "");
                Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+               Put_Line (File, "");
                Generate_Code_For_Get_Version_Subprogram_Declaration;
+               Put_Line (File, "");
                Generate_Code_For_Destroy_Subprogram_Declaration;
                Generate_Code_For_Requests;
             end Handle_Interface;
@@ -2295,7 +2145,6 @@ procedure XML_Parser is
 
       begin
          Write_To_File;
-         Generate_Use_Type_Declarions;
       end Create_Wl_Thin_Spec_File;
 
       procedure Generate_Manually_Edited_Code_For_Type_Definitions;
@@ -2503,6 +2352,8 @@ procedure XML_Parser is
 
       procedure Create_Wl_Thin_Body_File;
 
+      procedure Generate_Manually_Edited_Code;
+
       procedure Create_File is
       begin
          Ada.Text_IO.Create
@@ -2511,6 +2362,15 @@ procedure XML_Parser is
          Put_Line (File, "package body C_Binding.Linux.Wayland_Client is");
          New_Line (File);
 
+         Generate_Manually_Edited_Code;
+
+         Ada.Text_IO.Close (File);
+
+         -----------------------------------------------------------------------
+
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "c_binding-wl_thin.adb");
+
          Create_Wl_Thin_Body_File;
 
          Ada.Text_IO.Close (File);
@@ -2518,78 +2378,39 @@ procedure XML_Parser is
 
       pragma Unmodified (File);
 
-      procedure Generate_Manually_Edited_Code;
-
       procedure Create_Wl_Thin_Body_File is
 
          procedure Generate_Code_For_Protocol_Tag_Children;
 
          procedure Write_To_File is
          begin
-            Put_Line (File, "-- Mostly auto generated from Wayland.xml");
-            Put_Line (File, "package body Wl_Thin is");
+            Put_Line (File, "with C_Binding.Constants;");
+            Put_Line (File, "use C_Binding.Constants;");
             Put_Line (File, "");
-            Put_Line (File, "   procedure wl_proxy_destroy (Registry : Proxy_Ptr) with");
-            Put_Line (File, "     Convention    => C,");
-            Put_Line (File, "     Import        => True,");
-            Put_Line (File, "     External_Name => ""wl_proxy_destroy"";");
+            Put_Line (File, "--  Mostly auto generated from Wayland.xml");
+            Put_Line (File, "package body C_Binding.Wl_Thin is");
             Put_Line (File, "");
-            Put_Line (File, "      function Display_Connect (Name : C_String) return Display_Ptr is");
+            Put_Line (File, "   use type Proxy_Ptr;");
             Put_Line (File, "");
-            Put_Line (File, "         function wl_display_connect (Name : in C_String) return Display_Ptr with");
-            Put_Line (File, "           Convention    => C,");
-            Put_Line (File, "           Import        => True,");
-            Put_Line (File, "           External_Name => ""wl_display_connect"";");
+            Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr is");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      return Wayland.API.Display_Connect (Name);");
+            Put_Line (File, "   end Display_Connect;");
             Put_Line (File, "");
-            Put_Line (File, "      begin");
-            Put_Line (File, "         return wl_display_connect (Name);");
-            Put_Line (File, "      end Display_Connect;");
-            Put_Line (File, "");
-            Put_Line (File, "      procedure Display_Disconnect (This : in out Display_Ptr) is");
-            Put_Line (File, "");
-            Put_Line (File, "         procedure wl_display_disconnect (Display : in Display_Ptr) with");
-            Put_Line (File, "           Convention => C,");
-            Put_Line (File, "           Import     => True;");
-            Put_Line (File, "");
-            Put_Line (File, "      begin");
-            Put_Line (File, "         if This /= null then");
-            Put_Line (File, "            wl_display_disconnect (This);");
-            Put_Line (File, "            This := null;");
-            Put_Line (File, "         end if;");
-            Put_Line (File, "      end Display_Disconnect;");
-            Put_Line (File, "   ");
-            Put_Line (File, "   function wl_proxy_add_listener");
-            Put_Line (File, "     (arg1 : Proxy_Ptr;");
-            Put_Line (File, "      arg2 : Void_Ptr;");
-            Put_Line (File, "      arg3 : Void_Ptr) return Interfaces.C.int with");
-            Put_Line (File, "     Import        => True,");
-            Put_Line (File, "     Convention    => C,");
-            Put_Line (File, "     External_Name => ""wl_proxy_add_listener"";");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure wl_proxy_set_user_data");
-            Put_Line (File, "     (arg1 : Proxy_Ptr;");
-            Put_Line (File, "      arg3 : Void_Ptr) with");
-            Put_Line (File, "     Import        => True,");
-            Put_Line (File, "     Convention    => C,");
-            Put_Line (File, "     External_Name => ""wl_proxy_set_user_data"";");
-            Put_Line (File, "");
-            Put_Line (File, "   function wl_proxy_get_user_data");
-            Put_Line (File, "     (arg1 : Proxy_Ptr) return Void_Ptr with");
-            Put_Line (File, "     Import        => True,");
-            Put_Line (File, "     Convention    => C,");
-            Put_Line (File, "     External_Name => ""wl_proxy_get_user_data"";");
-            Put_Line (File, "");
-            Put_Line (File, "   function wl_proxy_get_version");
-            Put_Line (File, "     (arg1 : Proxy_Ptr) return Unsigned_32 with");
-            Put_Line (File, "     Import        => True,");
-            Put_Line (File, "     Convention    => C,");
-            Put_Line (File, "     External_Name => ""wl_proxy_get_version"";");
+            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr) is");
+            Put_Line (File, "      use type Wayland.API.Display_Ptr;");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      if This /= null then");
+            Put_Line (File, "         Wayland.API.Display_Disconnect (This);");
+            Put_Line (File, "         This := null;");
+            Put_Line (File, "      end if;");
+            Put_Line (File, "   end Display_Disconnect;");
             Put_Line (File, "");
 
             Generate_Code_For_Protocol_Tag_Children;
 
             Put_Line (File, "");
-            Put_Line (File, "end Wl_Thin;");
+            Put_Line (File, "end C_Binding.Wl_Thin;");
          end Write_To_File;
 
          procedure Generate_Code_For_Protocol_Tag_Children is
@@ -2609,13 +2430,18 @@ procedure XML_Parser is
                   Ptr_Listener_Name : constant String
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Listener_Ptr");
+
+                  Max_Name_Length : constant Natural := Natural'Max (Name'Length, 8);
+
+                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                begin
-                  Put_Line (File, "function " & Function_Name & " (" & Name & " : " & Ptr_Name & ";");
-                  Put_Line (File, "Listener : " & Ptr_Listener_Name & ";");
-                  Put_Line (File, "Data : Void_Ptr) return Interfaces.C.int is");
-                  Put_Line (File, "begin");
-                  Put_Line (File, "return wl_proxy_add_listener (" & Name & ".all'Access, Listener.all'Address, Data);");
-                  Put_Line (File, "end " & Function_Name & ";");
+                  Put_Line (File, "   function " & Function_Name);
+                  Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
+                  Put_Line (File, "      " & Align ("Listener") & " : " & Ptr_Listener_Name & ";");
+                  Put_Line (File, "      " & Align ("Data") & " : Void_Ptr) return Interfaces.C.int is");
+                  Put_Line (File, "   begin");
+                  Put_Line (File, "      return Wayland.API.Proxy_Add_Listener (" & Name & ".all, Listener.all'Address, Data);");
+                  Put_Line (File, "   end " & Function_Name & ";");
                   Put_Line (File, "");
                end Generate_Code_For_Add_Listener_Subprogram_Implementations;
 
@@ -2629,11 +2455,11 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
-                  Put_Line (File, "Data : Void_Ptr) is");
-                  Put_Line (File, "begin");
-                  Put_Line (File, "wl_proxy_set_user_data (" & Name & ".all'Access, Data);");
-                  Put_Line (File, "end " & Subprogram_Name & ";");
+                  Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
+                  Put_Line (File, "      Data : Void_Ptr) is");
+                  Put_Line (File, "   begin");
+                  Put_Line (File, "      Wayland.API.Proxy_Set_User_Data (" & Name & ".all, Data);");
+                  Put_Line (File, "   end " & Subprogram_Name & ";");
                   Put_Line (File, "");
                end Generate_Code_For_Set_User_Data_Subprogram_Implementations;
 
@@ -2646,10 +2472,10 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Void_Ptr is");
-                  Put_Line (File, "begin");
-                  Put_Line (File, "return wl_proxy_get_user_data (" & Name & ".all'Access);");
-                  Put_Line (File, "end " & Subprogram_Name & ";");
+                  Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Void_Ptr is");
+                  Put_Line (File, "   begin");
+                  Put_Line (File, "      return Wayland.API.Proxy_Get_User_Data (" & Name & ".all);");
+                  Put_Line (File, "   end " & Subprogram_Name & ";");
                   Put_Line (File, "");
                end Generate_Code_For_Get_User_Data_Subprogram_Implementations;
 
@@ -2663,10 +2489,10 @@ procedure XML_Parser is
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
-                  Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Unsigned_32 is");
-                  Put_Line (File, "begin");
-                  Put_Line (File, "return wl_proxy_get_version (" & Name & ".all'Access);");
-                  Put_Line (File, "end " & Subprogram_Name & ";");
+                  Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Unsigned_32 is");
+                  Put_Line (File, "   begin");
+                  Put_Line (File, "      return Wayland.API.Proxy_Get_Version (" & Name & ".all);");
+                  Put_Line (File, "   end " & Subprogram_Name & ";");
                   Put_Line (File, "");
                end Generate_Code_For_Get_Version_Subprogram_Implementations;
 
@@ -2681,52 +2507,34 @@ procedure XML_Parser is
                       (Wayland_XML.Name (Interface_Tag) & "_Ptr");
                begin
                   if Xml_Parser_Utils.Exists_Destructor (Interface_Tag) then
-                     Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
-                     Put_Line (File, "begin");
-                     Put_Line (File, "Proxy_Marshal (Proxy_Ptr'(" & Name & ".all'Access),");
-                     Put_Line
-                       (File,
-                        "     " & Xml_Parser_Utils.Make_Upper_Case
-                          (Wayland_XML.Name (Interface_Tag) & "_Destroy") & ");");
+                     Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
+                     Put_Line (File, "   begin");
+                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, " &
+                       Xml_Parser_Utils.Make_Upper_Case (Wayland_XML.Name (Interface_Tag) & "_Destroy") & ");");
                      Put_Line (File, "");
-                     Put_Line (File, "wl_proxy_destroy (" & Name & ".all'Access);");
-                     Put_Line (File, "end " & Subprogram_Name & ";");
+                     Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
+                     Put_Line (File, "   end " & Subprogram_Name & ";");
                      Put_Line (File, "");
                   else
-                     Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
-                     Put_Line (File, "begin");
-                     Put_Line (File, "wl_proxy_destroy (" & Name & ".all'Access);");
-                     Put_Line (File, "end " & Subprogram_Name & ";");
+                     Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
+                     Put_Line (File, "   begin");
+                     Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
+                     Put_Line (File, "   end " & Subprogram_Name & ";");
                      Put_Line (File, "");
                   end if;
                end Generate_Code_For_Destroy_Subprogram_Implementations;
 
                procedure Generate_Code_For_Requests is
 
+                  function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
+                    (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
+
                   procedure Generate_Code_For_Subprogram_Implementation
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
-                     procedure Generate_Code_For_Arg
-                       (Arg_Tag : Wayland_XML.Arg_Tag;
-                        Is_Last : Boolean) is
-                     begin
-                        declare
-                           Arg_Name      : constant String
-                             := Xml_Parser_Utils.Adaify_Variable_Name
-                               (Name (Arg_Tag));
-                           Arg_Type_Name : constant String
-                             := Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
-                        begin
-                           if Is_Last then
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name);
-                           else
-                              Put_Line (File, "     " & Arg_Name & " : " & Arg_Type_Name & ";");
-                           end if;
-                        end;
-                     end Generate_Code_For_Arg;
-
-                     Opcode          : constant String :=
-                       Xml_Parser_Utils.Make_Upper_Case
+                     Opcode          : constant String
+                       := "Wl_" & Xml_Parser_Utils.Adaify_Name
+--                       Xml_Parser_Utils.Make_Upper_Case
                          (Wayland_XML.Name
                             (Interface_Tag) & "_" & Name (Request_Tag));
                      Subprogram_Name : constant String
@@ -2748,8 +2556,11 @@ procedure XML_Parser is
                               if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
                                  declare
                                     V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                                    Max_Name_Length : Natural := Name'Length;
+
+                                    function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                                  begin
-                                    Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                                     for Child of Children (Request_Tag) loop
                                        case Child.Kind_Id is
                                        when Child_Dummy =>
@@ -2759,9 +2570,18 @@ procedure XML_Parser is
                                        when Child_Arg =>
                                           if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                              V.Append (Child);
+
+                                             declare
+                                                Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                             begin
+                                                Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                             end;
                                           end if;
                                        end case;
                                     end loop;
+
+                                    Put_Line (File, "   function " & Subprogram_Name);
+                                    Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                                     for Child of V loop
                                        case Child.Kind_Id is
@@ -2771,13 +2591,14 @@ procedure XML_Parser is
                                           null;
                                        when Child_Arg =>
                                           Generate_Code_For_Arg
-                                            (Child.Arg_Tag.all,
+                                            (File, Child.Arg_Tag.all,
+                                             Max_Name_Length,
                                              Child = Children (Request_Tag).Last_Element);
                                        end case;
                                     end loop;
 
                                     Put_Line (File, "   ) return " & Return_Type & " is");
-                                    Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name & ".all'Access,");
+                                    Put_Line (File, "   P : Proxy_Ptr := Wayland.API.Proxy_Marshal_Constructor (" & Name & ".all,");
                                     Put_Line
                                       (File,
                                        "    " & Xml_Parser_Utils.Make_Upper_Case
@@ -2815,7 +2636,7 @@ procedure XML_Parser is
                                  Put_Line
                                    (File,
                                     "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & " is");
-                                 Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name & ".all'Access,");
+                                 Put_Line (File, "   P : Proxy_Ptr := Wayland.API.Proxy_Marshal_Constructor (" & Name & ".all,");
                                  Put_Line
                                    (File,
                                     "    " & Xml_Parser_Utils.Make_Upper_Case
@@ -2834,9 +2655,11 @@ procedure XML_Parser is
                            if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
                               declare
                                  V : Wayland_XML.Request_Child_Vectors.Vector;
-                              begin
-                                 Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
 
+                                 Max_Name_Length : Natural := Name'Length;
+
+                                 function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
+                              begin
                                  for Child of Children (Request_Tag) loop
                                     case Child.Kind_Id is
                                     when Child_Dummy =>
@@ -2846,9 +2669,18 @@ procedure XML_Parser is
                                     when Child_Arg =>
                                        if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                           V.Append (Child);
+
+                                          declare
+                                             Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                          begin
+                                             Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                          end;
                                        end if;
                                     end case;
                                  end loop;
+
+                                 Put_Line (File, "   function " & Subprogram_Name);
+                                 Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                                  for Child of V loop
                                     case Child.Kind_Id is
@@ -2857,14 +2689,14 @@ procedure XML_Parser is
                                     when Child_Description =>
                                        null;
                                     when Child_Arg =>
-                                       Generate_Code_For_Arg (Child.Arg_Tag.all, False);
+                                       Generate_Code_For_Arg (File, Child.Arg_Tag.all, Max_Name_Length, False);
                                     end case;
                                  end loop;
 
                                  Put_Line (File, "   Interface_V : Interface_Ptr;");
                                  Put_Line (File, "   New_Id : Unsigned_32) return Proxy_Ptr is");
                                  Put_Line (File, "begin");
-                                 Put_Line (File, "    return Proxy_Marshal_Constructor_Versioned (" & Name & ".all'Access,");
+                                 Put_Line (File, "    return Wayland.API.Proxy_Marshal_Constructor_Versioned (" & Name & ".all,");
                                  Put_Line
                                    (File,
                                     "    " & Xml_Parser_Utils.Make_Upper_Case
@@ -2900,20 +2732,20 @@ procedure XML_Parser is
                                  Put_Line (File, "end " & Subprogram_Name & ";");
                               end;
                            else
-                              Put_Line (File, "function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr is");
-                              Put_Line (File, "P : Proxy_Ptr := Proxy_Marshal_Constructor (" & Name & ".all'Access,");
+                              Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr is");
+                              Put_Line (File, "      P : Proxy_Ptr := Wayland.API.Proxy_Marshal_Constructor (" & Name & ".all,");
                               Put_Line
                                 (File,
-                                 "    " & Xml_Parser_Utils.Make_Upper_Case
+                                 "       " & Xml_Parser_Utils.Make_Upper_Case
                                    (Wayland_XML.Name (Interface_Tag) & "_" &
                                       Wayland_XML.Name (Request_Tag)) & ",");
                               Put_Line
                                 (File,
-                                 "    " & Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
-                              Put_Line (File, "    0);");
-                              Put_Line (File, "begin");
-                              Put_Line (File, "    return (if P /= null then P.all'Access else null);");
-                              Put_Line (File, "end " & Subprogram_Name & ";");
+                                 "       " & Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
+                              Put_Line (File, "      0);");
+                              Put_Line (File, "   begin");
+                              Put_Line (File, "      return (if P /= null then P.all'Access else null);");
+                              Put_Line (File, "   end " & Subprogram_Name & ";");
                            end if;
                         end if;
                      elsif Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
@@ -2922,8 +2754,11 @@ procedure XML_Parser is
                         if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 0 then
                            declare
                               V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                              Max_Name_Length : Natural := Name'Length;
+
+                              function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                            begin
-                              Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ";");
                               for Child of Children (Request_Tag) loop
                                  case Child.Kind_Id is
                                  when Child_Dummy =>
@@ -2933,9 +2768,18 @@ procedure XML_Parser is
                                  when Child_Arg =>
                                     if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
                                        V.Append (Child);
+
+                                       declare
+                                          Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                       begin
+                                          Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                       end;
                                     end if;
                                  end case;
                               end loop;
+
+                              Put_Line (File, "   procedure " & Subprogram_Name);
+                              Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
 
                               for Child of V loop
                                  case Child.Kind_Id is
@@ -2945,15 +2789,15 @@ procedure XML_Parser is
                                     null;
                                  when Child_Arg =>
                                     Generate_Code_For_Arg
-                                      (Child.Arg_Tag.all,
+                                      (File, Child.Arg_Tag.all,
+                                       Max_Name_Length,
                                        Child = Children (Request_Tag).Last_Element);
                                  end case;
                               end loop;
 
-                              Put_Line (File, "   ) is");
-                              Put_Line (File, "begin");
-                              Put_Line (File, "Proxy_Marshal (Proxy_Ptr'(" & Name & ".all'Access),");
-                              Ada.Text_IO.Put (File, "    " & Opcode);
+                              Put_Line (File, "   is");
+                              Put_Line (File, "   begin");
+                              Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, " & Opcode);
 
                               for Child of V loop
                                  case Child.Kind_Id is
@@ -2975,13 +2819,13 @@ procedure XML_Parser is
                                  end case;
                               end loop;
                               Put_Line (File, "    );");
-                              Put_Line (File, "end " & Subprogram_Name & ";");
+                              Put_Line (File, "   end " & Subprogram_Name & ";");
                            end;
                         else
-                           Put_Line (File, "procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
-                           Put_Line (File, "begin");
-                           Put_Line (File, "Proxy_Marshal (Proxy_Ptr'(" & Name & ".all'Access), " & Opcode & ");");
-                           Put_Line (File, "end " & Subprogram_Name & ";");
+                           Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
+                           Put_Line (File, "   begin");
+                           Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, " & Opcode & ");");
+                           Put_Line (File, "   end " & Subprogram_Name & ";");
                         end if;
                      end if;
 
@@ -3030,7 +2874,6 @@ procedure XML_Parser is
          end Generate_Code_For_Protocol_Tag_Children;
       begin
          Write_To_File;
-         Generate_Manually_Edited_Code;
       end Create_Wl_Thin_Body_File;
 
       procedure Generate_Code_For_Footer;
