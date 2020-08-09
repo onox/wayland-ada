@@ -102,8 +102,7 @@ package body C_Binding.Wl_Thin is
      (Registry    : Registry_Ptr;
       Name        : Unsigned_32;
       Interface_V : Interface_Ptr;
-      New_Id      : Unsigned_32) return Proxy_Ptr
-   is
+      New_Id      : Unsigned_32) return Proxy_Ptr is
    begin
       return Wayland.API.Proxy_Marshal_Constructor_Versioned
           (Registry.all,
@@ -119,8 +118,7 @@ package body C_Binding.Wl_Thin is
    function Callback_Add_Listener
      (Callback : Callback_Ptr;
       Listener : Callback_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Callback.all, Listener.all'Address, Data);
    end Callback_Add_Listener;
@@ -240,8 +238,7 @@ package body C_Binding.Wl_Thin is
    function Shm_Add_Listener
      (Shm      : Shm_Ptr;
       Listener : Shm_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Shm.all, Listener.all'Address, Data);
    end Shm_Add_Listener;
@@ -282,8 +279,7 @@ package body C_Binding.Wl_Thin is
    function Buffer_Add_Listener
      (Buffer   : Buffer_Ptr;
       Listener : Buffer_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Buffer.all, Listener.all'Address, Data);
    end Buffer_Add_Listener;
@@ -313,8 +309,7 @@ package body C_Binding.Wl_Thin is
    function Data_Offer_Add_Listener
      (Data_Offer : Data_Offer_Ptr;
       Listener   : Data_Offer_Listener_Ptr;
-      Data       : Void_Ptr) return Interfaces.C.int
-   is
+      Data       : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Data_Offer.all, Listener.all'Address, Data);
    end Data_Offer_Add_Listener;
@@ -344,8 +339,7 @@ package body C_Binding.Wl_Thin is
    procedure Data_Offer_Accept
      (Data_Offer : Data_Offer_Ptr;
       Serial     : Unsigned_32;
-      Mime_Type  : Chars_Ptr)
-   is
+      Mime_Type  : Chars_Ptr) is
    begin
       Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Accept, Serial, Mime_Type);
    end Data_Offer_Accept;
@@ -353,8 +347,7 @@ package body C_Binding.Wl_Thin is
    procedure Data_Offer_Receive
      (Data_Offer : Data_Offer_Ptr;
       Mime_Type  : C_String;
-      Fd         : Integer)
-   is
+      Fd         : Integer) is
    begin
       Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Receive, Mime_Type, Fd);
    end Data_Offer_Receive;
@@ -419,8 +412,7 @@ package body C_Binding.Wl_Thin is
    function Data_Device_Add_Listener
      (Data_Device : Data_Device_Ptr;
       Listener    : Data_Device_Listener_Ptr;
-      Data        : Void_Ptr) return Interfaces.C.int
-   is
+      Data        : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Data_Device.all, Listener.all'Address, Data);
    end Data_Device_Add_Listener;
@@ -464,8 +456,7 @@ package body C_Binding.Wl_Thin is
    procedure Data_Device_Set_Selection
      (Data_Device : Data_Device_Ptr;
       Source      : Data_Source_Ptr;
-      Serial      : Unsigned_32)
-   is
+      Serial      : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Device.all,
@@ -487,15 +478,13 @@ package body C_Binding.Wl_Thin is
    end Data_Device_Manager_Set_User_Data;
 
    function Data_Device_Manager_Get_User_Data
-     (Data_Device_Manager : Data_Device_Manager_Ptr) return Void_Ptr
-   is
+     (Data_Device_Manager : Data_Device_Manager_Ptr) return Void_Ptr is
    begin
       return Wayland.API.Proxy_Get_User_Data (Data_Device_Manager.all);
    end Data_Device_Manager_Get_User_Data;
 
    function Data_Device_Manager_Get_Version
-     (Data_Device_Manager : Data_Device_Manager_Ptr) return Unsigned_32
-   is
+     (Data_Device_Manager : Data_Device_Manager_Ptr) return Unsigned_32 is
    begin
       return Wayland.API.Proxy_Get_Version (Data_Device_Manager.all);
    end Data_Device_Manager_Get_Version;
@@ -605,8 +594,7 @@ package body C_Binding.Wl_Thin is
    procedure Shell_Surface_Move
      (Shell_Surface : Shell_Surface_Ptr;
       Seat          : Seat_Ptr;
-      Serial        : Unsigned_32)
-   is
+      Serial        : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -619,8 +607,7 @@ package body C_Binding.Wl_Thin is
      (Shell_Surface : Shell_Surface_Ptr;
       Seat          : Seat_Ptr;
       Serial        : Unsigned_32;
-      Edges         : Unsigned_32)
-   is
+      Edges         : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -640,8 +627,7 @@ package body C_Binding.Wl_Thin is
       Parent        : Surface_Ptr;
       X             : Integer;
       Y             : Integer;
-      Flags         : Unsigned_32)
-   is
+      Flags         : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -656,8 +642,7 @@ package body C_Binding.Wl_Thin is
      (Shell_Surface : Shell_Surface_Ptr;
       Method        : Unsigned_32;
       Framerate     : Unsigned_32;
-      Output        : Output_Ptr)
-   is
+      Output        : Output_Ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -674,8 +659,7 @@ package body C_Binding.Wl_Thin is
       Parent        : Surface_Ptr;
       X             : Integer;
       Y             : Integer;
-      Flags         : Unsigned_32)
-   is
+      Flags         : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -690,8 +674,7 @@ package body C_Binding.Wl_Thin is
 
    procedure Shell_Surface_Set_Maximized
      (Shell_Surface : Shell_Surface_Ptr;
-      Output        : Output_Ptr)
-   is
+      Output        : Output_Ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -712,8 +695,7 @@ package body C_Binding.Wl_Thin is
    function Surface_Add_Listener
      (Surface  : Surface_Ptr;
       Listener : Surface_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Surface.all, Listener.all'Address, Data);
    end Surface_Add_Listener;
@@ -806,8 +788,7 @@ package body C_Binding.Wl_Thin is
       X       : Integer;
       Y       : Integer;
       Width   : Integer;
-      Height  : Integer)
-   is
+      Height  : Integer) is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
@@ -821,8 +802,7 @@ package body C_Binding.Wl_Thin is
    function Seat_Add_Listener
      (Seat     : Seat_Ptr;
       Listener : Seat_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Seat.all, Listener.all'Address, Data);
    end Seat_Add_Listener;
@@ -918,8 +898,7 @@ package body C_Binding.Wl_Thin is
       Serial    : Unsigned_32;
       Surface   : Surface_Ptr;
       Hotspot_X : Integer;
-      Hotspot_Y : Integer)
-   is
+      Hotspot_Y : Integer) is
    begin
       Wayland.API.Proxy_Marshal
         (Pointer.all,
@@ -938,8 +917,7 @@ package body C_Binding.Wl_Thin is
    function Keyboard_Add_Listener
      (Keyboard : Keyboard_Ptr;
       Listener : Keyboard_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Keyboard.all, Listener.all'Address, Data);
    end Keyboard_Add_Listener;
@@ -972,8 +950,7 @@ package body C_Binding.Wl_Thin is
    function Touch_Add_Listener
      (Touch    : Touch_Ptr;
       Listener : Touch_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Touch.all, Listener.all'Address, Data);
    end Touch_Add_Listener;
@@ -1006,8 +983,7 @@ package body C_Binding.Wl_Thin is
    function Output_Add_Listener
      (Output   : Output_Ptr;
       Listener : Output_Listener_Ptr;
-      Data     : Void_Ptr) return Interfaces.C.int
-   is
+      Data     : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Output.all, Listener.all'Address, Data);
    end Output_Add_Listener;
@@ -1064,8 +1040,7 @@ package body C_Binding.Wl_Thin is
       X      : Integer;
       Y      : Integer;
       Width  : Integer;
-      Height : Integer)
-   is
+      Height : Integer) is
    begin
       Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Add, X, Y, Width, Height);
    end Region_Add;

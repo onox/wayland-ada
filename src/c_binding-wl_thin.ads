@@ -181,20 +181,20 @@ private package C_Binding.Wl_Thin is
       Display   : Display_Ptr;
       Object_Id : Void_Ptr;
       Code      : Unsigned_32;
-      Message   : Chars_Ptr) with
-      Convention => C;
+      Message   : chars_ptr)
+   with Convention => C;
 
    type Display_Delete_Id_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Display : Display_Ptr;
-      Id      : Unsigned_32) with
-      Convention => C;
+      Id      : Unsigned_32)
+   with Convention => C;
 
    type Display_Listener_T is record
       Error     : Display_Error_Subprogram_Ptr;
       Delete_Id : Display_Delete_Id_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Display_Listener_Ptr is access all Display_Listener_T;
 
@@ -203,7 +203,9 @@ private package C_Binding.Wl_Thin is
       Listener : Display_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Display_Set_User_Data (Display : Display_Ptr; Data : Void_Ptr);
+   procedure Display_Set_User_Data
+     (Display : Display_Ptr;
+      Data    : Void_Ptr);
 
    function Display_Get_User_Data (Display : Display_Ptr) return Void_Ptr;
 
@@ -239,21 +241,21 @@ private package C_Binding.Wl_Thin is
      (Data        : Void_Ptr;
       Registry    : Registry_Ptr;
       Name        : Unsigned_32;
-      Interface_V : Chars_Ptr;
-      Version     : Unsigned_32) with
-      Convention => C;
+      Interface_V : chars_ptr;
+      Version     : Unsigned_32)
+   with Convention => C;
 
    type Registry_Global_Remove_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Registry : Registry_Ptr;
-      Name     : Unsigned_32) with
-      Convention => C;
+      Name     : Unsigned_32)
+   with Convention => C;
 
    type Registry_Listener_T is record
       Global        : Registry_Global_Subprogram_Ptr;
       Global_Remove : Registry_Global_Remove_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Registry_Listener_Ptr is access all Registry_Listener_T;
 
@@ -262,7 +264,9 @@ private package C_Binding.Wl_Thin is
       Listener : Registry_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Registry_Set_User_Data (Registry : Registry_Ptr; Data : Void_Ptr);
+   procedure Registry_Set_User_Data
+     (Registry : Registry_Ptr;
+      Data     : Void_Ptr);
 
    function Registry_Get_User_Data (Registry : Registry_Ptr) return Void_Ptr;
 
@@ -281,13 +285,13 @@ private package C_Binding.Wl_Thin is
    type Callback_Done_Subprogram_Ptr is access procedure
      (Data          : Void_Ptr;
       Callback      : Callback_Ptr;
-      Callback_Data : Unsigned_32) with
-      Convention => C;
+      Callback_Data : Unsigned_32)
+   with Convention => C;
 
    type Callback_Listener_T is record
       Done : Callback_Done_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Callback_Listener_Ptr is access all Callback_Listener_T;
 
@@ -296,7 +300,9 @@ private package C_Binding.Wl_Thin is
       Listener : Callback_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Callback_Set_User_Data (Callback : Callback_Ptr; Data : Void_Ptr);
+   procedure Callback_Set_User_Data
+     (Callback : Callback_Ptr;
+      Data     : Void_Ptr);
 
    function Callback_Get_User_Data (Callback : Callback_Ptr) return Void_Ptr;
 
@@ -304,7 +310,9 @@ private package C_Binding.Wl_Thin is
 
    procedure Callback_Destroy (Callback : Callback_Ptr);
 
-   procedure Compositor_Set_User_Data (Compositor : Compositor_Ptr; Data : Void_Ptr);
+   procedure Compositor_Set_User_Data
+     (Compositor : Compositor_Ptr;
+      Data       : Void_Ptr);
 
    function Compositor_Get_User_Data (Compositor : Compositor_Ptr) return Void_Ptr;
 
@@ -318,7 +326,9 @@ private package C_Binding.Wl_Thin is
    --  Ask the compositor to create a new region.
    function Compositor_Create_Region (Compositor : Compositor_Ptr) return Region_Ptr;
 
-   procedure Shm_Pool_Set_User_Data (Shm_Pool : Shm_Pool_Ptr; Data : Void_Ptr);
+   procedure Shm_Pool_Set_User_Data
+     (Shm_Pool : Shm_Pool_Ptr;
+      Data     : Void_Ptr);
 
    function Shm_Pool_Get_User_Data (Shm_Pool : Shm_Pool_Ptr) return Void_Ptr;
 
@@ -349,18 +359,20 @@ private package C_Binding.Wl_Thin is
    --  for the pool from the file descriptor passed when the pool was
    --  created, but using the new size.  This request can only be
    --  used to make the pool bigger.
-   procedure Shm_Pool_Resize (Shm_Pool : Shm_Pool_Ptr; Size : Integer);
+   procedure Shm_Pool_Resize
+     (Shm_Pool : Shm_Pool_Ptr;
+      Size     : Integer);
 
    type Shm_Format_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
       Shm    : Shm_Ptr;
-      Format : Unsigned_32) with
-      Convention => C;
+      Format : Unsigned_32)
+   with Convention => C;
 
    type Shm_Listener_T is record
       Format : Shm_Format_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Shm_Listener_Ptr is access all Shm_Listener_T;
 
@@ -369,7 +381,9 @@ private package C_Binding.Wl_Thin is
       Listener : Shm_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Shm_Set_User_Data (Shm : Shm_Ptr; Data : Void_Ptr);
+   procedure Shm_Set_User_Data
+     (Shm  : Shm_Ptr;
+      Data : Void_Ptr);
 
    function Shm_Get_User_Data (Shm : Shm_Ptr) return Void_Ptr;
 
@@ -382,17 +396,20 @@ private package C_Binding.Wl_Thin is
    --  The pool can be used to create shared memory based buffer
    --  objects.  The server will mmap size bytes of the passed file
    --  descriptor, to use as backing memory for the pool.
-   function Shm_Create_Pool (Shm : Shm_Ptr; Fd : Integer; Size : Integer) return Shm_Pool_Ptr;
+   function Shm_Create_Pool
+     (Shm  : Shm_Ptr;
+      Fd   : Integer;
+      Size : Integer) return Shm_Pool_Ptr;
 
    type Buffer_Release_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
-      Buffer : Buffer_Ptr) with
-      Convention => C;
+      Buffer : Buffer_Ptr)
+   with Convention => C;
 
    type Buffer_Listener_T is record
       Release : Buffer_Release_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Buffer_Listener_Ptr is access all Buffer_Listener_T;
 
@@ -401,7 +418,9 @@ private package C_Binding.Wl_Thin is
       Listener : Buffer_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Buffer_Set_User_Data (Buffer : Buffer_Ptr; Data : Void_Ptr);
+   procedure Buffer_Set_User_Data
+     (Buffer : Buffer_Ptr;
+      Data   : Void_Ptr);
 
    function Buffer_Get_User_Data (Buffer : Buffer_Ptr) return Void_Ptr;
 
@@ -412,27 +431,27 @@ private package C_Binding.Wl_Thin is
    type Data_Offer_Offer_Subprogram_Ptr is access procedure
      (Data       : Void_Ptr;
       Data_Offer : Data_Offer_Ptr;
-      Mime_Type  : Chars_Ptr) with
-      Convention => C;
+      Mime_Type  : chars_ptr)
+   with Convention => C;
 
    type Data_Offer_Source_Actions_Subprogram_Ptr is access procedure
      (Data           : Void_Ptr;
       Data_Offer     : Data_Offer_Ptr;
-      Source_Actions : Unsigned_32) with
-      Convention => C;
+      Source_Actions : Unsigned_32)
+   with Convention => C;
 
    type Data_Offer_Action_Subprogram_Ptr is access procedure
      (Data       : Void_Ptr;
       Data_Offer : Data_Offer_Ptr;
-      Dnd_Action : Unsigned_32) with
-      Convention => C;
+      Dnd_Action : Unsigned_32)
+   with Convention => C;
 
    type Data_Offer_Listener_T is record
       Offer          : Data_Offer_Offer_Subprogram_Ptr;
       Source_Actions : Data_Offer_Source_Actions_Subprogram_Ptr;
       Action         : Data_Offer_Action_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Data_Offer_Listener_Ptr is access all Data_Offer_Listener_T;
 
@@ -441,7 +460,9 @@ private package C_Binding.Wl_Thin is
       Listener   : Data_Offer_Listener_Ptr;
       Data       : Void_Ptr) return Interfaces.C.int;
 
-   procedure Data_Offer_Set_User_Data (Data_Offer : Data_Offer_Ptr; Data : Void_Ptr);
+   procedure Data_Offer_Set_User_Data
+     (Data_Offer : Data_Offer_Ptr;
+      Data       : Void_Ptr);
 
    function Data_Offer_Get_User_Data (Data_Offer : Data_Offer_Ptr) return Void_Ptr;
 
@@ -466,7 +487,7 @@ private package C_Binding.Wl_Thin is
    procedure Data_Offer_Accept
      (Data_Offer : Data_Offer_Ptr;
       Serial     : Unsigned_32;
-      Mime_Type  : Chars_Ptr);
+      Mime_Type  : chars_ptr);
 
    --  To transfer the offered data, the client issues this request
    --  and indicates the mime type it wants to receive.  The transfer
@@ -483,7 +504,10 @@ private package C_Binding.Wl_Thin is
    --  both before and after wl_data_device.drop. Drag-and-drop destination
    --  clients may preemptively fetch data or examine it more closely to
    --  determine acceptance.
-   procedure Data_Offer_Receive (Data_Offer : Data_Offer_Ptr; Mime_Type : C_String; Fd : Integer);
+   procedure Data_Offer_Receive
+     (Data_Offer : Data_Offer_Ptr;
+      Mime_Type  : C_String;
+      Fd         : Integer);
 
    --  Notifies the compositor that the drag destination successfully
    --  finished the drag-and-drop operation.
@@ -537,36 +561,36 @@ private package C_Binding.Wl_Thin is
    type Data_Source_Target_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Source : Data_Source_Ptr;
-      Mime_Type   : Chars_Ptr) with
-      Convention => C;
+      Mime_Type   : chars_ptr)
+   with Convention => C;
 
    type Data_Source_Send_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Source : Data_Source_Ptr;
-      Mime_Type   : Chars_Ptr;
-      Fd          : Integer) with
-      Convention => C;
+      Mime_Type   : chars_ptr;
+      Fd          : Integer)
+   with Convention => C;
 
    type Data_Source_Cancelled_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
-      Data_Source : Data_Source_Ptr) with
-      Convention => C;
+      Data_Source : Data_Source_Ptr)
+   with Convention => C;
 
    type Data_Source_Dnd_Drop_Performed_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
-      Data_Source : Data_Source_Ptr) with
-      Convention => C;
+      Data_Source : Data_Source_Ptr)
+   with Convention => C;
 
    type Data_Source_Dnd_Finished_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
-      Data_Source : Data_Source_Ptr) with
-      Convention => C;
+      Data_Source : Data_Source_Ptr)
+   with Convention => C;
 
    type Data_Source_Action_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Source : Data_Source_Ptr;
-      Dnd_Action  : Unsigned_32) with
-      Convention => C;
+      Dnd_Action  : Unsigned_32)
+   with Convention => C;
 
    type Data_Source_Listener_T is record
       Target             : Data_Source_Target_Subprogram_Ptr;
@@ -575,8 +599,8 @@ private package C_Binding.Wl_Thin is
       Dnd_Drop_Performed : Data_Source_Dnd_Drop_Performed_Subprogram_Ptr;
       Dnd_Finished       : Data_Source_Dnd_Finished_Subprogram_Ptr;
       Action             : Data_Source_Action_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Data_Source_Listener_Ptr is access all Data_Source_Listener_T;
 
@@ -585,7 +609,9 @@ private package C_Binding.Wl_Thin is
       Listener    : Data_Source_Listener_Ptr;
       Data        : Void_Ptr) return Interfaces.C.int;
 
-   procedure Data_Source_Set_User_Data (Data_Source : Data_Source_Ptr; Data : Void_Ptr);
+   procedure Data_Source_Set_User_Data
+     (Data_Source : Data_Source_Ptr;
+      Data        : Void_Ptr);
 
    function Data_Source_Get_User_Data (Data_Source : Data_Source_Ptr) return Void_Ptr;
 
@@ -596,7 +622,9 @@ private package C_Binding.Wl_Thin is
    --  This request adds a mime type to the set of mime types
    --  advertised to targets.  Can be called several times to offer
    --  multiple types.
-   procedure Data_Source_Offer (Data_Source : Data_Source_Ptr; Mime_Type : Chars_Ptr);
+   procedure Data_Source_Offer
+     (Data_Source : Data_Source_Ptr;
+      Mime_Type   : chars_ptr);
 
    --  Sets the actions that the source side client supports for this
    --  operation. This request may trigger wl_data_source.action and
@@ -611,13 +639,15 @@ private package C_Binding.Wl_Thin is
    --  used in drag-and-drop, so it must be performed before
    --  wl_data_device.start_drag. Attempting to use the source other than
    --  for drag-and-drop will raise a protocol error.
-   procedure Data_Source_Set_Actions (Data_Source : Data_Source_Ptr; Dnd_Actions : Unsigned_32);
+   procedure Data_Source_Set_Actions
+     (Data_Source : Data_Source_Ptr;
+      Dnd_Actions : Unsigned_32);
 
    type Data_Device_Data_Offer_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Device : Data_Device_Ptr;
-      Id          : Unsigned_32) with
-      Convention => C;
+      Id          : Unsigned_32)
+   with Convention => C;
 
    type Data_Device_Enter_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
@@ -626,32 +656,32 @@ private package C_Binding.Wl_Thin is
       Surface     : Surface_Ptr;
       X           : Fixed;
       Y           : Fixed;
-      Id          : Data_Offer_Ptr) with
-      Convention => C;
+      Id          : Data_Offer_Ptr)
+   with Convention => C;
 
    type Data_Device_Leave_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
-      Data_Device : Data_Device_Ptr) with
-      Convention => C;
+      Data_Device : Data_Device_Ptr)
+   with Convention => C;
 
    type Data_Device_Motion_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Device : Data_Device_Ptr;
       Time        : Unsigned_32;
       X           : Fixed;
-      Y           : Fixed) with
-      Convention => C;
+      Y           : Fixed)
+   with Convention => C;
 
    type Data_Device_Drop_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
-      Data_Device : Data_Device_Ptr) with
-      Convention => C;
+      Data_Device : Data_Device_Ptr)
+   with Convention => C;
 
    type Data_Device_Selection_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Data_Device : Data_Device_Ptr;
-      Id          : Data_Offer_Ptr) with
-      Convention => C;
+      Id          : Data_Offer_Ptr)
+   with Convention => C;
 
    type Data_Device_Listener_T is record
       Data_Offer : Data_Device_Data_Offer_Subprogram_Ptr;
@@ -660,8 +690,8 @@ private package C_Binding.Wl_Thin is
       Motion     : Data_Device_Motion_Subprogram_Ptr;
       Drop       : Data_Device_Drop_Subprogram_Ptr;
       Selection  : Data_Device_Selection_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Data_Device_Listener_Ptr is access all Data_Device_Listener_T;
 
@@ -670,7 +700,9 @@ private package C_Binding.Wl_Thin is
       Listener    : Data_Device_Listener_Ptr;
       Data        : Void_Ptr) return Interfaces.C.int;
 
-   procedure Data_Device_Set_User_Data (Data_Device : Data_Device_Ptr; Data : Void_Ptr);
+   procedure Data_Device_Set_User_Data
+     (Data_Device : Data_Device_Ptr;
+      Data        : Void_Ptr);
 
    function Data_Device_Get_User_Data (Data_Device : Data_Device_Ptr) return Void_Ptr;
 
@@ -745,7 +777,9 @@ private package C_Binding.Wl_Thin is
      (Data_Device_Manager : Data_Device_Manager_Ptr;
       Seat                : Seat_Ptr) return Data_Device_Ptr;
 
-   procedure Shell_Set_User_Data (Shell : Shell_Ptr; Data : Void_Ptr);
+   procedure Shell_Set_User_Data
+     (Shell : Shell_Ptr;
+      Data  : Void_Ptr);
 
    function Shell_Get_User_Data (Shell : Shell_Ptr) return Void_Ptr;
 
@@ -765,28 +799,28 @@ private package C_Binding.Wl_Thin is
    type Shell_Surface_Ping_Subprogram_Ptr is access procedure
      (Data          : Void_Ptr;
       Shell_Surface : Shell_Surface_Ptr;
-      Serial        : Unsigned_32) with
-      Convention => C;
+      Serial        : Unsigned_32)
+   with Convention => C;
 
    type Shell_Surface_Configure_Subprogram_Ptr is access procedure
      (Data          : Void_Ptr;
       Shell_Surface : Shell_Surface_Ptr;
       Edges         : Unsigned_32;
       Width         : Integer;
-      Height        : Integer) with
-      Convention => C;
+      Height        : Integer)
+   with Convention => C;
 
    type Shell_Surface_Popup_Done_Subprogram_Ptr is access procedure
      (Data          : Void_Ptr;
-      Shell_Surface : Shell_Surface_Ptr) with
-      Convention => C;
+      Shell_Surface : Shell_Surface_Ptr)
+   with Convention => C;
 
    type Shell_Surface_Listener_T is record
       Ping       : Shell_Surface_Ping_Subprogram_Ptr;
       Configure  : Shell_Surface_Configure_Subprogram_Ptr;
       Popup_Done : Shell_Surface_Popup_Done_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Shell_Surface_Listener_Ptr is access all Shell_Surface_Listener_T;
 
@@ -795,7 +829,9 @@ private package C_Binding.Wl_Thin is
       Listener      : Shell_Surface_Listener_Ptr;
       Data          : Void_Ptr) return Interfaces.C.int;
 
-   procedure Shell_Surface_Set_User_Data (Shell_Surface : Shell_Surface_Ptr; Data : Void_Ptr);
+   procedure Shell_Surface_Set_User_Data
+     (Shell_Surface : Shell_Surface_Ptr;
+      Data          : Void_Ptr);
 
    function Shell_Surface_Get_User_Data (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr;
 
@@ -805,7 +841,9 @@ private package C_Binding.Wl_Thin is
 
    --  A client must respond to a ping event with a pong request or
    --  the client may be deemed unresponsive.
-   procedure Shell_Surface_Pong (Shell_Surface : Shell_Surface_Ptr; Serial : Unsigned_32);
+   procedure Shell_Surface_Pong
+     (Shell_Surface : Shell_Surface_Ptr;
+      Serial        : Unsigned_32);
 
    --  Start a pointer-driven move of the surface.
    --
@@ -932,7 +970,9 @@ private package C_Binding.Wl_Thin is
    --  fullscreen shell surface.
    --
    --  The details depend on the compositor implementation.
-   procedure Shell_Surface_Set_Maximized (Shell_Surface : Shell_Surface_Ptr; Output : Output_Ptr);
+   procedure Shell_Surface_Set_Maximized
+     (Shell_Surface : Shell_Surface_Ptr;
+      Output        : Output_Ptr);
 
    --  Set a short title for the surface.
    --
@@ -941,7 +981,9 @@ private package C_Binding.Wl_Thin is
    --  compositor.
    --
    --  The string must be encoded in UTF-8.
-   procedure Shell_Surface_Set_Title (Shell_Surface : Shell_Surface_Ptr; Title : Chars_Ptr);
+   procedure Shell_Surface_Set_Title
+     (Shell_Surface : Shell_Surface_Ptr;
+      Title         : chars_ptr);
 
    --  Set a class for the surface.
    --
@@ -949,25 +991,27 @@ private package C_Binding.Wl_Thin is
    --  to which the surface belongs. A common convention is to use the
    --  file name (or the full path if it is a non-standard location) of
    --  the application's .desktop file as the class.
-   procedure Shell_Surface_Set_Class (Shell_Surface : Shell_Surface_Ptr; Class_V : Chars_Ptr);
+   procedure Shell_Surface_Set_Class
+     (Shell_Surface : Shell_Surface_Ptr;
+      Class_V       : chars_ptr);
 
    type Surface_Enter_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Surface : Surface_Ptr;
-      Output  : Output_Ptr) with
-      Convention => C;
+      Output  : Output_Ptr)
+   with Convention => C;
 
    type Surface_Leave_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Surface : Surface_Ptr;
-      Output  : Output_Ptr) with
-      Convention => C;
+      Output  : Output_Ptr)
+   with Convention => C;
 
    type Surface_Listener_T is record
       Enter : Surface_Enter_Subprogram_Ptr;
       Leave : Surface_Leave_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Surface_Listener_Ptr is access all Surface_Listener_T;
 
@@ -976,7 +1020,9 @@ private package C_Binding.Wl_Thin is
       Listener : Surface_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Surface_Set_User_Data (Surface : Surface_Ptr; Data : Void_Ptr);
+   procedure Surface_Set_User_Data
+     (Surface : Surface_Ptr;
+      Data    : Void_Ptr);
 
    function Surface_Get_User_Data (Surface : Surface_Ptr) return Void_Ptr;
 
@@ -1023,7 +1069,11 @@ private package C_Binding.Wl_Thin is
    --
    --  If wl_surface.attach is sent with a NULL wl_buffer, the
    --  following wl_surface.commit will remove the surface content.
-   procedure Surface_Attach (Surface : Surface_Ptr; Buffer : Buffer_Ptr; X : Integer; Y : Integer);
+   procedure Surface_Attach
+     (Surface : Surface_Ptr;
+      Buffer  : Buffer_Ptr;
+      X       : Integer;
+      Y       : Integer);
 
    --  This request is used to describe the regions where the pending
    --  buffer is different from the current surface contents, and where
@@ -1111,7 +1161,9 @@ private package C_Binding.Wl_Thin is
    --  opaque region has copy semantics, and the wl_region object can be
    --  destroyed immediately. A NULL wl_region causes the pending opaque
    --  region to be set to empty.
-   procedure Surface_Set_Opaque_Region (Surface : Surface_Ptr; Region : Region_Ptr);
+   procedure Surface_Set_Opaque_Region
+     (Surface : Surface_Ptr;
+      Region  : Region_Ptr);
 
    --  This request sets the region of the surface that can receive
    --  pointer and touch events.
@@ -1135,7 +1187,9 @@ private package C_Binding.Wl_Thin is
    --  has copy semantics, and the wl_region object can be destroyed
    --  immediately. A NULL wl_region causes the input region to be set
    --  to infinite.
-   procedure Surface_Set_Input_Region (Surface : Surface_Ptr; Region : Region_Ptr);
+   procedure Surface_Set_Input_Region
+     (Surface : Surface_Ptr;
+      Region  : Region_Ptr);
 
    --  Surface state (input, opaque, and damage regions, attached buffers,
    --  etc.) is double-buffered. Protocol requests modify the pending state,
@@ -1185,7 +1239,9 @@ private package C_Binding.Wl_Thin is
    --  If transform is not one of the values from the
    --  wl_output.transform enum the invalid_transform protocol error
    --  is raised.
-   procedure Surface_Set_Buffer_Transform (Surface : Surface_Ptr; Transform : Integer);
+   procedure Surface_Set_Buffer_Transform
+     (Surface   : Surface_Ptr;
+      Transform : Integer);
 
    --  This request sets an optional scaling factor on how the compositor
    --  interprets the contents of the buffer attached to the window.
@@ -1210,7 +1266,9 @@ private package C_Binding.Wl_Thin is
    --
    --  If scale is not positive the invalid_scale protocol error is
    --  raised.
-   procedure Surface_Set_Buffer_Scale (Surface : Surface_Ptr; Scale : Integer);
+   procedure Surface_Set_Buffer_Scale
+     (Surface : Surface_Ptr;
+      Scale   : Integer);
 
    --  This request is used to describe the regions where the pending
    --  buffer is different from the current surface contents, and where
@@ -1254,20 +1312,20 @@ private package C_Binding.Wl_Thin is
    type Seat_Capabilities_Subprogram_Ptr is access procedure
      (Data         : Void_Ptr;
       Seat         : Seat_Ptr;
-      Capabilities : Unsigned_32) with
-      Convention => C;
+      Capabilities : Unsigned_32)
+   with Convention => C;
 
    type Seat_Name_Subprogram_Ptr is access procedure
      (Data : Void_Ptr;
       Seat : Seat_Ptr;
-      Name : Chars_Ptr) with
-      Convention => C;
+      Name : chars_ptr)
+   with Convention => C;
 
    type Seat_Listener_T is record
       Capabilities : Seat_Capabilities_Subprogram_Ptr;
       Name         : Seat_Name_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Seat_Listener_Ptr is access all Seat_Listener_T;
 
@@ -1276,7 +1334,9 @@ private package C_Binding.Wl_Thin is
       Listener : Seat_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Seat_Set_User_Data (Seat : Seat_Ptr; Data : Void_Ptr);
+   procedure Seat_Set_User_Data
+     (Seat : Seat_Ptr;
+      Data : Void_Ptr);
 
    function Seat_Get_User_Data (Seat : Seat_Ptr) return Void_Ptr;
 
@@ -1321,23 +1381,23 @@ private package C_Binding.Wl_Thin is
       Serial    : Unsigned_32;
       Surface   : Surface_Ptr;
       Surface_X : Fixed;
-      Surface_Y : Fixed) with
-      Convention => C;
+      Surface_Y : Fixed)
+   with Convention => C;
 
    type Pointer_Leave_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Pointer : Pointer_Ptr;
       Serial  : Unsigned_32;
-      Surface : Surface_Ptr) with
-      Convention => C;
+      Surface : Surface_Ptr)
+   with Convention => C;
 
    type Pointer_Motion_Subprogram_Ptr is access procedure
      (Data      : Void_Ptr;
       Pointer   : Pointer_Ptr;
       Time      : Unsigned_32;
       Surface_X : Fixed;
-      Surface_Y : Fixed) with
-      Convention => C;
+      Surface_Y : Fixed)
+   with Convention => C;
 
    type Pointer_Button_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
@@ -1345,41 +1405,41 @@ private package C_Binding.Wl_Thin is
       Serial  : Unsigned_32;
       Time    : Unsigned_32;
       Button  : Unsigned_32;
-      State   : Unsigned_32) with
-      Convention => C;
+      State   : Unsigned_32)
+   with Convention => C;
 
    type Pointer_Axis_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Pointer : Pointer_Ptr;
       Time    : Unsigned_32;
       Axis    : Unsigned_32;
-      Value   : Fixed) with
-      Convention => C;
+      Value   : Fixed)
+   with Convention => C;
 
    type Pointer_Frame_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
-      Pointer : Pointer_Ptr) with
-      Convention => C;
+      Pointer : Pointer_Ptr)
+   with Convention => C;
 
    type Pointer_Axis_Source_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Pointer     : Pointer_Ptr;
-      Axis_Source : Unsigned_32) with
-      Convention => C;
+      Axis_Source : Unsigned_32)
+   with Convention => C;
 
    type Pointer_Axis_Stop_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Pointer : Pointer_Ptr;
       Time    : Unsigned_32;
-      Axis    : Unsigned_32) with
-      Convention => C;
+      Axis    : Unsigned_32)
+   with Convention => C;
 
    type Pointer_Axis_Discrete_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Pointer  : Pointer_Ptr;
       Axis     : Unsigned_32;
-      Discrete : Integer) with
-      Convention => C;
+      Discrete : Integer)
+   with Convention => C;
 
    type Pointer_Listener_T is record
       Enter         : Pointer_Enter_Subprogram_Ptr;
@@ -1391,8 +1451,8 @@ private package C_Binding.Wl_Thin is
       Axis_Source   : Pointer_Axis_Source_Subprogram_Ptr;
       Axis_Stop     : Pointer_Axis_Stop_Subprogram_Ptr;
       Axis_Discrete : Pointer_Axis_Discrete_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Pointer_Listener_Ptr is access all Pointer_Listener_T;
 
@@ -1401,7 +1461,9 @@ private package C_Binding.Wl_Thin is
       Listener : Pointer_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Pointer_Set_User_Data (Pointer : Pointer_Ptr; Data : Void_Ptr);
+   procedure Pointer_Set_User_Data
+     (Pointer : Pointer_Ptr;
+      Data    : Void_Ptr);
 
    function Pointer_Get_User_Data (Pointer : Pointer_Ptr) return Void_Ptr;
 
@@ -1459,23 +1521,23 @@ private package C_Binding.Wl_Thin is
       Keyboard : Keyboard_Ptr;
       Format   : Unsigned_32;
       Fd       : Integer;
-      Size     : Unsigned_32) with
-      Convention => C;
+      Size     : Unsigned_32)
+   with Convention => C;
 
    type Keyboard_Enter_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Keyboard : Keyboard_Ptr;
       Serial   : Unsigned_32;
       Surface  : Surface_Ptr;
-      Keys     : Wayland_Array_T) with
-      Convention => C;
+      Keys     : Wayland_Array_T)
+   with Convention => C;
 
    type Keyboard_Leave_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Keyboard : Keyboard_Ptr;
       Serial   : Unsigned_32;
-      Surface  : Surface_Ptr) with
-      Convention => C;
+      Surface  : Surface_Ptr)
+   with Convention => C;
 
    type Keyboard_Key_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
@@ -1483,8 +1545,8 @@ private package C_Binding.Wl_Thin is
       Serial   : Unsigned_32;
       Time     : Unsigned_32;
       Key      : Unsigned_32;
-      State    : Unsigned_32) with
-      Convention => C;
+      State    : Unsigned_32)
+   with Convention => C;
 
    type Keyboard_Modifiers_Subprogram_Ptr is access procedure
      (Data           : Void_Ptr;
@@ -1493,15 +1555,15 @@ private package C_Binding.Wl_Thin is
       Mods_Depressed : Unsigned_32;
       Mods_Latched   : Unsigned_32;
       Mods_Locked    : Unsigned_32;
-      Group          : Unsigned_32) with
-      Convention => C;
+      Group          : Unsigned_32)
+   with Convention => C;
 
    type Keyboard_Repeat_Info_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Keyboard : Keyboard_Ptr;
       Rate     : Integer;
-      Delay_V  : Integer) with
-      Convention => C;
+      Delay_V  : Integer)
+   with Convention => C;
 
    type Keyboard_Listener_T is record
       Keymap      : Keyboard_Keymap_Subprogram_Ptr;
@@ -1510,8 +1572,8 @@ private package C_Binding.Wl_Thin is
       Key         : Keyboard_Key_Subprogram_Ptr;
       Modifiers   : Keyboard_Modifiers_Subprogram_Ptr;
       Repeat_Info : Keyboard_Repeat_Info_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Keyboard_Listener_Ptr is access all Keyboard_Listener_T;
 
@@ -1520,7 +1582,9 @@ private package C_Binding.Wl_Thin is
       Listener : Keyboard_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Keyboard_Set_User_Data (Keyboard : Keyboard_Ptr; Data : Void_Ptr);
+   procedure Keyboard_Set_User_Data
+     (Keyboard : Keyboard_Ptr;
+      Data     : Void_Ptr);
 
    function Keyboard_Get_User_Data (Keyboard : Keyboard_Ptr) return Void_Ptr;
 
@@ -1538,16 +1602,16 @@ private package C_Binding.Wl_Thin is
       Surface : Surface_Ptr;
       Id      : Integer;
       X       : Fixed;
-      Y       : Fixed) with
-      Convention => C;
+      Y       : Fixed)
+   with Convention => C;
 
    type Touch_Up_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
       Touch  : Touch_Ptr;
       Serial : Unsigned_32;
       Time   : Unsigned_32;
-      Id     : Integer) with
-      Convention => C;
+      Id     : Integer)
+   with Convention => C;
 
    type Touch_Motion_Subprogram_Ptr is access procedure
      (Data  : Void_Ptr;
@@ -1555,29 +1619,33 @@ private package C_Binding.Wl_Thin is
       Time  : Unsigned_32;
       Id    : Integer;
       X     : Fixed;
-      Y     : Fixed) with
-      Convention => C;
+      Y     : Fixed)
+   with Convention => C;
 
-   type Touch_Frame_Subprogram_Ptr is access procedure (Data : Void_Ptr; Touch : Touch_Ptr) with
-      Convention => C;
+   type Touch_Frame_Subprogram_Ptr is access procedure
+     (Data  : Void_Ptr;
+      Touch : Touch_Ptr)
+   with Convention => C;
 
-   type Touch_Cancel_Subprogram_Ptr is access procedure (Data : Void_Ptr; Touch : Touch_Ptr) with
-      Convention => C;
+   type Touch_Cancel_Subprogram_Ptr is access procedure
+     (Data  : Void_Ptr;
+      Touch : Touch_Ptr)
+   with Convention => C;
 
    type Touch_Shape_Subprogram_Ptr is access procedure
      (Data  : Void_Ptr;
       Touch : Touch_Ptr;
       Id    : Integer;
       Major : Fixed;
-      Minor : Fixed) with
-      Convention => C;
+      Minor : Fixed)
+   with Convention => C;
 
    type Touch_Orientation_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Touch       : Touch_Ptr;
       Id          : Integer;
-      Orientation : Fixed) with
-      Convention => C;
+      Orientation : Fixed)
+   with Convention => C;
 
    type Touch_Listener_T is record
       Down        : Touch_Down_Subprogram_Ptr;
@@ -1587,8 +1655,8 @@ private package C_Binding.Wl_Thin is
       Cancel      : Touch_Cancel_Subprogram_Ptr;
       Shape       : Touch_Shape_Subprogram_Ptr;
       Orientation : Touch_Orientation_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Touch_Listener_Ptr is access all Touch_Listener_T;
 
@@ -1597,7 +1665,9 @@ private package C_Binding.Wl_Thin is
       Listener : Touch_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Touch_Set_User_Data (Touch : Touch_Ptr; Data : Void_Ptr);
+   procedure Touch_Set_User_Data
+     (Touch : Touch_Ptr;
+      Data  : Void_Ptr);
 
    function Touch_Get_User_Data (Touch : Touch_Ptr) return Void_Ptr;
 
@@ -1615,10 +1685,10 @@ private package C_Binding.Wl_Thin is
       Physical_Width  : Integer;
       Physical_Height : Integer;
       Subpixel        : Integer;
-      Make            : Chars_Ptr;
-      Model           : Chars_Ptr;
-      Transform       : Integer) with
-      Convention => C;
+      Make            : chars_ptr;
+      Model           : chars_ptr;
+      Transform       : Integer)
+   with Convention => C;
 
    type Output_Mode_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
@@ -1626,25 +1696,27 @@ private package C_Binding.Wl_Thin is
       Flags   : Unsigned_32;
       Width   : Integer;
       Height  : Integer;
-      Refresh : Integer) with
-      Convention => C;
+      Refresh : Integer)
+   with Convention => C;
 
-   type Output_Done_Subprogram_Ptr is access procedure (Data : Void_Ptr; Output : Output_Ptr) with
-      Convention => C;
+   type Output_Done_Subprogram_Ptr is access procedure
+     (Data   : Void_Ptr;
+      Output : Output_Ptr)
+   with Convention => C;
 
    type Output_Scale_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
       Output : Output_Ptr;
-      Factor : Integer) with
-      Convention => C;
+      Factor : Integer)
+   with Convention => C;
 
    type Output_Listener_T is record
       Geometry : Output_Geometry_Subprogram_Ptr;
       Mode     : Output_Mode_Subprogram_Ptr;
       Done     : Output_Done_Subprogram_Ptr;
       Scale    : Output_Scale_Subprogram_Ptr;
-   end record with
-      Convention => C_Pass_By_Copy;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Output_Listener_Ptr is access all Output_Listener_T;
 
@@ -1653,7 +1725,9 @@ private package C_Binding.Wl_Thin is
       Listener : Output_Listener_Ptr;
       Data     : Void_Ptr) return Interfaces.C.int;
 
-   procedure Output_Set_User_Data (Output : Output_Ptr; Data : Void_Ptr);
+   procedure Output_Set_User_Data
+     (Output : Output_Ptr;
+      Data   : Void_Ptr);
 
    function Output_Get_User_Data (Output : Output_Ptr) return Void_Ptr;
 
@@ -1665,7 +1739,9 @@ private package C_Binding.Wl_Thin is
    --  use the output object anymore.
    procedure Output_Release (Output : Output_Ptr);
 
-   procedure Region_Set_User_Data (Region : Region_Ptr; Data : Void_Ptr);
+   procedure Region_Set_User_Data
+     (Region : Region_Ptr;
+      Data   : Void_Ptr);
 
    function Region_Get_User_Data (Region : Region_Ptr) return Void_Ptr;
 
@@ -1689,7 +1765,9 @@ private package C_Binding.Wl_Thin is
       Width  : Integer;
       Height : Integer);
 
-   procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr; Data : Void_Ptr);
+   procedure Subcompositor_Set_User_Data
+     (Subcompositor : Subcompositor_Ptr;
+      Data          : Void_Ptr);
 
    function Subcompositor_Get_User_Data (Subcompositor : Subcompositor_Ptr) return Void_Ptr;
 
@@ -1717,7 +1795,9 @@ private package C_Binding.Wl_Thin is
       Surface       : Surface_Ptr;
       Parent        : Surface_Ptr) return Subsurface_Ptr;
 
-   procedure Subsurface_Set_User_Data (Subsurface : Subsurface_Ptr; Data : Void_Ptr);
+   procedure Subsurface_Set_User_Data
+     (Subsurface : Subsurface_Ptr;
+      Data       : Void_Ptr);
 
    function Subsurface_Get_User_Data (Subsurface : Subsurface_Ptr) return Void_Ptr;
 
@@ -1741,7 +1821,10 @@ private package C_Binding.Wl_Thin is
    --  replaces the scheduled position from any previous request.
    --
    --  The initial position is 0, 0.
-   procedure Subsurface_Set_Position (Subsurface : Subsurface_Ptr; X : Integer; Y : Integer);
+   procedure Subsurface_Set_Position
+     (Subsurface : Subsurface_Ptr;
+      X          : Integer;
+      Y          : Integer);
 
    --  This sub-surface is taken from the stack, and put back just
    --  above the reference surface, changing the z-order of the sub-surfaces.
@@ -1758,11 +1841,15 @@ private package C_Binding.Wl_Thin is
    --
    --  A new sub-surface is initially added as the top-most in the stack
    --  of its siblings and parent.
-   procedure Subsurface_Place_Above (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr);
+   procedure Subsurface_Place_Above
+     (Subsurface : Subsurface_Ptr;
+      Sibling    : Surface_Ptr);
 
    --  The sub-surface is placed just below the reference surface.
    --  See wl_subsurface.place_above.
-   procedure Subsurface_Place_Below (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr);
+   procedure Subsurface_Place_Below
+     (Subsurface : Subsurface_Ptr;
+      Sibling    : Surface_Ptr);
 
    --  Change the commit behaviour of the sub-surface to synchronized
    --  mode, also described as the parent dependent mode.
