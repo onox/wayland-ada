@@ -105,14 +105,14 @@ package body C_Binding.Wl_Thin is
       New_Id      : Unsigned_32) return Proxy_Ptr is
    begin
       return Wayland.API.Proxy_Marshal_Constructor_Versioned
-          (Registry.all,
-           Wl_Registry_Bind,
-           Interface_V,
-           New_Id,
-           Name,
-           Interface_V.Name,
-           New_Id,
-           0);
+        (Registry.all,
+         Wl_Registry_Bind,
+         Interface_V,
+         New_Id,
+         Name,
+         Interface_V.Name,
+         New_Id,
+         0);
    end Registry_Bind;
 
    function Callback_Add_Listener
@@ -560,8 +560,7 @@ package body C_Binding.Wl_Thin is
    function Shell_Surface_Add_Listener
      (Shell_Surface : Shell_Surface_Ptr;
       Listener      : Shell_Surface_Listener_Ptr;
-      Data          : Void_Ptr) return Interfaces.C.int
-   is
+      Data          : Void_Ptr) return Interfaces.C.int is
    begin
       return Wayland.API.Proxy_Add_Listener (Shell_Surface.all, Listener.all'Address, Data);
    end Shell_Surface_Add_Listener;
@@ -1050,8 +1049,7 @@ package body C_Binding.Wl_Thin is
       X      : Integer;
       Y      : Integer;
       Width  : Integer;
-      Height : Integer)
-   is
+      Height : Integer) is
    begin
       Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Subtract, X, Y, Width, Height);
    end Region_Subtract;

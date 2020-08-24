@@ -13,7 +13,7 @@ package body Client_Examples.Find_Compositor is
       Name       : String;
       Version    : Wayland_Client.Unsigned_32) is
    begin
-      Put_Line ("Got a registry event for " & Name & " id" & Id'Image);
+      Put_Line ("Got a registry event for " & Name & " version" & Version'Image & " id" & Id'Image);
 
       if Name = "wl_compositor" then
          Compositor.Get_Proxy (Registry, Id, Version);
