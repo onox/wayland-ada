@@ -1,8 +1,5 @@
-with Aida.UTF8;
 with Ada.Characters.Latin_1;
 with Aida.Text_IO;
-
-use all type Aida.UTF8.Code_Point;
 
 --  Known unsupported issues: Escaping of text (for example &amp;)
 --  The stack roof may be hit if the comments and texts in the XML are HUGE.
@@ -12,6 +9,8 @@ procedure Aida.XML_SAX_Parse
    Contents    : String;
    Call_Result : in out Aida.Call_Result)
 is
+   package L1 renames Ada.Characters.Latin_1;
+
    type Initial_State_Id is
      (Less_Sign,
       Question_Mark,
@@ -109,11 +108,8 @@ is
       Double_Quotes  -- Example: "hello"
      );
 
-   function Is_Special_Symbol (CP : Aida.UTF8.Code_Point) return Boolean is
-     (if CP = Character'Pos ('<') then True
-      elsif CP = Character'Pos ('>') then True
-      elsif CP = Character'Pos ('/') then True
-      elsif CP = Character'Pos ('"') then True else False);
+   function Is_Special_Symbol (CP : Character) return Boolean is
+     (CP in '<' | '>' | '/' | '"');
 
    XML_IDENTIFIER_ERROR_1 : constant Integer := -1913564897;
    XML_IDENTIFIER_ERROR_2 : constant Integer := -0537097086;
@@ -139,7 +135,7 @@ is
       subtype Contents_Index_T is Integer range
         Contents'First .. Contents'Last;
 
-      CP : Aida.UTF8.Code_Point;
+      CP : Character;
 
       Prev_P      : Prev_P_T := P;
       Prev_Prev_P : Prev_Prev_P_T; -- := Prev_P;
@@ -168,24 +164,24 @@ is
 
       Expected_Quotation_Symbol : Expected_Quotation_Symbol_T := Double_Quotes;
    begin
-      if Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Contents, Pointer => P)
+      if P in Contents'Range
       then
-         Aida.UTF8.Get (Source => Contents, Pointer => P, Value => CP);
+         CP := Contents (P);
+         P := P + 1;
 
-         if CP = Character'Pos ('>') then
+         if CP = '>' then
             while P <= Contents'Last loop
                Prev_Prev_P := Prev_P;
 
                Prev_P := P;
 
-               if not Aida.UTF8.Is_Valid_UTF8_Code_Point
-                 (Source => Contents, Pointer => P)
-               then
+               if P not in Contents'Range then
                   Call_Result.Initialize (1434797854, -0068724898);
                   exit;
                end if;
 
-               Aida.UTF8.Get (Source => Contents, Pointer => P, Value => CP);
+               CP := Contents (P);
+               P := P + 1;
 
                pragma Loop_Variant (Increases => P);
                pragma Loop_Invariant (not Call_Result.Has_Failed);
@@ -205,23 +201,19 @@ is
 
                case State_Id is
                   when Expecting_NL_Sign_Or_Space_Or_Less_Sign =>
-                     if CP = Character'Pos (' ') or
-                       CP = Character'Pos (Ada.Characters.Latin_1.LF) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.CR) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.HT)
-                     then
+                     if CP in ' ' | L1.LF | L1.CR | L1.HT then
                         null; -- Normal
-                     elsif CP = Character'Pos ('<') then
+                     elsif CP = '<' then
                         State_Id := Init_Found_Less_Sign;
                      else
                         Call_Result.Initialize (1003548980, 1714289304);
                         exit;
                      end if;
                   when Init_Found_Less_Sign =>
-                     if CP = Character'Pos ('!') then
+                     if CP = '!' then
                         State_Id :=
                           Init_Found_Less_Followed_By_Exclamation_Sign;
-                     elsif CP = Character'Pos ('/') then
+                     elsif CP = '/' then
                         if Depth = 0 then
                            Call_Result.Initialize (-1797161339, -1801650669);
                            exit;
@@ -250,7 +242,7 @@ is
                         exit;
                      end if;
                   when Init_Found_Less_Followed_By_Exclamation_Sign =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id :=
                          Init_Found_Less_Followed_By_Exclamation_And_Dash_Sign;
                      else
@@ -258,7 +250,7 @@ is
                         exit;
                      end if;
                   when Init_Found_Less_Followed_By_Exclamation_And_Dash_Sign =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id := Init_Extracting_Comment;
 
                         Comment_First_Index :=
@@ -268,7 +260,7 @@ is
                         exit;
                      end if;
                   when Extracting_Start_Tag_Name =>
-                     if CP = Character'Pos (' ') then
+                     if CP = ' ' then
                         Start_Tag_Name_Last_Index := Prev_Prev_P;
 
                         Start_Tag
@@ -290,7 +282,7 @@ is
                         end if;
 
                         State_Id := Expecting_G_Sign_Or_Attributes;
-                     elsif CP = Character'Pos ('>') then
+                     elsif CP = '>' then
                         Start_Tag_Name_Last_Index := Prev_Prev_P;
 
                         Start_Tag
@@ -320,13 +312,9 @@ is
                         exit;
                      end if;
                   when Expecting_G_Sign_Or_Attributes =>
-                     if CP = Character'Pos (' ') or
-                       CP = Character'Pos (Ada.Characters.Latin_1.LF) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.CR) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.HT)
-                     then
+                     if CP in ' ' | L1.LF | L1.CR | L1.HT then
                         null; -- Normal
-                     elsif CP = Character'Pos ('>') then
+                     elsif CP = '>' then
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
 
                         if P > Contents'Last then
@@ -335,7 +323,7 @@ is
                         end if;
 
                         Tag_Value_First_Index := P;
-                     elsif CP = Character'Pos ('/') then
+                     elsif CP = '/' then
                         State_Id :=
                     Expecting_G_Sign_Or_Attributes_And_Found_Slash;
                      elsif not Is_Special_Symbol (CP) then
@@ -346,7 +334,7 @@ is
                         exit;
                      end if;
                   when Expecting_G_Sign_Or_Attributes_And_Found_Slash =>
-                     if CP = Character'Pos ('>') then
+                     if CP = '>' then
                         State_Id := Expecting_NL_Sign_Or_Space_Or_Less_Sign;
 
                         Text (Argument, "", Call_Result);
@@ -382,12 +370,10 @@ is
                         exit;
                      end if;
                   when Extracting_Attribute_Name =>
-                     if CP = Character'Pos ('=') then
+                     if CP = '=' then
                         Attribute_Last_Index := Prev_Prev_P;
                         State_Id := Expecting_Attribute_Value_Quotation_Mark;
-                     elsif CP = Character'Pos (Ada.Characters.Latin_1.LF) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.CR)
-                     then
+                     elsif CP = L1.LF or CP = L1.CR then
                         Call_Result.Initialize (-0986469701, -0000005525);
                         exit;
                      elsif not Is_Special_Symbol (CP) then
@@ -397,13 +383,13 @@ is
                         exit;
                      end if;
                   when Expecting_Attribute_Value_Quotation_Mark =>
-                     if CP = Character'Pos ('"') then
+                     if CP = '"' then
                         Expected_Quotation_Symbol := Double_Quotes;
 
                         Attribute_Value_First_Index :=
                           (if P <= Contents'Last then P else Contents'Last);
                         State_Id := Extracting_Attribute_Value;
-                     elsif CP = Character'Pos (''') then
+                     elsif CP = ''' then
                         Expected_Quotation_Symbol   := Single_Quotes;
                         Attribute_Value_First_Index :=
                           (if P <= Contents'Last then P else Contents'Last);
@@ -414,9 +400,9 @@ is
                      end if;
                   when Extracting_Attribute_Value =>
                      if
-                       (CP = Character'Pos ('"') and
+                       (CP = '"' and
                             Expected_Quotation_Symbol = Double_Quotes) or
-                         (CP = Character'Pos (''') and
+                         (CP = ''' and
                                 Expected_Quotation_Symbol = Single_Quotes)
                      then
                         Attribute_Value_Last_Index := Prev_Prev_P;
@@ -438,9 +424,7 @@ is
                         if Call_Result.Has_Failed then
                            exit;
                         end if;
-                     elsif CP = Character'Pos (Ada.Characters.Latin_1.LF) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.CR)
-                     then
+                     elsif CP = L1.LF or CP = L1.CR then
                         Call_Result.Initialize (0587945467, 1683764896);
                         exit;
                      end if;
@@ -448,7 +432,7 @@ is
                      --  if CP = Character'Pos ('"') then
                      --     Shall_Ignore_Until_Next_Quotation_Mark :=
                      --         not Shall_Ignore_Until_Next_Quotation_Mark;
-                     if CP = Character'Pos ('<') then
+                     if CP = '<' then
                         --   if not Shall_Ignore_Until_Next_Quotation_Mark then
                         State_Id :=
                           Expecting_New_Tag_Or_Tag_Value_And_Found_L;
@@ -467,7 +451,7 @@ is
                         --                     end if;
                      end if;
                   when Expecting_New_Tag_Or_Tag_Value_And_Found_L =>
-                     if CP = Character'Pos ('/') then
+                     if CP = '/' then
                         if P > Contents'Last then
                            Call_Result.Initialize (-1635958681, 2091153567);
                            exit;
@@ -476,7 +460,7 @@ is
                         State_Id := Extracting_End_Tag_Name;
 
                         End_Tag_Name_First_Index := P;
-                     elsif CP = Character'Pos ('!') then
+                     elsif CP = '!' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_And_Found_L_And_Exclamation;
                      elsif Is_Special_Symbol (CP) then
@@ -488,52 +472,52 @@ is
                         Start_Tag_Name_First_Index := Prev_P;
                      end if;
                   when New_Tag_Or_Tag_Value_And_Found_L_And_Exclamation =>
-                     if CP = Character'Pos ('[') then
+                     if CP = '[' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_C;
-                     elsif CP = Character'Pos ('-') then
+                     elsif CP = '-' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_And_L_And_Excl_And_Dash;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_C =>
-                     if CP = Character'Pos ('C') then
+                     if CP = 'C' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_CD;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_CD =>
-                     if CP = Character'Pos ('D') then
+                     if CP = 'D' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_CDA;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_CDA =>
-                     if CP = Character'Pos ('A') then
+                     if CP = 'A' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_CDAT;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_CDAT =>
-                     if CP = Character'Pos ('T') then
+                     if CP = 'T' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_CDATA;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_CDATA =>
-                     if CP = Character'Pos ('A') then
+                     if CP = 'A' then
                         State_Id :=
                           New_Tag_Or_Tag_Value_But_Expecting_CDATA_And_SB;
                      else
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when New_Tag_Or_Tag_Value_But_Expecting_CDATA_And_SB =>
-                     if CP = Character'Pos ('[') then
+                     if CP = '[' then
                         State_Id              := Extracting_CDATA;
                         Tag_Value_First_Index :=
                           (if P <= Contents'Last then P else Contents'Last);
@@ -541,18 +525,18 @@ is
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when Extracting_CDATA =>
-                     if CP = Character'Pos (']') then
+                     if CP = ']' then
                         Tag_Value_Last_Index := Prev_Prev_P;
                         State_Id := Extracting_CDATA_Found_Square_Bracket;
                      end if;
                   when Extracting_CDATA_Found_Square_Bracket =>
-                     if CP = Character'Pos (']') then
+                     if CP = ']' then
                         State_Id := Extracting_CDATA_Found_Two_Square_Brackets;
                      else
                         State_Id := Extracting_CDATA;
                      end if;
                   when Extracting_CDATA_Found_Two_Square_Brackets =>
-                     if CP = Character'Pos ('>') then
+                     if CP = '>' then
                         CDATA
                           (Argument,
                            Contents
@@ -570,7 +554,7 @@ is
                         State_Id := Extracting_CDATA;
                      end if;
                   when Extracting_End_Tag_Name =>
-                     if CP = Character'Pos ('>') then
+                     if CP = '>' then
 
                         End_Tag_Name_Last_Index := Prev_Prev_P;
 
@@ -602,9 +586,7 @@ is
                         Tag_Value_First_Index :=
                           (if P <= Contents'Last then P else Contents'Last);
 
-                     elsif CP = Character'Pos (Ada.Characters.Latin_1.LF) or
-                       CP = Character'Pos (Ada.Characters.Latin_1.CR)
-                     then
+                     elsif CP = L1.LF or CP = L1.CR then
                         Call_Result.Initialize (-1658791000, 1638125646);
                         exit;
                      elsif Is_Special_Symbol (CP) then
@@ -612,7 +594,7 @@ is
                         exit;
                      end if;
                   when New_Tag_Or_Tag_Value_And_L_And_Excl_And_Dash =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         Comment_First_Index :=
                           (if P <= Contents'Last then P else Contents'Last);
                         State_Id := Extracting_Comment;
@@ -620,18 +602,18 @@ is
                         State_Id := Expecting_New_Tag_Or_Extracting_Tag_Value;
                      end if;
                   when Init_Extracting_Comment =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id := Init_Extracting_Comment_And_Found_Dash;
                      end if;
                   when Init_Extracting_Comment_And_Found_Dash =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id :=
                           Init_Extracting_Comment_And_Found_Dash_Dash;
                      else
                         State_Id := Init_Extracting_Comment;
                      end if;
                   when Init_Extracting_Comment_And_Found_Dash_Dash =>
-                     if CP = Character'Pos ('>') then
+                     if CP = '>' then
                         Comment
                           (Argument,
                            Value => Contents (Comment_First_Index .. (P - 4)),
@@ -648,17 +630,17 @@ is
                         State_Id := Init_Extracting_Comment;
                      end if;
                   when Extracting_Comment =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id := Extracting_Comment_And_Found_Dash;
                      end if;
                   when Extracting_Comment_And_Found_Dash =>
-                     if CP = Character'Pos ('-') then
+                     if CP = '-' then
                         State_Id := Extracting_Comment_And_Found_Dash_Dash;
                      else
                         State_Id := Extracting_Comment;
                      end if;
                   when Extracting_Comment_And_Found_Dash_Dash =>
-                     if CP = Character'Pos ('>') then
+                     if CP = '>' then
                         Comment
                           (Argument,
                            Value => Contents (Comment_First_Index .. (P - 4)),
@@ -675,7 +657,7 @@ is
                         State_Id := Init_Extracting_Comment;
                      end if;
                   when Expecting_Only_Trailing_Spaces =>
-                     if CP = Character'Pos (' ') or CP = 10 or CP = 13 then
+                     if CP = ' ' or CP = L1.LF or CP = L1.CR then
                         null; -- Trailing spaces are OK
                      else
                         Call_Result.Initialize (1777504526, -1635825641);
@@ -702,19 +684,18 @@ is
 
    P : P_T := Contents'First;
 
-   CP : Aida.UTF8.Code_Point;
+   CP : Character;
 begin
    while P <= Contents'Last loop
       exit when State_Id = End_State;
 
-      if not Aida.UTF8.Is_Valid_UTF8_Code_Point
-        (Source => Contents, Pointer => P)
-      then
+      if P not in Contents'Range then
          Call_Result.Initialize (-0356399774, -0280059910);
          exit;
       end if;
 
-      Aida.UTF8.Get (Source => Contents, Pointer => P, Value => CP);
+      CP := Contents (P);
+      P := P + 1;
 
       pragma Loop_Variant (Increases => P);
       pragma Loop_Invariant (not Call_Result.Has_Failed);
@@ -987,9 +968,9 @@ begin
          when End_State =>
             null;
          when Less_Sign =>
-            if CP = Character'Pos (' ') then
+            if CP = ' ' then
                null;
-            elsif CP = Character'Pos ('<') then
+            elsif CP = '<' then
                State_Id := Question_Mark;
             else
                Call_Result.Initialize
@@ -997,7 +978,7 @@ begin
                exit;
             end if;
          when Question_Mark =>
-            if CP = Character'Pos ('?') then
+            if CP = '?' then
                State_Id := X;
             else
                Call_Result.Initialize
@@ -1005,7 +986,7 @@ begin
                exit;
             end if;
          when X =>
-            if CP = Character'Pos ('x') then
+            if CP = 'x' then
                State_Id := XM;
             else
                Call_Result.Initialize
@@ -1013,7 +994,7 @@ begin
                exit;
             end if;
          when XM =>
-            if CP = Character'Pos ('m') then
+            if CP = 'm' then
                State_Id := XML;
             else
                Call_Result.Initialize
@@ -1021,7 +1002,7 @@ begin
                exit;
             end if;
          when XML =>
-            if CP = Character'Pos ('l') then
+            if CP = 'l' then
                State_Id := XML_S;
             else
                Call_Result.Initialize
@@ -1029,7 +1010,7 @@ begin
                exit;
             end if;
          when XML_S =>
-            if CP = Character'Pos (' ') then
+            if CP = ' ' then
                State_Id := XML_S_V;
             else
                Call_Result.Initialize
@@ -1037,7 +1018,7 @@ begin
                exit;
             end if;
          when XML_S_V =>
-            if CP = Character'Pos ('v') then
+            if CP = 'v' then
                State_Id := XML_S_VE;
             else
                Call_Result.Initialize
@@ -1045,7 +1026,7 @@ begin
                exit;
             end if;
          when XML_S_VE =>
-            if CP = Character'Pos ('e') then
+            if CP = 'e' then
                State_Id := XML_S_VER;
             else
                Call_Result.Initialize
@@ -1053,7 +1034,7 @@ begin
                exit;
             end if;
          when XML_S_VER =>
-            if CP = Character'Pos ('r') then
+            if CP = 'r' then
                State_Id := XML_S_VERS;
             else
                Call_Result.Initialize
@@ -1061,7 +1042,7 @@ begin
                exit;
             end if;
          when XML_S_VERS =>
-            if CP = Character'Pos ('s') then
+            if CP = 's' then
                State_Id := XML_S_VERSI;
             else
                Call_Result.Initialize
@@ -1069,7 +1050,7 @@ begin
                exit;
             end if;
          when XML_S_VERSI =>
-            if CP = Character'Pos ('i') then
+            if CP = 'i' then
                State_Id := XML_S_VERSIO;
             else
                Call_Result.Initialize
@@ -1077,7 +1058,7 @@ begin
                exit;
             end if;
          when XML_S_VERSIO =>
-            if CP = Character'Pos ('o') then
+            if CP = 'o' then
                State_Id := XML_S_VERSION;
             else
                Call_Result.Initialize
@@ -1085,7 +1066,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION =>
-            if CP = Character'Pos ('n') then
+            if CP = 'n' then
                State_Id := XML_S_VERSION_E;
             else
                Call_Result.Initialize
@@ -1093,7 +1074,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E =>
-            if CP = Character'Pos ('=') then
+            if CP = '=' then
                State_Id := XML_S_VERSION_E_Q;
             else
                Call_Result.Initialize
@@ -1101,7 +1082,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q =>
-            if CP = Character'Pos ('"') then
+            if CP = '"' then
                State_Id := XML_S_VERSION_E_Q_1;
             else
                Call_Result.Initialize
@@ -1109,7 +1090,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1 =>
-            if CP = Character'Pos ('1') then
+            if CP = '1' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P;
             else
@@ -1118,7 +1099,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P =>
-            if CP = Character'Pos ('.') then
+            if CP = '.' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0;
             else
@@ -1127,7 +1108,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0 =>
-            if CP = Character'Pos ('0') then
+            if CP = '0' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q;
             else
@@ -1136,7 +1117,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q =>
-            if CP = Character'Pos ('"') then
+            if CP = '"' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S;
             else
@@ -1145,7 +1126,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S =>
-            if CP = Character'Pos (' ') then
+            if CP = ' ' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_E;
             else
@@ -1154,7 +1135,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_E =>
-            if CP = Character'Pos ('e') then
+            if CP = 'e' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_EN;
             else
@@ -1163,7 +1144,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_EN =>
-            if CP = Character'Pos ('n') then
+            if CP = 'n' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC;
             else
@@ -1172,7 +1153,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC =>
-            if CP = Character'Pos ('c') then
+            if CP = 'c' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCO;
             else
@@ -1181,7 +1162,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCO =>
-            if CP = Character'Pos ('o') then
+            if CP = 'o' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCOD;
             else
@@ -1190,7 +1171,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCOD =>
-            if CP = Character'Pos ('d') then
+            if CP = 'd' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODI;
             else
@@ -1199,7 +1180,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODI =>
-            if CP = Character'Pos ('i') then
+            if CP = 'i' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODIN;
             else
@@ -1208,7 +1189,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODIN =>
-            if CP = Character'Pos ('n') then
+            if CP = 'n' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING;
             else
@@ -1217,7 +1198,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING =>
-            if CP = Character'Pos ('g') then
+            if CP = 'g' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E;
             else
@@ -1226,7 +1207,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E =>
-            if CP = Character'Pos ('=') then
+            if CP = '=' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q;
             else
@@ -1235,7 +1216,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q =>
-            if CP = Character'Pos ('"') then
+            if CP = '"' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_U;
             else
@@ -1244,7 +1225,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_U =>
-            if CP = Character'Pos ('u') or CP = Character'Pos ('U') then
+            if CP = 'u' or CP = 'U' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UT;
             else
@@ -1253,7 +1234,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENCODING_E_Q_UT =>
-            if CP = Character'Pos ('t') or CP = Character'Pos ('T') then
+            if CP = 't' or CP = 'T' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF;
             else
@@ -1262,7 +1243,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF =>
-            if CP = Character'Pos ('f') or CP = Character'Pos ('F') then
+            if CP = 'f' or CP = 'F' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D;
             else
@@ -1271,7 +1252,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D =>
-            if CP = Character'Pos ('-') then
+            if CP = '-' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8;
             else
@@ -1280,7 +1261,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8 =>
-            if CP = Character'Pos ('8') then
+            if CP = '8' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8_Q;
             else
@@ -1289,7 +1270,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8_Q =>
-            if CP = Character'Pos ('"') then
+            if CP = '"' then
                State_Id :=
                  XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8_Q_QM;
             else
@@ -1298,7 +1279,7 @@ begin
                exit;
             end if;
          when XML_S_VERSION_E_Q_1_P_0_Q_S_ENC_E_Q_UTF_D_8_Q_QM =>
-            if CP = Character'Pos ('?') then
+            if CP = '?' then
                if P <= Contents'Last then
                   State_Id := End_State;
 

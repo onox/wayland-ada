@@ -180,10 +180,7 @@ Contact me if you want to help out: joakimds at kth dot se
 # License
 All software written by me (and potential contributors)
 is released to the public domain or the software
-license of your choice. This repository does however contain code that does
-not originate from me like code from Dmitry Kazakov's Simple Components (Aida.UTF8).
-These software treasures retain their original license
-of their original authors.
+license of your choice.
 
 # Notes on the creation of the Wayland Ada binding
 

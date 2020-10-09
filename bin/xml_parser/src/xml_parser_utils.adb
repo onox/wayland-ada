@@ -1,10 +1,14 @@
 with Ada.Strings.Unbounded;
-with Aida.UTF8;
+with Ada.Characters.Handling;
+with Ada.Characters.Latin_1;
 
 package body Xml_Parser_Utils is
 
+   use Ada.Characters.Handling;
+
+   package L1 renames Ada.Characters.Latin_1;
+
    use all type Ada.Strings.Unbounded.Unbounded_String;
-   use all type Aida.UTF8.Code_Point;
    use all type Wayland_XML.Arg_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
@@ -42,57 +46,55 @@ package body Xml_Parser_Utils is
 
       P : Integer := Old_Name'First;
 
-      CP : Aida.UTF8.Code_Point := 0;
+      CP : Character := L1.NUL;
 
       Is_Previous_Lowercase    : Boolean := False;
       Is_Previous_A_Number     : Boolean := False;
       Is_Previous_An_Undercase : Boolean := False;
    begin
-      Aida.UTF8.Get (Source => Old_Name, Pointer => P, Value => CP);
+      CP := Old_Name (P);
+      P := P + 1;
 
-      if Is_Uppercase (CP) then
-         Append (New_Name, Image (CP));
-      else
-         Append (New_Name, Image (To_Uppercase (CP)));
-      end if;
+      Append (New_Name, To_Upper (CP));
 
       while P <= Old_Name'Last loop
-         Aida.UTF8.Get (Source => Old_Name, Pointer => P, Value => CP);
+         CP := Old_Name (P);
+         P := P + 1;
 
-         if Image (CP) = "_" then
+         if CP = '_' then
             Append (New_Name, "_");
             Remove_Initial_Wl (New_Name);
             Is_Previous_An_Undercase := True;
          else
             if Is_Digit (CP) then
                if Is_Previous_A_Number then
-                  Append (New_Name, Image (CP));
+                  Append (New_Name, CP);
                elsif Is_Previous_An_Undercase then
-                  Append (New_Name, Image (CP));
+                  Append (New_Name, CP);
                else
                   Append (New_Name, "_");
                   Remove_Initial_Wl (New_Name);
-                  Append (New_Name, Image (CP));
+                  Append (New_Name, CP);
                end if;
 
                Is_Previous_A_Number := True;
             else
-               if Is_Uppercase (CP) then
+               if Is_Upper (CP) then
                   if Is_Previous_An_Undercase then
-                     Append (New_Name, Image (CP));
+                     Append (New_Name, CP);
                   elsif Is_Previous_Lowercase then
                      Append (New_Name, "_");
                      Remove_Initial_Wl (New_Name);
-                     Append (New_Name, Image (CP));
+                     Append (New_Name, CP);
                      Is_Previous_Lowercase := False;
                   else
-                     Append (New_Name, Image (To_Lowercase (CP)));
+                     Append (New_Name, To_Lower (CP));
                   end if;
                else
                   if Is_Previous_An_Undercase then
-                     Append (New_Name, Image (To_Uppercase (CP)));
+                     Append (New_Name, To_Upper (CP));
                   else
-                     Append (New_Name, Image (CP));
+                     Append (New_Name, CP);
                   end if;
                   Is_Previous_Lowercase := True;
                end if;
@@ -130,20 +132,21 @@ package body Xml_Parser_Utils is
 
       P : Integer := Source'First;
 
-      CP : Aida.UTF8.Code_Point := 0;
+      CP : Character := L1.NUL;
    begin
       Set_Unbounded_String (Target, "");
       while P <= Source'Last loop
-         Aida.UTF8.Get (Source => Source, Pointer => P, Value => CP);
+         CP := Source (P);
+         P := P + 1;
 
-         if Image (CP) = "_" then
+         if CP = '_' then
             Append (Target, "_");
          elsif Is_Digit (CP) then
-            Append (Target, Image (CP));
-         elsif Is_Lowercase (CP) then
-            Append (Target, Image (To_Uppercase (CP)));
+            Append (Target, CP);
+         elsif Is_Lower (CP) then
+            Append (Target, To_Upper (CP));
          else
-            Append (Target, Image (CP));
+            Append (Target, CP);
          end if;
 
       end loop;
@@ -322,20 +325,21 @@ package body Xml_Parser_Utils is
       P           : Integer := Text'First;
       Prev_P      : Integer := P;
       Prev_Prev_P : Integer;
-      CP          : Aida.UTF8.Code_Point;
+      CP          : Character;
 
       Is_Previous_New_Line : Boolean := False;
    begin
       return This : Interval_Identifier do
          while
-           Aida.UTF8.Is_Valid_UTF8_Code_Point (Source => Text, Pointer => P)
+           P in Text'Range
          loop
             Prev_Prev_P := Prev_P;
 
             Prev_P := P;
-            Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
+            CP := Text (P);
+            P := P + 1;
 
-            if CP = 10 then
+            if CP = L1.LF then
                if Prev_P > Text'First then
                   if not Is_Previous_New_Line then
                      Interval.Last := Prev_Prev_P;
@@ -347,7 +351,7 @@ package body Xml_Parser_Utils is
                end if;
 
                Is_Previous_New_Line := True;
-            elsif CP = 13 then
+            elsif CP = L1.CR then
                Is_Previous_New_Line := True;
             else
                if Is_Previous_New_Line then
@@ -365,13 +369,14 @@ package body Xml_Parser_Utils is
 
       P : Integer := Text'First;
 
-      CP : Aida.UTF8.Code_Point;
+      CP : Character;
    begin
-      while Aida.UTF8.Is_Valid_UTF8_Code_Point (Text, P) loop
-         Aida.UTF8.Get (Source => Text, Pointer => P, Value => CP);
+      while P in Text'Range loop
+         CP := Text (P);
+         P := P + 1;
 
-         if CP /= 9 then
-            Ada.Strings.Unbounded.Append (S, Aida.UTF8.Image (CP));
+         if CP /= L1.HT then
+            Ada.Strings.Unbounded.Append (S, CP);
          else
             Ada.Strings.Unbounded.Append (S, "   ");
          end if;
