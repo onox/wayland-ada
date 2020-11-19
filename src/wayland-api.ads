@@ -40,8 +40,8 @@ package Wayland.API is
 
    -----------------------------------------------------------------------------
 
---   procedure Event_Queue_Destroy (Object : in out Event_Queue)
---     with Import, Convention => C, External_Name => "wl_event_queue_destroy";
+   --  wl_proxy_create is not task-safe
+   --  See https://gitlab.freedesktop.org/wayland/wayland/-/issues/182
 
 --   function Proxy_Create
 --     (Factory   : in out Proxy;
@@ -314,9 +314,8 @@ package Wayland.API is
 --   function Proxy_Get_Class (Object : in out Proxy) return Interfaces.C.Strings.chars_ptr
 --     with Import, Convention => C, External_Name => "wl_proxy_get_class";
 
---   procedure Proxy_Set_Queue (Object : in out Proxy; Queue : access Event_Queue)
---     with Import, Convention => C, External_Name => "wl_proxy_set_queue";
-
+   -----------------------------------------------------------------------------
+   --                           Connection Handling                           --
    -----------------------------------------------------------------------------
 
    function Display_Connect (Name : C_String) return Display_Ptr
@@ -332,22 +331,6 @@ package Wayland.API is
      with Import, Convention => C, External_Name => "wl_display_get_fd";
    --  TODO Pre => Object /= null
 
-   function Display_Dispatch (Object : Display_Ptr) return Integer
-     with Import, Convention => C, External_Name => "wl_display_dispatch";
-
-   function Display_Dispatch_Pending (Object : Display_Ptr) return Integer
-     with Import, Convention => C, External_Name => "wl_display_dispatch_pending";
-
---   function Display_Dispatch_Queue
---     (Object : Display_Ptr;
---      Queue  : System.Address) return int
---   with Import, Convention => C, External_Name => "wl_display_dispatch_queue";
-
---   function Display_Dispatch_Queue_Pending
---     (Object : Display_Ptr;
---      Queue  : System.Address) return int
---   with Import, Convention => C, External_Name => "wl_display_dispatch_queue_pending";
-
 --   function Display_Get_Error (Object : Display_Ptr) return int
 --     with Import, Convention => C, External_Name => "wl_display_get_error";
 
@@ -357,20 +340,24 @@ package Wayland.API is
 --      Arg3 : access Unsigned_32) return Unsigned_32
 --     with Import, Convention => C, External_Name => "wl_display_get_protocol_error";
 
+--   procedure Log_Set_Handler_Client (Arg1 : Wayland_Util_H.WL_Log_Func_T)
+--     with Import, Convention => C, External_Name => "wl_log_set_handler_client";
+
 --   function Display_Flush (Object : Display_Ptr) return int
 --     with Import, Convention => C, External_Name => "wl_display_flush";
 
---   function Display_Roundtrip_Queue (Object : Display_Ptr; Queue : System.Address) return int
---     with Import, Convention => C, External_Name => "wl_display_roundtrip_queue";
+   -----------------------------------------------------------------------------
+   --                           Default Event Queue                           --
+   -----------------------------------------------------------------------------
+
+   function Display_Dispatch (Object : Display_Ptr) return Integer
+     with Import, Convention => C, External_Name => "wl_display_dispatch";
+
+   function Display_Dispatch_Pending (Object : Display_Ptr) return Integer
+     with Import, Convention => C, External_Name => "wl_display_dispatch_pending";
 
    function Display_Roundtrip (Object : Display_Ptr) return Integer
      with Import, Convention => C, External_Name => "wl_display_roundtrip";
-
---   function Display_Create_Queue (Object : Display_Ptr) return System.Address
---     with Import, Convention => C, External_Name => "wl_display_create_queue";
-
---   function Display_Prepare_Read_Queue (Object : Display_Ptr; Queue : System.Address) return int
---     with Import, Convention => C, External_Name => "wl_display_prepare_read_queue";
 
    function Display_Prepare_Read (Object : Display_Ptr) return Integer
      with Import, Convention => C, External_Name => "wl_display_prepare_read";
@@ -382,8 +369,34 @@ package Wayland.API is
    function Display_Read_Events (Object : Display_Ptr) return Integer
      with Import, Convention => C, External_Name => "wl_display_read_events";
 
---   procedure Log_Set_Handler_Client (Arg1 : Wayland_Util_H.WL_Log_Func_T)
---     with Import, Convention => C, External_Name => "wl_log_set_handler_client";
+   -----------------------------------------------------------------------------
+   --                               Event Queue                               --
+   -----------------------------------------------------------------------------
+
+--   function Display_Create_Queue (Object : Display_Ptr) return System.Address
+--     with Import, Convention => C, External_Name => "wl_display_create_queue";
+
+--   function Display_Dispatch_Queue
+--     (Object : Display_Ptr;
+--      Queue  : System.Address) return int
+--   with Import, Convention => C, External_Name => "wl_display_dispatch_queue";
+
+--   function Display_Dispatch_Queue_Pending
+--     (Object : Display_Ptr;
+--      Queue  : System.Address) return int
+--   with Import, Convention => C, External_Name => "wl_display_dispatch_queue_pending";
+
+--   function Display_Roundtrip_Queue (Object : Display_Ptr; Queue : System.Address) return int
+--     with Import, Convention => C, External_Name => "wl_display_roundtrip_queue";
+
+--   function Display_Prepare_Read_Queue (Object : Display_Ptr; Queue : System.Address) return int
+--     with Import, Convention => C, External_Name => "wl_display_prepare_read_queue";
+
+--   procedure Proxy_Set_Queue (Object : in out Proxy; Queue : access Event_Queue)
+--     with Import, Convention => C, External_Name => "wl_proxy_set_queue";
+
+--   procedure Event_Queue_Destroy (Object : in out Event_Queue)
+--     with Import, Convention => C, External_Name => "wl_event_queue_destroy";
 
 private
 
