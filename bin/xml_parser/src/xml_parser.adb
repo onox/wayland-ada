@@ -1,12 +1,13 @@
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Sequential_IO;
+with Ada.Streams;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with Aida.Deepend.XML_DOM_Parser;
-with Aida.Sequential_Stream_IO;
 
 with Wayland_XML;
 with Xml_Parser_Utils;
@@ -197,22 +198,19 @@ procedure XML_Parser is
       pragma Unmodified (File_Contents);
 
       procedure Read_Contents_Of_Wayland_XML is
+         package IO is new Ada.Sequential_IO (Ada.Streams.Stream_Element);
+
+         File : IO.File_Type;
+         SE   : Ada.Streams.Stream_Element;
       begin
-         declare
-            File : Aida.Sequential_Stream_IO.File_Type;
-            SE   : Aida.Sequential_Stream_IO.Stream_Element;
-         begin
-            Aida.Sequential_Stream_IO.Open (File,
-                                            Aida.Sequential_Stream_IO.In_File,
-                                            File_Name);
+         IO.Open (File, IO.In_File, File_Name);
 
-            for I in File_Contents.all'First .. File_Contents.all'Last loop
-               Aida.Sequential_Stream_IO.Read (File, SE);
-               File_Contents (I) := Character'Val (SE);
-            end loop;
+         for I in File_Contents.all'First .. File_Contents.all'Last loop
+            IO.Read (File, SE);
+            File_Contents (I) := Character'Val (SE);
+         end loop;
 
-            Aida.Sequential_Stream_IO.Close (File);
-         end;
+         IO.Close (File);
 
          Parse_Contents;
       end Read_Contents_Of_Wayland_XML;
