@@ -1,6 +1,6 @@
+with Ada.Directories;
 with Ada.Sequential_IO;
 with Ada.Streams;
-with Aida.Directories;
 
 package Aida.Sequential_Stream_IO with SPARK_Mode is
 
@@ -9,7 +9,7 @@ package Aida.Sequential_Stream_IO with SPARK_Mode is
    function Calculate_Hash
      (Filename : String) return Ada.Containers.Hash_Type with
      Global => null,
-     Pre    => Aida.Directories.Exists (Filename);
+     Pre    => Ada.Directories.Exists (Filename);
 
    type File_Type is limited private with
      Default_Initial_Condition => not Is_Open (File_Type);
