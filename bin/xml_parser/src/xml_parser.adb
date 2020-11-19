@@ -52,7 +52,7 @@ procedure XML_Parser is
 
    XML_Exception : exception;
 
-   File_Name : constant String := "wayland.xml";
+   File_Name : constant String := "/usr/share/wayland/wayland.xml";
 
    procedure Read_Wayland_XML_File;
    procedure Create_Wayland_Spec_File;
