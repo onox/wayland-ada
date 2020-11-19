@@ -1,5 +1,4 @@
 with Ada.Characters.Latin_1;
-with Aida.Text_IO;
 
 --  Known unsupported issues: Escaping of text (for example &amp;)
 --  The stack roof may be hit if the comments and texts in the XML are HUGE.

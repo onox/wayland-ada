@@ -1,12 +1,12 @@
-with Ada.Text_IO;
-with Ada.Exceptions;
-with Aida.Deepend.XML_DOM_Parser;
-with Aida.Text_IO;
+with Ada.Containers;
 with Ada.Directories;
-with Aida.Sequential_Stream_IO;
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
-with Ada.Containers;
+with Ada.Text_IO;
+
+with Aida.Deepend.XML_DOM_Parser;
+with Aida.Sequential_Stream_IO;
 
 with Wayland_XML;
 with Xml_Parser_Utils;
@@ -226,7 +226,7 @@ procedure XML_Parser is
            (File_Contents.all, Call_Result, Root_Node);
 
          if Call_Result.Has_Failed then
-            Aida.Text_IO.Put_Line (Call_Result.Message);
+            Put_Line (Call_Result.Message);
          else
             Identify_Protocol_Tag;
          end if;
@@ -1512,8 +1512,7 @@ procedure XML_Parser is
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
-               Ada.Text_IO.Put (File, "   " & Name);
-               Put_Line (File, " : aliased Interface_T with");
+               Put_Line (File, "   " & Name & " : aliased Interface_T with");
                Put_Line (File, "      Import        => True,");
                Put_Line (File, "      Convention    => C,");
                Put_Line
@@ -1634,7 +1633,7 @@ procedure XML_Parser is
                            Interface_Name_Aligned : constant String := SF.Head (Interface_Name, Max_Name_Length, ' ');
                         begin
                            Put_Line (File, "     (" & SF.Head ("Data", Max_Name_Length, ' ') & " : Void_Ptr;");
-                           Ada.Text_IO.Put (File, "      " & Interface_Name_Aligned & " : " & Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag));
+                           Put (File, "      " & Interface_Name_Aligned & " : " & Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag));
                         end;
 
                         if V.Length = 0 then
@@ -2419,16 +2418,15 @@ procedure XML_Parser is
                                     Put_Line
                                       (File,
                                        "           " & Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
-                                    Ada.Text_IO.Put (File, "           0");
+                                    Put (File, "           0");
 
                                     for Child of V loop
                                        if Child.Kind_Id = Child_Arg then
                                           Put_Line (File, ",");
                                           if Type_Attribute (Child.Arg_Tag.all) /= Type_Object then
-                                             Ada.Text_IO.Put
-                                               (File, "           " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)));
+                                             Put (File, "           " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)));
                                           else
-                                             Ada.Text_IO.Put (File, "           " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)) & ".all'Address");
+                                             Put (File, "           " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)) & ".all'Address");
                                           end if;
                                        end if;
                                     end loop;
@@ -2593,13 +2591,9 @@ procedure XML_Parser is
                                  if Child.Kind_Id = Child_Arg then
                                     Put_Line (File, ",");
                                     if Type_Attribute (Child.Arg_Tag.all) /= Type_Object then
-                                       Ada.Text_IO.Put
-                                         (File, "         " &
-                                            Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)));
+                                       Put (File, "         " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)));
                                     else
-                                       Ada.Text_IO.Put
-                                         (File, "         " &
-                                            Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)) & ".all'Address");
+                                       Put (File, "         " & Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Arg_Tag.all)) & ".all'Address");
                                     end if;
                                  end if;
                               end loop;
