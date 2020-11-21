@@ -1,4 +1,5 @@
-private package C_Binding.Constants is
+private package Wayland.Constants is
+   pragma Pure;
 
    WL_DISPLAY_SYNC : constant := 0;
 
@@ -366,4 +367,4 @@ private package C_Binding.Constants is
 
    WL_SUBSURFACE_SET_DESYNC_SINCE_VERSION : constant := 1;
 
-end C_Binding.Constants;
+end Wayland.Constants;

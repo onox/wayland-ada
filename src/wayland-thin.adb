@@ -1,8 +1,9 @@
-with C_Binding.Constants;
-use C_Binding.Constants;
+with Wayland.Constants;
+
+use Wayland.Constants;
 
 --  Mostly auto generated from Wayland.xml
-package body C_Binding.Wl_Thin is
+package body Wayland.Thin is
 
    use type Proxy_Ptr;
 
@@ -1146,4 +1147,4 @@ package body C_Binding.Wl_Thin is
       Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Desync);
    end Subsurface_Set_Desync;
 
-end C_Binding.Wl_Thin;
+end Wayland.Thin;

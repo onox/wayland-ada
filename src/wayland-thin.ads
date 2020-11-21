@@ -1,12 +1,17 @@
-limited with C_Binding.Linux.Wayland_Client;
+limited with Wayland.Client;
+
+with Interfaces.C.Strings;
 
 with Wayland.API;
 
 --  Mostly auto generated from Wayland.xml
-private package C_Binding.Wl_Thin is
+private package Wayland.Thin is
+   pragma Preelaborate;
 
-   subtype Fixed is C_Binding.Linux.Wayland_Client.Fixed;
-   subtype Wayland_Array_T is C_Binding.Linux.Wayland_Client.Wayland_Array_T;
+   --  FIXME Move to package Wayland
+   subtype Fixed is Wayland.Client.Fixed;
+   subtype Wayland_Array_T is Wayland.Client.Wayland_Array_T;
+   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
    --  Begin core parts
 
@@ -1887,4 +1892,4 @@ private package C_Binding.Wl_Thin is
    --  the cached state is applied on set_desync.
    procedure Subsurface_Set_Desync (Subsurface : Subsurface_Ptr);
 
-end C_Binding.Wl_Thin;
+end Wayland.Thin;

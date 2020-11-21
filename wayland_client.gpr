@@ -8,11 +8,11 @@ project Wayland_Client is
 
    for Source_Files use
      (
-      "c_binding-linux-wayland_client.ads",
-      "c_binding-linux-wayland_client.adb",
-      "c_binding-constants.ads",
-      "c_binding-wl_thin.ads",
-      "c_binding-wl_thin.adb",
+      "wayland-client.ads",
+      "wayland-client.adb",
+      "wayland-constants.ads",
+      "wayland-thin.ads",
+      "wayland-thin.adb",
       "wayland.ads",
       "wayland-api.ads"
      );

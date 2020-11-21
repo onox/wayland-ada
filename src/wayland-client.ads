@@ -1,12 +1,9 @@
-with C_Binding.Linux.Files;
-with Interfaces;
 private with Interfaces.C.Strings;
-private with C_Binding.Wl_Thin;
+private with Wayland.Thin;
 
-with Wayland.API;
+with C_Binding.Linux.Files;
 
---  Auto-generated from Wayland.xml
-package C_Binding.Linux.Wayland_Client is
+package Wayland.Client is
 
    type Display;
    type Registry;
@@ -39,9 +36,6 @@ package C_Binding.Linux.Wayland_Client is
                              Success,
                              Error
                             );
-
---   subtype Unsigned_32 is Interfaces.Unsigned_32;
-   subtype Unsigned_32 is Wayland.API.Unsigned_32;
 
    type Fixed is new Integer;
 
@@ -489,19 +483,19 @@ package C_Binding.Linux.Wayland_Client is
 
    type Subcompositor is tagged limited private;
 
-   function Has_Proxy (Subcompositor : Wayland_Client.Subcompositor) return Boolean;
+   function Has_Proxy (Subcompositor : Wayland.Client.Subcompositor) return Boolean;
 
-   procedure Destroy (S : in out Wayland_Client.Subcompositor) with
+   procedure Destroy (S : in out Wayland.Client.Subcompositor) with
      Pre    => S.Has_Proxy,
      Post   => not S.Has_Proxy;
 
-   function Get_Version (S : Wayland_Client.Subcompositor) return Unsigned_32 with
+   function Get_Version (S : Wayland.Client.Subcompositor) return Unsigned_32 with
      Pre => S.Has_Proxy;
 
-   procedure Get_Subsurface (Subcompositor : Wayland_Client.Subcompositor;
-                             Surface       : Wayland_Client.Surface;
-                             Parent        : Wayland_Client.Surface;
-                             Subsurface    : in out Wayland_Client.Subsurface);
+   procedure Get_Subsurface (Subcompositor : Wayland.Client.Subcompositor;
+                             Surface       : Wayland.Client.Surface;
+                             Parent        : Wayland.Client.Surface;
+                             Subsurface    : in out Wayland.Client.Subsurface);
    --  Create a sub-surface interface for the given surface, and
    --  associate it with the given parent surface. This turns a
    --  plain wl_surface into a sub-surface.
@@ -520,45 +514,45 @@ package C_Binding.Linux.Wayland_Client is
 
    type Compositor is tagged limited private;
 
-   function Has_Proxy (Compositor : Wayland_Client.Compositor) return Boolean;
+   function Has_Proxy (Compositor : Wayland.Client.Compositor) return Boolean;
 
-   procedure Get_Proxy (Compositor  : in out Wayland_Client.Compositor;
-                        Registry    : Wayland_Client.Registry;
+   procedure Get_Proxy (Compositor  : in out Wayland.Client.Compositor;
+                        Registry    : Wayland.Client.Registry;
                         Id          : Unsigned_32;
                         Version     : Unsigned_32) with
      Pre => not Compositor.Has_Proxy and Has_Proxy (Registry);
 
-   procedure Get_Surface_Proxy (Compositor : Wayland_Client.Compositor;
-                                Surface    : in out Wayland_Client.Surface) with
+   procedure Get_Surface_Proxy (Compositor : Wayland.Client.Compositor;
+                                Surface    : in out Wayland.Client.Surface) with
      Pre => Compositor.Has_Proxy;
    --  Ask the compositor to create a new surface. When success, Surface has
    --  When success Surface.Has_Proxy = True,
    --  otherwise Surface.Has_Proxy = False.
 
-   procedure Get_Region_Proxy (Compositor : Wayland_Client.Compositor;
-                               Region     : in out Wayland_Client.Region) with
+   procedure Get_Region_Proxy (Compositor : Wayland.Client.Compositor;
+                               Region     : in out Wayland.Client.Region) with
      Pre => Compositor.Has_Proxy;
    --  Ask the compositor to create a new region.
    --  When success Region.Has_Proxy = True, otherwise Region.Has_Proxy = False.
 
-   procedure Destroy (Compositor : in out Wayland_Client.Compositor) with
+   procedure Destroy (Compositor : in out Wayland.Client.Compositor) with
      Pre  => Compositor.Has_Proxy,
      Post => not Compositor.Has_Proxy;
 
    type Shell is tagged limited private;
 
-   function Has_Proxy (Shell : Wayland_Client.Shell) return Boolean;
+   function Has_Proxy (Shell : Wayland.Client.Shell) return Boolean;
 
-   procedure Get_Proxy (Shell    : in out Wayland_Client.Shell;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Shell    : in out Wayland.Client.Shell;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32) with
      Pre => Has_Proxy (Registry);
 
    procedure Get_Shell_Surface
-     (Shell         : Wayland_Client.Shell;
-      Surface       : Wayland_Client.Surface;
-      Shell_Surface : in out Wayland_Client.Shell_Surface) with
+     (Shell         : Wayland.Client.Shell;
+      Surface       : Wayland.Client.Surface;
+      Shell_Surface : in out Wayland.Client.Shell_Surface) with
      Pre => Shell.Has_Proxy;
    --  Create a shell surface for an existing surface. This gives
    --  the Surface the role of a shell surface. If the Surface
@@ -584,7 +578,7 @@ package C_Binding.Linux.Wayland_Client is
    --  the client may be deemed unresponsive.
 
    procedure Move (Surface : Shell_Surface;
-                   Seat    : Wayland_Client.Seat;
+                   Seat    : Wayland.Client.Seat;
                    Serial  : Unsigned_32) with
      Pre => Surface.Has_Proxy;
    --  Start a pointer-driven move of the surface.
@@ -594,7 +588,7 @@ package C_Binding.Linux.Wayland_Client is
    --  the surface (e.g. fullscreen or maximized).
 
    procedure Resize (Surface : Shell_Surface;
-                     Seat    : Wayland_Client.Seat;
+                     Seat    : Wayland.Client.Seat;
                      Serial  : Unsigned_32;
                      Edges   : Unsigned_32) with
      Pre => Surface.Has_Proxy;
@@ -611,7 +605,7 @@ package C_Binding.Linux.Wayland_Client is
    --  A toplevel surface is not fullscreen, maximized or transient.
 
    procedure Set_Transient (Surface : Shell_Surface;
-                            Parent  : Wayland_Client.Surface;
+                            Parent  : Wayland.Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Flags   : Unsigned_32) with
@@ -627,7 +621,7 @@ package C_Binding.Linux.Wayland_Client is
    procedure Set_Fullscreen (Surface   : Shell_Surface;
                              Method    : Unsigned_32;
                              Framerate : Unsigned_32;
-                             Output    : Wayland_Client.Output) with
+                             Output    : Wayland.Client.Output) with
      Pre => Surface.Has_Proxy;
    --  Map the surface as a fullscreen surface.
    --
@@ -664,9 +658,9 @@ package C_Binding.Linux.Wayland_Client is
    --  be made fullscreen.
 
    procedure Set_Popup (Surface : Shell_Surface;
-                        Seat    : Wayland_Client.Seat;
+                        Seat    : Wayland.Client.Seat;
                         Serial  : Unsigned_32;
-                        Parent  : Wayland_Client.Surface;
+                        Parent  : Wayland.Client.Surface;
                         X       : Integer;
                         Y       : Integer;
                         Flags   : Unsigned_32) with
@@ -692,7 +686,7 @@ package C_Binding.Linux.Wayland_Client is
    --  parent surface, in surface-local coordinates.
 
    procedure Set_Maximized (Surface : Shell_Surface;
-                            Output  : Wayland_Client.Output) with
+                            Output  : Wayland.Client.Output) with
      Pre => Surface.Has_Proxy;
    --  Map the surface as a maximized surface.
    --
@@ -736,7 +730,7 @@ package C_Binding.Linux.Wayland_Client is
 
    type Data_Device_Manager is tagged limited private;
 
-   function Has_Proxy (Data_Device_Manager : Wayland_Client.Data_Device_Manager) return Boolean;
+   function Has_Proxy (Data_Device_Manager : Wayland.Client.Data_Device_Manager) return Boolean;
 
    procedure Destroy (Manager : in out Data_Device_Manager) with
      Pre    => Manager.Has_Proxy,
@@ -750,66 +744,66 @@ package C_Binding.Linux.Wayland_Client is
    --  Create a new data source.
 
    procedure Get_Data_Device (Manager : Data_Device_Manager;
-                              Seat    : Wayland_Client.Seat;
+                              Seat    : Wayland.Client.Seat;
                               Device  : in out Data_Device);
    --  Create a new data device for a given seat.
 
    type Seat is tagged limited private;
 
-   function Has_Proxy (Seat : Wayland_Client.Seat) return Boolean;
+   function Has_Proxy (Seat : Wayland.Client.Seat) return Boolean;
 
-   function Get_Version (Seat : Wayland_Client.Seat) return Unsigned_32 with
+   function Get_Version (Seat : Wayland.Client.Seat) return Unsigned_32 with
      Pre => Seat.Has_Proxy;
 
-   procedure Get_Proxy (Seat     : in out Wayland_Client.Seat;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Seat     : in out Wayland.Client.Seat;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32) with
      Pre => Has_Proxy (Registry);
 
-   procedure Get_Pointer (Seat    : Wayland_Client.Seat;
-                          Pointer : in out Wayland_Client.Pointer) with
+   procedure Get_Pointer (Seat    : Wayland.Client.Seat;
+                          Pointer : in out Wayland.Client.Pointer) with
      Pre => Seat.Has_Proxy and not Has_Proxy (Pointer);
    --  This request only takes effect if the seat has the pointer
    --  capability, or has had the pointer capability in the past.
    --  It is a protocol violation to issue this request on a seat that has
    --  never had the pointer capability.
 
-   procedure Get_Keyboard (Seat     : Wayland_Client.Seat;
-                           Keyboard : in out Wayland_Client.Keyboard) with
+   procedure Get_Keyboard (Seat     : Wayland.Client.Seat;
+                           Keyboard : in out Wayland.Client.Keyboard) with
      Pre => Seat.Has_Proxy and not Has_Proxy (Keyboard);
    --  This request only takes effect if the seat has the keyboard
    --  capability, or has had the keyboard capability in the past.
    --  It is a protocol violation to issue this request on a seat that has
    --  never had the keyboard capability.
 
-   procedure Get_Touch (Seat  : Wayland_Client.Seat;
-                        Touch : in out Wayland_Client.Touch) with
+   procedure Get_Touch (Seat  : Wayland.Client.Seat;
+                        Touch : in out Wayland.Client.Touch) with
      Pre => Seat.Has_Proxy and not Has_Proxy (Touch);
    --  This request only takes effect if the seat has the touch
    --  capability, or has had the touch capability in the past.
    --  It is a protocol violation to issue this request on a seat that has
    --  never had the touch capability.
 
-   procedure Release (Seat : in out Wayland_Client.Seat) with
+   procedure Release (Seat : in out Wayland.Client.Seat) with
      Pre => Seat.Has_Proxy;
    --  Using this request a client can tell the server that it is not going to
    --  use the seat object anymore.
 
    type Pointer is tagged limited private;
 
-   function Has_Proxy (Pointer : Wayland_Client.Pointer) return Boolean;
+   function Has_Proxy (Pointer : Wayland.Client.Pointer) return Boolean;
 
-   function Get_Version (Pointer : Wayland_Client.Pointer) return Unsigned_32 with
+   function Get_Version (Pointer : Wayland.Client.Pointer) return Unsigned_32 with
      Pre => Pointer.Has_Proxy;
 
-   procedure Destroy (Pointer : in out Wayland_Client.Pointer) with
+   procedure Destroy (Pointer : in out Wayland.Client.Pointer) with
      Pre  => Pointer.Has_Proxy,
      Post => not Pointer.Has_Proxy;
 
-   procedure Set_Cursor (Pointer   : Wayland_Client.Pointer;
+   procedure Set_Cursor (Pointer   : Wayland.Client.Pointer;
                          Serial    : Unsigned_32;
-                         Surface   : Wayland_Client.Surface;
+                         Surface   : Wayland.Client.Surface;
                          Hotspot_X : Integer;
                          Hotspot_Y : Integer) with
      Pre => Pointer.Has_Proxy;
@@ -845,7 +839,7 @@ package C_Binding.Linux.Wayland_Client is
    --  cursor ends, the current and pending input regions become
    --  undefined, and the wl_surface is unmapped.
 
-   procedure Release (Pointer : in out Wayland_Client.Pointer) with
+   procedure Release (Pointer : in out Wayland.Client.Pointer) with
      Pre  => Pointer.Has_Proxy,
      Post => not Pointer.Has_Proxy;
    --  Using this request a client can tell the server that it is not going to
@@ -856,15 +850,15 @@ package C_Binding.Linux.Wayland_Client is
 
    type Shm is tagged limited private;
 
-   function Has_Proxy (Shm : Wayland_Client.Shm) return Boolean;
+   function Has_Proxy (Shm : Wayland.Client.Shm) return Boolean;
 
-   procedure Get_Proxy (Shm      : in out Wayland_Client.Shm;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Shm      : in out Wayland.Client.Shm;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32) with
      Pre => Has_Proxy (Registry);
 
-   procedure Create_Pool (Shm             : Wayland_Client.Shm;
+   procedure Create_Pool (Shm             : Wayland.Client.Shm;
                           File_Descriptor : C_Binding.Linux.Files.File;
                           Size            : Integer;
                           Pool            : in out Shm_Pool);
@@ -874,25 +868,25 @@ package C_Binding.Linux.Wayland_Client is
    --  objects.  The server will mmap size bytes of the passed file
    --  descriptor, to use as backing memory for the pool.
 
-   function Get_Version (Shm : Wayland_Client.Shm) return Unsigned_32 with
+   function Get_Version (Shm : Wayland.Client.Shm) return Unsigned_32 with
      Pre => Shm.Has_Proxy;
 
-   procedure Destroy (Shm : in out Wayland_Client.Shm) with
+   procedure Destroy (Shm : in out Wayland.Client.Shm) with
      Pre  => Shm.Has_Proxy,
      Post => not Shm.Has_Proxy;
 
    type Shm_Pool is tagged limited private;
    --  Shared memory pool.
 
-   function Has_Proxy (Pool : Wayland_Client.Shm_Pool) return Boolean;
+   function Has_Proxy (Pool : Wayland.Client.Shm_Pool) return Boolean;
 
-   procedure Create_Buffer (Pool   : Wayland_Client.Shm_Pool;
+   procedure Create_Buffer (Pool   : Wayland.Client.Shm_Pool;
                             Offset : Integer;
                             Width  : Integer;
                             Height : Integer;
                             Stride : Integer;
                             Format : Shm_Format;
-                            Buffer : in out Wayland_Client.Buffer) with
+                            Buffer : in out Wayland.Client.Buffer) with
      Pre => Pool.Has_Proxy;
    --  Create a Buffer object from the pool.
    --
@@ -906,7 +900,7 @@ package C_Binding.Linux.Wayland_Client is
    --  so it is valid to destroy the pool immediately after creating
    --  a buffer from it.
 
-   procedure Resize (Pool : Wayland_Client.Shm_Pool;
+   procedure Resize (Pool : Wayland.Client.Shm_Pool;
                      Size : Integer) with
      Pre => Pool.Has_Proxy;
    --  This request will cause the server to remap the backing memory
@@ -914,16 +908,16 @@ package C_Binding.Linux.Wayland_Client is
    --  created, but using the new size.  This request can only be
    --  used to make the pool bigger.
 
-   function Get_Version (Pool : Wayland_Client.Shm_Pool) return Unsigned_32 with
+   function Get_Version (Pool : Wayland.Client.Shm_Pool) return Unsigned_32 with
      Pre => Pool.Has_Proxy;
 
-   procedure Destroy (Pool : in out Wayland_Client.Shm_Pool) with
+   procedure Destroy (Pool : in out Wayland.Client.Shm_Pool) with
      Pre  => Pool.Has_Proxy,
      Post => not Pool.Has_Proxy;
 
    type Data_Device is tagged limited private;
 
-   function Has_Proxy (Data_Device : Wayland_Client.Data_Device) return Boolean;
+   function Has_Proxy (Data_Device : Wayland.Client.Data_Device) return Boolean;
 
    procedure Destroy (Device : in out Data_Device) with
      Pre    => Device.Has_Proxy,
@@ -983,16 +977,16 @@ package C_Binding.Linux.Wayland_Client is
 
    type Subsurface is tagged limited private;
 
-   function Has_Proxy (Subsurface : Wayland_Client.Subsurface) return Boolean;
+   function Has_Proxy (Subsurface : Wayland.Client.Subsurface) return Boolean;
 
-   procedure Destroy (Subsurface : in out Wayland_Client.Subsurface) with
+   procedure Destroy (Subsurface : in out Wayland.Client.Subsurface) with
      Pre    => Subsurface.Has_Proxy,
      Post   => not Subsurface.Has_Proxy;
 
-   function Get_Version (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 with
+   function Get_Version (Subsurface : Wayland.Client.Subsurface) return Unsigned_32 with
      Pre => Subsurface.Has_Proxy;
 
-   procedure Set_Position (Subsurface : Wayland_Client.Subsurface;
+   procedure Set_Position (Subsurface : Wayland.Client.Subsurface;
                            X          : Integer;
                            Y          : Integer) with
      Pre => Subsurface.Has_Proxy;
@@ -1013,8 +1007,8 @@ package C_Binding.Linux.Wayland_Client is
    --
    --  The initial position is 0, 0.
 
-   procedure Place_Above (Subsurface : Wayland_Client.Subsurface;
-                          Sibling    : Wayland_Client.Surface) with
+   procedure Place_Above (Subsurface : Wayland.Client.Subsurface;
+                          Sibling    : Wayland.Client.Surface) with
      Pre => Subsurface.Has_Proxy and Has_Proxy (Sibling);
    --  This sub-surface is taken from the stack, and put back just
    --  above the reference surface, changing the z-order of the sub-surfaces.
@@ -1032,13 +1026,13 @@ package C_Binding.Linux.Wayland_Client is
    --  A new sub-surface is initially added as the top-most in the stack
    --  of its siblings and parent.
 
-   procedure Place_Below (Subsurface : Wayland_Client.Subsurface;
-                          Sibling    : Wayland_Client.Surface) with
+   procedure Place_Below (Subsurface : Wayland.Client.Subsurface;
+                          Sibling    : Wayland.Client.Surface) with
      Pre => Subsurface.Has_Proxy and Has_Proxy (Sibling);
    --  The sub-surface is placed just below the reference surface.
    --  See wl_subsurface.place_above.
 
-   procedure Set_Sync (Subsurface : Wayland_Client.Subsurface) with
+   procedure Set_Sync (Subsurface : Wayland.Client.Subsurface) with
      Pre => Subsurface.Has_Proxy;
    --  Change the commit behaviour of the sub-surface to synchronized
    --  mode, also described as the parent dependent mode.
@@ -1054,7 +1048,7 @@ package C_Binding.Linux.Wayland_Client is
    --
    --  See wl_subsurface for the recursive effect of this mode.
 
-   procedure Set_Desync (Subsurface : Wayland_Client.Subsurface) with
+   procedure Set_Desync (Subsurface : Wayland.Client.Subsurface) with
      Pre => Subsurface.Has_Proxy;
    --  Change the commit behaviour of the sub-surface to desynchronized
    --  mode, also described as independent or freely running mode.
@@ -1078,10 +1072,10 @@ package C_Binding.Linux.Wayland_Client is
 
    type Surface is tagged limited private;
 
-   function Has_Proxy (Surface : Wayland_Client.Surface) return Boolean;
+   function Has_Proxy (Surface : Wayland.Client.Surface) return Boolean;
 
-   procedure Attach (Surface : Wayland_Client.Surface;
-                     Buffer  : Wayland_Client.Buffer;
+   procedure Attach (Surface : Wayland.Client.Surface;
+                     Buffer  : Wayland.Client.Buffer;
                      X       : Integer;
                      Y       : Integer) with
      Pre => Surface.Has_Proxy and Has_Proxy (Buffer);
@@ -1125,7 +1119,7 @@ package C_Binding.Linux.Wayland_Client is
    --  If wl_surface.attach is sent with a NULL wl_buffer, the
    --  following wl_surface.commit will remove the surface content.
 
-   procedure Damage (Surface : Wayland_Client.Surface;
+   procedure Damage (Surface : Wayland.Client.Surface;
                      X       : Integer;
                      Y       : Integer;
                      Width   : Integer;
@@ -1153,7 +1147,7 @@ package C_Binding.Linux.Wayland_Client is
    --  which uses buffer coordinates instead of surface coordinates,
    --  and is probably the preferred and intuitive way of doing this.
 
-   function Frame (Surface : Wayland_Client.Surface) return Callback with
+   function Frame (Surface : Wayland.Client.Surface) return Callback with
      Pre => Surface.Has_Proxy;
    --  Request a notification when it is a good time to start drawing a new
    --  frame, by creating a frame callback. This is useful for throttling
@@ -1188,8 +1182,8 @@ package C_Binding.Linux.Wayland_Client is
    --  The callback_data passed in the callback is the current time, in
    --  milliseconds, with an undefined base.
 
-   procedure Set_Opaque_Region (Surface : Wayland_Client.Surface;
-                                Region  : Wayland_Client.Region) with
+   procedure Set_Opaque_Region (Surface : Wayland.Client.Surface;
+                                Region  : Wayland.Client.Region) with
      Pre => Surface.Has_Proxy;
    --  This request sets the region of the surface that contains
    --  opaque content.
@@ -1216,8 +1210,8 @@ package C_Binding.Linux.Wayland_Client is
    --  destroyed immediately. A NULL wl_region causes the pending opaque
    --  region to be set to empty.
 
-   procedure Set_Input_Region (Surface : Wayland_Client.Surface;
-                               Region  : Wayland_Client.Region) with
+   procedure Set_Input_Region (Surface : Wayland.Client.Surface;
+                               Region  : Wayland.Client.Region) with
      Pre => Surface.Has_Proxy;
    --  This request sets the region of the surface that can receive
    --  pointer and touch events.
@@ -1242,7 +1236,7 @@ package C_Binding.Linux.Wayland_Client is
    --  immediately. A NULL wl_region causes the input region to be set
    --  to infinite.
 
-   procedure Commit (Surface : Wayland_Client.Surface) with
+   procedure Commit (Surface : Wayland.Client.Surface) with
      Pre => Surface.Has_Proxy;
    --  Surface state (input, opaque, and damage regions, attached buffers,
    --  etc.) is double-buffered. Protocol requests modify the pending state,
@@ -1262,7 +1256,7 @@ package C_Binding.Linux.Wayland_Client is
    --
    --  Other interfaces may add further double-buffered surface state.
 
-   procedure Set_Buffer_Transform (Surface   : Wayland_Client.Surface;
+   procedure Set_Buffer_Transform (Surface   : Wayland.Client.Surface;
                                    Transform : Integer) with
      Pre => Surface.Has_Proxy;
    --  This request sets an optional transformation on how the compositor
@@ -1295,7 +1289,7 @@ package C_Binding.Linux.Wayland_Client is
    --  wl_output.transform enum the invalid_transform protocol error
    --  is raised.
 
-   procedure Set_Buffer_Scale (Surface : Wayland_Client.Surface;
+   procedure Set_Buffer_Scale (Surface : Wayland.Client.Surface;
                                Scale   : Integer) with
      Pre => Surface.Has_Proxy;
    --  This request sets an optional scaling factor on how the compositor
@@ -1322,7 +1316,7 @@ package C_Binding.Linux.Wayland_Client is
    --  If scale is not positive the invalid_scale protocol error is
    --  raised.
 
-   procedure Damage_Buffer (Surface : Wayland_Client.Surface;
+   procedure Damage_Buffer (Surface : Wayland.Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Width   : Integer;
@@ -1361,27 +1355,27 @@ package C_Binding.Linux.Wayland_Client is
    --  two requests separately and only transform from one to the other
    --  after receiving the wl_surface.commit.
 
-   procedure Destroy (Surface : in out Wayland_Client.Surface) with
+   procedure Destroy (Surface : in out Wayland.Client.Surface) with
      Pre  => Surface.Has_Proxy,
      Post => not Surface.Has_Proxy;
 
    type Buffer is tagged limited private;
 
-   function Has_Proxy (Buffer : Wayland_Client.Buffer) return Boolean;
+   function Has_Proxy (Buffer : Wayland.Client.Buffer) return Boolean;
 
-   function Get_Version (Buffer : Wayland_Client.Buffer) return Unsigned_32 with
+   function Get_Version (Buffer : Wayland.Client.Buffer) return Unsigned_32 with
      Pre => Buffer.Has_Proxy;
 
-   procedure Destroy (Buffer : in out Wayland_Client.Buffer) with
+   procedure Destroy (Buffer : in out Wayland.Client.Buffer) with
      Pre  => Buffer.Has_Proxy,
      Post => not Buffer.Has_Proxy;
 
    type Display is tagged limited private with
      Default_Initial_Condition => not Display.Is_Connected;
 
-   function Is_Connected (Display : Wayland_Client.Display) return Boolean;
+   function Is_Connected (Display : Wayland.Client.Display) return Boolean;
 
-   procedure Connect (Display : in out Wayland_Client.Display;
+   procedure Connect (Display : in out Wayland.Client.Display;
                       Name    : String := Default_Display_Name) with
      Pre => not Display.Is_Connected;
    --  Attempts connecting with the Wayland server.
@@ -1392,20 +1386,20 @@ package C_Binding.Linux.Wayland_Client is
                                     Error
                                     );
 
-   function Check_For_Events (Display : Wayland_Client.Display;
+   function Check_For_Events (Display : Wayland.Client.Display;
                               Timeout : Integer) return Check_For_Events_Status;
    --  The timeout is given in milliseconds.
 
-   function Dispatch (Display : Wayland_Client.Display) return Integer with
+   function Dispatch (Display : Wayland.Client.Display) return Integer with
      Pre => Display.Is_Connected;
    --  Process incoming events.
 
-   procedure Dispatch (Display : Wayland_Client.Display) with
+   procedure Dispatch (Display : Wayland.Client.Display) with
      Pre => Display.Is_Connected;
    --  Process incoming events. Ignores error code. To be removed?
 
    function Dispatch_Pending
-     (Display : Wayland_Client.Display) return Integer with
+     (Display : Wayland.Client.Display) return Integer with
      Pre => Display.Is_Connected;
    --  Dispatch default queue events without reading from
    --  the display file descriptor.
@@ -1417,34 +1411,34 @@ package C_Binding.Linux.Wayland_Client is
    --  Returns the number of dispatched events or -1 on failure
 
    function Prepare_Read
-     (Display : Wayland_Client.Display) return Integer with
+     (Display : Wayland.Client.Display) return Integer with
      Pre => Display.Is_Connected;
    --  Prepare to read events from the display's file descriptor
 
    function Read_Events
-     (Display : Wayland_Client.Display) return Call_Result_Code with
+     (Display : Wayland.Client.Display) return Call_Result_Code with
      Pre => Display.Is_Connected;
    --  Returns 0 on success or -1 on error.
 
-   procedure Cancel_Read (Display : Wayland_Client.Display) with
+   procedure Cancel_Read (Display : Wayland.Client.Display) with
      Pre => Display.Is_Connected;
    --  Cancel read intention on display's fd.
 
-   function Roundtrip (Display : Wayland_Client.Display) return Integer with
+   function Roundtrip (Display : Wayland.Client.Display) return Integer with
      Pre => Display.Is_Connected;
 
-   procedure Roundtrip (Display : Wayland_Client.Display) with
+   procedure Roundtrip (Display : Wayland.Client.Display) with
      Pre => Display.Is_Connected;
 
-   procedure Disconnect (Display : in out Wayland_Client.Display) with
+   procedure Disconnect (Display : in out Wayland.Client.Display) with
      Pre  => Display.Is_Connected,
      Post => not Display.Is_Connected;
 
-   function Get_Version (Display : Wayland_Client.Display) return Unsigned_32 with
+   function Get_Version (Display : Wayland.Client.Display) return Unsigned_32 with
      Pre => Display.Is_Connected;
 
-   procedure Get_Registry (Display  : Wayland_Client.Display;
-                           Registry : in out Wayland_Client.Registry) with
+   procedure Get_Registry (Display  : Wayland.Client.Display;
+                           Registry : in out Wayland.Client.Registry) with
      Pre => Display.Is_Connected and not Has_Proxy (Registry);
    --  This request to the compositor (Wayland Server)
    --  creates a registry proxy object that allows the client
@@ -1457,7 +1451,7 @@ package C_Binding.Linux.Wayland_Client is
    --  Therefore, clients should invoke Get_Registry_Proxy as infrequently as
    --  possible to avoid wasting memory.
 
-   function Sync (Display : Wayland_Client.Display) return Callback with
+   function Sync (Display : Wayland.Client.Display) return Callback with
      Pre => Display.Is_Connected;
    --  The sync request asks the server to emit the 'done' event
    --  on the returned wl_callback object.  Since requests are
@@ -1473,24 +1467,24 @@ package C_Binding.Linux.Wayland_Client is
 
    type Registry is tagged limited private;
 
-   function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean;
+   function Has_Proxy (Registry : Wayland.Client.Registry) return Boolean;
 
-   procedure Destroy (Registry : in out Wayland_Client.Registry) with
+   procedure Destroy (Registry : in out Wayland.Client.Registry) with
      Pre  => Registry.Has_Proxy,
      Post => not Registry.Has_Proxy;
 
-   function Get_Version (Registry : Wayland_Client.Registry) return Unsigned_32 with
+   function Get_Version (Registry : Wayland.Client.Registry) return Unsigned_32 with
      Pre => Registry.Has_Proxy;
 
    type Callback is tagged limited private;
 
-   function Has_Proxy (Callback : Wayland_Client.Callback) return Boolean;
+   function Has_Proxy (Callback : Wayland.Client.Callback) return Boolean;
 
-   procedure Destroy (Callback : in out Wayland_Client.Callback) with
+   procedure Destroy (Callback : in out Wayland.Client.Callback) with
      Pre    => Callback.Has_Proxy,
      Post   => not Callback.Has_Proxy;
 
-   function Get_Version (Callback : Wayland_Client.Callback) return Unsigned_32 with
+   function Get_Version (Callback : Wayland.Client.Callback) return Unsigned_32 with
      Pre => Callback.Has_Proxy;
 
    type Data_Offer is tagged limited private;
@@ -1588,7 +1582,7 @@ package C_Binding.Linux.Wayland_Client is
 
    type Data_Source is tagged limited private;
 
-   function Has_Proxy (Data_Source : Wayland_Client.Data_Source) return Boolean;
+   function Has_Proxy (Data_Source : Wayland.Client.Data_Source) return Boolean;
 
    procedure Destroy (Source : in out Data_Source) with
      Pre    => Source.Has_Proxy,
@@ -1623,46 +1617,46 @@ package C_Binding.Linux.Wayland_Client is
 
    type Keyboard is tagged limited private;
 
-   function Has_Proxy (Keyboard : Wayland_Client.Keyboard) return Boolean;
+   function Has_Proxy (Keyboard : Wayland.Client.Keyboard) return Boolean;
 
-   procedure Destroy (Keyboard : in out Wayland_Client.Keyboard) with
+   procedure Destroy (Keyboard : in out Wayland.Client.Keyboard) with
      Pre    => Keyboard.Has_Proxy,
      Post   => not Keyboard.Has_Proxy;
 
-   function Get_Version (Keyboard : Wayland_Client.Keyboard) return Unsigned_32 with
+   function Get_Version (Keyboard : Wayland.Client.Keyboard) return Unsigned_32 with
      Pre => Keyboard.Has_Proxy;
 
-   procedure Release (Keyboard : in out Wayland_Client.Keyboard) with
+   procedure Release (Keyboard : in out Wayland.Client.Keyboard) with
      Pre    => Keyboard.Has_Proxy,
      Post   => not Keyboard.Has_Proxy;
 
    type Touch is tagged limited private;
 
-   function Has_Proxy (Touch : Wayland_Client.Touch) return Boolean;
+   function Has_Proxy (Touch : Wayland.Client.Touch) return Boolean;
 
-   procedure Destroy (Touch : in out Wayland_Client.Touch) with
+   procedure Destroy (Touch : in out Wayland.Client.Touch) with
      Pre    => Touch.Has_Proxy,
      Post   => not Touch.Has_Proxy;
 
-   function Get_Version (Touch : Wayland_Client.Touch) return Unsigned_32 with
+   function Get_Version (Touch : Wayland.Client.Touch) return Unsigned_32 with
      Pre => Touch.Has_Proxy;
 
-   procedure Release (Touch : in out Wayland_Client.Touch) with
+   procedure Release (Touch : in out Wayland.Client.Touch) with
      Pre    => Touch.Has_Proxy,
      Post   => not Touch.Has_Proxy;
 
    type Output is tagged limited private;
 
-   function Has_Proxy (Output : Wayland_Client.Output) return Boolean;
+   function Has_Proxy (Output : Wayland.Client.Output) return Boolean;
 
-   procedure Destroy (Output : in out Wayland_Client.Output) with
+   procedure Destroy (Output : in out Wayland.Client.Output) with
      Pre    => Output.Has_Proxy,
      Post   => not Output.Has_Proxy;
 
-   function Get_Version (Output : Wayland_Client.Output) return Unsigned_32 with
+   function Get_Version (Output : Wayland.Client.Output) return Unsigned_32 with
      Pre => Output.Has_Proxy;
 
-   procedure Release (Output : in out Wayland_Client.Output) with
+   procedure Release (Output : in out Wayland.Client.Output) with
      Pre    => Output.Has_Proxy,
      Post   => not Output.Has_Proxy;
    --  Using this request a client can tell the server that it is not going to
@@ -1670,16 +1664,16 @@ package C_Binding.Linux.Wayland_Client is
 
    type Region is tagged limited private;
 
-   function Has_Proxy (Region : Wayland_Client.Region) return Boolean;
+   function Has_Proxy (Region : Wayland.Client.Region) return Boolean;
 
-   procedure Destroy (Region : in out Wayland_Client.Region) with
+   procedure Destroy (Region : in out Wayland.Client.Region) with
      Pre    => Region.Has_Proxy,
      Post   => not Region.Has_Proxy;
 
-   function Get_Version (Region : Wayland_Client.Region) return Unsigned_32 with
+   function Get_Version (Region : Wayland.Client.Region) return Unsigned_32 with
      Pre => Region.Has_Proxy;
 
-   procedure Add (Region : Wayland_Client.Region;
+   procedure Add (Region : Wayland.Client.Region;
                   X      : Integer;
                   Y      : Integer;
                   Width  : Integer;
@@ -1687,7 +1681,7 @@ package C_Binding.Linux.Wayland_Client is
      Pre => Region.Has_Proxy;
    --  Add the specified rectangle to the region.
 
-   procedure Subtract (Region : Wayland_Client.Region;
+   procedure Subtract (Region : Wayland.Client.Region;
                        X      : Integer;
                        Y      : Integer;
                        Width  : Integer;
@@ -1700,7 +1694,7 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Error (Data      : not null Data_Ptr;
-                            Display   : Wayland_Client.Display;
+                            Display   : Wayland.Client.Display;
                             Object_Id : Void_Ptr;
                             Code      : Unsigned_32;
                             Message   : String);
@@ -1708,12 +1702,12 @@ package C_Binding.Linux.Wayland_Client is
       --  of the API can potentially be improved upon.
 
       with procedure Delete_Id (Data    : not null Data_Ptr;
-                                Display : Wayland_Client.Display;
+                                Display : Wayland.Client.Display;
                                 Id      : Unsigned_32);
 
    package Display_Events is
 
-      function Subscribe (Display : in out Wayland_Client.Display;
+      function Subscribe (Display : in out Wayland.Client.Display;
                           Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Display_Events;
@@ -1723,17 +1717,17 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Global_Object_Added (Data     : not null Data_Ptr;
-                                          Registry : Wayland_Client.Registry;
+                                          Registry : Wayland.Client.Registry;
                                           Id       : Unsigned_32;
                                           Name     : String;
                                           Version  : Unsigned_32);
 
       with procedure Global_Object_Removed (Data     : not null Data_Ptr;
-                                            Registry : Wayland_Client.Registry;
+                                            Registry : Wayland.Client.Registry;
                                             Id       : Unsigned_32);
    package Registry_Events is
 
-      function Subscribe (Registry : in out Wayland_Client.Registry;
+      function Subscribe (Registry : in out Wayland.Client.Registry;
                           Data     : not null Data_Ptr) return Call_Result_Code;
       --  Starts subcription to global objects addded and removed events.
       --  To stop subscription, call Registry.Destroy.
@@ -1745,12 +1739,12 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Done (Data          : not null Data_Ptr;
-                           Callback      : Wayland_Client.Callback;
+                           Callback      : Wayland.Client.Callback;
                            Callback_Data : Unsigned_32);
 
    package Callback_Events is
 
-      function Subscribe (Callback : in out Wayland_Client.Callback;
+      function Subscribe (Callback : in out Wayland.Client.Callback;
                           Data     : not null Data_Ptr) return Call_Result_Code;
 
    end Callback_Events;
@@ -1760,11 +1754,11 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Format (Data   : not null Data_Ptr;
-                             Shm    : Wayland_Client.Shm;
+                             Shm    : Wayland.Client.Shm;
                              Format : Unsigned_32);
    package Shm_Events is
 
-      function Subscribe (Shm  : in out Wayland_Client.Shm;
+      function Subscribe (Shm  : in out Wayland.Client.Shm;
                           Data : not null Data_Ptr) return Call_Result_Code;
 
    end Shm_Events;
@@ -1774,11 +1768,11 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Release (Data   : not null Data_Ptr;
-                              Buffer : Wayland_Client.Buffer);
+                              Buffer : Wayland.Client.Buffer);
 
    package Buffer_Events is
 
-      function Subscribe (Buffer : in out Wayland_Client.Buffer;
+      function Subscribe (Buffer : in out Wayland.Client.Buffer;
                           Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Buffer_Events;
@@ -1788,21 +1782,21 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Offer (Data       : not null Data_Ptr;
-                            Data_Offer : Wayland_Client.Data_Offer;
+                            Data_Offer : Wayland.Client.Data_Offer;
                             Mime_Type  : String);
 
       with procedure Source_Actions (Data           : not null Data_Ptr;
-                                     Data_Offer     : Wayland_Client.Data_Offer;
+                                     Data_Offer     : Wayland.Client.Data_Offer;
                                      Source_Actions : Unsigned_32);
 
       with procedure Action (Data       : not null Data_Ptr;
-                             Data_Offer : Wayland_Client.Data_Offer;
+                             Data_Offer : Wayland.Client.Data_Offer;
                              Dnd_Action : Unsigned_32);
 
    package Data_Offer_Events is
 
       function Subscribe
-        (Data_Offer : in out Wayland_Client.Data_Offer;
+        (Data_Offer : in out Wayland.Client.Data_Offer;
          Data       : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Offer_Events;
@@ -1812,32 +1806,32 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Target (Data        : not null Data_Ptr;
-                             Data_Source : Wayland_Client.Data_Source;
+                             Data_Source : Wayland.Client.Data_Source;
                              Mime_Type   : String);
 
       with procedure Send (Data        : not null Data_Ptr;
-                           Data_Source : Wayland_Client.Data_Source;
+                           Data_Source : Wayland.Client.Data_Source;
                            Mime_Type   : String;
                            Fd          : Integer);
 
       with procedure Cancelled (Data        : not null Data_Ptr;
-                                Data_Source : Wayland_Client.Data_Source);
+                                Data_Source : Wayland.Client.Data_Source);
 
       with procedure Dnd_Drop_Performed
         (Data        : not null Data_Ptr;
-         Data_Source : Wayland_Client.Data_Source);
+         Data_Source : Wayland.Client.Data_Source);
 
       with procedure Dnd_Finished (Data        : not null Data_Ptr;
-                                   Data_Source : Wayland_Client.Data_Source);
+                                   Data_Source : Wayland.Client.Data_Source);
 
       with procedure Action (Data        : not null Data_Ptr;
-                             Data_Source : Wayland_Client.Data_Source;
+                             Data_Source : Wayland.Client.Data_Source;
                              Dnd_Action  : Unsigned_32);
 
    package Data_Source_Events is
 
       function Subscribe
-        (Data_Source : in out Wayland_Client.Data_Source;
+        (Data_Source : in out Wayland.Client.Data_Source;
          Data        : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Source_Events;
@@ -1847,37 +1841,37 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Data_Offer (Data        : not null Data_Ptr;
-                                 Data_Device : Wayland_Client.Data_Device;
+                                 Data_Device : Wayland.Client.Data_Device;
                                  Id          : Unsigned_32);
 
       with procedure Enter (Data        : not null Data_Ptr;
-                            Data_Device : Wayland_Client.Data_Device;
+                            Data_Device : Wayland.Client.Data_Device;
                             Serial      : Unsigned_32;
-                            Surface     : Wayland_Client.Surface;
+                            Surface     : Wayland.Client.Surface;
                             X           : Fixed;
                             Y           : Fixed;
-                            Id          : Wayland_Client.Data_Offer);
+                            Id          : Wayland.Client.Data_Offer);
 
       with procedure Leave (Data        : not null Data_Ptr;
-                            Data_Device : Wayland_Client.Data_Device);
+                            Data_Device : Wayland.Client.Data_Device);
 
       with procedure Motion (Data        : not null Data_Ptr;
-                             Data_Device : Wayland_Client.Data_Device;
+                             Data_Device : Wayland.Client.Data_Device;
                              Time        : Unsigned_32;
                              X           : Fixed;
                              Y           : Fixed);
 
       with procedure Drop (Data        : not null Data_Ptr;
-                           Data_Device : Wayland_Client.Data_Device);
+                           Data_Device : Wayland.Client.Data_Device);
 
       with procedure Selection (Data        : not null Data_Ptr;
-                                Data_Device : Wayland_Client.Data_Device;
-                                Id          : Wayland_Client.Data_Offer);
+                                Data_Device : Wayland.Client.Data_Device;
+                                Id          : Wayland.Client.Data_Offer);
 
    package Data_Device_Events is
 
       function Subscribe
-        (Data_Device : in out Wayland_Client.Data_Device;
+        (Data_Device : in out Wayland.Client.Data_Device;
          Data        : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Device_Events;
@@ -1915,18 +1909,18 @@ package C_Binding.Linux.Wayland_Client is
 
       with procedure Enter
         (Data    : not null Data_Ptr;
-         Surface : Wayland_Client.Surface;
-         Output  : Wayland_Client.Output);
+         Surface : Wayland.Client.Surface;
+         Output  : Wayland.Client.Output);
 
       with procedure Leave
         (Data    : not null Data_Ptr;
-         Surface : Wayland_Client.Surface;
-         Output  : Wayland_Client.Output);
+         Surface : Wayland.Client.Surface;
+         Output  : Wayland.Client.Output);
 
    package Surface_Events is
 
       function Subscribe
-        (Surface : in out Wayland_Client.Surface;
+        (Surface : in out Wayland.Client.Surface;
          Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Surface_Events;
@@ -1937,17 +1931,17 @@ package C_Binding.Linux.Wayland_Client is
 
       with procedure Seat_Capabilities
         (Data         : not null Data_Ptr;
-         Seat         : Wayland_Client.Seat;
+         Seat         : Wayland.Client.Seat;
          Capabilities : Unsigned_32);
 
       with procedure Seat_Name
         (Data : not null Data_Ptr;
-         Seat : Wayland_Client.Seat;
+         Seat : Wayland.Client.Seat;
          Name : String);
 
    package Seat_Events is
 
-      function Subscribe (Seat : in out Wayland_Client.Seat;
+      function Subscribe (Seat : in out Wayland.Client.Seat;
                           Data : not null Data_Ptr) return Call_Result_Code;
 
    end Seat_Events;
@@ -1958,28 +1952,28 @@ package C_Binding.Linux.Wayland_Client is
 
       with procedure Pointer_Enter
         (Data      : not null Data_Ptr;
-         Pointer   : Wayland_Client.Pointer;
+         Pointer   : Wayland.Client.Pointer;
          Serial    : Unsigned_32;
-         Surface   : Wayland_Client.Surface;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed);
+         Surface   : Wayland.Client.Surface;
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed);
 
       with procedure Pointer_Leave
         (Data    : not null Data_Ptr;
-         Pointer : Wayland_Client.Pointer;
+         Pointer : Wayland.Client.Pointer;
          Serial  : Unsigned_32;
-         Surface : Wayland_Client.Surface);
+         Surface : Wayland.Client.Surface);
 
       with procedure Pointer_Motion
         (Data      : not null Data_Ptr;
-         Pointer   : Wayland_Client.Pointer;
+         Pointer   : Wayland.Client.Pointer;
          Time      : Unsigned_32;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed);
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed);
 
       with procedure Pointer_Button
         (Data    : not null Data_Ptr;
-         Pointer : Wayland_Client.Pointer;
+         Pointer : Wayland.Client.Pointer;
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Button  : Unsigned_32;
@@ -1987,34 +1981,34 @@ package C_Binding.Linux.Wayland_Client is
 
       with procedure Pointer_Axis
         (Data    : not null Data_Ptr;
-         Pointer : Wayland_Client.Pointer;
+         Pointer : Wayland.Client.Pointer;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wayland_Client.Fixed);
+         Value   : Wayland.Client.Fixed);
 
       with procedure Pointer_Frame (Data    : not null Data_Ptr;
-                                    Pointer : Wayland_Client.Pointer);
+                                    Pointer : Wayland.Client.Pointer);
 
       with procedure Pointer_Axis_Source
         (Data        : not null Data_Ptr;
-         Pointer     : Wayland_Client.Pointer;
+         Pointer     : Wayland.Client.Pointer;
          Axis_Source : Unsigned_32);
 
       with procedure Pointer_Axis_Stop
         (Data    : not null Data_Ptr;
-         Pointer : Wayland_Client.Pointer;
+         Pointer : Wayland.Client.Pointer;
          Time    : Unsigned_32;
          Axis    : Unsigned_32);
 
       with procedure Pointer_Axis_Discrete
         (Data     : not null Data_Ptr;
-         Pointer  : Wayland_Client.Pointer;
+         Pointer  : Wayland.Client.Pointer;
          Axis     : Unsigned_32;
          Discrete : Integer);
 
    package Pointer_Events is
 
-      function Subscribe (Pointer : in out Wayland_Client.Pointer;
+      function Subscribe (Pointer : in out Wayland.Client.Pointer;
                           Data    : not null Data_Ptr) return Call_Result_Code;
 
    end Pointer_Events;
@@ -2025,31 +2019,31 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Keymap (Data     : not null Data_Ptr;
-                             Keyboard : Wayland_Client.Keyboard;
+                             Keyboard : Wayland.Client.Keyboard;
                              Format   : Unsigned_32;
                              Fd       : Integer;
                              Size     : Unsigned_32);
 
       with procedure Enter (Data     : not null Data_Ptr;
-                            Keyboard : Wayland_Client.Keyboard;
+                            Keyboard : Wayland.Client.Keyboard;
                             Serial   : Unsigned_32;
-                            Surface  : Wayland_Client.Surface;
+                            Surface  : Wayland.Client.Surface;
                             Keys     : Wayland_Array_T);
 
       with procedure Leave (Data     : not null Data_Ptr;
-                            Keyboard : Wayland_Client.Keyboard;
+                            Keyboard : Wayland.Client.Keyboard;
                             Serial   : Unsigned_32;
-                            Surface  : Wayland_Client.Surface);
+                            Surface  : Wayland.Client.Surface);
 
       with procedure Key (Data     : not null Data_Ptr;
-                          Keyboard : Wayland_Client.Keyboard;
+                          Keyboard : Wayland.Client.Keyboard;
                           Serial   : Unsigned_32;
                           Time     : Unsigned_32;
                           Key      : Unsigned_32;
                           State    : Unsigned_32);
 
       with procedure Modifiers (Data           : not null Data_Ptr;
-                                Keyboard       : Wayland_Client.Keyboard;
+                                Keyboard       : Wayland.Client.Keyboard;
                                 Serial         : Unsigned_32;
                                 Mods_Depressed : Unsigned_32;
                                 Mods_Latched   : Unsigned_32;
@@ -2057,13 +2051,13 @@ package C_Binding.Linux.Wayland_Client is
                                 Group          : Unsigned_32);
 
       with procedure Repeat_Info (Data     : not null Data_Ptr;
-                                  Keyboard : Wayland_Client.Keyboard;
+                                  Keyboard : Wayland.Client.Keyboard;
                                   Rate     : Integer;
                                   Delay_V  : Integer);
 
    package Keyboard_Events is
 
-      function Subscribe (Keyboard : in out Wayland_Client.Keyboard;
+      function Subscribe (Keyboard : in out Wayland.Client.Keyboard;
                           Data     : not null Data_Ptr) return Call_Result_Code;
 
    end Keyboard_Events;
@@ -2073,46 +2067,46 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Down (Data    : not null Data_Ptr;
-                           Touch   : Wayland_Client.Touch;
+                           Touch   : Wayland.Client.Touch;
                            Serial  : Unsigned_32;
                            Time    : Unsigned_32;
-                           Surface : Wayland_Client.Surface;
+                           Surface : Wayland.Client.Surface;
                            Id      : Integer;
                            X       : Fixed;
                            Y       : Fixed);
 
       with procedure Up (Data   : not null Data_Ptr;
-                         Touch  : Wayland_Client.Touch;
+                         Touch  : Wayland.Client.Touch;
                          Serial : Unsigned_32;
                          Time   : Unsigned_32;
                          Id     : Integer);
 
       with procedure Motion (Data  : not null Data_Ptr;
-                             Touch : Wayland_Client.Touch;
+                             Touch : Wayland.Client.Touch;
                              Time  : Unsigned_32;
                              Id    : Integer;
                              X     : Fixed;
                              Y     : Fixed);
 
       with procedure Frame (Data  : not null Data_Ptr;
-                            Touch : Wayland_Client.Touch);
+                            Touch : Wayland.Client.Touch);
 
       with procedure Cancel (Data  : not null Data_Ptr;
-                             Touch : Wayland_Client.Touch);
+                             Touch : Wayland.Client.Touch);
 
       with procedure Shape (Data  : not null Data_Ptr;
-                            Touch : Wayland_Client.Touch;
+                            Touch : Wayland.Client.Touch;
                             Id    : Integer;
                             Major : Fixed;
                             Minor : Fixed);
 
       with procedure Orientation (Data        : not null Data_Ptr;
-                                  Touch       : Wayland_Client.Touch;
+                                  Touch       : Wayland.Client.Touch;
                                   Id          : Integer;
                                   Orientation : Fixed);
    package Touch_Events is
 
-      function Subscribe (Touch : in out Wayland_Client.Touch;
+      function Subscribe (Touch : in out Wayland.Client.Touch;
                           Data  : not null Data_Ptr) return Call_Result_Code;
 
    end Touch_Events;
@@ -2122,7 +2116,7 @@ package C_Binding.Linux.Wayland_Client is
       type Data_Ptr is access all Data_Type;
 
       with procedure Geometry (Data            : not null Data_Ptr;
-                               Output          : Wayland_Client.Output;
+                               Output          : Wayland.Client.Output;
                                X               : Integer;
                                Y               : Integer;
                                Physical_Width  : Integer;
@@ -2133,22 +2127,22 @@ package C_Binding.Linux.Wayland_Client is
                                Transform       : Integer);
 
       with procedure Mode (Data    : not null Data_Ptr;
-                           Output  : Wayland_Client.Output;
+                           Output  : Wayland.Client.Output;
                            Flags   : Unsigned_32;
                            Width   : Integer;
                            Height  : Integer;
                            Refresh : Integer);
 
       with procedure Done (Data   : not null Data_Ptr;
-                           Output : Wayland_Client.Output);
+                           Output : Wayland.Client.Output);
 
       with procedure Scale (Data   : not null Data_Ptr;
-                            Output : Wayland_Client.Output;
+                            Output : Wayland.Client.Output;
                             Factor : Integer);
 
    package Output_Events is
 
-      function Subscribe (Output : in out Wayland_Client.Output;
+      function Subscribe (Output : in out Wayland.Client.Output;
                           Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Output_Events;
@@ -2185,7 +2179,8 @@ private
    function Value
      (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
 
-   package Wl_Thin renames C_Binding.Wl_Thin;
+   package Wl_Thin renames Wayland.Thin;
+   --  FIXME Remove renaming
 
    use type Wl_Thin.Display_Ptr;
    use type Wl_Thin.Registry_Ptr;
@@ -2215,49 +2210,49 @@ private
       My_Fd      : Integer;
    end record;
 
-   function Is_Connected (Display : Wayland_Client.Display) return Boolean is
+   function Is_Connected (Display : Wayland.Client.Display) return Boolean is
      (Display.My_Display /= null);
 
    type Registry is tagged limited record
       My_Registry : Wl_Thin.Registry_Ptr;
    end record;
 
-   function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean is
+   function Has_Proxy (Registry : Wayland.Client.Registry) return Boolean is
      (Registry.My_Registry /= null);
 
    type Compositor is tagged limited record
       My_Compositor : Wl_Thin.Compositor_Ptr;
    end record;
 
-   function Has_Proxy (Compositor : Wayland_Client.Compositor) return Boolean is
+   function Has_Proxy (Compositor : Wayland.Client.Compositor) return Boolean is
      (Compositor.My_Compositor /= null);
 
    type Pointer is tagged limited record
       My_Pointer : Wl_Thin.Pointer_Ptr;
    end record;
 
-   function Has_Proxy (Pointer : Wayland_Client.Pointer) return Boolean is
+   function Has_Proxy (Pointer : Wayland.Client.Pointer) return Boolean is
      (Pointer.My_Pointer /= null);
 
    type Seat is tagged limited record
       My_Seat : Wl_Thin.Seat_Ptr;
    end record;
 
-   function Has_Proxy (Seat : Wayland_Client.Seat) return Boolean is
+   function Has_Proxy (Seat : Wayland.Client.Seat) return Boolean is
      (Seat.My_Seat /= null);
 
    type Shell is tagged limited record
       My_Shell : Wl_Thin.Shell_Ptr;
    end record;
 
-   function Has_Proxy (Shell : Wayland_Client.Shell) return Boolean is
+   function Has_Proxy (Shell : Wayland.Client.Shell) return Boolean is
      (Shell.My_Shell /= null);
 
    type Shm is tagged limited record
       My_Shm : Wl_Thin.Shm_Ptr;
    end record;
 
-   function Has_Proxy (Shm : Wayland_Client.Shm) return Boolean is (Shm.My_Shm /= null);
+   function Has_Proxy (Shm : Wayland.Client.Shm) return Boolean is (Shm.My_Shm /= null);
 
    type Shm_Pool is tagged limited record
       My_Shm_Pool : Wl_Thin.Shm_Pool_Ptr;
@@ -2270,14 +2265,14 @@ private
       My_Buffer : Wl_Thin.Buffer_Ptr;
    end record;
 
-   function Has_Proxy (Buffer : Wayland_Client.Buffer) return Boolean is
+   function Has_Proxy (Buffer : Wayland.Client.Buffer) return Boolean is
      (Buffer.My_Buffer /= null);
 
    type Surface is tagged limited record
       My_Surface : Wl_Thin.Surface_Ptr;
    end record;
 
-   function Has_Proxy (Surface : Wayland_Client.Surface) return Boolean is
+   function Has_Proxy (Surface : Wayland.Client.Surface) return Boolean is
      (Surface.My_Surface /= null);
 
    type Shell_Surface is tagged limited record
@@ -2299,63 +2294,63 @@ private
       My_Data_Source : Wl_Thin.Data_Source_Ptr;
    end record;
 
-   function Has_Proxy (Data_Source : Wayland_Client.Data_Source) return Boolean is
+   function Has_Proxy (Data_Source : Wayland.Client.Data_Source) return Boolean is
      (Data_Source.My_Data_Source /= null);
 
    type Data_Device is tagged limited record
       My_Data_Device : Wl_Thin.Data_Device_Ptr;
    end record;
 
-   function Has_Proxy (Data_Device : Wayland_Client.Data_Device) return Boolean is
+   function Has_Proxy (Data_Device : Wayland.Client.Data_Device) return Boolean is
      (Data_Device.My_Data_Device /= null);
 
    type Data_Device_Manager is tagged limited record
       My_Data_Device_Manager : Wl_Thin.Data_Device_Manager_Ptr;
    end record;
 
-   function Has_Proxy (Data_Device_Manager : Wayland_Client.Data_Device_Manager) return Boolean is
+   function Has_Proxy (Data_Device_Manager : Wayland.Client.Data_Device_Manager) return Boolean is
      (Data_Device_Manager.My_Data_Device_Manager /= null);
 
    type Keyboard is tagged limited record
       My_Keyboard : Wl_Thin.Keyboard_Ptr;
    end record;
 
-   function Has_Proxy (Keyboard : Wayland_Client.Keyboard) return Boolean is
+   function Has_Proxy (Keyboard : Wayland.Client.Keyboard) return Boolean is
      (Keyboard.My_Keyboard /= null);
 
    type Touch is tagged limited record
       My_Touch : Wl_Thin.Touch_Ptr;
    end record;
 
-   function Has_Proxy (Touch : Wayland_Client.Touch) return Boolean is
+   function Has_Proxy (Touch : Wayland.Client.Touch) return Boolean is
      (Touch.My_Touch /= null);
 
    type Output is tagged limited record
       My_Output : Wl_Thin.Output_Ptr;
    end record;
 
-   function Has_Proxy (Output : Wayland_Client.Output) return Boolean is
+   function Has_Proxy (Output : Wayland.Client.Output) return Boolean is
      (Output.My_Output /= null);
 
    type Region is tagged limited record
       My_Region : Wl_Thin.Region_Ptr;
    end record;
 
-   function Has_Proxy (Region : Wayland_Client.Region) return Boolean is
+   function Has_Proxy (Region : Wayland.Client.Region) return Boolean is
      (Region.My_Region /= null);
 
    type Subcompositor is tagged limited record
       My_Subcompositor : Wl_Thin.Subcompositor_Ptr;
    end record;
 
-   function Has_Proxy (Subcompositor : Wayland_Client.Subcompositor) return Boolean is
+   function Has_Proxy (Subcompositor : Wayland.Client.Subcompositor) return Boolean is
      (Subcompositor.My_Subcompositor /= null);
 
    type Subsurface is tagged limited record
       My_Subsurface : Wl_Thin.Subsurface_Ptr;
    end record;
 
-   function Has_Proxy (Subsurface : Wayland_Client.Subsurface) return Boolean is
+   function Has_Proxy (Subsurface : Wayland.Client.Subsurface) return Boolean is
      (Subsurface.My_Subsurface /= null);
 
    type Interface_Type is tagged limited record
@@ -2431,4 +2426,4 @@ private
    Subsurface_Interface : constant Interface_Type :=
      (My_Interface => Wl_Thin.Subsurface_Interface'Access);
 
-end C_Binding.Linux.Wayland_Client;
+end Wayland.Client;

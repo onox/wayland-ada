@@ -8,17 +8,8 @@ with Interfaces.C.Strings;
 --
 --  and then manually modified to make it a bit higher-level.
 
-package Wayland.API is
+private package Wayland.API is
    pragma Preelaborate;
-
-   type Unsigned_32 is mod 2 ** 32
-     with Size => 32;
-
-   type C_String is new String;
-
-   subtype Void_Ptr is System.Address;
-
-   -----------------------------------------------------------------------------
 
    type Proxy is limited private;
 

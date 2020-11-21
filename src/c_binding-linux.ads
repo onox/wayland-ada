@@ -50,6 +50,8 @@ package C_Binding.Linux is
    EDOM    : constant := 33;  -- Math argument out of domain of func
    ERANGE  : constant := 34;  -- Math result not representable
 
+   function Poll_File_Descriptor_Until_Timeout (Descriptor, Timeout : Integer) return Integer;
+
 private
 
    use type long;

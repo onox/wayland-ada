@@ -1,17 +1,15 @@
-with C_Binding.Linux.Wayland_Client;
+with Wayland.Client;
 
 package body Client_Examples.Find_Compositor is
 
-   package Wayland_Client renames C_Binding.Linux.Wayland_Client;
-
-   use all type Wayland_Client.Call_Result_Code;
+   use all type Wayland.Client.Call_Result_Code;
 
    procedure Global_Registry_Handler
-     (Compositor : not null Wayland_Client.Compositor_Ptr;
-      Registry   : Wayland_Client.Registry;
-      Id         : Wayland_Client.Unsigned_32;
+     (Compositor : not null Wayland.Client.Compositor_Ptr;
+      Registry   : Wayland.Client.Registry;
+      Id         : Wayland.Unsigned_32;
       Name       : String;
-      Version    : Wayland_Client.Unsigned_32) is
+      Version    : Wayland.Unsigned_32) is
    begin
       Put_Line ("Got a registry event for " & Name & " version" & Version'Image & " id" & Id'Image);
 
@@ -21,25 +19,25 @@ package body Client_Examples.Find_Compositor is
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover
-     (Data     : not null Wayland_Client.Compositor_Ptr;
-      Registry : Wayland_Client.Registry;
-      Id       : Wayland_Client.Unsigned_32) is
+     (Data     : not null Wayland.Client.Compositor_Ptr;
+      Registry : Wayland.Client.Registry;
+      Id       : Wayland.Unsigned_32) is
    begin
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   package Registry_Events is new Wayland_Client.Registry_Events
-     (Data_Type             => Wayland_Client.Compositor,
-      Data_Ptr              => Wayland_Client.Compositor_Ptr,
+   package Registry_Events is new Wayland.Client.Registry_Events
+     (Data_Type             => Wayland.Client.Compositor,
+      Data_Ptr              => Wayland.Client.Compositor_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display  : Wayland_Client.Display;
-   Registry : Wayland_Client.Registry;
+   Display  : Wayland.Client.Display;
+   Registry : Wayland.Client.Registry;
 
-   Compositor : aliased Wayland_Client.Compositor;
+   Compositor : aliased Wayland.Client.Compositor;
 
-   Call_Result : Wayland_Client.Call_Result_Code;
+   Call_Result : Wayland.Client.Call_Result_Code;
 
    procedure Run is
    begin

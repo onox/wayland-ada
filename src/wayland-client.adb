@@ -1,7 +1,15 @@
 with System.Address_To_Access_Conversions;
-with C_Binding.Constants;
 
-package body C_Binding.Linux.Wayland_Client is
+with Interfaces.C;
+
+with C_Binding.Linux;
+
+with Wayland.API;
+with Wayland.Constants;
+
+package body Wayland.Client is
+
+   subtype int is Interfaces.C.int;
 
    use type int;
 
@@ -15,7 +23,7 @@ package body C_Binding.Linux.Wayland_Client is
 
    subtype Registry_Listener_Ptr is Wl_Thin.Registry_Listener_Ptr;
 
-   use C_Binding.Constants;
+   use Wayland.Constants;
 
    package body Display_Events is
 
@@ -40,7 +48,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Code      : Unsigned_32;
                                 Message   : chars_ptr)
       is
-         D : constant Wayland_Client.Display
+         D : constant Wayland.Client.Display
            := (
                My_Display                  => Display,
                My_Fd                       =>
@@ -59,7 +67,7 @@ package body C_Binding.Linux.Wayland_Client is
                                     Display : Wl_Thin.Display_Ptr;
                                     Id      : Unsigned_32)
       is
-         D : constant Wayland_Client.Display
+         D : constant Wayland.Client.Display
            := (
                My_Display                  => Display,
                My_Fd                       =>
@@ -78,7 +86,7 @@ package body C_Binding.Linux.Wayland_Client is
            );
 
       function Subscribe
-        (Display : in out Wayland_Client.Display;
+        (Display : in out Wayland.Client.Display;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -104,7 +112,7 @@ package body C_Binding.Linux.Wayland_Client is
         (Data        : Void_Ptr;
          Registry    : Wl_Thin.Registry_Ptr;
          Id          : Unsigned_32;
-         Interface_V : Wayland_Client.Chars_Ptr;
+         Interface_V : Wayland.Client.Chars_Ptr;
          Version     : Unsigned_32) with
         Convention => C,
         Global     => null;
@@ -113,10 +121,10 @@ package body C_Binding.Linux.Wayland_Client is
         (Data        : Void_Ptr;
          Registry    : Wl_Thin.Registry_Ptr;
          Id          : Unsigned_32;
-         Interface_V : Wayland_Client.Chars_Ptr;
+         Interface_V : Wayland.Client.Chars_Ptr;
          Version     : Unsigned_32)
       is
-         R : constant Wayland_Client.Registry := (My_Registry => Registry);
+         R : constant Wayland.Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Added (Data_Ptr (Conversion.To_Pointer (Data)),
                               R,
@@ -134,12 +142,12 @@ package body C_Binding.Linux.Wayland_Client is
                                          Registry : Wl_Thin.Registry_Ptr;
                                          Id       : Unsigned_32)
       is
-         R : constant Wayland_Client.Registry := (My_Registry => Registry);
+         R : constant Wayland.Client.Registry := (My_Registry => Registry);
       begin
          Global_Object_Removed (Data_Ptr (Conversion.To_Pointer (Data)), R, Id);
       end Internal_Object_Removed;
 
-      Listener : aliased Wayland_Client.Registry_Listener_T :=
+      Listener : aliased Wayland.Client.Registry_Listener_T :=
         (
          Global        => Internal_Object_Added'Unrestricted_Access,
          Global_Remove => Internal_Object_Removed'Unrestricted_Access
@@ -148,7 +156,7 @@ package body C_Binding.Linux.Wayland_Client is
       -- this generic can only be instantiated at library level.
 
       function Subscribe
-        (Registry : in out Wayland_Client.Registry;
+        (Registry : in out Wayland.Client.Registry;
          Data     : not null Data_Ptr) return Call_Result_Code is
          I : int;
       begin
@@ -179,7 +187,7 @@ package body C_Binding.Linux.Wayland_Client is
                                Callback      : Wl_Thin.Callback_Ptr;
                                Callback_Data : Unsigned_32)
       is
-         C : constant Wayland_Client.Callback := (My_Callback => Callback);
+         C : constant Wayland.Client.Callback := (My_Callback => Callback);
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), C, Callback_Data);
       end Internal_Done;
@@ -188,7 +196,7 @@ package body C_Binding.Linux.Wayland_Client is
         := (Done => Internal_Done'Unrestricted_Access);
 
       function Subscribe
-        (Callback : in out Wayland_Client.Callback;
+        (Callback : in out Wayland.Client.Callback;
          Data     : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -219,7 +227,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Shm    : Wl_Thin.Shm_Ptr;
                                  Format : Unsigned_32)
       is
-         S : constant Wayland_Client.Shm := (My_Shm => Shm);
+         S : constant Wayland.Client.Shm := (My_Shm => Shm);
       begin
          Shm_Events.Format
            (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
@@ -229,7 +237,7 @@ package body C_Binding.Linux.Wayland_Client is
         := (Format => Internal_Format'Unrestricted_Access);
 
       function Subscribe
-        (Shm  : in out Wayland_Client.Shm;
+        (Shm  : in out Wayland.Client.Shm;
          Data : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -258,7 +266,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Release (Data   : Void_Ptr;
                                   Buffer : Wl_Thin.Buffer_Ptr)
       is
-         B : constant Wayland_Client.Buffer := (My_Buffer => Buffer);
+         B : constant Wayland.Client.Buffer := (My_Buffer => Buffer);
       begin
          Release (Data_Ptr (Conversion.To_Pointer (Data)), B);
       end Internal_Release;
@@ -267,7 +275,7 @@ package body C_Binding.Linux.Wayland_Client is
         := (Release => Internal_Release'Unrestricted_Access);
 
       function Subscribe
-        (Buffer : in out Wayland_Client.Buffer;
+        (Buffer : in out Wayland.Client.Buffer;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -309,7 +317,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Data_Offer : Wl_Thin.Data_Offer_Ptr;
                                 Mime_Type  : chars_ptr)
       is
-         D : constant Wayland_Client.Data_Offer
+         D : constant Wayland.Client.Data_Offer
            := (My_Data_Offer => Data_Offer);
 
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
@@ -322,7 +330,7 @@ package body C_Binding.Linux.Wayland_Client is
          Data_Offer     : Wl_Thin.Data_Offer_Ptr;
          Source_Actions : Unsigned_32)
       is
-         D : constant Wayland_Client.Data_Offer
+         D : constant Wayland.Client.Data_Offer
            := (My_Data_Offer => Data_Offer);
       begin
          Data_Offer_Events.Source_Actions
@@ -335,7 +343,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Offer : Wl_Thin.Data_Offer_Ptr;
                                  Dnd_Action : Unsigned_32)
       is
-         D : constant Wayland_Client.Data_Offer
+         D : constant Wayland.Client.Data_Offer
            := (My_Data_Offer => Data_Offer);
       begin
          Action (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -349,7 +357,7 @@ package body C_Binding.Linux.Wayland_Client is
             Action         => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Data_Offer : in out Wayland_Client.Data_Offer;
+        (Data_Offer : in out Wayland.Client.Data_Offer;
          Data       : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -405,7 +413,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Source : Wl_Thin.Data_Source_Ptr;
                                  Mime_Type   : chars_ptr)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
 
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
@@ -418,7 +426,7 @@ package body C_Binding.Linux.Wayland_Client is
                                Mime_Type   : chars_ptr;
                                Fd          : Integer)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
 
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
@@ -429,7 +437,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Cancelled (Data        : Void_Ptr;
                                     Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
       begin
          Cancelled (Data_Ptr (Conversion.To_Pointer (Data)), D);
@@ -439,7 +447,7 @@ package body C_Binding.Linux.Wayland_Client is
         (Data        : Void_Ptr;
          Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
       begin
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
@@ -448,7 +456,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Dnd_Finished (Data        : Void_Ptr;
                                        Data_Source : Wl_Thin.Data_Source_Ptr)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
       begin
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
@@ -458,7 +466,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Data_Source : Wl_Thin.Data_Source_Ptr;
                                  Dnd_Action  : Unsigned_32)
       is
-         D : constant Wayland_Client.Data_Source
+         D : constant Wayland.Client.Data_Source
            := (My_Data_Source => Data_Source);
       begin
          Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
@@ -474,7 +482,7 @@ package body C_Binding.Linux.Wayland_Client is
             Action             => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Data_Source : in out Wayland_Client.Data_Source;
+        (Data_Source : in out Wayland.Client.Data_Source;
          Data       : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -534,7 +542,7 @@ package body C_Binding.Linux.Wayland_Client is
                                      Data_Device : Wl_Thin.Data_Device_Ptr;
                                      Id          : Unsigned_32)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
       begin
          Data_Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
@@ -548,11 +556,11 @@ package body C_Binding.Linux.Wayland_Client is
                                 Y           : Fixed;
                                 Id          : Wl_Thin.Data_Offer_Ptr)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
-         S : constant Wayland_Client.Surface
+         S : constant Wayland.Client.Surface
            := (My_Surface => Surface);
-         Offer : constant Wayland_Client.Data_Offer
+         Offer : constant Wayland.Client.Data_Offer
            := (My_Data_Offer => Id);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -567,7 +575,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Leave (Data        : Void_Ptr;
                                 Data_Device : Wl_Thin.Data_Device_Ptr)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), D);
@@ -579,7 +587,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  X           : Fixed;
                                  Y           : Fixed)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
       begin
          Motion (Data_Ptr (Conversion.To_Pointer (Data)), D, Time, X, Y);
@@ -588,7 +596,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Drop (Data        : Void_Ptr;
                                Data_Device : Wl_Thin.Data_Device_Ptr)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
       begin
          Drop (Data_Ptr (Conversion.To_Pointer (Data)), D);
@@ -598,9 +606,9 @@ package body C_Binding.Linux.Wayland_Client is
                                     Data_Device : Wl_Thin.Data_Device_Ptr;
                                     Id          : Wl_Thin.Data_Offer_Ptr)
       is
-         D : constant Wayland_Client.Data_Device
+         D : constant Wayland.Client.Data_Device
            := (My_Data_Device => Data_Device);
-         Offer : constant Wayland_Client.Data_Offer
+         Offer : constant Wayland.Client.Data_Offer
            := (My_Data_Offer => Id);
       begin
          Selection (Data_Ptr (Conversion.To_Pointer (Data)), D, Offer);
@@ -615,7 +623,7 @@ package body C_Binding.Linux.Wayland_Client is
             Selection  => Internal_Selection'Unrestricted_Access);
 
       function Subscribe
-        (Data_Device : in out Wayland_Client.Data_Device;
+        (Data_Device : in out Wayland.Client.Data_Device;
          Data        : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -661,7 +669,7 @@ package body C_Binding.Linux.Wayland_Client is
          Surface : Wl_Thin.Shell_Surface_Ptr;
          Serial  : Unsigned_32)
       is
-         S : constant Wayland_Client.Shell_Surface
+         S : constant Wayland.Client.Shell_Surface
            := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Ping (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -676,7 +684,7 @@ package body C_Binding.Linux.Wayland_Client is
          Width   : Integer;
          Height  : Integer)
       is
-         S : constant Wayland_Client.Shell_Surface
+         S : constant Wayland.Client.Shell_Surface
            := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Configure (Data_Ptr (Conversion.To_Pointer (Data)),
@@ -690,7 +698,7 @@ package body C_Binding.Linux.Wayland_Client is
         (Data    : Void_Ptr;
          Surface : Wl_Thin.Shell_Surface_Ptr)
       is
-         S : constant Wayland_Client.Shell_Surface
+         S : constant Wayland.Client.Shell_Surface
            := (My_Shell_Surface => Surface);
       begin
          Shell_Surface_Popup_Done (Data_Ptr (Conversion.To_Pointer (Data)), S);
@@ -704,7 +712,7 @@ package body C_Binding.Linux.Wayland_Client is
         );
 
       function Subscribe
-        (Surface : in out Wayland_Client.Shell_Surface;
+        (Surface : in out Wayland.Client.Shell_Surface;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -742,8 +750,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface : Wl_Thin.Surface_Ptr;
                                 Output  : Wl_Thin.Output_Ptr)
       is
-         S : constant Wayland_Client.Surface := (My_Surface => Surface);
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         S : constant Wayland.Client.Surface := (My_Surface => Surface);
+         O : constant Wayland.Client.Output := (My_Output => Output);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Enter;
@@ -752,8 +760,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface : Wl_Thin.Surface_Ptr;
                                 Output  : Wl_Thin.Output_Ptr)
       is
-         S : constant Wayland_Client.Surface := (My_Surface => Surface);
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         S : constant Wayland.Client.Surface := (My_Surface => Surface);
+         O : constant Wayland.Client.Output := (My_Output => Output);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Leave;
@@ -763,7 +771,7 @@ package body C_Binding.Linux.Wayland_Client is
             Leave => Internal_Leave'Unrestricted_Access);
 
       function Subscribe
-        (Surface : in out Wayland_Client.Surface;
+        (Surface : in out Wayland.Client.Surface;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -795,7 +803,7 @@ package body C_Binding.Linux.Wayland_Client is
                                             Seat         : Wl_Thin.Seat_Ptr;
                                             Capabilities : Unsigned_32)
       is
-         S : constant Wayland_Client.Seat := (My_Seat => Seat);
+         S : constant Wayland.Client.Seat := (My_Seat => Seat);
       begin
          Seat_Capabilities (Data_Ptr (Conversion.To_Pointer (Data)),
                             S,
@@ -815,7 +823,7 @@ package body C_Binding.Linux.Wayland_Client is
       is
          N : constant String := Interfaces.C.Strings.Value (Name);
 
-         S : constant Wayland_Client.Seat := (My_Seat => Seat);
+         S : constant Wayland.Client.Seat := (My_Seat => Seat);
       begin
          Seat_Name (Data_Ptr (Conversion.To_Pointer (Data)), S, N);
       end Internal_Seat_Name;
@@ -827,7 +835,7 @@ package body C_Binding.Linux.Wayland_Client is
         );
 
       function Subscribe
-        (Seat : in out Wayland_Client.Seat;
+        (Seat : in out Wayland.Client.Seat;
          Data : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -855,8 +863,8 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer   : Wl_Thin.Pointer_Ptr;
          Serial    : Unsigned_32;
          Surface   : Wl_Thin.Surface_Ptr;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed) with
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Leave
@@ -870,8 +878,8 @@ package body C_Binding.Linux.Wayland_Client is
         (Data      : Void_Ptr;
          Pointer   : Wl_Thin.Pointer_Ptr;
          Time      : Unsigned_32;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed) with
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Button
@@ -888,7 +896,7 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wayland_Client.Fixed) with
+         Value   : Wayland.Client.Fixed) with
         Convention => C;
 
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
@@ -920,11 +928,11 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer   : Wl_Thin.Pointer_Ptr;
          Serial    : Unsigned_32;
          Surface   : Wl_Thin.Surface_Ptr;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed)
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
-         S : constant Wayland_Client.Surface := (My_Surface => Surface);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
+         S : constant Wayland.Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Enter (Data_Ptr (Conversion.To_Pointer (Data)),
                         P,
@@ -940,8 +948,8 @@ package body C_Binding.Linux.Wayland_Client is
          Serial  : Unsigned_32;
          Surface : Wl_Thin.Surface_Ptr)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
-         S : constant Wayland_Client.Surface := (My_Surface => Surface);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
+         S : constant Wayland.Client.Surface := (My_Surface => Surface);
       begin
          Pointer_Leave (Data_Ptr (Conversion.To_Pointer (Data)), P, Serial, S);
       end Internal_Pointer_Leave;
@@ -950,10 +958,10 @@ package body C_Binding.Linux.Wayland_Client is
         (Data      : Void_Ptr;
          Pointer   : Wl_Thin.Pointer_Ptr;
          Time      : Unsigned_32;
-         Surface_X : Wayland_Client.Fixed;
-         Surface_Y : Wayland_Client.Fixed)
+         Surface_X : Wayland.Client.Fixed;
+         Surface_Y : Wayland.Client.Fixed)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Motion (Data_Ptr (Conversion.To_Pointer (Data)),
                          P,
@@ -970,7 +978,7 @@ package body C_Binding.Linux.Wayland_Client is
          Button  : Unsigned_32;
          State   : Unsigned_32)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Button (Data_Ptr (Conversion.To_Pointer (Data)),
                          P,
@@ -985,9 +993,9 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer : Wl_Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Unsigned_32;
-         Value   : Wayland_Client.Fixed)
+         Value   : Wayland.Client.Fixed)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis (Data_Ptr (Conversion.To_Pointer (Data)),
                        P,
@@ -999,7 +1007,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
                                         Pointer : Wl_Thin.Pointer_Ptr)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Frame (Data_Ptr (Conversion.To_Pointer (Data)), P);
       end Internal_Pointer_Frame;
@@ -1009,7 +1017,7 @@ package body C_Binding.Linux.Wayland_Client is
          Pointer     : Wl_Thin.Pointer_Ptr;
          Axis_Source : Unsigned_32)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Source (Data_Ptr (Conversion.To_Pointer (Data)),
                               P,
@@ -1022,7 +1030,7 @@ package body C_Binding.Linux.Wayland_Client is
          Time    : Unsigned_32;
          Axis    : Unsigned_32)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
                             P,
@@ -1036,7 +1044,7 @@ package body C_Binding.Linux.Wayland_Client is
          Axis     : Unsigned_32;
          Discrete : Integer)
       is
-         P : constant Wayland_Client.Pointer := (My_Pointer => Pointer);
+         P : constant Wayland.Client.Pointer := (My_Pointer => Pointer);
       begin
          Pointer_Axis_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
                                 P,
@@ -1058,7 +1066,7 @@ package body C_Binding.Linux.Wayland_Client is
         );
 
       function Subscribe
-        (Pointer : in out Wayland_Client.Pointer;
+        (Pointer : in out Wayland.Client.Pointer;
          Data    : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -1130,7 +1138,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  Fd       : Integer;
                                  Size     : Unsigned_32)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Keymap (Data_Ptr (Conversion.To_Pointer (Data)),
                  K,
@@ -1145,8 +1153,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Surface  : Wl_Thin.Surface_Ptr;
                                 Keys     : Wayland_Array_T)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
-         S : constant Wayland_Client.Surface  := (My_Surface => Surface);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
+         S : constant Wayland.Client.Surface  := (My_Surface => Surface);
       begin
          Enter (Data_Ptr (Conversion.To_Pointer (Data)),
                 K,
@@ -1160,8 +1168,8 @@ package body C_Binding.Linux.Wayland_Client is
                                 Serial   : Unsigned_32;
                                 Surface  : Wl_Thin.Surface_Ptr)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
-         S : constant Wayland_Client.Surface  := (My_Surface => Surface);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
+         S : constant Wayland.Client.Surface  := (My_Surface => Surface);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)),
                 K,
@@ -1176,7 +1184,7 @@ package body C_Binding.Linux.Wayland_Client is
                               Key      : Unsigned_32;
                               State    : Unsigned_32)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)),
                               K,
@@ -1194,7 +1202,7 @@ package body C_Binding.Linux.Wayland_Client is
                                     Mods_Locked    : Unsigned_32;
                                     Group          : Unsigned_32)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Modifiers (Data_Ptr (Conversion.To_Pointer (Data)),
                     K,
@@ -1210,7 +1218,7 @@ package body C_Binding.Linux.Wayland_Client is
                                       Rate     : Integer;
                                       Delay_V  : Integer)
       is
-         K : constant Wayland_Client.Keyboard := (My_Keyboard => Keyboard);
+         K : constant Wayland.Client.Keyboard := (My_Keyboard => Keyboard);
       begin
          Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)),
                       K,
@@ -1227,7 +1235,7 @@ package body C_Binding.Linux.Wayland_Client is
             Repeat_Info => Internal_Repeat_Info'Unrestricted_Access);
 
       function Subscribe
-        (Keyboard : in out Wayland_Client.Keyboard;
+        (Keyboard : in out Wayland.Client.Keyboard;
          Data     : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -1305,8 +1313,8 @@ package body C_Binding.Linux.Wayland_Client is
                                X       : Fixed;
                                Y       : Fixed)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
-         S : constant Wayland_Client.Surface := (My_Surface => Surface);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
+         S : constant Wayland.Client.Surface := (My_Surface => Surface);
       begin
          Down (Data_Ptr (Conversion.To_Pointer (Data)),
                T,
@@ -1324,7 +1332,7 @@ package body C_Binding.Linux.Wayland_Client is
                              Time   : Unsigned_32;
                              Id     : Integer)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Up (Data_Ptr (Conversion.To_Pointer (Data)),
              T,
@@ -1340,7 +1348,7 @@ package body C_Binding.Linux.Wayland_Client is
                                  X     : Fixed;
                                  Y     : Fixed)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Motion (Data_Ptr (Conversion.To_Pointer (Data)),
                  T,
@@ -1353,7 +1361,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Frame (Data  : Void_Ptr;
                                 Touch : Wl_Thin.Touch_Ptr)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Frame (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Frame;
@@ -1361,7 +1369,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Cancel (Data  : Void_Ptr;
                                  Touch : Wl_Thin.Touch_Ptr)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Cancel;
@@ -1372,7 +1380,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Major : Fixed;
                                 Minor : Fixed)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Shape (Data_Ptr (Conversion.To_Pointer (Data)),
                 T,
@@ -1386,7 +1394,7 @@ package body C_Binding.Linux.Wayland_Client is
                                       Id          : Integer;
                                       Orientation : Fixed)
       is
-         T : constant Wayland_Client.Touch := (My_Touch => Touch);
+         T : constant Wayland.Client.Touch := (My_Touch => Touch);
       begin
          Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)),
                                    T,
@@ -1404,7 +1412,7 @@ package body C_Binding.Linux.Wayland_Client is
             Orientation => Internal_Orientation'Unrestricted_Access);
 
       function Subscribe
-        (Touch : in out Wayland_Client.Touch;
+        (Touch : in out Wayland.Client.Touch;
          Data  : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -1466,7 +1474,7 @@ package body C_Binding.Linux.Wayland_Client is
                                    Model           : chars_ptr;
                                    Transform       : Integer)
       is
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland.Client.Output := (My_Output => Output);
          Ma : constant String := Interfaces.C.Strings.Value (Make);
          Mo : constant String := Interfaces.C.Strings.Value (Model);
       begin
@@ -1489,7 +1497,7 @@ package body C_Binding.Linux.Wayland_Client is
                                Height  : Integer;
                                Refresh : Integer)
       is
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland.Client.Output := (My_Output => Output);
       begin
          Mode (Data_Ptr (Conversion.To_Pointer (Data)),
                O,
@@ -1502,7 +1510,7 @@ package body C_Binding.Linux.Wayland_Client is
       procedure Internal_Done (Data   : Void_Ptr;
                                Output : Wl_Thin.Output_Ptr)
       is
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland.Client.Output := (My_Output => Output);
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), O);
       end Internal_Done;
@@ -1511,7 +1519,7 @@ package body C_Binding.Linux.Wayland_Client is
                                 Output : Wl_Thin.Output_Ptr;
                                 Factor : Integer)
       is
-         O : constant Wayland_Client.Output := (My_Output => Output);
+         O : constant Wayland.Client.Output := (My_Output => Output);
       begin
          Scale (Data_Ptr (Conversion.To_Pointer (Data)), O, Factor);
       end Internal_Scale;
@@ -1523,7 +1531,7 @@ package body C_Binding.Linux.Wayland_Client is
             Scale    => Internal_Scale'Unrestricted_Access);
 
       function Subscribe
-        (Output : in out Wayland_Client.Output;
+        (Output : in out Wayland.Client.Output;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
@@ -1540,7 +1548,7 @@ package body C_Binding.Linux.Wayland_Client is
 
    end Output_Events;
 
-   procedure Connect (Display : in out Wayland_Client.Display;
+   procedure Connect (Display : in out Wayland.Client.Display;
                       Name    : String := Default_Display_Name) is
    begin
       Display.My_Display := Wl_Thin.Display_Connect (+Name);
@@ -1554,7 +1562,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Connect;
 
-   procedure Disconnect (Display : in out Wayland_Client.Display) is
+   procedure Disconnect (Display : in out Wayland.Client.Display) is
    begin
       if Display.My_Display /= null then
          Wl_Thin.Display_Disconnect (Display.My_Display);
@@ -1562,14 +1570,10 @@ package body C_Binding.Linux.Wayland_Client is
    end Disconnect;
 
    function Check_For_Events
-     (Display : Wayland_Client.Display;
+     (Display : Wayland.Client.Display;
       Timeout : Integer) return Check_For_Events_Status
    is
-      File_Descriptors : constant Linux.Poll_File_Descriptor_Array
-        := (1 => (Descriptor => Display.My_Fd,
-                  Events     => Linux.POLLIN,
-                  Revents    => 0));
-      I : constant Integer := Linux.Poll (File_Descriptors, Timeout);
+      I : constant Integer := C_Binding.Linux.Poll_File_Descriptor_Until_Timeout (Display.My_Fd, Timeout);
    begin
       case I is
          when 1..Integer'Last   => return Events_Need_Processing;
@@ -1579,19 +1583,19 @@ package body C_Binding.Linux.Wayland_Client is
    end Check_For_Events;
 
    function Get_Version
-     (Display : Wayland_Client.Display) return Unsigned_32 is
+     (Display : Wayland.Client.Display) return Unsigned_32 is
    begin
       return Wl_Thin.Display_Get_Version (Display.My_Display);
    end Get_Version;
 
-   procedure Get_Registry (Display  : Wayland_Client.Display;
-                           Registry : in out Wayland_Client.Registry) is
+   procedure Get_Registry (Display  : Wayland.Client.Display;
+                           Registry : in out Wayland.Client.Registry) is
    begin
       Registry.My_Registry
         := Wl_Thin.Display_Get_Registry (Display.My_Display);
    end Get_Registry;
 
-   procedure Destroy (Registry : in out Wayland_Client.Registry) is
+   procedure Destroy (Registry : in out Wayland.Client.Registry) is
    begin
       if Registry.My_Registry /= null then
          Wl_Thin.Registry_Destroy (Registry.My_Registry);
@@ -1599,25 +1603,25 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Dispatch (Display : Wayland_Client.Display) return Integer is
+   function Dispatch (Display : Wayland.Client.Display) return Integer is
    begin
       return Integer (Wayland.API.Display_Dispatch (Display.My_Display));
    end Dispatch;
 
    function Dispatch_Pending
-     (Display : Wayland_Client.Display) return Integer is
+     (Display : Wayland.Client.Display) return Integer is
    begin
       return Wayland.API.Display_Dispatch_Pending (Display.My_Display);
    end Dispatch_Pending;
 
    function Prepare_Read
-     (Display : Wayland_Client.Display) return Integer is
+     (Display : Wayland.Client.Display) return Integer is
    begin
       return Wayland.API.Display_Prepare_Read (Display.My_Display);
    end Prepare_Read;
 
    function Read_Events
-     (Display : Wayland_Client.Display) return Call_Result_Code
+     (Display : Wayland.Client.Display) return Call_Result_Code
    is
       I : constant Integer
         := Wayland.API.Display_Read_Events (Display.My_Display);
@@ -1629,32 +1633,32 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Read_Events;
 
-   procedure Cancel_Read (Display : Wayland_Client.Display) is
+   procedure Cancel_Read (Display : Wayland.Client.Display) is
    begin
       Wayland.API.Display_Cancel_Read (Display.My_Display);
    end Cancel_Read;
 
-   procedure Dispatch (Display : Wayland_Client.Display) is
+   procedure Dispatch (Display : Wayland.Client.Display) is
       I : Integer;
       pragma Unreferenced (I);
    begin
       I := Display.Dispatch;
    end Dispatch;
 
-   function Roundtrip (Display : Wayland_Client.Display) return Integer is
+   function Roundtrip (Display : Wayland.Client.Display) return Integer is
    begin
       return Integer (Wayland.API.Display_Roundtrip (Display.My_Display));
    end Roundtrip;
 
-   procedure Roundtrip (Display : Wayland_Client.Display) is
+   procedure Roundtrip (Display : Wayland.Client.Display) is
       I : Integer;
       pragma Unreferenced (I);
    begin
       I := Display.Roundtrip;
    end Roundtrip;
 
-   procedure Get_Proxy (Compositor  : in out Wayland_Client.Compositor;
-                        Registry    : Wayland_Client.Registry;
+   procedure Get_Proxy (Compositor  : in out Wayland.Client.Compositor;
+                        Registry    : Wayland.Client.Registry;
                         Id          : Unsigned_32;
                         Version     : Unsigned_32)
    is
@@ -1671,21 +1675,21 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Surface_Proxy (Compositor : Wayland_Client.Compositor;
-                             Surface    : in out Wayland_Client.Surface) is
+   procedure Get_Surface_Proxy (Compositor : Wayland.Client.Compositor;
+                             Surface    : in out Wayland.Client.Surface) is
    begin
       Surface.My_Surface :=
         Wl_Thin.Compositor_Create_Surface (Compositor.My_Compositor);
    end Get_Surface_Proxy;
 
-   procedure Get_Region_Proxy (Compositor : Wayland_Client.Compositor;
-                               Region     : in out Wayland_Client.Region) is
+   procedure Get_Region_Proxy (Compositor : Wayland.Client.Compositor;
+                               Region     : in out Wayland.Client.Region) is
    begin
       Region.My_Region :=
         Wl_Thin.Compositor_Create_Region (Compositor.My_Compositor);
    end Get_Region_Proxy;
 
-   procedure Destroy (Compositor : in out Wayland_Client.Compositor) is
+   procedure Destroy (Compositor : in out Wayland.Client.Compositor) is
    begin
       if Compositor.My_Compositor /= null then
          Wl_Thin.Compositor_Destroy (Compositor.My_Compositor);
@@ -1693,13 +1697,13 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Get_Version (Seat : Wayland_Client.Seat) return Unsigned_32 is
+   function Get_Version (Seat : Wayland.Client.Seat) return Unsigned_32 is
    begin
       return Wl_Thin.Seat_Get_Version (Seat.My_Seat);
    end Get_Version;
 
-   procedure Get_Proxy (Seat     : in out Wayland_Client.Seat;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Seat     : in out Wayland.Client.Seat;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1715,32 +1719,32 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Pointer (Seat    : Wayland_Client.Seat;
-                          Pointer : in out Wayland_Client.Pointer) is
+   procedure Get_Pointer (Seat    : Wayland.Client.Seat;
+                          Pointer : in out Wayland.Client.Pointer) is
    begin
       Pointer.My_Pointer := Wl_Thin.Seat_Get_Pointer (Seat.My_Seat);
    end Get_Pointer;
 
-   procedure Get_Keyboard (Seat     : Wayland_Client.Seat;
-                           Keyboard : in out Wayland_Client.Keyboard) is
+   procedure Get_Keyboard (Seat     : Wayland.Client.Seat;
+                           Keyboard : in out Wayland.Client.Keyboard) is
    begin
       Keyboard.My_Keyboard := Wl_Thin.Seat_Get_Keyboard (Seat.My_Seat);
    end Get_Keyboard;
 
-   procedure Get_Touch (Seat  : Wayland_Client.Seat;
-                        Touch : in out Wayland_Client.Touch) is
+   procedure Get_Touch (Seat  : Wayland.Client.Seat;
+                        Touch : in out Wayland.Client.Touch) is
    begin
       Touch.My_Touch := Wl_Thin.Seat_Get_Touch (Seat.My_Seat);
    end Get_Touch;
 
-   procedure Release (Seat : in out Wayland_Client.Seat) is
+   procedure Release (Seat : in out Wayland.Client.Seat) is
    begin
       Wl_Thin.Seat_Release (Seat.My_Seat);
       Seat.My_Seat := null;
    end Release;
 
-   procedure Get_Proxy (Shell    : in out Wayland_Client.Shell;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Shell    : in out Wayland.Client.Shell;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1756,16 +1760,16 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Get_Proxy;
 
-   procedure Get_Shell_Surface (Shell         : Wayland_Client.Shell;
-                                Surface       : Wayland_Client.Surface;
-                                Shell_Surface : in out Wayland_Client.Shell_Surface) is
+   procedure Get_Shell_Surface (Shell         : Wayland.Client.Shell;
+                                Surface       : Wayland.Client.Surface;
+                                Shell_Surface : in out Wayland.Client.Shell_Surface) is
    begin
       Shell_Surface.My_Shell_Surface :=
         Wl_Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);
    end Get_Shell_Surface;
 
-   procedure Get_Proxy (Shm      : in out Wayland_Client.Shm;
-                        Registry : Wayland_Client.Registry;
+   procedure Get_Proxy (Shm      : in out Wayland.Client.Shm;
+                        Registry : Wayland.Client.Registry;
                         Id       : Unsigned_32;
                         Version  : Unsigned_32)
    is
@@ -1782,23 +1786,23 @@ package body C_Binding.Linux.Wayland_Client is
    end Get_Proxy;
 
    procedure Create_Pool
-     (Shm             : Wayland_Client.Shm;
+     (Shm             : Wayland.Client.Shm;
       File_Descriptor : C_Binding.Linux.Files.File;
       Size            : Integer;
-      Pool            : in out Wayland_Client.Shm_Pool) is
+      Pool            : in out Wayland.Client.Shm_Pool) is
    begin
       Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool
         (Shm.My_Shm,
-         Integer (File_Descriptor.My_File_Descriptor),
+         C_Binding.Linux.Files.File_Descriptor (File_Descriptor),
          Size);
    end Create_Pool;
 
-   function Get_Version (Shm : Wayland_Client.Shm) return Unsigned_32 is
+   function Get_Version (Shm : Wayland.Client.Shm) return Unsigned_32 is
    begin
       return Wl_Thin.Shm_Get_Version (Shm.My_Shm);
    end Get_Version;
 
-   procedure Destroy (Shm : in out Wayland_Client.Shm) is
+   procedure Destroy (Shm : in out Wayland.Client.Shm) is
    begin
       if Shm.My_Shm /= null then
          Wl_Thin.Shm_Destroy (Shm.My_Shm);
@@ -1806,13 +1810,13 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Create_Buffer (Pool   : Wayland_Client.Shm_Pool;
+   procedure Create_Buffer (Pool   : Wayland.Client.Shm_Pool;
                             Offset   : Integer;
                             Width    : Integer;
                             Height   : Integer;
                             Stride   : Integer;
                             Format   : Shm_Format;
-                            Buffer : in out Wayland_Client.Buffer) is
+                            Buffer : in out Wayland.Client.Buffer) is
    begin
       Buffer.My_Buffer := Wl_Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,
                                                           Offset,
@@ -1822,19 +1826,19 @@ package body C_Binding.Linux.Wayland_Client is
                                                           Unsigned_32 (Format));
    end Create_Buffer;
 
-   procedure Resize (Pool : Wayland_Client.Shm_Pool;
+   procedure Resize (Pool : Wayland.Client.Shm_Pool;
                      Size : Integer) is
    begin
       Wl_Thin.Shm_Pool_Resize (Pool.My_Shm_Pool, Size);
    end Resize;
 
    function Get_Version
-     (Pool : Wayland_Client.Shm_Pool) return Unsigned_32 is
+     (Pool : Wayland.Client.Shm_Pool) return Unsigned_32 is
    begin
       return Wl_Thin.Shm_Pool_Get_Version (Pool.My_Shm_Pool);
    end Get_Version;
 
-   procedure Destroy (Pool : in out Wayland_Client.Shm_Pool) is
+   procedure Destroy (Pool : in out Wayland.Client.Shm_Pool) is
    begin
       if Pool.My_Shm_Pool /= null then
          Wl_Thin.Shm_Pool_Destroy (Pool.My_Shm_Pool);
@@ -1843,12 +1847,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Destroy;
 
    function Get_Version
-     (Buffer : Wayland_Client.Buffer) return Unsigned_32 is
+     (Buffer : Wayland.Client.Buffer) return Unsigned_32 is
    begin
       return Wl_Thin.Buffer_Get_Version (Buffer.My_Buffer);
    end Get_Version;
 
-   procedure Destroy (Buffer : in out Wayland_Client.Buffer) is
+   procedure Destroy (Buffer : in out Wayland.Client.Buffer) is
    begin
       if Buffer.My_Buffer /= null then
          Wl_Thin.Buffer_Destroy (Buffer.My_Buffer);
@@ -1856,16 +1860,16 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Has_Proxy (Offer : Wayland_Client.Data_Offer) return Boolean is
+   function Has_Proxy (Offer : Wayland.Client.Data_Offer) return Boolean is
       (Offer.My_Data_Offer /= null);
 
    function Get_Version
-     (Offer : Wayland_Client.Data_Offer) return Unsigned_32 is
+     (Offer : Wayland.Client.Data_Offer) return Unsigned_32 is
    begin
       return Wl_Thin.Data_Offer_Get_Version (Offer.My_Data_Offer);
    end Get_Version;
 
-   procedure Destroy (Offer : in out Wayland_Client.Data_Offer) is
+   procedure Destroy (Offer : in out Wayland.Client.Data_Offer) is
    begin
       if Offer.My_Data_Offer /= null then
          Wl_Thin.Data_Offer_Destroy (Offer.My_Data_Offer);
@@ -1928,14 +1932,14 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Pong (Surface : Wayland_Client.Shell_Surface;
+   procedure Pong (Surface : Wayland.Client.Shell_Surface;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
    end Pong;
 
    procedure Move (Surface : Shell_Surface;
-                   Seat    : Wayland_Client.Seat;
+                   Seat    : Wayland.Client.Seat;
                    Serial  : Unsigned_32) is
    begin
       Wl_Thin.Shell_Surface_Move (Surface.My_Shell_Surface,
@@ -1944,7 +1948,7 @@ package body C_Binding.Linux.Wayland_Client is
    end Move;
 
    procedure Resize (Surface : Shell_Surface;
-                     Seat    : Wayland_Client.Seat;
+                     Seat    : Wayland.Client.Seat;
                      Serial  : Unsigned_32;
                      Edges   : Unsigned_32) is
    begin
@@ -1954,13 +1958,13 @@ package body C_Binding.Linux.Wayland_Client is
                                     Edges);
    end Resize;
 
-   procedure Set_Toplevel (Surface : Wayland_Client.Shell_Surface) is
+   procedure Set_Toplevel (Surface : Wayland.Client.Shell_Surface) is
    begin
       Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
    end Set_Toplevel;
 
    procedure Set_Transient (Surface : Shell_Surface;
-                            Parent  : Wayland_Client.Surface;
+                            Parent  : Wayland.Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Flags   : Unsigned_32) is
@@ -1975,7 +1979,7 @@ package body C_Binding.Linux.Wayland_Client is
    procedure Set_Fullscreen (Surface   : Shell_Surface;
                              Method    : Unsigned_32;
                              Framerate : Unsigned_32;
-                             Output    : Wayland_Client.Output) is
+                             Output    : Wayland.Client.Output) is
    begin
       Wl_Thin.Shell_Surface_Set_Fullscreen (Surface.My_Shell_Surface,
                                             Method,
@@ -1984,9 +1988,9 @@ package body C_Binding.Linux.Wayland_Client is
    end Set_Fullscreen;
 
    procedure Set_Popup (Surface : Shell_Surface;
-                        Seat    : Wayland_Client.Seat;
+                        Seat    : Wayland.Client.Seat;
                         Serial  : Unsigned_32;
-                        Parent  : Wayland_Client.Surface;
+                        Parent  : Wayland.Client.Surface;
                         X       : Integer;
                         Y       : Integer;
                         Flags   : Unsigned_32) is
@@ -2001,7 +2005,7 @@ package body C_Binding.Linux.Wayland_Client is
    end Set_Popup;
 
    procedure Set_Maximized (Surface : Shell_Surface;
-                            Output  : Wayland_Client.Output) is
+                            Output  : Wayland.Client.Output) is
    begin
       Wl_Thin.Shell_Surface_Set_Maximized (Surface.My_Shell_Surface,
                                            Output.My_Output);
@@ -2027,15 +2031,15 @@ package body C_Binding.Linux.Wayland_Client is
          +Class_V);
    end Set_Class;
 
-   procedure Attach (Surface : Wayland_Client.Surface;
-                     Buffer  : Wayland_Client.Buffer;
+   procedure Attach (Surface : Wayland.Client.Surface;
+                     Buffer  : Wayland.Client.Buffer;
                      X       : Integer;
                      Y       : Integer) is
    begin
       Wl_Thin.Surface_Attach (Surface.My_Surface, Buffer.My_Buffer, X, Y);
    end Attach;
 
-   procedure Damage (Surface : Wayland_Client.Surface;
+   procedure Damage (Surface : Wayland.Client.Surface;
                      X       : Integer;
                      Y       : Integer;
                      Width   : Integer;
@@ -2044,48 +2048,48 @@ package body C_Binding.Linux.Wayland_Client is
       Wl_Thin.Surface_Damage (Surface.My_Surface, X, Y, Width, Height);
    end Damage;
 
-   function Frame (Surface : Wayland_Client.Surface) return Callback is
+   function Frame (Surface : Wayland.Client.Surface) return Callback is
    begin
       return C : Callback do
          C.My_Callback := Wl_Thin.Surface_Frame (Surface.My_Surface);
       end return;
    end Frame;
 
-   procedure Set_Opaque_Region (Surface : Wayland_Client.Surface;
-                                Region  : Wayland_Client.Region) is
+   procedure Set_Opaque_Region (Surface : Wayland.Client.Surface;
+                                Region  : Wayland.Client.Region) is
    begin
       Wl_Thin.Surface_Set_Opaque_Region (Surface.My_Surface,
                                          Region.My_Region);
    end Set_Opaque_Region;
 
-   procedure Set_Input_Region (Surface : Wayland_Client.Surface;
-                               Region  : Wayland_Client.Region) is
+   procedure Set_Input_Region (Surface : Wayland.Client.Surface;
+                               Region  : Wayland.Client.Region) is
    begin
       Wl_Thin.Surface_Set_Input_Region (Surface.My_Surface,
                                         Region.My_Region);
 
    end Set_Input_Region;
 
-   procedure Commit (Surface : Wayland_Client.Surface) is
+   procedure Commit (Surface : Wayland.Client.Surface) is
    begin
       Wl_Thin.Surface_Commit (Surface.My_Surface);
    end Commit;
 
-   procedure Set_Buffer_Transform (Surface   : Wayland_Client.Surface;
+   procedure Set_Buffer_Transform (Surface   : Wayland.Client.Surface;
                                    Transform : Integer) is
    begin
       Wl_Thin.Surface_Set_Buffer_Transform (Surface.My_Surface,
                                             Transform);
    end Set_Buffer_Transform;
 
-   procedure Set_Buffer_Scale (Surface : Wayland_Client.Surface;
+   procedure Set_Buffer_Scale (Surface : Wayland.Client.Surface;
                                Scale   : Integer) is
    begin
       Wl_Thin.Surface_Set_Buffer_Scale (Surface.My_Surface,
                                         Scale);
    end Set_Buffer_Scale;
 
-   procedure Damage_Buffer (Surface : Wayland_Client.Surface;
+   procedure Damage_Buffer (Surface : Wayland.Client.Surface;
                             X       : Integer;
                             Y       : Integer;
                             Width   : Integer;
@@ -2095,7 +2099,7 @@ package body C_Binding.Linux.Wayland_Client is
         (Surface.My_Surface, X, Y, Width, Height);
    end Damage_Buffer;
 
-   procedure Destroy (Surface : in out Wayland_Client.Surface) is
+   procedure Destroy (Surface : in out Wayland.Client.Surface) is
    begin
       if Surface.My_Surface /= null then
          Wl_Thin.Surface_Destroy (Surface.My_Surface);
@@ -2103,23 +2107,23 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   function Sync (Display : Wayland_Client.Display) return Callback is
+   function Sync (Display : Wayland.Client.Display) return Callback is
    begin
-      return Callback : Wayland_Client.Callback do
+      return Callback : Wayland.Client.Callback do
          Callback.My_Callback := Wl_Thin.Display_Sync (Display.My_Display);
       end return;
    end Sync;
 
    function Get_Version
-     (Registry : Wayland_Client.Registry) return Unsigned_32 is
+     (Registry : Wayland.Client.Registry) return Unsigned_32 is
    begin
       return Wl_Thin.Registry_Get_Version (Registry.My_Registry);
    end Get_Version;
 
-   function Has_Proxy (Callback : Wayland_Client.Callback) return Boolean is
+   function Has_Proxy (Callback : Wayland.Client.Callback) return Boolean is
       (Callback.My_Callback /= null);
 
-   procedure Destroy (Callback : in out Wayland_Client.Callback) is
+   procedure Destroy (Callback : in out Wayland.Client.Callback) is
    begin
       if Callback.My_Callback /= null then
          Wl_Thin.Callback_Destroy (Callback.My_Callback);
@@ -2128,18 +2132,18 @@ package body C_Binding.Linux.Wayland_Client is
    end Destroy;
 
    function Get_Version
-     (Callback : Wayland_Client.Callback) return Unsigned_32 is
+     (Callback : Wayland.Client.Callback) return Unsigned_32 is
    begin
       return Wl_Thin.Callback_Get_Version (Callback.My_Callback);
    end Get_Version;
 
    function Get_Version
-     (Pointer : Wayland_Client.Pointer) return Unsigned_32 is
+     (Pointer : Wayland.Client.Pointer) return Unsigned_32 is
    begin
       return Wl_Thin.Pointer_Get_Version (Pointer.My_Pointer);
    end Get_Version;
 
-   procedure Destroy (Pointer : in out Wayland_Client.Pointer) is
+   procedure Destroy (Pointer : in out Wayland.Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
          Wl_Thin.Pointer_Destroy (Pointer.My_Pointer);
@@ -2147,9 +2151,9 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Set_Cursor (Pointer   : Wayland_Client.Pointer;
+   procedure Set_Cursor (Pointer   : Wayland.Client.Pointer;
                          Serial    : Unsigned_32;
-                         Surface   : Wayland_Client.Surface;
+                         Surface   : Wayland.Client.Surface;
                          Hotspot_X : Integer;
                          Hotspot_Y : Integer) is
    begin
@@ -2160,7 +2164,7 @@ package body C_Binding.Linux.Wayland_Client is
                                   Hotspot_Y);
    end Set_Cursor;
 
-   procedure Release (Pointer : in out Wayland_Client.Pointer) is
+   procedure Release (Pointer : in out Wayland.Client.Pointer) is
    begin
       if Pointer.My_Pointer /= null then
          Wl_Thin.Pointer_Release (Pointer.My_Pointer);
@@ -2169,12 +2173,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Release;
 
    function Get_Version
-     (Keyboard : Wayland_Client.Keyboard) return Unsigned_32 is
+     (Keyboard : Wayland.Client.Keyboard) return Unsigned_32 is
    begin
       return Wl_Thin.Keyboard_Get_Version (Keyboard.My_Keyboard);
    end Get_Version;
 
-   procedure Destroy (Keyboard : in out Wayland_Client.Keyboard) is
+   procedure Destroy (Keyboard : in out Wayland.Client.Keyboard) is
    begin
       if Keyboard.My_Keyboard /= null then
          Wl_Thin.Keyboard_Destroy (Keyboard.My_Keyboard);
@@ -2182,7 +2186,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Keyboard : in out Wayland_Client.Keyboard) is
+   procedure Release (Keyboard : in out Wayland.Client.Keyboard) is
    begin
       if Keyboard.My_Keyboard /= null then
          Wl_Thin.Keyboard_Release (Keyboard.My_Keyboard);
@@ -2190,12 +2194,12 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Release;
 
-   function Get_Version (Touch : Wayland_Client.Touch) return Unsigned_32 is
+   function Get_Version (Touch : Wayland.Client.Touch) return Unsigned_32 is
    begin
       return Wl_Thin.Touch_Get_Version (Touch.My_Touch);
    end Get_Version;
 
-   procedure Destroy (Touch : in out Wayland_Client.Touch) is
+   procedure Destroy (Touch : in out Wayland.Client.Touch) is
    begin
       if Touch.My_Touch /= null then
          Wl_Thin.Touch_Destroy (Touch.My_Touch);
@@ -2203,7 +2207,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Touch : in out Wayland_Client.Touch) is
+   procedure Release (Touch : in out Wayland.Client.Touch) is
    begin
       if Touch.My_Touch /= null then
          Wl_Thin.Touch_Release (Touch.My_Touch);
@@ -2212,12 +2216,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Release;
 
    function Get_Version
-     (Output : Wayland_Client.Output) return Unsigned_32 is
+     (Output : Wayland.Client.Output) return Unsigned_32 is
    begin
       return Wl_Thin.Output_Get_Version (Output.My_Output);
    end Get_Version;
 
-   procedure Destroy (Output : in out Wayland_Client.Output) is
+   procedure Destroy (Output : in out Wayland.Client.Output) is
    begin
       if Output.My_Output /= null then
          Wl_Thin.Output_Destroy (Output.My_Output);
@@ -2225,7 +2229,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Release (Output : in out Wayland_Client.Output) is
+   procedure Release (Output : in out Wayland.Client.Output) is
    begin
       if Output.My_Output /= null then
          Wl_Thin.Output_Release (Output.My_Output);
@@ -2234,12 +2238,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Release;
 
    function Get_Version
-     (Region : Wayland_Client.Region) return Unsigned_32 is
+     (Region : Wayland.Client.Region) return Unsigned_32 is
    begin
       return Wl_Thin.Region_Get_Version (Region.My_Region);
    end Get_Version;
 
-   procedure Destroy (Region : in out Wayland_Client.Region) is
+   procedure Destroy (Region : in out Wayland.Client.Region) is
    begin
       if Region.My_Region /= null then
          Wl_Thin.Region_Destroy (Region.My_Region);
@@ -2247,7 +2251,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Add (Region : Wayland_Client.Region;
+   procedure Add (Region : Wayland.Client.Region;
                   X      : Integer;
                   Y      : Integer;
                   Width  : Integer;
@@ -2256,7 +2260,7 @@ package body C_Binding.Linux.Wayland_Client is
       Wl_Thin.Region_Add (Region.My_Region, X, Y, Width, Height);
    end Add;
 
-   procedure Subtract (Region : Wayland_Client.Region;
+   procedure Subtract (Region : Wayland.Client.Region;
                        X      : Integer;
                        Y      : Integer;
                        Width  : Integer;
@@ -2266,12 +2270,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Subtract;
 
    function Get_Version
-     (S : Wayland_Client.Subcompositor) return Unsigned_32 is
+     (S : Wayland.Client.Subcompositor) return Unsigned_32 is
    begin
       return Wl_Thin.Subcompositor_Get_Version (S.My_Subcompositor);
    end Get_Version;
 
-   procedure Destroy (S : in out Wayland_Client.Subcompositor) is
+   procedure Destroy (S : in out Wayland.Client.Subcompositor) is
    begin
       if S.My_Subcompositor /= null then
          Wl_Thin.Subcompositor_Destroy (S.My_Subcompositor);
@@ -2280,10 +2284,10 @@ package body C_Binding.Linux.Wayland_Client is
    end Destroy;
 
    procedure Get_Subsurface
-     (Subcompositor : Wayland_Client.Subcompositor;
-      Surface       : Wayland_Client.Surface;
-      Parent        : Wayland_Client.Surface;
-      Subsurface    : in out Wayland_Client.Subsurface) is
+     (Subcompositor : Wayland.Client.Subcompositor;
+      Surface       : Wayland.Client.Surface;
+      Parent        : Wayland.Client.Surface;
+      Subsurface    : in out Wayland.Client.Subsurface) is
    begin
       Subsurface.My_Subsurface :=
         Wl_Thin.Subcompositor_Get_Subsurface
@@ -2293,12 +2297,12 @@ package body C_Binding.Linux.Wayland_Client is
    end Get_Subsurface;
 
    function Get_Version
-     (Subsurface : Wayland_Client.Subsurface) return Unsigned_32 is
+     (Subsurface : Wayland.Client.Subsurface) return Unsigned_32 is
    begin
       return Wl_Thin.Subsurface_Get_Version (Subsurface.My_Subsurface);
    end Get_Version;
 
-   procedure Destroy (Subsurface : in out Wayland_Client.Subsurface) is
+   procedure Destroy (Subsurface : in out Wayland.Client.Subsurface) is
    begin
       if Subsurface.My_Subsurface /= null then
          Wl_Thin.Subsurface_Destroy (Subsurface.My_Subsurface);
@@ -2306,7 +2310,7 @@ package body C_Binding.Linux.Wayland_Client is
       end if;
    end Destroy;
 
-   procedure Set_Position (Subsurface : Wayland_Client.Subsurface;
+   procedure Set_Position (Subsurface : Wayland.Client.Subsurface;
                            X          : Integer;
                            Y          : Integer) is
    begin
@@ -2315,26 +2319,26 @@ package body C_Binding.Linux.Wayland_Client is
                                        Y);
    end Set_Position;
 
-   procedure Place_Above (Subsurface : Wayland_Client.Subsurface;
-                          Sibling    : Wayland_Client.Surface) is
+   procedure Place_Above (Subsurface : Wayland.Client.Subsurface;
+                          Sibling    : Wayland.Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Above (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Above;
 
-   procedure Place_Below (Subsurface : Wayland_Client.Subsurface;
-                          Sibling    : Wayland_Client.Surface) is
+   procedure Place_Below (Subsurface : Wayland.Client.Subsurface;
+                          Sibling    : Wayland.Client.Surface) is
    begin
       Wl_Thin.Subsurface_Place_Below (Subsurface.My_Subsurface,
                                       Sibling.My_Surface);
    end Place_Below;
 
-   procedure Set_Sync (Subsurface : Wayland_Client.Subsurface) is
+   procedure Set_Sync (Subsurface : Wayland.Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Sync (Subsurface.My_Subsurface);
    end Set_Sync;
 
-   procedure Set_Desync (Subsurface : Wayland_Client.Subsurface) is
+   procedure Set_Desync (Subsurface : Wayland.Client.Subsurface) is
    begin
       Wl_Thin.Subsurface_Set_Desync (Subsurface.My_Subsurface);
    end Set_Desync;
@@ -2434,11 +2438,11 @@ package body C_Binding.Linux.Wayland_Client is
    end Create_Data_Source;
 
    procedure Get_Data_Device (Manager : Data_Device_Manager;
-                              Seat    : Wayland_Client.Seat;
+                              Seat    : Wayland.Client.Seat;
                               Device  : in out Data_Device) is
    begin
       Device.My_Data_Device := Wl_Thin.Data_Device_Manager_Get_Data_Device
         (Manager.My_Data_Device_Manager, Seat.My_Seat);
    end Get_Data_Device;
 
-end C_Binding.Linux.Wayland_Client;
+end Wayland.Client;
