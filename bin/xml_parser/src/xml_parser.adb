@@ -54,8 +54,8 @@ procedure XML_Parser is
    XML_Exception : exception;
 
    procedure Read_Wayland_XML_File (File_Name : String);
-   procedure Create_Wayland_Spec_File;
-   procedure Create_Wayland_Body_File;
+   procedure Create_Wayland_Spec_File (File_Name : String);
+   procedure Create_Wayland_Body_File (File_Name : String);
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
 
@@ -164,9 +164,9 @@ procedure XML_Parser is
       procedure Check_Wayland_XML_File_Exists;
       procedure Allocate_Space_For_Wayland_XML_Contents;
       procedure Read_Contents_Of_Wayland_XML;
-      procedure Parse_Contents;
+      procedure Parse_Contents (File_Name : String);
       procedure Identify_Protocol_Tag;
-      procedure Identify_Protocol_Children;
+      procedure Identify_Protocol_Children (File_Name : String);
 
       procedure Check_Wayland_XML_File_Exists is
       begin
@@ -211,12 +211,12 @@ procedure XML_Parser is
 
          IO.Close (File);
 
-         Parse_Contents;
+         Parse_Contents (File_Name);
       end Read_Contents_Of_Wayland_XML;
 
       Root_Node : Aida.Deepend.XML_DOM_Parser.Node_Ptr;
 
-      procedure Parse_Contents is
+      procedure Parse_Contents (File_Name : String) is
          Call_Result : Aida.Call_Result;
       begin
          Aida.Deepend.XML_DOM_Parser.Parse
@@ -226,6 +226,7 @@ procedure XML_Parser is
             Put_Line (Call_Result.Message);
          else
             Identify_Protocol_Tag;
+            Identify_Protocol_Children (File_Name);
          end if;
       end Parse_Contents;
 
@@ -233,28 +234,22 @@ procedure XML_Parser is
 
       procedure Identify_Protocol_Tag is
       begin
-         if
-           Root_Node.Id = Node_Kind_Tag
-           and then Name (Root_Node.Tag) = "protocol"
-         then
-            Protocol_Tag := new Wayland_XML.Protocol_Tag;
-            if
-              Attributes (Root_Node.Tag).Length = 1 and then
-              Name (Attributes (Root_Node.Tag) (1).all) = "name"
-            then
-               Set_Name
-                 (Protocol_Tag.all,
-                  Value (Attributes (Root_Node.Tag) (1).all));
-               Identify_Protocol_Children;
-            else
-               Put_Line ("<protocol> node does not have name attribute?");
-            end if;
-         else
-            Put_Line ("Root node is not <protocol> ???");
+         if Root_Node.Id /= Node_Kind_Tag or else Name (Root_Node.Tag) /= "protocol" then
+            raise XML_Exception with "Root node is not <protocol>";
          end if;
+
+         if
+           Attributes (Root_Node.Tag).Length /= 1 or else
+           Name (Attributes (Root_Node.Tag) (1).all) /= "name"
+         then
+            raise XML_Exception with "<protocol> node has no name attribute";
+         end if;
+
+         Protocol_Tag := new Wayland_XML.Protocol_Tag;
+         Set_Name (Protocol_Tag.all, Value (Attributes (Root_Node.Tag) (1).all));
       end Identify_Protocol_Tag;
 
-      procedure Identify_Protocol_Children is
+      procedure Identify_Protocol_Children (File_Name : String) is
 
          function Identify_Copyright
            (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
@@ -720,7 +715,8 @@ procedure XML_Parser is
       begin
          Iterate (Root_Node.Tag);
 
-         Create_Wayland_Spec_File;
+         Create_Wayland_Spec_File (File_Name);
+         Create_Wayland_Body_File (File_Name);
       end Identify_Protocol_Children;
 
    begin
@@ -820,66 +816,109 @@ procedure XML_Parser is
       end loop;
    end Generate_Code_For_Numeric_Constants;
 
-   procedure Create_Wayland_Spec_File is
+   procedure Create_Wayland_Spec_File (File_Name : String) is
       File : Ada.Text_IO.File_Type;
-
-      procedure Generate_Code_For_Header;
 
       procedure Create_Wl_Thin_Spec_File;
 
+      procedure Generate_Code_For_Type_Declarations;
+      procedure Generate_Code_For_The_Interface_Type;
+      procedure Generate_Code_For_The_Interface_Constants;
+      procedure Generate_Code_For_Enum_Constants;
+      procedure Generate_Manually_Edited_Partial_Type_Declarations;
+      procedure Generate_Code_For_The_Private_Part;
+      procedure Generate_Use_Type_Declarions;
+      procedure Generate_Manually_Edited_Code_For_Type_Definitions;
+      procedure Generate_Private_Code_For_The_Interface_Constants;
+
       procedure Create_File is
+         Protocol_Name : constant String := Name (Protocol_Tag.all);
+         Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-client.ads");
+           (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.ads");
 
-         Generate_Code_For_Header;
+         Put_Line (File, "private with Interfaces.C.Strings;");
+         Put_Line (File, "private with " & Package_Name & ".Thin;");
+         New_Line (File);
+         Put_Line (File, "with C_Binding.Linux.Files;");
+         New_Line (File);
+         Put_Line (File, "package " & Package_Name & ".Client is");
+         Put_Line (File, "   pragma Preelaborate;");
+         New_Line (File);
+
+         Generate_Code_For_Type_Declarations;
+         Generate_Code_For_The_Interface_Type;
+         Generate_Code_For_The_Interface_Constants;
+         Generate_Code_For_Enum_Constants;
+         Generate_Manually_Edited_Partial_Type_Declarations;
+         Generate_Code_For_The_Private_Part;
+         Generate_Use_Type_Declarions;
+         Generate_Manually_Edited_Code_For_Type_Definitions;
+         Generate_Private_Code_For_The_Interface_Constants;
+
+         Put_Line (File, "end " & Package_Name & ".Client;");
 
          Ada.Text_IO.Close (File);
 
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-constants.ads");
+           (File, Ada.Text_IO.Out_File, Protocol_Name & "-constants.ads");
 
-         Put_Line (File, "private package Wayland.Constants is");
+         Put_Line (File, "private package " & Package_Name & ".Constants is");
          Put_Line (File, "   pragma Pure;");
          New_Line (File);
 
          Generate_Code_For_Numeric_Constants (File);
 
-         Put_Line (File, "end Wayland.Constants;");
+         Put_Line (File, "end " & Package_Name & ".Constants;");
 
          Ada.Text_IO.Close (File);
 
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-thin.ads");
+           (File, Ada.Text_IO.Out_File, Protocol_Name & "-thin.ads");
+
+         Put_Line (File, "limited with " & Package_Name & ".Client;");
+         Put_Line (File, "");
+         Put_Line (File, "with Interfaces.C.Strings;");
+         Put_Line (File, "");
+         Put_Line (File, "with Wayland.API;");
+         Put_Line (File, "");
+         Put_Line (File, "--  Mostly auto generated from " & File_Name);
+         Put_Line (File, "private package " & Package_Name & ".Thin is");
+         Put_Line (File, "   pragma Preelaborate;");
+         Put_Line (File, "");
+         Put_Line (File, "   subtype Fixed is " & Package_Name & ".Client.Fixed;");
+         Put_Line (File, "   subtype Wayland_Array_T is " & Package_Name & ".Client.Wayland_Array_T;");
+         Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
+         Put_Line (File, "");
+         Put_Line (File, "   --  Begin core parts");
+         Put_Line (File, "");
+         Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
+         Put_Line (File, "");
+         Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
+         Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
+         Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr;");
+         Put_Line (File, "");
+         Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
+         Put_Line (File, "");
+         Put_Line (File, "   --  End core parts");
+         Put_Line (File, "");
 
          Create_Wl_Thin_Spec_File;
+
+         Put_Line (File, "");
+         Put_Line (File, "end " & Package_Name & ".Thin;");
 
          Ada.Text_IO.Close (File);
       end Create_File;
 
       pragma Unmodified (File);
-
-      procedure Generate_Code_For_Type_Declarations;
-
-      procedure Generate_Code_For_Header is
-      begin
-         Put_Line (File, "private with Interfaces.C.Strings;");
-         Put_Line (File, "private with Wayland.Thin;");
-         New_Line (File);
-         Put_Line (File, "with C_Binding.Linux.Files;");
-         New_Line (File);
-         Put_Line (File, "package Wayland.Client is");
-         Put_Line (File, "   pragma Preelaborate;");
-         New_Line (File);
-
-         Generate_Code_For_Type_Declarations;
-      end Generate_Code_For_Header;
-
-      procedure Generate_Code_For_The_Interface_Type;
 
       procedure Generate_Code_For_Type_Declarations is
          procedure Handle_Interface
@@ -904,11 +943,7 @@ procedure XML_Parser is
          Put_Line (File, "   --  Added this linker option here to avoid adding it");
          Put_Line (File, "   --  to each gpr file that with's this Wayland Ada binding.");
          New_Line (File);
-
-         Generate_Code_For_The_Interface_Type;
       end Generate_Code_For_Type_Declarations;
-
-      procedure Generate_Code_For_The_Interface_Constants;
 
       procedure Generate_Code_For_The_Interface_Type is
       begin
@@ -923,14 +958,9 @@ procedure XML_Parser is
          Put_Line (File, "   function Name (I : Interface_Type) return String");
          Put_Line (File, "     with Global => null;");
          New_Line (File);
-
-         Generate_Code_For_The_Interface_Constants;
       end Generate_Code_For_The_Interface_Type;
 
-      procedure Generate_Code_For_Enum_Constants;
-
       procedure Generate_Code_For_The_Interface_Constants is
-
          procedure Handle_Interface
            (Interface_Tag : Wayland_XML.Interface_Tag)
          is
@@ -942,7 +972,6 @@ procedure XML_Parser is
             Put_Line (File, " : constant Interface_Type;");
             New_Line (File);
          end Handle_Interface;
-
       begin
          for Child of Children (Protocol_Tag.all) loop
             if Child.Kind_Id = Child_Interface then
@@ -952,14 +981,9 @@ procedure XML_Parser is
 
          Put_Line (File, "   Default_Display_Name : constant String := ""wayland-0"";");
          New_Line (File);
-
-         Generate_Code_For_Enum_Constants;
       end Generate_Code_For_The_Interface_Constants;
 
-      procedure Generate_Manually_Edited_Partial_Type_Declarations;
-
       procedure Generate_Code_For_Enum_Constants is
-
          procedure Handle_Interface
            (Interface_Tag : aliased Wayland_XML.Interface_Tag)
          is
@@ -1019,18 +1043,13 @@ procedure XML_Parser is
                end if;
             end loop;
          end Handle_Interface;
-
       begin
          for Child of Children (Protocol_Tag.all) loop
             if Child.Kind_Id = Child_Interface then
                Handle_Interface (Child.Interface_Tag.all);
             end if;
          end loop;
-
-         Generate_Manually_Edited_Partial_Type_Declarations;
       end Generate_Code_For_Enum_Constants;
-
-      procedure Generate_Code_For_The_Private_Part;
 
       procedure Generate_Manually_Edited_Partial_Type_Declarations is
       begin
@@ -1356,11 +1375,7 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   end Pointer_Subscriber;");
          Put_Line (File, "");
-
-         Generate_Code_For_The_Private_Part;
       end Generate_Manually_Edited_Partial_Type_Declarations;
-
-      procedure Generate_Use_Type_Declarions;
 
       procedure Generate_Code_For_The_Private_Part is
       begin
@@ -1373,50 +1388,9 @@ procedure XML_Parser is
          New_Line (File);
          Put_Line (File, "   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;");
          New_Line (File);
-
-         Generate_Use_Type_Declarions;
       end Generate_Code_For_The_Private_Part;
 
       procedure Create_Wl_Thin_Spec_File is
-
-         procedure Generate_Code_For_Interface_Constants;
-
-         procedure Write_To_File is
-         begin
-            Put_Line (File, "limited with Wayland.Client;");
-            Put_Line (File, "");
-            Put_Line (File, "with Interfaces.C.Strings;");
-            Put_Line (File, "");
-            Put_Line (File, "with Wayland.API;");
-            Put_Line (File, "");
-            Put_Line (File, "--  Mostly auto generated from Wayland.xml");
-            Put_Line (File, "private package Wayland.Thin is");
-            Put_Line (File, "   pragma Preelaborate;");
-            Put_Line (File, "");
-            Put_Line (File, "   subtype Fixed is Wayland.Client.Fixed;");
-            Put_Line (File, "   subtype Wayland_Array_T is Wayland.Client.Wayland_Array_T;");
-            Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   --  Begin core parts");
-            Put_Line (File, "");
-            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
-            Put_Line (File, "");
-            Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
-            Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
-            Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
-            Put_Line (File, "");
-            Put_Line (File, "   --  End core parts");
-            Put_Line (File, "");
-
-            Generate_Code_For_Interface_Constants;
-
-            Put_Line (File, "");
-            Put_Line (File, "end Wayland.Thin;");
-         end Write_To_File;
 
 --           procedure Generate_Code_For_Numeric_Constants is
 --
@@ -1511,8 +1485,6 @@ procedure XML_Parser is
 --              Generate_Code_For_Interface_Constants;
 --           end Generate_Code_For_Numeric_Constants;
 
-         procedure Generate_Code_For_Interface_Ptrs;
-
          procedure Generate_Code_For_Interface_Constants is
 
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
@@ -1535,11 +1507,7 @@ procedure XML_Parser is
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
             end loop;
-
-            Generate_Code_For_Interface_Ptrs;
          end Generate_Code_For_Interface_Constants;
-
-         procedure Generate_Code_For_Each_Interface;
 
          procedure Generate_Code_For_Interface_Ptrs is
 
@@ -1562,8 +1530,6 @@ procedure XML_Parser is
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
             end loop;
-
-            Generate_Code_For_Each_Interface;
          end Generate_Code_For_Interface_Ptrs;
 
          procedure Generate_Code_For_Each_Interface is
@@ -1979,10 +1945,10 @@ procedure XML_Parser is
          end Generate_Code_For_Each_Interface;
 
       begin
-         Write_To_File;
+         Generate_Code_For_Interface_Constants;
+         Generate_Code_For_Interface_Ptrs;
+         Generate_Code_For_Each_Interface;
       end Create_Wl_Thin_Spec_File;
-
-      procedure Generate_Manually_Edited_Code_For_Type_Definitions;
 
       procedure Generate_Use_Type_Declarions is
 
@@ -2002,11 +1968,7 @@ procedure XML_Parser is
          end loop;
 
          New_Line (File);
-
-         Generate_Manually_Edited_Code_For_Type_Definitions;
       end Generate_Use_Type_Declarions;
-
-      procedure Generate_Private_Code_For_The_Interface_Constants;
 
       procedure Generate_Manually_Edited_Code_For_Type_Definitions is
       begin
@@ -2161,11 +2123,7 @@ procedure XML_Parser is
          Put_Line (File, "   function Has_Proxy (Subsurface : Wayland.Client.Subsurface) return Boolean is");
          Put_Line (File, "     (Subsurface.My_Subsurface /= null);");
          New_Line (File);
-
-         Generate_Private_Code_For_The_Interface_Constants;
       end Generate_Manually_Edited_Code_For_Type_Definitions;
-
-      procedure Generate_Code_For_Footer;
 
       procedure Generate_Private_Code_For_The_Interface_Constants is
 
@@ -2194,21 +2152,13 @@ procedure XML_Parser is
                Handle_Interface (Child.Interface_Tag.all);
             end if;
          end loop;
-
-         Generate_Code_For_Footer;
       end Generate_Private_Code_For_The_Interface_Constants;
-
-      procedure Generate_Code_For_Footer is
-      begin
-         Put_Line (File, "end Wayland.Client;");
-      end Generate_Code_For_Footer;
 
    begin
       Create_File;
-      Create_Wayland_Body_File;
    end Create_Wayland_Spec_File;
 
-   procedure Create_Wayland_Body_File is
+   procedure Create_Wayland_Body_File (File_Name : String) is
       File : Ada.Text_IO.File_Type;
 
       procedure Create_Wl_Thin_Body_File;
@@ -2216,23 +2166,53 @@ procedure XML_Parser is
       procedure Generate_Manually_Edited_Code;
 
       procedure Create_File is
+         Protocol_Name : constant String := Name (Protocol_Tag.all);
+         Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-client.adb");
+           (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.adb");
 
-         Put_Line (File, "package body Wayland.Client is");
+         Put_Line (File, "package body " & Package_Name & ".Client is");
          New_Line (File);
 
          Generate_Manually_Edited_Code;
+
+         Put_Line (File, "end " & Package_Name & ".Client;");
 
          Ada.Text_IO.Close (File);
 
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-thin.adb");
+           (File, Ada.Text_IO.Out_File, Protocol_Name & "-thin.adb");
+
+         Put_Line (File, "with " & Package_Name & ".Constants;");
+         Put_Line (File, "");
+         Put_Line (File, "use " & Package_Name & ".Constants;");
+         Put_Line (File, "");
+         Put_Line (File, "--  Mostly auto generated from " & File_Name);
+         Put_Line (File, "package body " & Package_Name & ".Thin is");
+         Put_Line (File, "");
+         Put_Line (File, "   use type Proxy_Ptr;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr is");
+         Put_Line (File, "   begin");
+         Put_Line (File, "      return Wayland.API.Display_Connect (Name);");
+         Put_Line (File, "   end Display_Connect;");
+         Put_Line (File, "");
+         Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr) is");
+         Put_Line (File, "      use type Wayland.API.Display_Ptr;");
+         Put_Line (File, "   begin");
+         Put_Line (File, "      if This /= null then");
+         Put_Line (File, "         Wayland.API.Display_Disconnect (This);");
+         Put_Line (File, "         This := null;");
+         Put_Line (File, "      end if;");
+         Put_Line (File, "   end Display_Disconnect;");
 
          Create_Wl_Thin_Body_File;
+
+         Put_Line (File, "");
+         Put_Line (File, "end " & Package_Name & ".Thin;");
 
          Ada.Text_IO.Close (File);
       end Create_File;
@@ -2241,41 +2221,7 @@ procedure XML_Parser is
 
       procedure Create_Wl_Thin_Body_File is
 
-         procedure Generate_Code_For_Protocol_Tag_Children;
-
-         procedure Write_To_File is
-         begin
-            Put_Line (File, "with Wayland.Constants;");
-            Put_Line (File, "");
-            Put_Line (File, "use Wayland.Constants;");
-            Put_Line (File, "");
-            Put_Line (File, "--  Mostly auto generated from Wayland.xml");
-            Put_Line (File, "package body Wayland.Thin is");
-            Put_Line (File, "");
-            Put_Line (File, "   use type Proxy_Ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   function Display_Connect (Name : C_String) return Display_Ptr is");
-            Put_Line (File, "   begin");
-            Put_Line (File, "      return Wayland.API.Display_Connect (Name);");
-            Put_Line (File, "   end Display_Connect;");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr) is");
-            Put_Line (File, "      use type Wayland.API.Display_Ptr;");
-            Put_Line (File, "   begin");
-            Put_Line (File, "      if This /= null then");
-            Put_Line (File, "         Wayland.API.Display_Disconnect (This);");
-            Put_Line (File, "         This := null;");
-            Put_Line (File, "      end if;");
-            Put_Line (File, "   end Display_Disconnect;");
-
-            Generate_Code_For_Protocol_Tag_Children;
-
-            Put_Line (File, "");
-            Put_Line (File, "end Wayland.Thin;");
-         end Write_To_File;
-
          procedure Generate_Code_For_Protocol_Tag_Children is
-
             procedure Handle_Interface
               (Interface_Tag : aliased Wayland_XML.Interface_Tag)
             is
@@ -2651,10 +2597,8 @@ procedure XML_Parser is
             end loop;
          end Generate_Code_For_Protocol_Tag_Children;
       begin
-         Write_To_File;
+         Generate_Code_For_Protocol_Tag_Children;
       end Create_Wl_Thin_Body_File;
-
-      procedure Generate_Code_For_Footer;
 
       procedure Generate_Manually_Edited_Code is
       begin
@@ -3230,15 +3174,7 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Destroy;");
          Put_Line (File, "");
-
-         Generate_Code_For_Footer;
       end Generate_Manually_Edited_Code;
-
-      procedure Generate_Code_For_Footer is
-      begin
-         Put_Line (File, "end Wayland.Client;");
-      end Generate_Code_For_Footer;
-
    begin
       Create_File;
    end Create_Wayland_Body_File;
