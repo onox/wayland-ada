@@ -730,6 +730,97 @@ procedure XML_Parser is
 
    pragma Unmodified (Protocol_Tag);
 
+   procedure Generate_Code_For_Numeric_Constants (File : Ada.Text_IO.File_Type) is
+
+      procedure Handle_Interface
+        (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+      is
+         procedure Generate_Code_For_Opcodes is
+            I : Integer := 0;
+
+            procedure Generate_Code
+              (Request_Tag : Wayland_XML.Request_Tag)
+            is
+               Name : constant String
+                 := Xml_Parser_Utils.Adaify_Name
+                   (Wayland_XML.Name (Interface_Tag) & "_" &
+                      Wayland_XML.Name (Request_Tag));
+            begin
+               Put (File, "   " & Name & " : constant := " & Aida.To_String (I) & ";");
+               Put_Line (File, "");
+
+               I := I + 1;
+            end Generate_Code;
+         begin
+            for Child of Children (Interface_Tag) loop
+               if Child.Kind_Id = Child_Request then
+                  Generate_Code (Child.Request_Tag.all);
+               end if;
+            end loop;
+         end Generate_Code_For_Opcodes;
+
+         procedure Generate_Code_For_Event_Since_Version is
+
+            procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag) is
+               Name : constant String
+                 := Xml_Parser_Utils.Adaify_Name
+                   (Wayland_XML.Name (Interface_Tag) & "_" &
+                      Wayland_XML.Name (Event_Tag) & "_SINCE_VERSION");
+            begin
+               if Exists_Since_Attribute (Event_Tag) then
+                  Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_Attribute_As_Pos32 (Event_Tag)) & ";");
+               else
+                  Put_Line (File, "   " & Name & " : constant := 1;");
+               end if;
+               Put_Line (File, "");
+            end Generate_Code;
+
+         begin
+            for Child of Children (Interface_Tag) loop
+               if Child.Kind_Id = Child_Event then
+                  Generate_Code (Child.Event_Tag.all);
+               end if;
+            end loop;
+         end Generate_Code_For_Event_Since_Version;
+
+         procedure Generate_Code_For_Opcodes_Since_Version is
+
+            procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
+               Name : constant String
+                 := Xml_Parser_Utils.Adaify_Name
+                   (Wayland_XML.Name (Interface_Tag) & "_" &
+                      Wayland_XML.Name (Request_Tag) & "_SINCE_VERSION");
+            begin
+               if Exists_Since (Request_Tag) then
+                  Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_As_Pos32 (Request_Tag)) & ";");
+               else
+                  Put_Line (File, "   " & Name & " : constant := 1;");
+               end if;
+               Put_Line (File, "");
+            end Generate_Code;
+
+         begin
+            for Child of Children (Interface_Tag) loop
+               if Child.Kind_Id = Child_Request then
+                  Generate_Code (Child.Request_Tag.all);
+               end if;
+            end loop;
+         end Generate_Code_For_Opcodes_Since_Version;
+
+      begin
+         Generate_Code_For_Opcodes;
+         Generate_Code_For_Event_Since_Version;
+         Generate_Code_For_Opcodes_Since_Version;
+      end Handle_Interface;
+
+   begin
+      for Child of Children (Protocol_Tag.all) loop
+         if Child.Kind_Id = Child_Interface then
+            Handle_Interface (Child.Interface_Tag.all);
+         end if;
+      end loop;
+   end Generate_Code_For_Numeric_Constants;
+
    procedure Create_Wayland_Spec_File is
       File : Ada.Text_IO.File_Type;
 
@@ -743,6 +834,21 @@ procedure XML_Parser is
            (File, Ada.Text_IO.Out_File, "wayland-client.ads");
 
          Generate_Code_For_Header;
+
+         Ada.Text_IO.Close (File);
+
+         -----------------------------------------------------------------------
+
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "wayland-constants.ads");
+
+         Put_Line (File, "private package Wayland.Constants is");
+         Put_Line (File, "   pragma Pure;");
+         New_Line (File);
+
+         Generate_Code_For_Numeric_Constants (File);
+
+         Put_Line (File, "end Wayland.Constants;");
 
          Ada.Text_IO.Close (File);
 
@@ -845,7 +951,7 @@ procedure XML_Parser is
             end if;
          end loop;
 
-         Put_Line (File, "   Default_Display_Name : constant C_String := ""wayland-0"" & Nul;");
+         Put_Line (File, "   Default_Display_Name : constant String := ""wayland-0"";");
          New_Line (File);
 
          Generate_Code_For_Enum_Constants;
@@ -925,7 +1031,7 @@ procedure XML_Parser is
          Generate_Manually_Edited_Partial_Type_Declarations;
       end Generate_Code_For_Enum_Constants;
 
-      procedure Generate_Code_For_Numeric_Constants;
+      procedure Generate_Code_For_The_Private_Part;
 
       procedure Generate_Manually_Edited_Partial_Type_Declarations is
       begin
@@ -1252,103 +1358,8 @@ procedure XML_Parser is
          Put_Line (File, "   end Pointer_Subscriber;");
          Put_Line (File, "");
 
-         Generate_Code_For_Numeric_Constants;
-      end Generate_Manually_Edited_Partial_Type_Declarations;
-
-      procedure Generate_Code_For_The_Private_Part;
-
-      procedure Generate_Code_For_Numeric_Constants is
-
-         procedure Handle_Interface
-           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
-         is
-            procedure Generate_Code_For_Opcodes is
-               I : Integer := 0;
-
-               procedure Generate_Code
-                 (Request_Tag : Wayland_XML.Request_Tag)
-               is
-                  Name : constant String
-                    := Xml_Parser_Utils.Adaify_Name
-                      (Wayland_XML.Name (Interface_Tag) & "_" &
-                         Wayland_XML.Name (Request_Tag));
-               begin
-                  Put (File, "   " & Name & " : constant := " & Aida.To_String (I) & ";");
-                  Put_Line (File, "");
-
-                  I := I + 1;
-               end Generate_Code;
-            begin
-               for Child of Children (Interface_Tag) loop
-                  if Child.Kind_Id = Child_Request then
-                     Generate_Code (Child.Request_Tag.all);
-                  end if;
-               end loop;
-            end Generate_Code_For_Opcodes;
-
-            procedure Generate_Code_For_Event_Since_Version is
-
-               procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag) is
-                  Name : constant String
-                    := Xml_Parser_Utils.Adaify_Name
-                      (Wayland_XML.Name (Interface_Tag) & "_" &
-                         Wayland_XML.Name (Event_Tag) & "_SINCE_VERSION");
-               begin
-                  if Exists_Since_Attribute (Event_Tag) then
-                     Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_Attribute_As_Pos32 (Event_Tag)) & ";");
-                  else
-                     Put_Line (File, "   " & Name & " : constant := 1;");
-                  end if;
-                  Put_Line (File, "");
-               end Generate_Code;
-
-            begin
-               for Child of Children (Interface_Tag) loop
-                  if Child.Kind_Id = Child_Event then
-                     Generate_Code (Child.Event_Tag.all);
-                  end if;
-               end loop;
-            end Generate_Code_For_Event_Since_Version;
-
-            procedure Generate_Code_For_Opcodes_Since_Version is
-
-               procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
-                  Name : constant String
-                    := Xml_Parser_Utils.Adaify_Name
-                      (Wayland_XML.Name (Interface_Tag) & "_" &
-                         Wayland_XML.Name (Request_Tag) & "_SINCE_VERSION");
-               begin
-                  if Exists_Since (Request_Tag) then
-                     Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_As_Pos32 (Request_Tag)) & ";");
-                  else
-                     Put_Line (File, "   " & Name & " : constant := 1;");
-                  end if;
-                  Put_Line (File, "");
-               end Generate_Code;
-
-            begin
-               for Child of Children (Interface_Tag) loop
-                  if Child.Kind_Id = Child_Request then
-                     Generate_Code (Child.Request_Tag.all);
-                  end if;
-               end loop;
-            end Generate_Code_For_Opcodes_Since_Version;
-
-         begin
-            Generate_Code_For_Opcodes;
-            Generate_Code_For_Event_Since_Version;
-            Generate_Code_For_Opcodes_Since_Version;
-         end Handle_Interface;
-
-      begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
-
          Generate_Code_For_The_Private_Part;
-      end Generate_Code_For_Numeric_Constants;
+      end Generate_Manually_Edited_Partial_Type_Declarations;
 
       procedure Generate_Use_Type_Declarions;
 
@@ -2332,7 +2343,7 @@ procedure XML_Parser is
                   Put_Line (File, "   begin");
 
                   if Xml_Parser_Utils.Exists_Destructor (Interface_Tag) then
-                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, Wl_" &
+                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, Wayland.Constants." &
                        Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag) & "_Destroy") & ");");
                      Put_Line (File, "");
                   end if;
@@ -2350,7 +2361,7 @@ procedure XML_Parser is
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
                      Opcode          : constant String
-                       := "Wl_" & Xml_Parser_Utils.Adaify_Name
+                       := "Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name
                             (Interface_Tag) & "_" & Name (Request_Tag));
                      Subprogram_Name : constant String
@@ -2411,7 +2422,7 @@ procedure XML_Parser is
                                     Put_Line (File, "          (" & Name & ".all,");
                                     Put_Line
                                       (File,
-                                       "           " & Xml_Parser_Utils.Adaify_Name
+                                       "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
                                          (Wayland_XML.Name (Interface_Tag) & "_" &
                                             Wayland_XML.Name (Request_Tag)) & ",");
                                     Put_Line
@@ -2445,7 +2456,7 @@ procedure XML_Parser is
                                  Put_Line (File, "          (" & Name & ".all,");
                                  Put_Line
                                    (File,
-                                    "           " & Xml_Parser_Utils.Adaify_Name
+                                    "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
                                       (Wayland_XML.Name (Interface_Tag) & "_" &
                                          Wayland_XML.Name (Request_Tag)) & ",");
                                  Put_Line
@@ -2496,7 +2507,7 @@ procedure XML_Parser is
                                  Put_Line (File, "        (" & Name & ".all,");
                                  Put_Line
                                    (File,
-                                    "         " & Xml_Parser_Utils.Adaify_Name
+                                    "         Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
                                       (Wayland_XML.Name (Interface_Tag) & "_" &
                                          Wayland_XML.Name (Request_Tag)) & ",");
                                  Put_Line (File, "         Interface_V,");
@@ -2530,7 +2541,7 @@ procedure XML_Parser is
                               Put_Line (File, "          (" & Name & ".all,");
                               Put_Line
                                 (File,
-                                 "           " & Xml_Parser_Utils.Adaify_Name
+                                 "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
                                    (Wayland_XML.Name (Interface_Tag) & "_" &
                                       Wayland_XML.Name (Request_Tag)) & ",");
                               Put_Line

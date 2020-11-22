@@ -53,7 +53,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Display.all,
-           Wl_Display_Sync,
+           Wayland.Constants.Display_Sync,
            Callback_Interface'Access,
            0);
    begin
@@ -64,7 +64,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Display.all,
-           Wl_Display_Get_Registry,
+           Wayland.Constants.Display_Get_Registry,
            Registry_Interface'Access,
            0);
    begin
@@ -107,7 +107,7 @@ package body Wayland.Thin is
    begin
       return Wayland.API.Proxy_Marshal_Constructor_Versioned
         (Registry.all,
-         Wl_Registry_Bind,
+         Wayland.Constants.Registry_Bind,
          Interface_V,
          New_Id,
          Name,
@@ -168,7 +168,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Compositor.all,
-           Wl_Compositor_Create_Surface,
+           Wayland.Constants.Compositor_Create_Surface,
            Surface_Interface'Access,
            0);
    begin
@@ -179,7 +179,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Compositor.all,
-           Wl_Compositor_Create_Region,
+           Wayland.Constants.Compositor_Create_Region,
            Region_Interface'Access,
            0);
    begin
@@ -203,7 +203,7 @@ package body Wayland.Thin is
 
    procedure Shm_Pool_Destroy (Shm_Pool : Shm_Pool_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wl_Shm_Pool_Destroy);
+      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wayland.Constants.Shm_Pool_Destroy);
 
       Wayland.API.Proxy_Destroy (Shm_Pool.all);
    end Shm_Pool_Destroy;
@@ -219,7 +219,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Shm_Pool.all,
-           Wl_Shm_Pool_Create_Buffer,
+           Wayland.Constants.Shm_Pool_Create_Buffer,
            Buffer_Interface'Access,
            0,
            Offset,
@@ -233,7 +233,7 @@ package body Wayland.Thin is
 
    procedure Shm_Pool_Resize (Shm_Pool : Shm_Pool_Ptr; Size : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wl_Shm_Pool_Resize, Size);
+      Wayland.API.Proxy_Marshal (Shm_Pool.all, Wayland.Constants.Shm_Pool_Resize, Size);
    end Shm_Pool_Resize;
 
    function Shm_Add_Listener
@@ -268,7 +268,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Shm.all,
-           Wl_Shm_Create_Pool,
+           Wayland.Constants.Shm_Create_Pool,
            Shm_Pool_Interface'Access,
            0,
            Fd,
@@ -302,7 +302,7 @@ package body Wayland.Thin is
 
    procedure Buffer_Destroy (Buffer : Buffer_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Buffer.all, Wl_Buffer_Destroy);
+      Wayland.API.Proxy_Marshal (Buffer.all, Wayland.Constants.Buffer_Destroy);
 
       Wayland.API.Proxy_Destroy (Buffer.all);
    end Buffer_Destroy;
@@ -332,7 +332,7 @@ package body Wayland.Thin is
 
    procedure Data_Offer_Destroy (Data_Offer : Data_Offer_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Destroy);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wayland.Constants.Data_Offer_Destroy);
 
       Wayland.API.Proxy_Destroy (Data_Offer.all);
    end Data_Offer_Destroy;
@@ -342,7 +342,11 @@ package body Wayland.Thin is
       Serial     : Unsigned_32;
       Mime_Type  : Chars_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Accept, Serial, Mime_Type);
+      Wayland.API.Proxy_Marshal
+        (Data_Offer.all,
+         Wayland.Constants.Data_Offer_Accept,
+         Serial,
+         Mime_Type);
    end Data_Offer_Accept;
 
    procedure Data_Offer_Receive
@@ -350,12 +354,16 @@ package body Wayland.Thin is
       Mime_Type  : C_String;
       Fd         : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Receive, Mime_Type, Fd);
+      Wayland.API.Proxy_Marshal
+        (Data_Offer.all,
+         Wayland.Constants.Data_Offer_Receive,
+         Mime_Type,
+         Fd);
    end Data_Offer_Receive;
 
    procedure Data_Offer_Finish (Data_Offer : Data_Offer_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Offer.all, Wl_Data_Offer_Finish);
+      Wayland.API.Proxy_Marshal (Data_Offer.all, Wayland.Constants.Data_Offer_Finish);
    end Data_Offer_Finish;
 
    procedure Data_Offer_Set_Actions
@@ -365,7 +373,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Offer.all,
-         Wl_Data_Offer_Set_Actions,
+         Wayland.Constants.Data_Offer_Set_Actions,
          Dnd_Actions,
          Preferred_Action);
    end Data_Offer_Set_Actions;
@@ -395,19 +403,25 @@ package body Wayland.Thin is
 
    procedure Data_Source_Destroy (Data_Source : Data_Source_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Destroy);
+      Wayland.API.Proxy_Marshal (Data_Source.all, Wayland.Constants.Data_Source_Destroy);
 
       Wayland.API.Proxy_Destroy (Data_Source.all);
    end Data_Source_Destroy;
 
    procedure Data_Source_Offer (Data_Source : Data_Source_Ptr; Mime_Type : Chars_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Offer, Mime_Type);
+      Wayland.API.Proxy_Marshal
+        (Data_Source.all,
+         Wayland.Constants.Data_Source_Offer,
+         Mime_Type);
    end Data_Source_Offer;
 
    procedure Data_Source_Set_Actions (Data_Source : Data_Source_Ptr; Dnd_Actions : Unsigned_32) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Source.all, Wl_Data_Source_Set_Actions, Dnd_Actions);
+      Wayland.API.Proxy_Marshal
+        (Data_Source.all,
+         Wayland.Constants.Data_Source_Set_Actions,
+         Dnd_Actions);
    end Data_Source_Set_Actions;
 
    function Data_Device_Add_Listener
@@ -447,7 +461,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Device.all,
-         Wl_Data_Device_Start_Drag,
+         Wayland.Constants.Data_Device_Start_Drag,
          Source.all'Address,
          Origin.all'Address,
          Icon.all'Address,
@@ -461,14 +475,14 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Device.all,
-         Wl_Data_Device_Set_Selection,
+         Wayland.Constants.Data_Device_Set_Selection,
          Source.all'Address,
          Serial);
    end Data_Device_Set_Selection;
 
    procedure Data_Device_Release (Data_Device : Data_Device_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Data_Device.all, Wl_Data_Device_Release);
+      Wayland.API.Proxy_Marshal (Data_Device.all, Wayland.Constants.Data_Device_Release);
    end Data_Device_Release;
 
    procedure Data_Device_Manager_Set_User_Data
@@ -501,7 +515,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Data_Device_Manager.all,
-           Wl_Data_Device_Manager_Create_Data_Source,
+           Wayland.Constants.Data_Device_Manager_Create_Data_Source,
            Data_Source_Interface'Access,
            0);
    begin
@@ -515,7 +529,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Data_Device_Manager.all,
-           Wl_Data_Device_Manager_Get_Data_Device,
+           Wayland.Constants.Data_Device_Manager_Get_Data_Device,
            Data_Device_Interface'Access,
            0,
            Seat.all'Address);
@@ -550,7 +564,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Shell.all,
-           Wl_Shell_Get_Shell_Surface,
+           Wayland.Constants.Shell_Get_Shell_Surface,
            Shell_Surface_Interface'Access,
            0,
            Surface.all'Address);
@@ -588,7 +602,10 @@ package body Wayland.Thin is
 
    procedure Shell_Surface_Pong (Shell_Surface : Shell_Surface_Ptr; Serial : Unsigned_32) is
    begin
-      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Pong, Serial);
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
+         Wayland.Constants.Shell_Surface_Pong,
+         Serial);
    end Shell_Surface_Pong;
 
    procedure Shell_Surface_Move
@@ -598,7 +615,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Move,
+         Wayland.Constants.Shell_Surface_Move,
          Seat.all'Address,
          Serial);
    end Shell_Surface_Move;
@@ -611,7 +628,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Resize,
+         Wayland.Constants.Shell_Surface_Resize,
          Seat.all'Address,
          Serial,
          Edges);
@@ -619,7 +636,7 @@ package body Wayland.Thin is
 
    procedure Shell_Surface_Set_Toplevel (Shell_Surface : Shell_Surface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Toplevel);
+      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wayland.Constants.Shell_Surface_Set_Toplevel);
    end Shell_Surface_Set_Toplevel;
 
    procedure Shell_Surface_Set_Transient
@@ -631,7 +648,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Set_Transient,
+         Wayland.Constants.Shell_Surface_Set_Transient,
          Parent.all'Address,
          X,
          Y,
@@ -646,7 +663,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Set_Fullscreen,
+         Wayland.Constants.Shell_Surface_Set_Fullscreen,
          Method,
          Framerate,
          Output.all'Address);
@@ -663,7 +680,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Set_Popup,
+         Wayland.Constants.Shell_Surface_Set_Popup,
          Seat.all'Address,
          Serial,
          Parent.all'Address,
@@ -678,18 +695,28 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
-         Wl_Shell_Surface_Set_Maximized,
+         Wayland.Constants.Shell_Surface_Set_Maximized,
          Output.all'Address);
    end Shell_Surface_Set_Maximized;
 
-   procedure Shell_Surface_Set_Title (Shell_Surface : Shell_Surface_Ptr; Title : Chars_Ptr) is
+   procedure Shell_Surface_Set_Title
+     (Shell_Surface : Shell_Surface_Ptr;
+      Title         : Chars_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Title, Title);
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
+         Wayland.Constants.Shell_Surface_Set_Title,
+         Title);
    end Shell_Surface_Set_Title;
 
-   procedure Shell_Surface_Set_Class (Shell_Surface : Shell_Surface_Ptr; Class_V : Chars_Ptr) is
+   procedure Shell_Surface_Set_Class
+     (Shell_Surface : Shell_Surface_Ptr;
+      Class_V       : Chars_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Shell_Surface.all, Wl_Shell_Surface_Set_Class, Class_V);
+      Wayland.API.Proxy_Marshal
+        (Shell_Surface.all,
+         Wayland.Constants.Shell_Surface_Set_Class,
+         Class_V);
    end Shell_Surface_Set_Class;
 
    function Surface_Add_Listener
@@ -717,7 +744,7 @@ package body Wayland.Thin is
 
    procedure Surface_Destroy (Surface : Surface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Destroy);
+      Wayland.API.Proxy_Marshal (Surface.all, Wayland.Constants.Surface_Destroy);
 
       Wayland.API.Proxy_Destroy (Surface.all);
    end Surface_Destroy;
@@ -728,7 +755,12 @@ package body Wayland.Thin is
       X       : Integer;
       Y       : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Attach, Buffer.all'Address, X, Y);
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
+         Wayland.Constants.Surface_Attach,
+         Buffer.all'Address,
+         X,
+         Y);
    end Surface_Attach;
 
    procedure Surface_Damage
@@ -738,14 +770,20 @@ package body Wayland.Thin is
       Width   : Integer;
       Height  : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Damage, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
+         Wayland.Constants.Surface_Damage,
+         X,
+         Y,
+         Width,
+         Height);
    end Surface_Damage;
 
    function Surface_Frame (Surface : Surface_Ptr) return Callback_Ptr is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Surface.all,
-           Wl_Surface_Frame,
+           Wayland.Constants.Surface_Frame,
            Callback_Interface'Access,
            0);
    begin
@@ -756,7 +794,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
-         Wl_Surface_Set_Opaque_Region,
+         Wayland.Constants.Surface_Set_Opaque_Region,
          Region.all'Address);
    end Surface_Set_Opaque_Region;
 
@@ -764,23 +802,29 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
-         Wl_Surface_Set_Input_Region,
+         Wayland.Constants.Surface_Set_Input_Region,
          Region.all'Address);
    end Surface_Set_Input_Region;
 
    procedure Surface_Commit (Surface : Surface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Commit);
+      Wayland.API.Proxy_Marshal (Surface.all, Wayland.Constants.Surface_Commit);
    end Surface_Commit;
 
    procedure Surface_Set_Buffer_Transform (Surface : Surface_Ptr; Transform : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Set_Buffer_Transform, Transform);
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
+         Wayland.Constants.Surface_Set_Buffer_Transform,
+         Transform);
    end Surface_Set_Buffer_Transform;
 
    procedure Surface_Set_Buffer_Scale (Surface : Surface_Ptr; Scale : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Surface.all, Wl_Surface_Set_Buffer_Scale, Scale);
+      Wayland.API.Proxy_Marshal
+        (Surface.all,
+         Wayland.Constants.Surface_Set_Buffer_Scale,
+         Scale);
    end Surface_Set_Buffer_Scale;
 
    procedure Surface_Damage_Buffer
@@ -792,7 +836,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
-         Wl_Surface_Damage_Buffer,
+         Wayland.Constants.Surface_Damage_Buffer,
          X,
          Y,
          Width,
@@ -831,7 +875,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Seat.all,
-           Wl_Seat_Get_Pointer,
+           Wayland.Constants.Seat_Get_Pointer,
            Pointer_Interface'Access,
            0);
    begin
@@ -842,7 +886,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Seat.all,
-           Wl_Seat_Get_Keyboard,
+           Wayland.Constants.Seat_Get_Keyboard,
            Keyboard_Interface'Access,
            0);
    begin
@@ -853,7 +897,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Seat.all,
-           Wl_Seat_Get_Touch,
+           Wayland.Constants.Seat_Get_Touch,
            Touch_Interface'Access,
            0);
    begin
@@ -862,7 +906,7 @@ package body Wayland.Thin is
 
    procedure Seat_Release (Seat : Seat_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Seat.all, Wl_Seat_Release);
+      Wayland.API.Proxy_Marshal (Seat.all, Wayland.Constants.Seat_Release);
    end Seat_Release;
 
    function Pointer_Add_Listener
@@ -902,7 +946,7 @@ package body Wayland.Thin is
    begin
       Wayland.API.Proxy_Marshal
         (Pointer.all,
-         Wl_Pointer_Set_Cursor,
+         Wayland.Constants.Pointer_Set_Cursor,
          Serial,
          Surface.all'Address,
          Hotspot_X,
@@ -911,7 +955,7 @@ package body Wayland.Thin is
 
    procedure Pointer_Release (Pointer : Pointer_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Pointer.all, Wl_Pointer_Release);
+      Wayland.API.Proxy_Marshal (Pointer.all, Wayland.Constants.Pointer_Release);
    end Pointer_Release;
 
    function Keyboard_Add_Listener
@@ -944,7 +988,7 @@ package body Wayland.Thin is
 
    procedure Keyboard_Release (Keyboard : Keyboard_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Keyboard.all, Wl_Keyboard_Release);
+      Wayland.API.Proxy_Marshal (Keyboard.all, Wayland.Constants.Keyboard_Release);
    end Keyboard_Release;
 
    function Touch_Add_Listener
@@ -977,7 +1021,7 @@ package body Wayland.Thin is
 
    procedure Touch_Release (Touch : Touch_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Touch.all, Wl_Touch_Release);
+      Wayland.API.Proxy_Marshal (Touch.all, Wayland.Constants.Touch_Release);
    end Touch_Release;
 
    function Output_Add_Listener
@@ -1010,7 +1054,7 @@ package body Wayland.Thin is
 
    procedure Output_Release (Output : Output_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Output.all, Wl_Output_Release);
+      Wayland.API.Proxy_Marshal (Output.all, Wayland.Constants.Output_Release);
    end Output_Release;
 
    procedure Region_Set_User_Data (Region : Region_Ptr; Data : Void_Ptr) is
@@ -1030,7 +1074,7 @@ package body Wayland.Thin is
 
    procedure Region_Destroy (Region : Region_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Destroy);
+      Wayland.API.Proxy_Marshal (Region.all, Wayland.Constants.Region_Destroy);
 
       Wayland.API.Proxy_Destroy (Region.all);
    end Region_Destroy;
@@ -1042,7 +1086,13 @@ package body Wayland.Thin is
       Width  : Integer;
       Height : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Add, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal
+        (Region.all,
+         Wayland.Constants.Region_Add,
+         X,
+         Y,
+         Width,
+         Height);
    end Region_Add;
 
    procedure Region_Subtract
@@ -1052,7 +1102,13 @@ package body Wayland.Thin is
       Width  : Integer;
       Height : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Region.all, Wl_Region_Subtract, X, Y, Width, Height);
+      Wayland.API.Proxy_Marshal
+        (Region.all,
+         Wayland.Constants.Region_Subtract,
+         X,
+         Y,
+         Width,
+         Height);
    end Region_Subtract;
 
    procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr; Data : Void_Ptr) is
@@ -1072,7 +1128,7 @@ package body Wayland.Thin is
 
    procedure Subcompositor_Destroy (Subcompositor : Subcompositor_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Subcompositor.all, Wl_Subcompositor_Destroy);
+      Wayland.API.Proxy_Marshal (Subcompositor.all, Wayland.Constants.Subcompositor_Destroy);
 
       Wayland.API.Proxy_Destroy (Subcompositor.all);
    end Subcompositor_Destroy;
@@ -1085,7 +1141,7 @@ package body Wayland.Thin is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Subcompositor.all,
-           Wl_Subcompositor_Get_Subsurface,
+           Wayland.Constants.Subcompositor_Get_Subsurface,
            Subsurface_Interface'Access,
            0,
            Surface.all'Address,
@@ -1111,40 +1167,51 @@ package body Wayland.Thin is
 
    procedure Subsurface_Destroy (Subsurface : Subsurface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Destroy);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wayland.Constants.Subsurface_Destroy);
 
       Wayland.API.Proxy_Destroy (Subsurface.all);
    end Subsurface_Destroy;
 
-   procedure Subsurface_Set_Position (Subsurface : Subsurface_Ptr; X : Integer; Y : Integer) is
-   begin
-      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Position, X, Y);
-   end Subsurface_Set_Position;
-
-   procedure Subsurface_Place_Above (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr) is
+   procedure Subsurface_Set_Position
+     (Subsurface : Subsurface_Ptr;
+      X          : Integer;
+      Y          : Integer) is
    begin
       Wayland.API.Proxy_Marshal
         (Subsurface.all,
-         Wl_Subsurface_Place_Above,
+         Wayland.Constants.Subsurface_Set_Position,
+         X,
+         Y);
+   end Subsurface_Set_Position;
+
+   procedure Subsurface_Place_Above
+     (Subsurface : Subsurface_Ptr;
+      Sibling    : Surface_Ptr) is
+   begin
+      Wayland.API.Proxy_Marshal
+        (Subsurface.all,
+         Wayland.Constants.Subsurface_Place_Above,
          Sibling.all'Address);
    end Subsurface_Place_Above;
 
-   procedure Subsurface_Place_Below (Subsurface : Subsurface_Ptr; Sibling : Surface_Ptr) is
+   procedure Subsurface_Place_Below
+     (Subsurface : Subsurface_Ptr;
+      Sibling    : Surface_Ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Subsurface.all,
-         Wl_Subsurface_Place_Below,
+         Wayland.Constants.Subsurface_Place_Below,
          Sibling.all'Address);
    end Subsurface_Place_Below;
 
    procedure Subsurface_Set_Sync (Subsurface : Subsurface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Sync);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wayland.Constants.Subsurface_Set_Sync);
    end Subsurface_Set_Sync;
 
    procedure Subsurface_Set_Desync (Subsurface : Subsurface_Ptr) is
    begin
-      Wayland.API.Proxy_Marshal (Subsurface.all, Wl_Subsurface_Set_Desync);
+      Wayland.API.Proxy_Marshal (Subsurface.all, Wayland.Constants.Subsurface_Set_Desync);
    end Subsurface_Set_Desync;
 
 end Wayland.Thin;

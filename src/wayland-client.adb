@@ -1884,7 +1884,7 @@ package body Wayland.Client is
       Wayland.API.Proxy_Marshal
         (Wayland.API.Proxy (Offer.My_Data_Offer.all),
 --        (Wl_Thin.Proxy_Ptr'(Offer.My_Data_Offer.all'Access),
-         WL_DATA_OFFER_ACCEPT,
+         Wayland.Constants.Data_Offer_Accept,
          Serial,
          +Mime_Type);
    end Do_Accept;
@@ -2017,7 +2017,7 @@ package body Wayland.Client is
       Wayland.API.Proxy_Marshal
 --        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
         (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
-         WL_SHELL_SURFACE_SET_TITLE,
+         Wayland.Constants.Shell_Surface_Set_Title,
          +Title);
    end Set_Title;
 
@@ -2027,7 +2027,7 @@ package body Wayland.Client is
       Wayland.API.Proxy_Marshal
 --        (Wl_Thin.Proxy_Ptr'(Surface.My_Shell_Surface.all'Access),
         (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
-         WL_SHELL_SURFACE_SET_CLASS,
+         Wayland.Constants.Shell_Surface_Set_Class,
          +Class_V);
    end Set_Class;
 
@@ -2362,7 +2362,7 @@ package body Wayland.Client is
       Wayland.API.Proxy_Marshal
 --        (Wl_Thin.Proxy_Ptr'(Source.My_Data_Source.all'Access),
         (Wayland.API.Proxy (Source.My_Data_Source.all),
-         WL_DATA_SOURCE_OFFER,
+         Wayland.Constants.Data_Source_Offer,
          +Mime_Type);
    end Offer;
 

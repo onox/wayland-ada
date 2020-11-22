@@ -82,6 +82,7 @@ package body Xml_Parser_Utils is
                if Is_Upper (CP) then
                   if Is_Previous_An_Undercase then
                      Append (New_Name, CP);
+                     Is_Previous_Lowercase := False;
                   elsif Is_Previous_Lowercase then
                      Append (New_Name, "_");
                      Remove_Initial_Wl (New_Name);

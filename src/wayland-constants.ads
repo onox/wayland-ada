@@ -1,370 +1,370 @@
 private package Wayland.Constants is
    pragma Pure;
 
-   WL_DISPLAY_SYNC : constant := 0;
+   Display_Sync : constant := 0;
 
-   WL_DISPLAY_GET_REGISTRY : constant := 1;
+   Display_Get_Registry : constant := 1;
 
-   WL_DISPLAY_ERROR_SINCE_VERSION : constant := 1;
+   Display_Error_Since_Version : constant := 1;
 
-   WL_DISPLAY_DELETE_ID_SINCE_VERSION : constant := 1;
+   Display_Delete_Id_Since_Version : constant := 1;
 
-   WL_DISPLAY_SYNC_SINCE_VERSION : constant := 1;
+   Display_Sync_Since_Version : constant := 1;
 
-   WL_DISPLAY_GET_REGISTRY_SINCE_VERSION : constant := 1;
+   Display_Get_Registry_Since_Version : constant := 1;
 
-   WL_REGISTRY_BIND : constant := 0;
+   Registry_Bind : constant := 0;
 
-   WL_REGISTRY_GLOBAL_SINCE_VERSION : constant := 1;
+   Registry_Global_Since_Version : constant := 1;
 
-   WL_REGISTRY_GLOBAL_REMOVE_SINCE_VERSION : constant := 1;
+   Registry_Global_Remove_Since_Version : constant := 1;
 
-   WL_REGISTRY_BIND_SINCE_VERSION : constant := 1;
+   Registry_Bind_Since_Version : constant := 1;
 
-   WL_CALLBACK_DONE_SINCE_VERSION : constant := 1;
+   Callback_Done_Since_Version : constant := 1;
 
-   WL_COMPOSITOR_CREATE_SURFACE : constant := 0;
+   Compositor_Create_Surface : constant := 0;
 
-   WL_COMPOSITOR_CREATE_REGION : constant := 1;
+   Compositor_Create_Region : constant := 1;
 
-   WL_COMPOSITOR_CREATE_SURFACE_SINCE_VERSION : constant := 1;
+   Compositor_Create_Surface_Since_Version : constant := 1;
 
-   WL_COMPOSITOR_CREATE_REGION_SINCE_VERSION : constant := 1;
+   Compositor_Create_Region_Since_Version : constant := 1;
 
-   WL_SHM_POOL_CREATE_BUFFER : constant := 0;
+   Shm_Pool_Create_Buffer : constant := 0;
 
-   WL_SHM_POOL_DESTROY : constant := 1;
+   Shm_Pool_Destroy : constant := 1;
 
-   WL_SHM_POOL_RESIZE : constant := 2;
+   Shm_Pool_Resize : constant := 2;
 
-   WL_SHM_POOL_CREATE_BUFFER_SINCE_VERSION : constant := 1;
+   Shm_Pool_Create_Buffer_Since_Version : constant := 1;
 
-   WL_SHM_POOL_DESTROY_SINCE_VERSION : constant := 1;
+   Shm_Pool_Destroy_Since_Version : constant := 1;
 
-   WL_SHM_POOL_RESIZE_SINCE_VERSION : constant := 1;
+   Shm_Pool_Resize_Since_Version : constant := 1;
 
-   WL_SHM_CREATE_POOL : constant := 0;
+   Shm_Create_Pool : constant := 0;
 
-   WL_SHM_FORMAT_SINCE_VERSION : constant := 1;
+   Shm_Format_Since_Version : constant := 1;
 
-   WL_SHM_CREATE_POOL_SINCE_VERSION : constant := 1;
+   Shm_Create_Pool_Since_Version : constant := 1;
 
-   WL_BUFFER_DESTROY : constant := 0;
+   Buffer_Destroy : constant := 0;
 
-   WL_BUFFER_RELEASE_SINCE_VERSION : constant := 1;
+   Buffer_Release_Since_Version : constant := 1;
 
-   WL_BUFFER_DESTROY_SINCE_VERSION : constant := 1;
+   Buffer_Destroy_Since_Version : constant := 1;
 
-   WL_DATA_OFFER_ACCEPT : constant := 0;
+   Data_Offer_Accept : constant := 0;
 
-   WL_DATA_OFFER_RECEIVE : constant := 1;
+   Data_Offer_Receive : constant := 1;
 
-   WL_DATA_OFFER_DESTROY : constant := 2;
+   Data_Offer_Destroy : constant := 2;
 
-   WL_DATA_OFFER_FINISH : constant := 3;
+   Data_Offer_Finish : constant := 3;
 
-   WL_DATA_OFFER_SET_ACTIONS : constant := 4;
+   Data_Offer_Set_Actions : constant := 4;
 
-   WL_DATA_OFFER_OFFER_SINCE_VERSION : constant := 1;
+   Data_Offer_Offer_Since_Version : constant := 1;
 
-   WL_DATA_OFFER_SOURCE_ACTIONS_SINCE_VERSION : constant := 3;
+   Data_Offer_Source_Actions_Since_Version : constant := 3;
 
-   WL_DATA_OFFER_ACTION_SINCE_VERSION : constant := 3;
+   Data_Offer_Action_Since_Version : constant := 3;
 
-   WL_DATA_OFFER_ACCEPT_SINCE_VERSION : constant := 1;
+   Data_Offer_Accept_Since_Version : constant := 1;
 
-   WL_DATA_OFFER_RECEIVE_SINCE_VERSION : constant := 1;
+   Data_Offer_Receive_Since_Version : constant := 1;
 
-   WL_DATA_OFFER_DESTROY_SINCE_VERSION : constant := 1;
+   Data_Offer_Destroy_Since_Version : constant := 1;
 
-   WL_DATA_OFFER_FINISH_SINCE_VERSION : constant := 3;
+   Data_Offer_Finish_Since_Version : constant := 3;
 
-   WL_DATA_OFFER_SET_ACTIONS_SINCE_VERSION : constant := 3;
+   Data_Offer_Set_Actions_Since_Version : constant := 3;
 
-   WL_DATA_SOURCE_OFFER : constant := 0;
+   Data_Source_Offer : constant := 0;
 
-   WL_DATA_SOURCE_DESTROY : constant := 1;
+   Data_Source_Destroy : constant := 1;
 
-   WL_DATA_SOURCE_SET_ACTIONS : constant := 2;
+   Data_Source_Set_Actions : constant := 2;
 
-   WL_DATA_SOURCE_TARGET_SINCE_VERSION : constant := 1;
+   Data_Source_Target_Since_Version : constant := 1;
 
-   WL_DATA_SOURCE_SEND_SINCE_VERSION : constant := 1;
+   Data_Source_Send_Since_Version : constant := 1;
 
-   WL_DATA_SOURCE_CANCELLED_SINCE_VERSION : constant := 1;
+   Data_Source_Cancelled_Since_Version : constant := 1;
 
-   WL_DATA_SOURCE_DND_DROP_PERFORMED_SINCE_VERSION : constant := 3;
+   Data_Source_Dnd_Drop_Performed_Since_Version : constant := 3;
 
-   WL_DATA_SOURCE_DND_FINISHED_SINCE_VERSION : constant := 3;
+   Data_Source_Dnd_Finished_Since_Version : constant := 3;
 
-   WL_DATA_SOURCE_ACTION_SINCE_VERSION : constant := 3;
+   Data_Source_Action_Since_Version : constant := 3;
 
-   WL_DATA_SOURCE_OFFER_SINCE_VERSION : constant := 1;
+   Data_Source_Offer_Since_Version : constant := 1;
 
-   WL_DATA_SOURCE_DESTROY_SINCE_VERSION : constant := 1;
+   Data_Source_Destroy_Since_Version : constant := 1;
 
-   WL_DATA_SOURCE_SET_ACTIONS_SINCE_VERSION : constant := 3;
+   Data_Source_Set_Actions_Since_Version : constant := 3;
 
-   WL_DATA_DEVICE_START_DRAG : constant := 0;
+   Data_Device_Start_Drag : constant := 0;
 
-   WL_DATA_DEVICE_SET_SELECTION : constant := 1;
+   Data_Device_Set_Selection : constant := 1;
 
-   WL_DATA_DEVICE_RELEASE : constant := 2;
+   Data_Device_Release : constant := 2;
 
-   WL_DATA_DEVICE_DATA_OFFER_SINCE_VERSION : constant := 1;
+   Data_Device_Data_Offer_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_ENTER_SINCE_VERSION : constant := 1;
+   Data_Device_Enter_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_LEAVE_SINCE_VERSION : constant := 1;
+   Data_Device_Leave_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_MOTION_SINCE_VERSION : constant := 1;
+   Data_Device_Motion_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_DROP_SINCE_VERSION : constant := 1;
+   Data_Device_Drop_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_SELECTION_SINCE_VERSION : constant := 1;
+   Data_Device_Selection_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_START_DRAG_SINCE_VERSION : constant := 1;
+   Data_Device_Start_Drag_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_SET_SELECTION_SINCE_VERSION : constant := 1;
+   Data_Device_Set_Selection_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_RELEASE_SINCE_VERSION : constant := 2;
+   Data_Device_Release_Since_Version : constant := 2;
 
-   WL_DATA_DEVICE_MANAGER_CREATE_DATA_SOURCE : constant := 0;
+   Data_Device_Manager_Create_Data_Source : constant := 0;
 
-   WL_DATA_DEVICE_MANAGER_GET_DATA_DEVICE : constant := 1;
+   Data_Device_Manager_Get_Data_Device : constant := 1;
 
-   WL_DATA_DEVICE_MANAGER_CREATE_DATA_SOURCE_SINCE_VERSION : constant := 1;
+   Data_Device_Manager_Create_Data_Source_Since_Version : constant := 1;
 
-   WL_DATA_DEVICE_MANAGER_GET_DATA_DEVICE_SINCE_VERSION : constant := 1;
+   Data_Device_Manager_Get_Data_Device_Since_Version : constant := 1;
 
-   WL_SHELL_GET_SHELL_SURFACE : constant := 0;
+   Shell_Get_Shell_Surface : constant := 0;
 
-   WL_SHELL_GET_SHELL_SURFACE_SINCE_VERSION : constant := 1;
+   Shell_Get_Shell_Surface_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_PONG : constant := 0;
+   Shell_Surface_Pong : constant := 0;
 
-   WL_SHELL_SURFACE_MOVE : constant := 1;
+   Shell_Surface_Move : constant := 1;
 
-   WL_SHELL_SURFACE_RESIZE : constant := 2;
+   Shell_Surface_Resize : constant := 2;
 
-   WL_SHELL_SURFACE_SET_TOPLEVEL : constant := 3;
+   Shell_Surface_Set_Toplevel : constant := 3;
 
-   WL_SHELL_SURFACE_SET_TRANSIENT : constant := 4;
+   Shell_Surface_Set_Transient : constant := 4;
 
-   WL_SHELL_SURFACE_SET_FULLSCREEN : constant := 5;
+   Shell_Surface_Set_Fullscreen : constant := 5;
 
-   WL_SHELL_SURFACE_SET_POPUP : constant := 6;
+   Shell_Surface_Set_Popup : constant := 6;
 
-   WL_SHELL_SURFACE_SET_MAXIMIZED : constant := 7;
+   Shell_Surface_Set_Maximized : constant := 7;
 
-   WL_SHELL_SURFACE_SET_TITLE : constant := 8;
+   Shell_Surface_Set_Title : constant := 8;
 
-   WL_SHELL_SURFACE_SET_CLASS : constant := 9;
+   Shell_Surface_Set_Class : constant := 9;
 
-   WL_SHELL_SURFACE_PING_SINCE_VERSION : constant := 1;
+   Shell_Surface_Ping_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_CONFIGURE_SINCE_VERSION : constant := 1;
+   Shell_Surface_Configure_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_POPUP_DONE_SINCE_VERSION : constant := 1;
+   Shell_Surface_Popup_Done_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_PONG_SINCE_VERSION : constant := 1;
+   Shell_Surface_Pong_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_MOVE_SINCE_VERSION : constant := 1;
+   Shell_Surface_Move_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_RESIZE_SINCE_VERSION : constant := 1;
+   Shell_Surface_Resize_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_TOPLEVEL_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Toplevel_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_TRANSIENT_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Transient_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_FULLSCREEN_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Fullscreen_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_POPUP_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Popup_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_MAXIMIZED_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Maximized_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_TITLE_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Title_Since_Version : constant := 1;
 
-   WL_SHELL_SURFACE_SET_CLASS_SINCE_VERSION : constant := 1;
+   Shell_Surface_Set_Class_Since_Version : constant := 1;
 
-   WL_SURFACE_DESTROY : constant := 0;
+   Surface_Destroy : constant := 0;
 
-   WL_SURFACE_ATTACH : constant := 1;
+   Surface_Attach : constant := 1;
 
-   WL_SURFACE_DAMAGE : constant := 2;
+   Surface_Damage : constant := 2;
 
-   WL_SURFACE_FRAME : constant := 3;
+   Surface_Frame : constant := 3;
 
-   WL_SURFACE_SET_OPAQUE_REGION : constant := 4;
+   Surface_Set_Opaque_Region : constant := 4;
 
-   WL_SURFACE_SET_INPUT_REGION : constant := 5;
+   Surface_Set_Input_Region : constant := 5;
 
-   WL_SURFACE_COMMIT : constant := 6;
+   Surface_Commit : constant := 6;
 
-   WL_SURFACE_SET_BUFFER_TRANSFORM : constant := 7;
+   Surface_Set_Buffer_Transform : constant := 7;
 
-   WL_SURFACE_SET_BUFFER_SCALE : constant := 8;
+   Surface_Set_Buffer_Scale : constant := 8;
 
-   WL_SURFACE_DAMAGE_BUFFER : constant := 9;
+   Surface_Damage_Buffer : constant := 9;
 
-   WL_SURFACE_ENTER_SINCE_VERSION : constant := 1;
+   Surface_Enter_Since_Version : constant := 1;
 
-   WL_SURFACE_LEAVE_SINCE_VERSION : constant := 1;
+   Surface_Leave_Since_Version : constant := 1;
 
-   WL_SURFACE_DESTROY_SINCE_VERSION : constant := 1;
+   Surface_Destroy_Since_Version : constant := 1;
 
-   WL_SURFACE_ATTACH_SINCE_VERSION : constant := 1;
+   Surface_Attach_Since_Version : constant := 1;
 
-   WL_SURFACE_DAMAGE_SINCE_VERSION : constant := 1;
+   Surface_Damage_Since_Version : constant := 1;
 
-   WL_SURFACE_FRAME_SINCE_VERSION : constant := 1;
+   Surface_Frame_Since_Version : constant := 1;
 
-   WL_SURFACE_SET_OPAQUE_REGION_SINCE_VERSION : constant := 1;
+   Surface_Set_Opaque_Region_Since_Version : constant := 1;
 
-   WL_SURFACE_SET_INPUT_REGION_SINCE_VERSION : constant := 1;
+   Surface_Set_Input_Region_Since_Version : constant := 1;
 
-   WL_SURFACE_COMMIT_SINCE_VERSION : constant := 1;
+   Surface_Commit_Since_Version : constant := 1;
 
-   WL_SURFACE_SET_BUFFER_TRANSFORM_SINCE_VERSION : constant := 2;
+   Surface_Set_Buffer_Transform_Since_Version : constant := 2;
 
-   WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION : constant := 3;
+   Surface_Set_Buffer_Scale_Since_Version : constant := 3;
 
-   WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION : constant := 4;
+   Surface_Damage_Buffer_Since_Version : constant := 4;
 
-   WL_SEAT_GET_POINTER : constant := 0;
+   Seat_Get_Pointer : constant := 0;
 
-   WL_SEAT_GET_KEYBOARD : constant := 1;
+   Seat_Get_Keyboard : constant := 1;
 
-   WL_SEAT_GET_TOUCH : constant := 2;
+   Seat_Get_Touch : constant := 2;
 
-   WL_SEAT_RELEASE : constant := 3;
+   Seat_Release : constant := 3;
 
-   WL_SEAT_CAPABILITIES_SINCE_VERSION : constant := 1;
+   Seat_Capabilities_Since_Version : constant := 1;
 
-   WL_SEAT_NAME_SINCE_VERSION : constant := 2;
+   Seat_Name_Since_Version : constant := 2;
 
-   WL_SEAT_GET_POINTER_SINCE_VERSION : constant := 1;
+   Seat_Get_Pointer_Since_Version : constant := 1;
 
-   WL_SEAT_GET_KEYBOARD_SINCE_VERSION : constant := 1;
+   Seat_Get_Keyboard_Since_Version : constant := 1;
 
-   WL_SEAT_GET_TOUCH_SINCE_VERSION : constant := 1;
+   Seat_Get_Touch_Since_Version : constant := 1;
 
-   WL_SEAT_RELEASE_SINCE_VERSION : constant := 5;
+   Seat_Release_Since_Version : constant := 5;
 
-   WL_POINTER_SET_CURSOR : constant := 0;
+   Pointer_Set_Cursor : constant := 0;
 
-   WL_POINTER_RELEASE : constant := 1;
+   Pointer_Release : constant := 1;
 
-   WL_POINTER_ENTER_SINCE_VERSION : constant := 1;
+   Pointer_Enter_Since_Version : constant := 1;
 
-   WL_POINTER_LEAVE_SINCE_VERSION : constant := 1;
+   Pointer_Leave_Since_Version : constant := 1;
 
-   WL_POINTER_MOTION_SINCE_VERSION : constant := 1;
+   Pointer_Motion_Since_Version : constant := 1;
 
-   WL_POINTER_BUTTON_SINCE_VERSION : constant := 1;
+   Pointer_Button_Since_Version : constant := 1;
 
-   WL_POINTER_AXIS_SINCE_VERSION : constant := 1;
+   Pointer_Axis_Since_Version : constant := 1;
 
-   WL_POINTER_FRAME_SINCE_VERSION : constant := 5;
+   Pointer_Frame_Since_Version : constant := 5;
 
-   WL_POINTER_AXIS_SOURCE_SINCE_VERSION : constant := 5;
+   Pointer_Axis_Source_Since_Version : constant := 5;
 
-   WL_POINTER_AXIS_STOP_SINCE_VERSION : constant := 5;
+   Pointer_Axis_Stop_Since_Version : constant := 5;
 
-   WL_POINTER_AXIS_DISCRETE_SINCE_VERSION : constant := 5;
+   Pointer_Axis_Discrete_Since_Version : constant := 5;
 
-   WL_POINTER_SET_CURSOR_SINCE_VERSION : constant := 1;
+   Pointer_Set_Cursor_Since_Version : constant := 1;
 
-   WL_POINTER_RELEASE_SINCE_VERSION : constant := 3;
+   Pointer_Release_Since_Version : constant := 3;
 
-   WL_KEYBOARD_RELEASE : constant := 0;
+   Keyboard_Release : constant := 0;
 
-   WL_KEYBOARD_KEYMAP_SINCE_VERSION : constant := 1;
+   Keyboard_Keymap_Since_Version : constant := 1;
 
-   WL_KEYBOARD_ENTER_SINCE_VERSION : constant := 1;
+   Keyboard_Enter_Since_Version : constant := 1;
 
-   WL_KEYBOARD_LEAVE_SINCE_VERSION : constant := 1;
+   Keyboard_Leave_Since_Version : constant := 1;
 
-   WL_KEYBOARD_KEY_SINCE_VERSION : constant := 1;
+   Keyboard_Key_Since_Version : constant := 1;
 
-   WL_KEYBOARD_MODIFIERS_SINCE_VERSION : constant := 1;
+   Keyboard_Modifiers_Since_Version : constant := 1;
 
-   WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION : constant := 4;
+   Keyboard_Repeat_Info_Since_Version : constant := 4;
 
-   WL_KEYBOARD_RELEASE_SINCE_VERSION : constant := 3;
+   Keyboard_Release_Since_Version : constant := 3;
 
-   WL_TOUCH_RELEASE : constant := 0;
+   Touch_Release : constant := 0;
 
-   WL_TOUCH_DOWN_SINCE_VERSION : constant := 1;
+   Touch_Down_Since_Version : constant := 1;
 
-   WL_TOUCH_UP_SINCE_VERSION : constant := 1;
+   Touch_Up_Since_Version : constant := 1;
 
-   WL_TOUCH_MOTION_SINCE_VERSION : constant := 1;
+   Touch_Motion_Since_Version : constant := 1;
 
-   WL_TOUCH_FRAME_SINCE_VERSION : constant := 1;
+   Touch_Frame_Since_Version : constant := 1;
 
-   WL_TOUCH_CANCEL_SINCE_VERSION : constant := 1;
+   Touch_Cancel_Since_Version : constant := 1;
 
-   WL_TOUCH_SHAPE_SINCE_VERSION : constant := 6;
+   Touch_Shape_Since_Version : constant := 6;
 
-   WL_TOUCH_ORIENTATION_SINCE_VERSION : constant := 6;
+   Touch_Orientation_Since_Version : constant := 6;
 
-   WL_TOUCH_RELEASE_SINCE_VERSION : constant := 3;
+   Touch_Release_Since_Version : constant := 3;
 
-   WL_OUTPUT_RELEASE : constant := 0;
+   Output_Release : constant := 0;
 
-   WL_OUTPUT_GEOMETRY_SINCE_VERSION : constant := 1;
+   Output_Geometry_Since_Version : constant := 1;
 
-   WL_OUTPUT_MODE_SINCE_VERSION : constant := 1;
+   Output_Mode_Since_Version : constant := 1;
 
-   WL_OUTPUT_DONE_SINCE_VERSION : constant := 2;
+   Output_Done_Since_Version : constant := 2;
 
-   WL_OUTPUT_SCALE_SINCE_VERSION : constant := 2;
+   Output_Scale_Since_Version : constant := 2;
 
-   WL_OUTPUT_RELEASE_SINCE_VERSION : constant := 3;
+   Output_Release_Since_Version : constant := 3;
 
-   WL_REGION_DESTROY : constant := 0;
+   Region_Destroy : constant := 0;
 
-   WL_REGION_ADD : constant := 1;
+   Region_Add : constant := 1;
 
-   WL_REGION_SUBTRACT : constant := 2;
+   Region_Subtract : constant := 2;
 
-   WL_REGION_DESTROY_SINCE_VERSION : constant := 1;
+   Region_Destroy_Since_Version : constant := 1;
 
-   WL_REGION_ADD_SINCE_VERSION : constant := 1;
+   Region_Add_Since_Version : constant := 1;
 
-   WL_REGION_SUBTRACT_SINCE_VERSION : constant := 1;
+   Region_Subtract_Since_Version : constant := 1;
 
-   WL_SUBCOMPOSITOR_DESTROY : constant := 0;
+   Subcompositor_Destroy : constant := 0;
 
-   WL_SUBCOMPOSITOR_GET_SUBSURFACE : constant := 1;
+   Subcompositor_Get_Subsurface : constant := 1;
 
-   WL_SUBCOMPOSITOR_DESTROY_SINCE_VERSION : constant := 1;
+   Subcompositor_Destroy_Since_Version : constant := 1;
 
-   WL_SUBCOMPOSITOR_GET_SUBSURFACE_SINCE_VERSION : constant := 1;
+   Subcompositor_Get_Subsurface_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_DESTROY : constant := 0;
+   Subsurface_Destroy : constant := 0;
 
-   WL_SUBSURFACE_SET_POSITION : constant := 1;
+   Subsurface_Set_Position : constant := 1;
 
-   WL_SUBSURFACE_PLACE_ABOVE : constant := 2;
+   Subsurface_Place_Above : constant := 2;
 
-   WL_SUBSURFACE_PLACE_BELOW : constant := 3;
+   Subsurface_Place_Below : constant := 3;
 
-   WL_SUBSURFACE_SET_SYNC : constant := 4;
+   Subsurface_Set_Sync : constant := 4;
 
-   WL_SUBSURFACE_SET_DESYNC : constant := 5;
+   Subsurface_Set_Desync : constant := 5;
 
-   WL_SUBSURFACE_DESTROY_SINCE_VERSION : constant := 1;
+   Subsurface_Destroy_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_SET_POSITION_SINCE_VERSION : constant := 1;
+   Subsurface_Set_Position_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_PLACE_ABOVE_SINCE_VERSION : constant := 1;
+   Subsurface_Place_Above_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_PLACE_BELOW_SINCE_VERSION : constant := 1;
+   Subsurface_Place_Below_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_SET_SYNC_SINCE_VERSION : constant := 1;
+   Subsurface_Set_Sync_Since_Version : constant := 1;
 
-   WL_SUBSURFACE_SET_DESYNC_SINCE_VERSION : constant := 1;
+   Subsurface_Set_Desync_Since_Version : constant := 1;
 
 end Wayland.Constants;
