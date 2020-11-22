@@ -740,7 +740,7 @@ procedure XML_Parser is
       procedure Create_File is
       begin
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "c_binding-linux-wayland_client.ads");
+           (File, Ada.Text_IO.Out_File, "wayland-client.ads");
 
          Generate_Code_For_Header;
 
@@ -749,7 +749,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "c_binding-wl_thin.ads");
+           (File, Ada.Text_IO.Out_File, "wayland-thin.ads");
 
          Create_Wl_Thin_Spec_File;
 
@@ -762,17 +762,13 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Header is
       begin
-         Put_Line (File, "with C_Binding.Linux.Files;");
-         Put_Line (File, "with Interfaces;");
          Put_Line (File, "private with Interfaces.C.Strings;");
-         Put_Line (File, "private with C_Binding.Wl_Thin;");
+         Put_Line (File, "private with Wayland.Thin;");
          New_Line (File);
-         Put_Line (File, "with Wayland.API;");
+         Put_Line (File, "with C_Binding.Linux.Files;");
          New_Line (File);
-         Put_Line (File, "--  Auto-generated from Wayland.xml");
-         Put_Line (File, "package C_Binding.Linux.Wayland_Client is");
-         New_Line (File);
-         Put_Line (File, "   package Wl renames Posix.Wayland;");
+         Put_Line (File, "package Wayland.Client is");
+         Put_Line (File, "   pragma Preelaborate;");
          New_Line (File);
 
          Generate_Code_For_Type_Declarations;
@@ -1017,26 +1013,26 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   type Surface is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Surface : Wayland_Client.Surface) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Surface : Wayland.Client.Surface) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Attach (Surface : Wayland_Client.Surface;");
-         Put_Line (File, "                     Buffer  : Wayland_Client.Buffer;");
+         Put_Line (File, "   procedure Attach (Surface : Wayland.Client.Surface;");
+         Put_Line (File, "                     Buffer  : Wayland.Client.Buffer;");
          Put_Line (File, "                     X       : Integer;");
          Put_Line (File, "                     Y       : Integer) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Commit (Surface : Wayland_Client.Surface) with");
+         Put_Line (File, "   procedure Commit (Surface : Wayland.Client.Surface) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Surface : in out Wayland_Client.Surface) with");
+         Put_Line (File, "   procedure Destroy (Surface : in out Wayland.Client.Surface) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Surface.Exists,");
          Put_Line (File, "     Post   => not Surface.Exists;");
          Put_Line (File, "");
          Put_Line (File, "   type Buffer is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Buffer : Wayland_Client.Buffer) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Buffer : Wayland.Client.Buffer) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
          Put_Line (File, "   type Shell_Surface is tagged limited private;");
@@ -1054,50 +1050,50 @@ procedure XML_Parser is
          Put_Line (File, "   type Display is tagged limited private with");
          Put_Line (File, "     Default_Initial_Condition => not Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   function Is_Connected (Display : Wayland_Client.Display) return Boolean with");
+         Put_Line (File, "   function Is_Connected (Display : Wayland.Client.Display) return Boolean with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Connect (Display : in out Wayland_Client.Display;");
+         Put_Line (File, "   procedure Connect (Display : in out Wayland.Client.Display;");
          Put_Line (File, "                      Name    : Px.C_String) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => not Display.Is_Connected;");
          Put_Line (File, "   -- Attempts connecting with the Wayland server.");
          Put_Line (File, "");
-         Put_Line (File, "   function Dispatch (Display : Wayland_Client.Display) return Int with");
+         Put_Line (File, "   function Dispatch (Display : Wayland.Client.Display) return Int with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Dispatch (Display : Wayland_Client.Display) with");
+         Put_Line (File, "   procedure Dispatch (Display : Wayland.Client.Display) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   function Roundtrip (Display : Wayland_Client.Display) return Int with");
+         Put_Line (File, "   function Roundtrip (Display : Wayland.Client.Display) return Int with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Roundtrip (Display : Wayland_Client.Display) with");
+         Put_Line (File, "   procedure Roundtrip (Display : Wayland.Client.Display) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Disconnect (Display : in out Wayland_Client.Display) with");
+         Put_Line (File, "   procedure Disconnect (Display : in out Wayland.Client.Display) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Display.Is_Connected,");
          Put_Line (File, "     Post   => not Display.Is_Connected;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Registry (Display  : Wayland_Client.Display;");
-         Put_Line (File, "                           Registry : in out Wayland_Client.Registry)");
+         Put_Line (File, "   procedure Get_Registry (Display  : Wayland.Client.Display;");
+         Put_Line (File, "                           Registry : in out Wayland.Client.Registry)");
          Put_Line (File, "     with Global => null,");
          Put_Line (File, "          Pre    => Display.Is_Connected and not Registry.Has_Proxy;");
          Put_Line (File, "");
          Put_Line (File, "   type Registry is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Registry : Wayland.Client.Registry) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Started_Subscription (Registry : Wayland_Client.Registry) return Boolean");
+         Put_Line (File, "   function Has_Started_Subscription (Registry : Wayland.Client.Registry) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Registry : in out Wayland_Client.Registry) with");
+         Put_Line (File, "   procedure Destroy (Registry : in out Wayland.Client.Registry) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Registry.Has_Proxy,");
          Put_Line (File, "     Post   => not Registry.Has_Proxy;");
@@ -1377,15 +1373,19 @@ procedure XML_Parser is
 
          procedure Write_To_File is
          begin
-            Put_Line (File, "limited with C_Binding.Linux.Wayland_Client;");
+            Put_Line (File, "limited with Wayland.Client;");
+            Put_Line (File, "");
+            Put_Line (File, "with Interfaces.C.Strings;");
             Put_Line (File, "");
             Put_Line (File, "with Wayland.API;");
             Put_Line (File, "");
             Put_Line (File, "--  Mostly auto generated from Wayland.xml");
-            Put_Line (File, "private package C_Binding.Wl_Thin is");
+            Put_Line (File, "private package Wayland.Thin is");
+            Put_Line (File, "   pragma Preelaborate;");
             Put_Line (File, "");
-            Put_Line (File, "   subtype Fixed is C_Binding.Linux.Wayland_Client.Fixed;");
-            Put_Line (File, "   subtype Wayland_Array_T is C_Binding.Linux.Wayland_Client.Wayland_Array_T;");
+            Put_Line (File, "   subtype Fixed is Wayland.Client.Fixed;");
+            Put_Line (File, "   subtype Wayland_Array_T is Wayland.Client.Wayland_Array_T;");
+            Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
             Put_Line (File, "");
             Put_Line (File, "   --  Begin core parts");
             Put_Line (File, "");
@@ -1405,7 +1405,7 @@ procedure XML_Parser is
             Generate_Code_For_Interface_Constants;
 
             Put_Line (File, "");
-            Put_Line (File, "end C_Binding.Wl_Thin;");
+            Put_Line (File, "end Wayland.Thin;");
          end Write_To_File;
 
 --           procedure Generate_Code_For_Numeric_Constants is
@@ -2004,30 +2004,30 @@ procedure XML_Parser is
          Put_Line (File, "      My_Display : Wl_Thin.Display_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Is_Connected (Display : Wayland_Client.Display) return Boolean is (Display.My_Display /= null);");
+         Put_Line (File, "   function Is_Connected (Display : Wayland.Client.Display) return Boolean is (Display.My_Display /= null);");
          New_Line (File);
          Put_Line (File, "   type Registry is tagged limited record");
          Put_Line (File, "      My_Registry                 : Wl_Thin.Registry_Ptr;");
          Put_Line (File, "      My_Has_Started_Subscription : Boolean := False;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Registry : Wayland_Client.Registry) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Registry : Wayland.Client.Registry) return Boolean is");
          Put_Line (File, "     (Registry.My_Registry /= null);");
          New_Line (File);
-         Put_Line (File, "   function Has_Started_Subscription (Registry : Wayland_Client.Registry) return Boolean is (Registry.My_Has_Started_Subscription);");
+         Put_Line (File, "   function Has_Started_Subscription (Registry : Wayland.Client.Registry) return Boolean is (Registry.My_Has_Started_Subscription);");
          New_Line (File);
          Put_Line (File, "   type Compositor is tagged limited record");
          Put_Line (File, "      My_Compositor : Wl_Thin.Compositor_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Compositor : Wayland_Client.Compositor) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Compositor : Wayland.Client.Compositor) return Boolean is");
          Put_Line (File, "     (Compositor.My_Compositor /= null);");
          New_Line (File);
          Put_Line (File, "   type Pointer is tagged limited record");
          Put_Line (File, "      My_Pointer : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Pointer : Wayland_Client.Pointer) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Pointer : Wayland.Client.Pointer) return Boolean is");
          Put_Line (File, "     (Pointer.My_Pointer /= null);");
          New_Line (File);
          Put_Line (File, "   type Seat is tagged limited record");
@@ -2035,49 +2035,49 @@ procedure XML_Parser is
          Put_Line (File, "      My_Has_Started_Subscription : Boolean := False;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Seat : Wayland_Client.Seat) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Seat : Wayland.Client.Seat) return Boolean is");
          Put_Line (File, "     (Seat.My_Seat /= null);");
          New_Line (File);
          Put_Line (File, "   type Shell is tagged limited record");
          Put_Line (File, "      My_Shell : Wl_Thin.Shell_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shell : Wayland_Client.Shell) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shell : Wayland.Client.Shell) return Boolean is");
          Put_Line (File, "     (Shell.My_Shell /= null);");
          New_Line (File);
          Put_Line (File, "   type Shm is tagged limited record");
          Put_Line (File, "      My_Shm : Wl_Thin.Shm_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shm : Wayland_Client.Shm) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shm : Wayland.Client.Shm) return Boolean is");
          Put_Line (File, "     (Shm.My_Shm /= null);");
          New_Line (File);
          Put_Line (File, "   type Shm_Pool is tagged limited record");
          Put_Line (File, "      My_Shm_Pool : Wl_Thin.Shm_Pool_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shm_Pool : Wayland_Client.Shm_Pool) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shm_Pool : Wayland.Client.Shm_Pool) return Boolean is");
          Put_Line (File, "     (Shm_Pool.My_Shm_Pool /= null);");
          New_Line (File);
          Put_Line (File, "   type Buffer is tagged limited record");
          Put_Line (File, "      My_Buffer : Wl_Thin.Buffer_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Buffer : Wayland_Client.Buffer) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Buffer : Wayland.Client.Buffer) return Boolean is");
          Put_Line (File, "     (Buffer.My_Buffer /= null);");
          New_Line (File);
          Put_Line (File, "   type Surface is tagged limited record");
          Put_Line (File, "      My_Surface : Wl_Thin.Surface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Surface : Wayland_Client.Surface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Surface : Wayland.Client.Surface) return Boolean is");
          Put_Line (File, "     (Surface.My_Surface /= null);");
          New_Line (File);
          Put_Line (File, "   type Shell_Surface is tagged limited record");
          Put_Line (File, "      My_Shell_Surface : Wl_Thin.Shell_Surface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shell_Surface : Wayland_Client.Shell_Surface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shell_Surface : Wayland.Client.Shell_Surface) return Boolean is");
          Put_Line (File, "     (Shell_Surface.My_Shell_Surface /= null);");
          New_Line (File);
          Put_Line (File, "   type Callback is tagged limited record");
@@ -2092,63 +2092,63 @@ procedure XML_Parser is
          Put_Line (File, "      My_Data_Source : Wl_Thin.Data_Source_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Source : Wayland_Client.Data_Source) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Source : Wayland.Client.Data_Source) return Boolean is");
          Put_Line (File, "     (Data_Source.My_Data_Source /= null);");
          New_Line (File);
          Put_Line (File, "   type Data_Device is tagged limited record");
          Put_Line (File, "      My_Data_Device : Wl_Thin.Data_Device_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Device : Wayland_Client.Data_Device) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Device : Wayland.Client.Data_Device) return Boolean is");
          Put_Line (File, "     (Data_Device.My_Data_Device /= null);");
          New_Line (File);
          Put_Line (File, "   type Data_Device_Manager is tagged limited record");
          Put_Line (File, "      My_Data_Device_Manager : Wl_Thin.Data_Device_Manager_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Device_Manager : Wayland_Client.Data_Device_Manager) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Device_Manager : Wayland.Client.Data_Device_Manager) return Boolean is");
          Put_Line (File, "     (Data_Device_Manager.My_Data_Device_Manager /= null);");
          New_Line (File);
          Put_Line (File, "   type Keyboard is tagged limited record");
          Put_Line (File, "      My_Keyboard : Wl_Thin.Keyboard_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Keyboard : Wayland_Client.Keyboard) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Keyboard : Wayland.Client.Keyboard) return Boolean is");
          Put_Line (File, "     (Keyboard.My_Keyboard /= null);");
          New_Line (File);
          Put_Line (File, "   type Touch is tagged limited record");
          Put_Line (File, "      My_Touch : Wl_Thin.Touch_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Touch : Wayland_Client.Touch) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Touch : Wayland.Client.Touch) return Boolean is");
          Put_Line (File, "     (Touch.My_Touch /= null);");
          New_Line (File);
          Put_Line (File, "   type Output is tagged limited record");
          Put_Line (File, "      My_Output : Wl_Thin.Output_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Output : Wayland_Client.Output) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Output : Wayland.Client.Output) return Boolean is");
          Put_Line (File, "     (Output.My_Output /= null);");
          New_Line (File);
          Put_Line (File, "   type Region is tagged limited record");
          Put_Line (File, "      My_Region : Wl_Thin.Region_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Region : Wayland_Client.Region) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Region : Wayland.Client.Region) return Boolean is");
          Put_Line (File, "     (Region.My_Region /= null);");
          New_Line (File);
          Put_Line (File, "   type Subcompositor is tagged limited record");
          Put_Line (File, "      My_Subcompositor : Wl_Thin.Subcompositor_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Subcompositor : Wayland_Client.Subcompositor) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Subcompositor : Wayland.Client.Subcompositor) return Boolean is");
          Put_Line (File, "     (Subcompositor.My_Subcompositor /= null);");
          New_Line (File);
          Put_Line (File, "   type Subsurface is tagged limited record");
          Put_Line (File, "      My_Subsurface : Wl_Thin.Subsurface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Subsurface : Wayland_Client.Subsurface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Subsurface : Wayland.Client.Subsurface) return Boolean is");
          Put_Line (File, "     (Subsurface.My_Subsurface /= null);");
          New_Line (File);
 
@@ -2190,7 +2190,7 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Footer is
       begin
-         Put_Line (File, "end C_Binding.Linux.Wayland_Client;");
+         Put_Line (File, "end Wayland.Client;");
       end Generate_Code_For_Footer;
 
    begin
@@ -2208,9 +2208,9 @@ procedure XML_Parser is
       procedure Create_File is
       begin
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "c_binding-linux-wayland_client.adb");
+           (File, Ada.Text_IO.Out_File, "wayland-client.adb");
 
-         Put_Line (File, "package body C_Binding.Linux.Wayland_Client is");
+         Put_Line (File, "package body Wayland.Client is");
          New_Line (File);
 
          Generate_Manually_Edited_Code;
@@ -2220,7 +2220,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "c_binding-wl_thin.adb");
+           (File, Ada.Text_IO.Out_File, "wayland-thin.adb");
 
          Create_Wl_Thin_Body_File;
 
@@ -2235,11 +2235,12 @@ procedure XML_Parser is
 
          procedure Write_To_File is
          begin
-            Put_Line (File, "with C_Binding.Constants;");
-            Put_Line (File, "use C_Binding.Constants;");
+            Put_Line (File, "with Wayland.Constants;");
+            Put_Line (File, "");
+            Put_Line (File, "use Wayland.Constants;");
             Put_Line (File, "");
             Put_Line (File, "--  Mostly auto generated from Wayland.xml");
-            Put_Line (File, "package body C_Binding.Wl_Thin is");
+            Put_Line (File, "package body Wayland.Thin is");
             Put_Line (File, "");
             Put_Line (File, "   use type Proxy_Ptr;");
             Put_Line (File, "");
@@ -2260,7 +2261,7 @@ procedure XML_Parser is
             Generate_Code_For_Protocol_Tag_Children;
 
             Put_Line (File, "");
-            Put_Line (File, "end C_Binding.Wl_Thin;");
+            Put_Line (File, "end Wayland.Thin;");
          end Write_To_File;
 
          procedure Generate_Code_For_Protocol_Tag_Children is
@@ -3225,7 +3226,7 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Footer is
       begin
-         Put_Line (File, "end C_Binding.Linux.Wayland_Client;");
+         Put_Line (File, "end Wayland.Client;");
       end Generate_Code_For_Footer;
 
    begin
