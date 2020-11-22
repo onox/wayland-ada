@@ -1501,29 +1501,6 @@ package Wayland.Client.Protocol is
 
    end Output_Events;
 
-   type Display_Ptr is access all Display;
-   type Registry_Ptr is access all Registry;
-   type Callback_Ptr is access all Callback;
-   type Compositor_Ptr is access all Compositor;
-   type Shm_Pool_Ptr is access all Shm_Pool;
-   type Shm_Ptr is access all Shm;
-   type Buffer_Ptr is access all Buffer;
-   type Data_Offer_Ptr is access all Data_Offer;
-   type Data_Source_Ptr is access all Data_Source;
-   type Data_Device_Ptr is access all Data_Device;
-   type Data_Device_Manager_Ptr is access all Data_Device_Manager;
-   type Shell_Ptr is access all Shell;
-   type Shell_Surface_Ptr is access all Shell_Surface;
-   type Surface_Ptr is access all Surface;
-   type Seat_Ptr is access all Seat;
-   type Pointer_Ptr is access all Pointer;
-   type Keyboard_Ptr is access all Keyboard;
-   type Touch_Ptr is access all Touch;
-   type Output_Ptr is access all Output;
-   type Region_Ptr is access all Region;
-   type Subcompositor_Ptr is access all Subcompositor;
-   type Subsurface_Ptr is access all Subsurface;
-
 private
 
    subtype char_array is Interfaces.C.char_array;

@@ -4,8 +4,16 @@ package body Client_Examples.Find_Compositor is
 
    use all type Wayland.Client.Protocol.Call_Result_Code;
 
+   type Data_Type is limited record
+      Compositor : aliased Wayland.Client.Protocol.Compositor;
+   end record;
+
+   type Data_Ptr is access all Data_Type;
+
+   Data : aliased Data_Type;
+
    procedure Global_Registry_Handler
-     (Compositor : not null Wayland.Client.Protocol.Compositor_Ptr;
+     (Data       : not null Data_Ptr;
       Registry   : Wayland.Client.Protocol.Registry;
       Id         : Wayland.Unsigned_32;
       Name       : String;
@@ -14,12 +22,12 @@ package body Client_Examples.Find_Compositor is
       Put_Line ("Got a registry event for " & Name & " version" & Version'Image & " id" & Id'Image);
 
       if Name = "wl_compositor" then
-         Compositor.Get_Proxy (Registry, Id, Version);
+         Data.Compositor.Get_Proxy (Registry, Id, Version);
       end if;
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover
-     (Data     : not null Wayland.Client.Protocol.Compositor_Ptr;
+     (Data     : not null Data_Ptr;
       Registry : Wayland.Client.Protocol.Registry;
       Id       : Wayland.Unsigned_32) is
    begin
@@ -27,15 +35,13 @@ package body Client_Examples.Find_Compositor is
    end Global_Registry_Remover;
 
    package Registry_Events is new Wayland.Client.Protocol.Registry_Events
-     (Data_Type             => Wayland.Client.Protocol.Compositor,
-      Data_Ptr              => Wayland.Client.Protocol.Compositor_Ptr,
+     (Data_Type             => Data_Type,
+      Data_Ptr              => Data_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
    Display  : Wayland.Client.Protocol.Display;
    Registry : Wayland.Client.Protocol.Registry;
-
-   Compositor : aliased Wayland.Client.Protocol.Compositor;
 
    Call_Result : Wayland.Client.Protocol.Call_Result_Code;
 
@@ -54,7 +60,7 @@ package body Client_Examples.Find_Compositor is
          return;
       end if;
 
-      Call_Result := Registry_Events.Subscribe (Registry, Compositor'Access);
+      Call_Result := Registry_Events.Subscribe (Registry, Data'Access);
       case Call_Result is
          when Success =>
             Put_Line ("Successfully subscribed to registry events");
@@ -67,7 +73,7 @@ package body Client_Examples.Find_Compositor is
       Display.Dispatch;
       Display.Roundtrip;
 
-      if Compositor.Has_Proxy then
+      if Data.Compositor.Has_Proxy then
          Put_Line ("Found compositor");
       else
          Put_Line ("Can't find compositor");

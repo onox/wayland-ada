@@ -45,32 +45,19 @@ package body Client_Examples.Hdante_Hello_World is
    use all type Ada.Real_Time.Time;
    use all type Ada.Real_Time.Time_Span;
 
-   Compositor : aliased Wayland_Client.Compositor;
-   Pointer    : aliased Wayland_Client.Pointer;
-   Seat       : aliased Wayland_Client.Seat;
-   Shell      : aliased Wayland_Client.Shell;
-   Shm        : aliased Wayland_Client.Shm;
-
    Done : Boolean := false;
 
    type Data_Type is limited record
-      Compositor : not null access Wayland_Client.Compositor;
-      Pointer    : not null access Wayland_Client.Pointer;
-      Seat       : not null access Wayland_Client.Seat;
-      Shell      : not null access Wayland_Client.Shell;
-      Shm        : not null access Wayland_Client.Shm;
+      Compositor : aliased Wayland_Client.Compositor;
+      Pointer    : aliased Wayland_Client.Pointer;
+      Seat       : aliased Wayland_Client.Seat;
+      Shell      : aliased Wayland_Client.Shell;
+      Shm        : aliased Wayland_Client.Shm;
    end record;
 
    type Data_Ptr is access all Data_Type;
 
-   Data : aliased Data_Type :=
-     (
-      Compositor => Compositor'Unchecked_Access,
-      Pointer    => Pointer'Unchecked_Access,
-      Seat       => Seat'Unchecked_Access,
-      Shell      => Shell'Unchecked_Access,
-      Shm        => Shm'Unchecked_Access
-     );
+   Data : aliased Data_Type;
 
    function Min (L, R : Unsigned_32) return Unsigned_32 renames
      Unsigned_32'Min;
@@ -121,26 +108,26 @@ package body Client_Examples.Hdante_Hello_World is
       Call_Result : Wayland_Client.Call_Result_Code;
    begin
       if Name = Wayland_Client.Compositor_Interface.Name then
-         Compositor.Get_Proxy (Registry,
+         Data.Compositor.Get_Proxy (Registry,
                                Id,
                                Min (Version, 4));
          Put_Line ("Got compositor proxy");
       elsif Name = Wayland_Client.Shm_Interface.Name then
-         Shm.Get_Proxy (Registry,
+         Data.Shm.Get_Proxy (Registry,
                         Id,
                         Min (Version, 1));
          Put_Line ("Got shm proxy");
       elsif Name = Wayland_Client.Shell_Interface.Name then
-         Shell.Get_Proxy (Registry,
+         Data.Shell.Get_Proxy (Registry,
                           Id,
                           Min (Version, 1));
          Put_Line ("Got shell proxy");
       elsif Name = Wayland_Client.Seat_Interface.Name then
-         Seat.Get_Proxy (Registry,
+         Data.Seat.Get_Proxy (Registry,
                          Id,
                          Min (Version, 2));
 
-         Call_Result := Seat_Events.Subscribe (Seat, Data);
+         Call_Result := Seat_Events.Subscribe (Data.Seat, Data);
 
          case Call_Result is
             when Success => Put_Line ("Successfully subscribed to seat events");
@@ -348,19 +335,19 @@ package body Client_Examples.Hdante_Hello_World is
       Display.Roundtrip;
       Registry.Destroy;
 
-      if not Compositor.Has_Proxy then
+      if not Data.Compositor.Has_Proxy then
          Put_Line ("Error: no compositor");
          Display.Disconnect;
          return;
       end if;
 
-      if not Shm.Has_Proxy then
+      if not Data.Shm.Has_Proxy then
          Put_Line ("Error: no shm");
          Display.Disconnect;
          return;
       end if;
 
-      if not Shell.Has_Proxy then
+      if not Data.Shell.Has_Proxy then
          Put_Line ("Error: no shell");
          Display.Disconnect;
          return;
@@ -368,8 +355,8 @@ package body Client_Examples.Hdante_Hello_World is
 
       if Exists_Mouse then
          Put_Line ("Start mouse subscription");
-         Seat.Get_Pointer (Pointer);
-         Call_Result := Mouse_Events.Subscribe (Pointer, Data'Access);
+         Data.Seat.Get_Pointer (Data.Pointer);
+         Call_Result := Mouse_Events.Subscribe (Data.Pointer, Data'Access);
 
          case Call_Result is
             when Success =>
@@ -414,7 +401,7 @@ package body Client_Examples.Hdante_Hello_World is
          Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
 
       if Memory_Map.Has_Mapping then
-         Shm.Create_Pool (Image,
+         Data.Shm.Create_Pool (Image,
                           Integer (Size (File_Status)),
                           Pool);
       else
@@ -429,7 +416,7 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Compositor.Get_Surface_Proxy (Surface);
+      Data.Compositor.Get_Surface_Proxy (Surface);
 
       if not Surface.Has_Proxy then
          Put_Line ("Failed to create surface");
@@ -437,7 +424,7 @@ package body Client_Examples.Hdante_Hello_World is
          return;
       end if;
 
-      Wayland_Client.Get_Shell_Surface (Shell, Surface, Shell_Surface);
+      Wayland_Client.Get_Shell_Surface (Data.Shell, Surface, Shell_Surface);
 
       if not Shell_Surface.Has_Proxy then
          Surface.Destroy;
