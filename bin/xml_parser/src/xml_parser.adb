@@ -1,3 +1,4 @@
+with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
@@ -52,9 +53,7 @@ procedure XML_Parser is
 
    XML_Exception : exception;
 
-   File_Name : constant String := "/usr/share/wayland/wayland.xml";
-
-   procedure Read_Wayland_XML_File;
+   procedure Read_Wayland_XML_File (File_Name : String);
    procedure Create_Wayland_Spec_File;
    procedure Create_Wayland_Body_File;
 
@@ -160,7 +159,7 @@ procedure XML_Parser is
       end if;
    end Generate_Pretty_Code_For_Subprogram;
 
-   procedure Read_Wayland_XML_File is
+   procedure Read_Wayland_XML_File (File_Name : String) is
 
       procedure Check_Wayland_XML_File_Exists;
       procedure Allocate_Space_For_Wayland_XML_Contents;
@@ -3245,7 +3244,7 @@ procedure XML_Parser is
    end Create_Wayland_Body_File;
 
 begin
-   Read_Wayland_XML_File;
+   Read_Wayland_XML_File (Ada.Command_Line.Argument (1));
 exception
    when Unknown_Exception : others =>
       Put_Line (Ada.Exceptions.Exception_Information (Unknown_Exception));
