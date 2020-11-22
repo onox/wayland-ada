@@ -529,8 +529,30 @@ procedure XML_Parser is
                   end if;
                end loop;
 
+               --  Some files have <entry> nodes with a <description summary>
+               --  child node instead of summary attribute
                if Child_Nodes (Tag).Length > 0 then
-                  raise XML_Exception;
+                  for Child of Child_Nodes (Tag) loop
+                     case Child.Id is
+                        when Node_Kind_Text =>
+                           --  TODO Check Trim (X.Text.all) is just whitespace
+                           null;
+                        when Node_Kind_Tag =>
+                           if Name (Child.Tag) = "description" then
+                              for A of Attributes (Child.Tag) loop
+                                 if Name (A.all) = "summary" then
+                                    Set_Summary (Entry_Tag.all, Value (A.all));
+                                 else
+                                    raise XML_Exception;
+                                 end if;
+                              end loop;
+                           else
+                              raise XML_Exception;
+                           end if;
+                        when others =>
+                           raise XML_Exception;
+                     end case;
+                  end loop;
                end if;
             end Iterate;
 
@@ -582,7 +604,7 @@ procedure XML_Parser is
                   end if;
                end loop;
 
-               for Child of Child_Nodes(Tag) loop
+               for Child of Child_Nodes (Tag) loop
                   if Child.Id = Node_Kind_Tag then
                      if Name (Child.Tag) = "description" then
                         Append_Child
@@ -835,31 +857,33 @@ procedure XML_Parser is
          Protocol_Name : constant String := Name (Protocol_Tag.all);
          Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
-         Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.ads");
+         if Protocol_Name = "wayland" then
+            Ada.Text_IO.Create
+              (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.ads");
 
-         Put_Line (File, "private with Interfaces.C.Strings;");
-         Put_Line (File, "private with " & Package_Name & ".Thin;");
-         New_Line (File);
-         Put_Line (File, "with C_Binding.Linux.Files;");
-         New_Line (File);
-         Put_Line (File, "package " & Package_Name & ".Client is");
-         Put_Line (File, "   pragma Preelaborate;");
-         New_Line (File);
+            Put_Line (File, "private with Interfaces.C.Strings;");
+            Put_Line (File, "private with " & Package_Name & ".Thin;");
+            New_Line (File);
+            Put_Line (File, "with C_Binding.Linux.Files;");
+            New_Line (File);
+            Put_Line (File, "package " & Package_Name & ".Client is");
+            Put_Line (File, "   pragma Preelaborate;");
+            New_Line (File);
 
-         Generate_Code_For_Type_Declarations;
-         Generate_Code_For_The_Interface_Type;
-         Generate_Code_For_The_Interface_Constants;
-         Generate_Code_For_Enum_Constants;
-         Generate_Manually_Edited_Partial_Type_Declarations;
-         Generate_Code_For_The_Private_Part;
-         Generate_Use_Type_Declarions;
-         Generate_Manually_Edited_Code_For_Type_Definitions;
-         Generate_Private_Code_For_The_Interface_Constants;
+            Generate_Code_For_Type_Declarations;
+            Generate_Code_For_The_Interface_Type;
+            Generate_Code_For_The_Interface_Constants;
+            Generate_Code_For_Enum_Constants;
+            Generate_Manually_Edited_Partial_Type_Declarations;
+            Generate_Code_For_The_Private_Part;
+            Generate_Use_Type_Declarions;
+            Generate_Manually_Edited_Code_For_Type_Definitions;
+            Generate_Private_Code_For_The_Interface_Constants;
 
-         Put_Line (File, "end " & Package_Name & ".Client;");
+            Put_Line (File, "end " & Package_Name & ".Client;");
 
-         Ada.Text_IO.Close (File);
+            Ada.Text_IO.Close (File);
+         end if;
 
          -----------------------------------------------------------------------
 
@@ -2169,17 +2193,19 @@ procedure XML_Parser is
          Protocol_Name : constant String := Name (Protocol_Tag.all);
          Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
-         Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.adb");
+         if Protocol_Name = "wayland" then
+            Ada.Text_IO.Create
+              (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.adb");
 
-         Put_Line (File, "package body " & Package_Name & ".Client is");
-         New_Line (File);
+            Put_Line (File, "package body " & Package_Name & ".Client is");
+            New_Line (File);
 
-         Generate_Manually_Edited_Code;
+            Generate_Manually_Edited_Code;
 
-         Put_Line (File, "end " & Package_Name & ".Client;");
+            Put_Line (File, "end " & Package_Name & ".Client;");
 
-         Ada.Text_IO.Close (File);
+            Ada.Text_IO.Close (File);
+         end if;
 
          -----------------------------------------------------------------------
 
