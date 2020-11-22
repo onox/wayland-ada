@@ -1779,6 +1779,38 @@ procedure XML_Parser is
                      Ptr_Name        : constant String
                        := Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name (Interface_Tag) & "_Ptr");
+
+                     procedure Generate_Pretty_Function_Code (Subprogram_Kind : String; Max_Name_Length : in out Natural) is
+                        V : Wayland_XML.Request_Child_Vectors.Vector;
+
+                        function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
+                     begin
+                        for Child of Children (Request_Tag) loop
+                           if Child.Kind_Id = Child_Arg then
+                              if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
+                                 V.Append (Child);
+
+                                 declare
+                                    Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
+                                 begin
+                                    Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                                 end;
+                              end if;
+                           end if;
+                        end loop;
+
+                        Put_Line (File, "   " & Subprogram_Kind & " " & Subprogram_Name);
+                        Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
+
+                        for Child of V loop
+                           if Child.Kind_Id = Child_Arg then
+                              Generate_Code_For_Arg
+                                (File, Child.Arg_Tag.all,
+                                 Max_Name_Length,
+                                 Child = Children (Request_Tag).Last_Element);
+                           end if;
+                        end loop;
+                     end Generate_Pretty_Function_Code;
                   begin
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
                         Put_Line (File, "");
@@ -1794,39 +1826,10 @@ procedure XML_Parser is
                            begin
                               if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
                                  declare
-                                    V : Wayland_XML.Request_Child_Vectors.Vector;
-
                                     Max_Name_Length : Natural := Name'Length;
-
-                                    function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                                  begin
-                                    for Child of Children (Request_Tag) loop
-                                       if Child.Kind_Id = Child_Arg then
-                                          if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                             V.Append (Child);
-
-                                             declare
-                                                Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                             begin
-                                                Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                             end;
-                                          end if;
-                                       end if;
-                                    end loop;
-
-                                    Put_Line (File, "   function " & Subprogram_Name);
-                                    Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
-
-                                    for Child of V loop
-                                       if Child.Kind_Id = Child_Arg then
-                                          Generate_Code_For_Arg
-                                            (File, Child.Arg_Tag.all,
-                                             Max_Name_Length,
-                                             Child = Children (Request_Tag).Last_Element);
-                                       end if;
-                                    end loop;
+                                    Generate_Pretty_Function_Code ("function", Max_Name_Length);
                                  end;
-
                                  Put_Line (File, " return " & Return_Type & ";");
                               else
                                  Put_Line
@@ -1837,38 +1840,12 @@ procedure XML_Parser is
                         else
                            if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
                               declare
-                                 V : Wayland_XML.Request_Child_Vectors.Vector;
-
                                  Max_Name_Length : Natural := Natural'Max (Name'Length, 11);
 
+                                 --  TODO Use parameter list in Generate_Pretty_Function_Code
                                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                               begin
-                                 for Child of Children (Request_Tag) loop
-                                    if Child.Kind_Id = Child_Arg then
-                                       if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                          V.Append (Child);
-
-                                          declare
-                                             Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                          begin
-                                             Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                          end;
-                                       end if;
-                                    end if;
-                                 end loop;
-
-                                 Put_Line (File, "   function " & Subprogram_Name);
-                                 Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
-
-                                 for Child of V loop
-                                    if Child.Kind_Id = Child_Arg then
-                                       Generate_Code_For_Arg
-                                         (File, Child.Arg_Tag.all,
-                                          Max_Name_Length,
-                                          Child = Children (Request_Tag).Last_Element);
-                                    end if;
-                                 end loop;
-
+                                 Generate_Pretty_Function_Code ("function", Max_Name_Length);
                                  Put_Line (File, "      " & Align ("Interface_V") & " : Interface_Ptr;");
                                  Put_Line (File, "      " & Align ("New_Id") & " : Unsigned_32) return Proxy_Ptr;");
                               end;
@@ -1887,37 +1864,9 @@ procedure XML_Parser is
                         end if;
                         if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 0 then
                            declare
-                              V : Wayland_XML.Request_Child_Vectors.Vector;
-
                               Max_Name_Length : Natural := Name'Length;
-
-                              function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                            begin
-                              for Child of Children (Request_Tag) loop
-                                 if Child.Kind_Id = Child_Arg then
-                                    if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                       V.Append (Child);
-
-                                       declare
-                                          Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                       begin
-                                          Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                       end;
-                                    end if;
-                                 end if;
-                              end loop;
-
-                              Put_Line (File, "   procedure " & Subprogram_Name);
-                              Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
-
-                              for Child of V loop
-                                 if Child.Kind_Id = Child_Arg then
-                                    Generate_Code_For_Arg
-                                      (File, Child.Arg_Tag.all,
-                                       Max_Name_Length,
-                                       Child = Children (Request_Tag).Last_Element);
-                                 end if;
-                              end loop;
+                              Generate_Pretty_Function_Code ("procedure", Max_Name_Length);
                               Put_Line (File, ";");
                            end;
                         else
