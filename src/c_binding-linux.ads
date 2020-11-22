@@ -3,7 +3,7 @@ private with Ada.Unchecked_Conversion;
 
 --  This package was originally named Posix but is nowadays Linux to avoid
 --  name clash with the Ada binding to Posix named Florist.
-package C_Binding.Linux is
+package C_Binding.Linux with Preelaborate is
 
    subtype Success_Flag is C_Binding.Success_Flag;
 

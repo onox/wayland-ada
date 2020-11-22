@@ -1,4 +1,4 @@
-package C_Binding.Linux.Files is
+package C_Binding.Linux.Files with Preelaborate is
 
    type File_Permission is
      (

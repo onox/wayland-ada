@@ -4,6 +4,7 @@ private with Wayland.Thin;
 with C_Binding.Linux.Files;
 
 package Wayland.Client is
+   pragma Preelaborate;
 
    type Display;
    type Registry;
