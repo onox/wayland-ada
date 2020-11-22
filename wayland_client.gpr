@@ -2,27 +2,8 @@ with "ubuntu_posix.gpr";
 
 project Wayland_Client is
 
-   for Source_Dirs use ("src");
+   for Source_Dirs use ("src/wayland");
 
    for Object_Dir use "obj";
-
-   for Source_Files use
-     (
-      "wayland-client.ads",
-      "wayland-client.adb",
-      "wayland-constants.ads",
-      "wayland-thin.ads",
-      "wayland-thin.adb",
-      "wayland.ads",
-      "wayland-api.ads"
-     );
-
---     package Compiler is
---
---        for Switches ("Ada") use (
---                                  "-Wall"
---                                  );
---
---     end Compiler;
 
 end Wayland_Client;

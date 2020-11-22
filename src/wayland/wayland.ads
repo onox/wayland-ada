@@ -8,6 +8,8 @@ package Wayland is
    type Unsigned_32 is mod 2 ** 32
      with Size => 32;
 
+   type Fixed is new Integer;
+
    type C_String is new String
      with Dynamic_Predicate => C_String'Length > 0 and then C_String (C_String'Last) = Nul;
 

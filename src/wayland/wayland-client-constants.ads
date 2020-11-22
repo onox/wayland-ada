@@ -1,4 +1,4 @@
-private package Wayland.Constants is
+private package Wayland.Client.Constants is
    pragma Pure;
 
    Display_Sync : constant := 0;
@@ -367,4 +367,4 @@ private package Wayland.Constants is
 
    Subsurface_Set_Desync_Since_Version : constant := 1;
 
-end Wayland.Constants;
+end Wayland.Client.Constants;

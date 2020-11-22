@@ -1,16 +1,16 @@
-limited with Wayland.Client;
+limited with Wayland.Client.Protocol;
 
 with Interfaces.C.Strings;
 
 with Wayland.API;
 
 --  Mostly auto generated from Wayland.xml
-private package Wayland.Thin is
+private package Wayland.Client.Thin is
    pragma Preelaborate;
 
    --  FIXME Move to package Wayland
-   subtype Fixed is Wayland.Client.Fixed;
-   subtype Wayland_Array_T is Wayland.Client.Wayland_Array_T;
+--   subtype Fixed is Wayland.Client.Fixed;
+   subtype Wayland_Array_T is Wayland.Client.Protocol.Wayland_Array_T;
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
    --  Begin core parts
@@ -1892,4 +1892,4 @@ private package Wayland.Thin is
    --  the cached state is applied on set_desync.
    procedure Subsurface_Set_Desync (Subsurface : Subsurface_Ptr);
 
-end Wayland.Thin;
+end Wayland.Client.Thin;

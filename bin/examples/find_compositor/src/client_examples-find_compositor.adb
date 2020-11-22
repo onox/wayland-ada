@@ -1,12 +1,12 @@
-with Wayland.Client;
+with Wayland.Client.Protocol;
 
 package body Client_Examples.Find_Compositor is
 
-   use all type Wayland.Client.Call_Result_Code;
+   use all type Wayland.Client.Protocol.Call_Result_Code;
 
    procedure Global_Registry_Handler
-     (Compositor : not null Wayland.Client.Compositor_Ptr;
-      Registry   : Wayland.Client.Registry;
+     (Compositor : not null Wayland.Client.Protocol.Compositor_Ptr;
+      Registry   : Wayland.Client.Protocol.Registry;
       Id         : Wayland.Unsigned_32;
       Name       : String;
       Version    : Wayland.Unsigned_32) is
@@ -19,25 +19,25 @@ package body Client_Examples.Find_Compositor is
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover
-     (Data     : not null Wayland.Client.Compositor_Ptr;
-      Registry : Wayland.Client.Registry;
+     (Data     : not null Wayland.Client.Protocol.Compositor_Ptr;
+      Registry : Wayland.Client.Protocol.Registry;
       Id       : Wayland.Unsigned_32) is
    begin
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
-   package Registry_Events is new Wayland.Client.Registry_Events
-     (Data_Type             => Wayland.Client.Compositor,
-      Data_Ptr              => Wayland.Client.Compositor_Ptr,
+   package Registry_Events is new Wayland.Client.Protocol.Registry_Events
+     (Data_Type             => Wayland.Client.Protocol.Compositor,
+      Data_Ptr              => Wayland.Client.Protocol.Compositor_Ptr,
       Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
-   Display  : Wayland.Client.Display;
-   Registry : Wayland.Client.Registry;
+   Display  : Wayland.Client.Protocol.Display;
+   Registry : Wayland.Client.Protocol.Registry;
 
-   Compositor : aliased Wayland.Client.Compositor;
+   Compositor : aliased Wayland.Client.Protocol.Compositor;
 
-   Call_Result : Wayland.Client.Call_Result_Code;
+   Call_Result : Wayland.Client.Protocol.Call_Result_Code;
 
    procedure Run is
    begin
