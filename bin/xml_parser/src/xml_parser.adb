@@ -59,6 +59,9 @@ procedure XML_Parser is
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
 
+   function Get_Protocol_Name (Name : String) return String is
+     (if Name = "wayland" then "client" else Name);
+
    procedure Generate_Code_For_Arg
      (File : Ada.Text_IO.File_Type;
       Arg_Tag    : Wayland_XML.Arg_Tag;
@@ -854,19 +857,19 @@ procedure XML_Parser is
       procedure Generate_Private_Code_For_The_Interface_Constants;
 
       procedure Create_File is
-         Protocol_Name : constant String := Name (Protocol_Tag.all);
+         Protocol_Name : constant String := Get_Protocol_Name (Name (Protocol_Tag.all));
          Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
-         if Protocol_Name = "wayland" then
+         if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.ads");
+              (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-protocol.ads");
 
             Put_Line (File, "private with Interfaces.C.Strings;");
-            Put_Line (File, "private with " & Package_Name & ".Thin;");
+            Put_Line (File, "private with Wayland." & Package_Name & ".Thin;");
             New_Line (File);
             Put_Line (File, "with C_Binding.Linux.Files;");
             New_Line (File);
-            Put_Line (File, "package " & Package_Name & ".Client is");
+            Put_Line (File, "package Wayland." & Package_Name & ".Protocol is");
             Put_Line (File, "   pragma Preelaborate;");
             New_Line (File);
 
@@ -880,7 +883,7 @@ procedure XML_Parser is
             Generate_Manually_Edited_Code_For_Type_Definitions;
             Generate_Private_Code_For_The_Interface_Constants;
 
-            Put_Line (File, "end " & Package_Name & ".Client;");
+            Put_Line (File, "end Wayland." & Package_Name & ".Protocol;");
 
             Ada.Text_IO.Close (File);
          end if;
@@ -888,9 +891,9 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Protocol_Name & "-constants.ads");
+           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-constants.ads");
 
-         Put_Line (File, "private package " & Package_Name & ".Constants is");
+         Put_Line (File, "private package Wayland." & Package_Name & ".Constants is");
          Put_Line (File, "   pragma Pure;");
          New_Line (File);
 
@@ -903,20 +906,20 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Protocol_Name & "-thin.ads");
+           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.ads");
 
-         Put_Line (File, "limited with " & Package_Name & ".Client;");
+         Put_Line (File, "limited with Wayland." & Package_Name & ".Protocol;");
          Put_Line (File, "");
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
-         Put_Line (File, "with Wayland.API;");
+         Put_Line (File, "with Wayland.Client.API;");
          Put_Line (File, "");
          Put_Line (File, "--  Mostly auto generated from " & File_Name);
-         Put_Line (File, "private package " & Package_Name & ".Thin is");
+         Put_Line (File, "private package Wayland." & Package_Name & ".Thin is");
          Put_Line (File, "   pragma Preelaborate;");
          Put_Line (File, "");
-         Put_Line (File, "   subtype Fixed is " & Package_Name & ".Client.Fixed;");
-         Put_Line (File, "   subtype Wayland_Array_T is " & Package_Name & ".Client.Wayland_Array_T;");
+         Put_Line (File, "   subtype Fixed is Wayland." & Package_Name & ".Protocol.Fixed;");
+         Put_Line (File, "   subtype Wayland_Array_T is Wayland." & Package_Name & ".Protocol.Wayland_Array_T;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   --  Begin core parts");
@@ -937,7 +940,7 @@ procedure XML_Parser is
          Create_Wl_Thin_Spec_File;
 
          Put_Line (File, "");
-         Put_Line (File, "end " & Package_Name & ".Thin;");
+         Put_Line (File, "end Wayland." & Package_Name & ".Thin;");
 
          Ada.Text_IO.Close (File);
       end Create_File;
@@ -2190,19 +2193,19 @@ procedure XML_Parser is
       procedure Generate_Manually_Edited_Code;
 
       procedure Create_File is
-         Protocol_Name : constant String := Name (Protocol_Tag.all);
+         Protocol_Name : constant String := Get_Protocol_Name (Name (Protocol_Tag.all));
          Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
       begin
-         if Protocol_Name = "wayland" then
+         if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, Protocol_Name & "-client.adb");
+              (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-protocol.adb");
 
-            Put_Line (File, "package body " & Package_Name & ".Client is");
+            Put_Line (File, "package body Wayland." & Package_Name & ".Protocol is");
             New_Line (File);
 
             Generate_Manually_Edited_Code;
 
-            Put_Line (File, "end " & Package_Name & ".Client;");
+            Put_Line (File, "end Wayland." & Package_Name & ".Protocol;");
 
             Ada.Text_IO.Close (File);
          end if;
@@ -2210,14 +2213,14 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Protocol_Name & "-thin.adb");
+           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.adb");
 
-         Put_Line (File, "with " & Package_Name & ".Constants;");
+         Put_Line (File, "with Wayland." & Package_Name & ".Constants;");
          Put_Line (File, "");
-         Put_Line (File, "use " & Package_Name & ".Constants;");
+         Put_Line (File, "use Wayland." & Package_Name & ".Constants;");
          Put_Line (File, "");
          Put_Line (File, "--  Mostly auto generated from " & File_Name);
-         Put_Line (File, "package body " & Package_Name & ".Thin is");
+         Put_Line (File, "package body Wayland." & Package_Name & ".Thin is");
          Put_Line (File, "");
          Put_Line (File, "   use type Proxy_Ptr;");
          Put_Line (File, "");
@@ -2238,7 +2241,7 @@ procedure XML_Parser is
          Create_Wl_Thin_Body_File;
 
          Put_Line (File, "");
-         Put_Line (File, "end " & Package_Name & ".Thin;");
+         Put_Line (File, "end Wayland." & Package_Name & ".Thin;");
 
          Ada.Text_IO.Close (File);
       end Create_File;
