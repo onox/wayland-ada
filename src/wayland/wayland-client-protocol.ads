@@ -31,17 +31,9 @@ package Wayland.Client.Protocol is
 
    pragma Linker_Options ("-lwayland-client");
    --  Added this linker option here to avoid adding it
-   --  to each gpr file that with's this Wayland Ada binding.  
+   --  to each gpr file that with's this Wayland Ada binding.
 
    type Call_Result_Code is (Success, Error);
-
-   type Wayland_Array_T is record
-      Size  : Unsigned_32;
-      Alloc : Unsigned_32;
-      Data  : Void_Ptr;
-   end record
-     with Convention => C_Pass_By_Copy;
-   --   TODO: Remove the trailing _T from the name of this type
 
    type Interface_Type is tagged limited private;
    --  This type name ends with _Type because 'interface'
@@ -1541,31 +1533,31 @@ private
    function Value
      (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
 
-   use type Wayland.Client.Thin.Display_Ptr;
-   use type Wayland.Client.Thin.Registry_Ptr;
-   use type Wayland.Client.Thin.Callback_Ptr;
-   use type Wayland.Client.Thin.Compositor_Ptr;
-   use type Wayland.Client.Thin.Shm_Pool_Ptr;
-   use type Wayland.Client.Thin.Shm_Ptr;
-   use type Wayland.Client.Thin.Buffer_Ptr;
-   use type Wayland.Client.Thin.Data_Offer_Ptr;
-   use type Wayland.Client.Thin.Data_Source_Ptr;
-   use type Wayland.Client.Thin.Data_Device_Ptr;
-   use type Wayland.Client.Thin.Data_Device_Manager_Ptr;
-   use type Wayland.Client.Thin.Shell_Ptr;
-   use type Wayland.Client.Thin.Shell_Surface_Ptr;
-   use type Wayland.Client.Thin.Surface_Ptr;
-   use type Wayland.Client.Thin.Seat_Ptr;
-   use type Wayland.Client.Thin.Pointer_Ptr;
-   use type Wayland.Client.Thin.Keyboard_Ptr;
-   use type Wayland.Client.Thin.Touch_Ptr;
-   use type Wayland.Client.Thin.Output_Ptr;
-   use type Wayland.Client.Thin.Region_Ptr;
-   use type Wayland.Client.Thin.Subcompositor_Ptr;
-   use type Wayland.Client.Thin.Subsurface_Ptr;
+   use type Thin.Display_Ptr;
+   use type Thin.Registry_Ptr;
+   use type Thin.Callback_Ptr;
+   use type Thin.Compositor_Ptr;
+   use type Thin.Shm_Pool_Ptr;
+   use type Thin.Shm_Ptr;
+   use type Thin.Buffer_Ptr;
+   use type Thin.Data_Offer_Ptr;
+   use type Thin.Data_Source_Ptr;
+   use type Thin.Data_Device_Ptr;
+   use type Thin.Data_Device_Manager_Ptr;
+   use type Thin.Shell_Ptr;
+   use type Thin.Shell_Surface_Ptr;
+   use type Thin.Surface_Ptr;
+   use type Thin.Seat_Ptr;
+   use type Thin.Pointer_Ptr;
+   use type Thin.Keyboard_Ptr;
+   use type Thin.Touch_Ptr;
+   use type Thin.Output_Ptr;
+   use type Thin.Region_Ptr;
+   use type Thin.Subcompositor_Ptr;
+   use type Thin.Subsurface_Ptr;
 
    type Display is tagged limited record
-      My_Display : Wayland.Client.Thin.Display_Ptr;
+      My_Display : Thin.Display_Ptr;
       My_Fd      : Integer;
    end record;
 
@@ -1573,216 +1565,216 @@ private
      (Display.My_Display /= null);
 
    type Registry is tagged limited record
-      My_Registry : Wayland.Client.Thin.Registry_Ptr;
+      My_Registry : Thin.Registry_Ptr;
    end record;
 
    function Has_Proxy (Registry : Protocol.Registry) return Boolean is
      (Registry.My_Registry /= null);
 
    type Compositor is tagged limited record
-      My_Compositor : Wayland.Client.Thin.Compositor_Ptr;
+      My_Compositor : Thin.Compositor_Ptr;
    end record;
 
    function Has_Proxy (Compositor : Protocol.Compositor) return Boolean is
      (Compositor.My_Compositor /= null);
 
    type Pointer is tagged limited record
-      My_Pointer : Wayland.Client.Thin.Pointer_Ptr;
+      My_Pointer : Thin.Pointer_Ptr;
    end record;
 
    function Has_Proxy (Pointer : Protocol.Pointer) return Boolean is
      (Pointer.My_Pointer /= null);
 
    type Seat is tagged limited record
-      My_Seat : Wayland.Client.Thin.Seat_Ptr;
+      My_Seat : Thin.Seat_Ptr;
    end record;
 
    function Has_Proxy (Seat : Protocol.Seat) return Boolean is
      (Seat.My_Seat /= null);
 
    type Shell is tagged limited record
-      My_Shell : Wayland.Client.Thin.Shell_Ptr;
+      My_Shell : Thin.Shell_Ptr;
    end record;
 
    function Has_Proxy (Shell : Protocol.Shell) return Boolean is
      (Shell.My_Shell /= null);
 
    type Shm is tagged limited record
-      My_Shm : Wayland.Client.Thin.Shm_Ptr;
+      My_Shm : Thin.Shm_Ptr;
    end record;
 
    function Has_Proxy (Shm : Protocol.Shm) return Boolean is (Shm.My_Shm /= null);
 
    type Shm_Pool is tagged limited record
-      My_Shm_Pool : Wayland.Client.Thin.Shm_Pool_Ptr;
+      My_Shm_Pool : Thin.Shm_Pool_Ptr;
    end record;
 
    function Has_Proxy (Pool : Shm_Pool) return Boolean is
      (Pool.My_Shm_Pool /= null);
 
    type Buffer is tagged limited record
-      My_Buffer : Wayland.Client.Thin.Buffer_Ptr;
+      My_Buffer : Thin.Buffer_Ptr;
    end record;
 
    function Has_Proxy (Buffer : Protocol.Buffer) return Boolean is
      (Buffer.My_Buffer /= null);
 
    type Surface is tagged limited record
-      My_Surface : Wayland.Client.Thin.Surface_Ptr;
+      My_Surface : Thin.Surface_Ptr;
    end record;
 
    function Has_Proxy (Surface : Protocol.Surface) return Boolean is
      (Surface.My_Surface /= null);
 
    type Shell_Surface is tagged limited record
-      My_Shell_Surface : Wayland.Client.Thin.Shell_Surface_Ptr;
+      My_Shell_Surface : Thin.Shell_Surface_Ptr;
    end record;
 
    function Has_Proxy (Surface : Shell_Surface) return Boolean is
      (Surface.My_Shell_Surface /= null);
 
    type Callback is tagged limited record
-      My_Callback : Wayland.Client.Thin.Callback_Ptr;
+      My_Callback : Thin.Callback_Ptr;
    end record;
 
    type Data_Offer is tagged limited record
-      My_Data_Offer : Wayland.Client.Thin.Data_Offer_Ptr;
+      My_Data_Offer : Thin.Data_Offer_Ptr;
    end record;
 
    type Data_Source is tagged limited record
-      My_Data_Source : Wayland.Client.Thin.Data_Source_Ptr;
+      My_Data_Source : Thin.Data_Source_Ptr;
    end record;
 
    function Has_Proxy (Data_Source : Protocol.Data_Source) return Boolean is
      (Data_Source.My_Data_Source /= null);
 
    type Data_Device is tagged limited record
-      My_Data_Device : Wayland.Client.Thin.Data_Device_Ptr;
+      My_Data_Device : Thin.Data_Device_Ptr;
    end record;
 
    function Has_Proxy (Data_Device : Protocol.Data_Device) return Boolean is
      (Data_Device.My_Data_Device /= null);
 
    type Data_Device_Manager is tagged limited record
-      My_Data_Device_Manager : Wayland.Client.Thin.Data_Device_Manager_Ptr;
+      My_Data_Device_Manager : Thin.Data_Device_Manager_Ptr;
    end record;
 
    function Has_Proxy (Data_Device_Manager : Protocol.Data_Device_Manager) return Boolean is
      (Data_Device_Manager.My_Data_Device_Manager /= null);
 
    type Keyboard is tagged limited record
-      My_Keyboard : Wayland.Client.Thin.Keyboard_Ptr;
+      My_Keyboard : Thin.Keyboard_Ptr;
    end record;
 
    function Has_Proxy (Keyboard : Protocol.Keyboard) return Boolean is
      (Keyboard.My_Keyboard /= null);
 
    type Touch is tagged limited record
-      My_Touch : Wayland.Client.Thin.Touch_Ptr;
+      My_Touch : Thin.Touch_Ptr;
    end record;
 
    function Has_Proxy (Touch : Protocol.Touch) return Boolean is
      (Touch.My_Touch /= null);
 
    type Output is tagged limited record
-      My_Output : Wayland.Client.Thin.Output_Ptr;
+      My_Output : Thin.Output_Ptr;
    end record;
 
    function Has_Proxy (Output : Protocol.Output) return Boolean is
      (Output.My_Output /= null);
 
    type Region is tagged limited record
-      My_Region : Wayland.Client.Thin.Region_Ptr;
+      My_Region : Thin.Region_Ptr;
    end record;
 
    function Has_Proxy (Region : Protocol.Region) return Boolean is
      (Region.My_Region /= null);
 
    type Subcompositor is tagged limited record
-      My_Subcompositor : Wayland.Client.Thin.Subcompositor_Ptr;
+      My_Subcompositor : Thin.Subcompositor_Ptr;
    end record;
 
    function Has_Proxy (Subcompositor : Protocol.Subcompositor) return Boolean is
      (Subcompositor.My_Subcompositor /= null);
 
    type Subsurface is tagged limited record
-      My_Subsurface : Wayland.Client.Thin.Subsurface_Ptr;
+      My_Subsurface : Thin.Subsurface_Ptr;
    end record;
 
    function Has_Proxy (Subsurface : Protocol.Subsurface) return Boolean is
      (Subsurface.My_Subsurface /= null);
 
    type Interface_Type is tagged limited record
-      My_Interface : not null Wayland.Client.Thin.Interface_Ptr;
+      My_Interface : not null Thin.Interface_Ptr;
    end record;
 
    function Name (I : Interface_Type) return String is
      (Value (I.My_Interface.Name));
 
    Display_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Display_Interface'Access);
+     (My_Interface => Thin.Display_Interface'Access);
 
    Registry_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Registry_Interface'Access);
+     (My_Interface => Thin.Registry_Interface'Access);
 
    Callback_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Callback_Interface'Access);
+     (My_Interface => Thin.Callback_Interface'Access);
 
    Compositor_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Compositor_Interface'Access);
+     (My_Interface => Thin.Compositor_Interface'Access);
 
    Shm_Pool_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Shm_Pool_Interface'Access);
+     (My_Interface => Thin.Shm_Pool_Interface'Access);
 
    Shm_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Shm_Interface'Access);
+     (My_Interface => Thin.Shm_Interface'Access);
 
    Buffer_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Buffer_Interface'Access);
+     (My_Interface => Thin.Buffer_Interface'Access);
 
    Data_Offer_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Data_Offer_Interface'Access);
+     (My_Interface => Thin.Data_Offer_Interface'Access);
 
    Data_Source_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Data_Source_Interface'Access);
+     (My_Interface => Thin.Data_Source_Interface'Access);
 
    Data_Device_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Data_Device_Interface'Access);
+     (My_Interface => Thin.Data_Device_Interface'Access);
 
    Data_Device_Manager_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Data_Device_Manager_Interface'Access);
+     (My_Interface => Thin.Data_Device_Manager_Interface'Access);
 
    Shell_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Shell_Interface'Access);
+     (My_Interface => Thin.Shell_Interface'Access);
 
    Shell_Surface_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Shell_Surface_Interface'Access);
+     (My_Interface => Thin.Shell_Surface_Interface'Access);
 
    Surface_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Surface_Interface'Access);
+     (My_Interface => Thin.Surface_Interface'Access);
 
    Seat_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Seat_Interface'Access);
+     (My_Interface => Thin.Seat_Interface'Access);
 
    Pointer_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Pointer_Interface'Access);
+     (My_Interface => Thin.Pointer_Interface'Access);
 
    Keyboard_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Keyboard_Interface'Access);
+     (My_Interface => Thin.Keyboard_Interface'Access);
 
    Touch_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Touch_Interface'Access);
+     (My_Interface => Thin.Touch_Interface'Access);
 
    Output_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Output_Interface'Access);
+     (My_Interface => Thin.Output_Interface'Access);
 
    Region_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Region_Interface'Access);
+     (My_Interface => Thin.Region_Interface'Access);
 
    Subcompositor_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Subcompositor_Interface'Access);
+     (My_Interface => Thin.Subcompositor_Interface'Access);
 
    Subsurface_Interface : constant Interface_Type :=
-     (My_Interface => Wayland.Client.Thin.Subsurface_Interface'Access);
+     (My_Interface => Thin.Subsurface_Interface'Access);
 
 end Wayland.Client.Protocol;

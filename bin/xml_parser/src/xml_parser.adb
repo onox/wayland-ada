@@ -908,18 +908,14 @@ procedure XML_Parser is
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.ads");
 
-         Put_Line (File, "limited with Wayland." & Package_Name & ".Protocol;");
-         Put_Line (File, "");
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
-         Put_Line (File, "with Wayland.Client.API;");
+         Put_Line (File, "with Wayland.API;");
          Put_Line (File, "");
          Put_Line (File, "--  Mostly auto generated from " & File_Name);
          Put_Line (File, "private package Wayland." & Package_Name & ".Thin is");
          Put_Line (File, "   pragma Preelaborate;");
          Put_Line (File, "");
-         Put_Line (File, "   subtype Fixed is Wayland." & Package_Name & ".Protocol.Fixed;");
-         Put_Line (File, "   subtype Wayland_Array_T is Wayland." & Package_Name & ".Protocol.Wayland_Array_T;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   --  Begin core parts");
@@ -974,10 +970,6 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_The_Interface_Type is
       begin
-         Put_Line (File, "   subtype Unsigned_32 is Interfaces.Unsigned_32;");
-         New_Line (File);
-         Put_Line (File, "   type Fixed is new Integer;");
-         New_Line (File);
          Put_Line (File, "   type Interface_Type is tagged limited private;");
          Put_Line (File, "   --  This type name ends with _Type because 'interface'");
          Put_Line (File, "   --  is a reserved keyword in the Ada programming language.");
@@ -1082,84 +1074,84 @@ procedure XML_Parser is
       begin
          Put_Line (File, "   type Compositor is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Compositor : Wl.Compositor) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Compositor : Protocol.Compositor) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Compositor  : in out Wl.Compositor;");
-         Put_Line (File, "                   Registry    : Wl.Registry;");
-         Put_Line (File, "                   Id          : Wl.Unsigned_32;");
-         Put_Line (File, "                   Version     : Wl.Unsigned_32) with");
+         Put_Line (File, "   procedure Bind (Compositor  : in out Protocol.Compositor;");
+         Put_Line (File, "                   Registry    : Protocol.Registry;");
+         Put_Line (File, "                   Id          : Unsigned_32;");
+         Put_Line (File, "                   Version     : Unsigned_32) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Has_Registry_Object (Registry);");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Surface (Compositor : Wl.Compositor;");
-         Put_Line (File, "                             Surface    : in out Wl.Surface) with");
+         Put_Line (File, "   procedure Create_Surface (Compositor : Protocol.Compositor;");
+         Put_Line (File, "                             Surface    : in out Protocol.Surface) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
          Put_Line (File, "   type Seat is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Seat : Wl.Seat) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Seat : Protocol.Seat) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Seat     : in out Wl.Seat;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
-         Put_Line (File, "                   Id       : Wl.Unsigned_32;");
-         Put_Line (File, "                   Version  : Wl.Unsigned_32) with");
+         Put_Line (File, "   procedure Bind (Seat     : in out Protocol.Seat;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
+         Put_Line (File, "                   Id       : Unsigned_32;");
+         Put_Line (File, "                   Version  : Unsigned_32) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Has_Registry_Object (Registry);");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Pointer (Seat    : Wl.Seat;");
-         Put_Line (File, "                          Pointer : in out Wl.Pointer) with");
+         Put_Line (File, "   procedure Get_Pointer (Seat    : Protocol.Seat;");
+         Put_Line (File, "                          Pointer : in out Protocol.Pointer) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
          Put_Line (File, "   type Pointer is tagged limited private;");
          Put_Line (File, "");
          Put_Line (File, "   type Shell is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Shell : Wl.Shell) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Shell : Protocol.Shell) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Shell    : in out Wl.Shell;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
-         Put_Line (File, "                   Id       : Wl.Unsigned_32;");
-         Put_Line (File, "                   Version  : Wl.Unsigned_32) with");
-         Put_Line (File, "     Global => null,");
-         Put_Line (File, "     Pre    => Has_Registry_Object (Registry);");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Shell_Surface (Shell         : Wl.Shell;");
-         Put_Line (File, "                                Surface       : Wl.Surface;");
-         Put_Line (File, "                                Shell_Surface : in out Wl.Shell_Surface) with");
-         Put_Line (File, "     Global => null;");
-         Put_Line (File, "");
-         Put_Line (File, "   type Shm is tagged limited private;");
-         Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Shm : Wl.Shm) return Boolean");
-         Put_Line (File, "     with Global => null;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Shm      : in out Wl.Shm;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
+         Put_Line (File, "   procedure Bind (Shell    : in out Protocol.Shell;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
          Put_Line (File, "                   Id       : Unsigned_32;");
          Put_Line (File, "                   Version  : Unsigned_32) with");
          Put_Line (File, "     Global => null,");
          Put_Line (File, "     Pre    => Has_Registry_Object (Registry);");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Pool (Shm             : Wl.Shm;");
+         Put_Line (File, "   procedure Get_Shell_Surface (Shell         : Protocol.Shell;");
+         Put_Line (File, "                                Surface       : Protocol.Surface;");
+         Put_Line (File, "                                Shell_Surface : in out Protocol.Shell_Surface) with");
+         Put_Line (File, "     Global => null;");
+         Put_Line (File, "");
+         Put_Line (File, "   type Shm is tagged limited private;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Has_Proxy (Shm : Protocol.Shm) return Boolean");
+         Put_Line (File, "     with Global => null;");
+         Put_Line (File, "");
+         Put_Line (File, "   procedure Bind (Shm      : in out Protocol.Shm;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
+         Put_Line (File, "                   Id       : Unsigned_32;");
+         Put_Line (File, "                   Version  : Unsigned_32) with");
+         Put_Line (File, "     Global => null,");
+         Put_Line (File, "     Pre    => Has_Registry_Object (Registry);");
+         Put_Line (File, "");
+         Put_Line (File, "   procedure Create_Pool (Shm             : Protocol.Shm;");
          Put_Line (File, "                          File_Descriptor : Integer;");
          Put_Line (File, "                          Size            : Integer;");
          Put_Line (File, "                          Pool            : in out Shm_Pool);");
          Put_Line (File, "");
          Put_Line (File, "   type Shm_Pool is tagged limited private;");
          Put_Line (File, "");
-         Put_Line (File, "   function Has_Proxy (Pool : Wl.Shm_Pool) return Boolean");
+         Put_Line (File, "   function Has_Proxy (Pool : Protocol.Shm_Pool) return Boolean");
          Put_Line (File, "     with Global => null;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Buffer (Pool     : Wl.Shm_Pool;");
+         Put_Line (File, "   procedure Create_Buffer (Pool     : Protocol.Shm_Pool;");
          Put_Line (File, "                            Offset   : Integer;");
          Put_Line (File, "                            Width    : Integer;");
          Put_Line (File, "                            Height   : Integer;");
          Put_Line (File, "                            Stride   : Integer;");
          Put_Line (File, "                            Format   : Unsigned_32;");
-         Put_Line (File, "                            Buffer : in out Wl.Buffer) with");
+         Put_Line (File, "                            Buffer : in out Protocol.Buffer) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
          Put_Line (File, "   type Surface is tagged limited private;");
@@ -1275,19 +1267,19 @@ procedure XML_Parser is
          Put_Line (File, "      type Data_T is private;");
          Put_Line (File, "      Data : Data_T;");
          Put_Line (File, "      with procedure Global_Object_Added (Data     : Data_T;");
-         Put_Line (File, "                                          Registry : Wl.Registry;");
+         Put_Line (File, "                                          Registry : Protocol.Registry;");
          Put_Line (File, "                                          Id       : Unsigned_32;");
          Put_Line (File, "                                          Name     : String;");
          Put_Line (File, "                                          Version  : Unsigned_32);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Global_Object_Removed (Data     : Data_T;");
-         Put_Line (File, "                                            Registry : Wl.Registry;");
+         Put_Line (File, "                                            Registry : Protocol.Registry;");
          Put_Line (File, "                                            Id       : Unsigned_32);");
          Put_Line (File, "   package Registry_Objects_Subscriber is");
          Put_Line (File, "");
          Put_Line (File, "      -- Starts subcription to global objects addded and removed events.");
          Put_Line (File, "      -- To stop subscription, call Registry.Destroy.");
-         Put_Line (File, "      procedure Start_Subscription (Registry : in out Wl.Registry);");
+         Put_Line (File, "      procedure Start_Subscription (Registry : in out Protocol.Registry);");
          Put_Line (File, "");
          Put_Line (File, "   end Registry_Objects_Subscriber;");
          Put_Line (File, "");
@@ -1323,12 +1315,12 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "      with procedure Seat_Capabilities");
          Put_Line (File, "        (Data         : Data_Type;");
-         Put_Line (File, "         Seat         : Wl.Seat;");
+         Put_Line (File, "         Seat         : Protocol.Seat;");
          Put_Line (File, "         Capabilities : Unsigned_32);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Seat_Name");
          Put_Line (File, "        (Data : Data_Type;");
-         Put_Line (File, "         Seat : Wl.Seat;");
+         Put_Line (File, "         Seat : Protocol.Seat;");
          Put_Line (File, "         Name : String);");
          Put_Line (File, "   package Seat_Capability_Subscriber is");
          Put_Line (File, "");
@@ -1342,28 +1334,28 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Enter");
          Put_Line (File, "        (Data      : Data_Type;");
-         Put_Line (File, "         Pointer   : Wl.Pointer;");
+         Put_Line (File, "         Pointer   : Protocol.Pointer;");
          Put_Line (File, "         Serial    : Unsigned_32;");
-         Put_Line (File, "         Surface   : Wl.Surface;");
-         Put_Line (File, "         Surface_X : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y : Wl.Fixed);");
+         Put_Line (File, "         Surface   : Protocol.Surface;");
+         Put_Line (File, "         Surface_X : Fixed;");
+         Put_Line (File, "         Surface_Y : Fixed);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Leave");
          Put_Line (File, "        (Data    : Data_Type;");
-         Put_Line (File, "         Pointer : Wl.Pointer;");
+         Put_Line (File, "         Pointer : Protocol.Pointer;");
          Put_Line (File, "         Serial  : Unsigned_32;");
-         Put_Line (File, "         Surface : Wl.Surface);");
+         Put_Line (File, "         Surface : Protocol.Surface);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Motion");
          Put_Line (File, "        (Data      : Data_Type;");
-         Put_Line (File, "         Pointer   : Wl.Pointer;");
+         Put_Line (File, "         Pointer   : Protocol.Pointer;");
          Put_Line (File, "         Time      : Unsigned_32;");
-         Put_Line (File, "         Surface_X : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y : Wl.Fixed);");
+         Put_Line (File, "         Surface_X : Fixed;");
+         Put_Line (File, "         Surface_Y : Fixed);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Button");
          Put_Line (File, "        (Data    : Data_Type;");
-         Put_Line (File, "         Pointer : Wl.Pointer;");
+         Put_Line (File, "         Pointer : Protocol.Pointer;");
          Put_Line (File, "         Serial  : Unsigned_32;");
          Put_Line (File, "         Time    : Unsigned_32;");
          Put_Line (File, "         Button  : Unsigned_32;");
@@ -1371,28 +1363,28 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Axis");
          Put_Line (File, "        (Data    : Data_Type;");
-         Put_Line (File, "         Pointer : Wl.Pointer;");
+         Put_Line (File, "         Pointer : Protocol.Pointer;");
          Put_Line (File, "         Time    : Unsigned_32;");
          Put_Line (File, "         Axis    : Unsigned_32;");
-         Put_Line (File, "         Value   : Wl.Fixed);");
+         Put_Line (File, "         Value   : Fixed);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Frame (Data    : Data_Type;");
-         Put_Line (File, "                                    Pointer : Wl.Pointer);");
+         Put_Line (File, "                                    Pointer : Protocol.Pointer);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Axis_Source");
          Put_Line (File, "        (Data        : Data_Type;");
-         Put_Line (File, "         Pointer     : Wl.Pointer;");
+         Put_Line (File, "         Pointer     : Protocol.Pointer;");
          Put_Line (File, "         Axis_Source : Unsigned_32);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Axis_Stop");
          Put_Line (File, "        (Data    : Data_Type;");
-         Put_Line (File, "         Pointer : Wl.Pointer;");
+         Put_Line (File, "         Pointer : Protocol.Pointer;");
          Put_Line (File, "         Time    : Unsigned_32;");
          Put_Line (File, "         Axis    : Unsigned_32);");
          Put_Line (File, "");
          Put_Line (File, "      with procedure Pointer_Axis_Discrete");
          Put_Line (File, "        (Data     : Data_Type;");
-         Put_Line (File, "         Pointer  : Wl.Pointer;");
+         Put_Line (File, "         Pointer  : Protocol.Pointer;");
          Put_Line (File, "         Axis     : Unsigned_32;");
          Put_Line (File, "         Discrete : Integer);");
          Put_Line (File, "");
@@ -1984,7 +1976,7 @@ procedure XML_Parser is
               := Xml_Parser_Utils.Adaify_Name
                 (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "   use type Wl_Thin." & Name & "_Ptr;");
+            Put_Line (File, "   use type Thin." & Name & "_Ptr;");
          end Handle_Interface;
 
       begin
@@ -2000,154 +1992,154 @@ procedure XML_Parser is
       procedure Generate_Manually_Edited_Code_For_Type_Definitions is
       begin
          Put_Line (File, "   type Display is tagged limited record");
-         Put_Line (File, "      My_Display : Wl_Thin.Display_Ptr;");
+         Put_Line (File, "      My_Display : Thin.Display_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Is_Connected (Display : Wayland.Client.Display) return Boolean is (Display.My_Display /= null);");
+         Put_Line (File, "   function Is_Connected (Display : Protocol.Display) return Boolean is (Display.My_Display /= null);");
          New_Line (File);
          Put_Line (File, "   type Registry is tagged limited record");
-         Put_Line (File, "      My_Registry                 : Wl_Thin.Registry_Ptr;");
+         Put_Line (File, "      My_Registry                 : Thin.Registry_Ptr;");
          Put_Line (File, "      My_Has_Started_Subscription : Boolean := False;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Registry : Wayland.Client.Registry) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Registry : Protocol.Registry) return Boolean is");
          Put_Line (File, "     (Registry.My_Registry /= null);");
          New_Line (File);
          Put_Line (File, "   function Has_Started_Subscription (Registry : Wayland.Client.Registry) return Boolean is (Registry.My_Has_Started_Subscription);");
          New_Line (File);
          Put_Line (File, "   type Compositor is tagged limited record");
-         Put_Line (File, "      My_Compositor : Wl_Thin.Compositor_Ptr;");
+         Put_Line (File, "      My_Compositor : Thin.Compositor_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Compositor : Wayland.Client.Compositor) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Compositor : Protocol.Compositor) return Boolean is");
          Put_Line (File, "     (Compositor.My_Compositor /= null);");
          New_Line (File);
          Put_Line (File, "   type Pointer is tagged limited record");
-         Put_Line (File, "      My_Pointer : Wl_Thin.Pointer_Ptr;");
+         Put_Line (File, "      My_Pointer : Thin.Pointer_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Pointer : Wayland.Client.Pointer) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Pointer : Protocol.Pointer) return Boolean is");
          Put_Line (File, "     (Pointer.My_Pointer /= null);");
          New_Line (File);
          Put_Line (File, "   type Seat is tagged limited record");
-         Put_Line (File, "      My_Seat : Wl_Thin.Seat_Ptr;");
+         Put_Line (File, "      My_Seat : Thin.Seat_Ptr;");
          Put_Line (File, "      My_Has_Started_Subscription : Boolean := False;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Seat : Wayland.Client.Seat) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Seat : Protocol.Seat) return Boolean is");
          Put_Line (File, "     (Seat.My_Seat /= null);");
          New_Line (File);
          Put_Line (File, "   type Shell is tagged limited record");
-         Put_Line (File, "      My_Shell : Wl_Thin.Shell_Ptr;");
+         Put_Line (File, "      My_Shell : Thin.Shell_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shell : Wayland.Client.Shell) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shell : Protocol.Shell) return Boolean is");
          Put_Line (File, "     (Shell.My_Shell /= null);");
          New_Line (File);
          Put_Line (File, "   type Shm is tagged limited record");
-         Put_Line (File, "      My_Shm : Wl_Thin.Shm_Ptr;");
+         Put_Line (File, "      My_Shm : Thin.Shm_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shm : Wayland.Client.Shm) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shm : Protocol.Shm) return Boolean is");
          Put_Line (File, "     (Shm.My_Shm /= null);");
          New_Line (File);
          Put_Line (File, "   type Shm_Pool is tagged limited record");
-         Put_Line (File, "      My_Shm_Pool : Wl_Thin.Shm_Pool_Ptr;");
+         Put_Line (File, "      My_Shm_Pool : Thin.Shm_Pool_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shm_Pool : Wayland.Client.Shm_Pool) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shm_Pool : Protocol.Shm_Pool) return Boolean is");
          Put_Line (File, "     (Shm_Pool.My_Shm_Pool /= null);");
          New_Line (File);
          Put_Line (File, "   type Buffer is tagged limited record");
-         Put_Line (File, "      My_Buffer : Wl_Thin.Buffer_Ptr;");
+         Put_Line (File, "      My_Buffer : Thin.Buffer_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Buffer : Wayland.Client.Buffer) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Buffer : Protocol.Buffer) return Boolean is");
          Put_Line (File, "     (Buffer.My_Buffer /= null);");
          New_Line (File);
          Put_Line (File, "   type Surface is tagged limited record");
-         Put_Line (File, "      My_Surface : Wl_Thin.Surface_Ptr;");
+         Put_Line (File, "      My_Surface : Thin.Surface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Surface : Wayland.Client.Surface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Surface : Protocol.Surface) return Boolean is");
          Put_Line (File, "     (Surface.My_Surface /= null);");
          New_Line (File);
          Put_Line (File, "   type Shell_Surface is tagged limited record");
-         Put_Line (File, "      My_Shell_Surface : Wl_Thin.Shell_Surface_Ptr;");
+         Put_Line (File, "      My_Shell_Surface : Thin.Shell_Surface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Shell_Surface : Wayland.Client.Shell_Surface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Shell_Surface : Protocol.Shell_Surface) return Boolean is");
          Put_Line (File, "     (Shell_Surface.My_Shell_Surface /= null);");
          New_Line (File);
          Put_Line (File, "   type Callback is tagged limited record");
-         Put_Line (File, "      My_Callback : Wl_Thin.Callback_Ptr;");
+         Put_Line (File, "      My_Callback : Thin.Callback_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
          Put_Line (File, "   type Data_Offer is tagged limited record");
-         Put_Line (File, "      My_Data_Offer : Wl_Thin.Data_Offer_Ptr;");
+         Put_Line (File, "      My_Data_Offer : Thin.Data_Offer_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
          Put_Line (File, "   type Data_Source is tagged limited record");
-         Put_Line (File, "      My_Data_Source : Wl_Thin.Data_Source_Ptr;");
+         Put_Line (File, "      My_Data_Source : Thin.Data_Source_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Source : Wayland.Client.Data_Source) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Source : Protocol.Data_Source) return Boolean is");
          Put_Line (File, "     (Data_Source.My_Data_Source /= null);");
          New_Line (File);
          Put_Line (File, "   type Data_Device is tagged limited record");
-         Put_Line (File, "      My_Data_Device : Wl_Thin.Data_Device_Ptr;");
+         Put_Line (File, "      My_Data_Device : Thin.Data_Device_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Device : Wayland.Client.Data_Device) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Device : Protocol.Data_Device) return Boolean is");
          Put_Line (File, "     (Data_Device.My_Data_Device /= null);");
          New_Line (File);
          Put_Line (File, "   type Data_Device_Manager is tagged limited record");
-         Put_Line (File, "      My_Data_Device_Manager : Wl_Thin.Data_Device_Manager_Ptr;");
+         Put_Line (File, "      My_Data_Device_Manager : Thin.Data_Device_Manager_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Data_Device_Manager : Wayland.Client.Data_Device_Manager) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Data_Device_Manager : Protocol.Data_Device_Manager) return Boolean is");
          Put_Line (File, "     (Data_Device_Manager.My_Data_Device_Manager /= null);");
          New_Line (File);
          Put_Line (File, "   type Keyboard is tagged limited record");
-         Put_Line (File, "      My_Keyboard : Wl_Thin.Keyboard_Ptr;");
+         Put_Line (File, "      My_Keyboard : Thin.Keyboard_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Keyboard : Wayland.Client.Keyboard) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Keyboard : Protocol.Keyboard) return Boolean is");
          Put_Line (File, "     (Keyboard.My_Keyboard /= null);");
          New_Line (File);
          Put_Line (File, "   type Touch is tagged limited record");
-         Put_Line (File, "      My_Touch : Wl_Thin.Touch_Ptr;");
+         Put_Line (File, "      My_Touch : Thin.Touch_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Touch : Wayland.Client.Touch) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Touch : Protocol.Touch) return Boolean is");
          Put_Line (File, "     (Touch.My_Touch /= null);");
          New_Line (File);
          Put_Line (File, "   type Output is tagged limited record");
-         Put_Line (File, "      My_Output : Wl_Thin.Output_Ptr;");
+         Put_Line (File, "      My_Output : Thin.Output_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Output : Wayland.Client.Output) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Output : Protocol.Output) return Boolean is");
          Put_Line (File, "     (Output.My_Output /= null);");
          New_Line (File);
          Put_Line (File, "   type Region is tagged limited record");
-         Put_Line (File, "      My_Region : Wl_Thin.Region_Ptr;");
+         Put_Line (File, "      My_Region : Thin.Region_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Region : Wayland.Client.Region) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Region : Protocol.Region) return Boolean is");
          Put_Line (File, "     (Region.My_Region /= null);");
          New_Line (File);
          Put_Line (File, "   type Subcompositor is tagged limited record");
-         Put_Line (File, "      My_Subcompositor : Wl_Thin.Subcompositor_Ptr;");
+         Put_Line (File, "      My_Subcompositor : Thin.Subcompositor_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Subcompositor : Wayland.Client.Subcompositor) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Subcompositor : Protocol.Subcompositor) return Boolean is");
          Put_Line (File, "     (Subcompositor.My_Subcompositor /= null);");
          New_Line (File);
          Put_Line (File, "   type Subsurface is tagged limited record");
-         Put_Line (File, "      My_Subsurface : Wl_Thin.Subsurface_Ptr;");
+         Put_Line (File, "      My_Subsurface : Thin.Subsurface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
-         Put_Line (File, "   function Has_Proxy (Subsurface : Wayland.Client.Subsurface) return Boolean is");
+         Put_Line (File, "   function Has_Proxy (Subsurface : Protocol.Subsurface) return Boolean is");
          Put_Line (File, "     (Subsurface.My_Subsurface /= null);");
          New_Line (File);
       end Generate_Manually_Edited_Code_For_Type_Definitions;
@@ -2160,14 +2152,14 @@ procedure XML_Parser is
                 (Wayland_XML.Name (Interface_Tag) & "_Interface");
          begin
             Put_Line (File, "   " & Name & " : constant Interface_Type :=");
-            Put (File, "     (My_Interface => Wl_Thin.");
+            Put (File, "     (My_Interface => Thin.");
             Put_Line (File, Name & "'Access);");
             New_Line (File);
          end Handle_Interface;
 
       begin
          Put_Line (File, "   type Interface_Type is tagged limited record");
-         Put_Line (File, "      My_Interface : not null Wl_Thin.Interface_Ptr;");
+         Put_Line (File, "      My_Interface : not null Thin.Interface_Ptr;");
          Put_Line (File, "   end record;");
          New_Line (File);
          Put_Line (File, "   function Name (I : Interface_Type) return String is");
@@ -2317,7 +2309,7 @@ procedure XML_Parser is
                   Put_Line (File, "   begin");
 
                   if Xml_Parser_Utils.Exists_Destructor (Interface_Tag) then
-                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, Wayland.Constants." &
+                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, Constants." &
                        Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag) & "_Destroy") & ");");
                      Put_Line (File, "");
                   end if;
@@ -2335,7 +2327,7 @@ procedure XML_Parser is
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
                      Opcode          : constant String
-                       := "Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
+                       := "Constants." & Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name
                             (Interface_Tag) & "_" & Name (Request_Tag));
                      Subprogram_Name : constant String
@@ -2396,7 +2388,7 @@ procedure XML_Parser is
                                     Put_Line (File, "          (" & Name & ".all,");
                                     Put_Line
                                       (File,
-                                       "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
+                                       "           Constants." & Xml_Parser_Utils.Adaify_Name
                                          (Wayland_XML.Name (Interface_Tag) & "_" &
                                             Wayland_XML.Name (Request_Tag)) & ",");
                                     Put_Line
@@ -2430,7 +2422,7 @@ procedure XML_Parser is
                                  Put_Line (File, "          (" & Name & ".all,");
                                  Put_Line
                                    (File,
-                                    "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
+                                    "           Constants." & Xml_Parser_Utils.Adaify_Name
                                       (Wayland_XML.Name (Interface_Tag) & "_" &
                                          Wayland_XML.Name (Request_Tag)) & ",");
                                  Put_Line
@@ -2481,7 +2473,7 @@ procedure XML_Parser is
                                  Put_Line (File, "        (" & Name & ".all,");
                                  Put_Line
                                    (File,
-                                    "         Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
+                                    "         Constants." & Xml_Parser_Utils.Adaify_Name
                                       (Wayland_XML.Name (Interface_Tag) & "_" &
                                          Wayland_XML.Name (Request_Tag)) & ",");
                                  Put_Line (File, "         Interface_V,");
@@ -2515,7 +2507,7 @@ procedure XML_Parser is
                               Put_Line (File, "          (" & Name & ".all,");
                               Put_Line
                                 (File,
-                                 "           Wayland.Constants." & Xml_Parser_Utils.Adaify_Name
+                                 "           Constants." & Xml_Parser_Utils.Adaify_Name
                                    (Wayland_XML.Name (Interface_Tag) & "_" &
                                       Wayland_XML.Name (Request_Tag)) & ",");
                               Put_Line

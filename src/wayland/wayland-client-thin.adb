@@ -2,7 +2,7 @@ with Wayland.Client.Constants;
 
 use Wayland.Client.Constants;
 
---  Mostly auto generated from Wayland.xml
+--  Mostly auto generated from /usr/share/wayland/wayland.xml
 package body Wayland.Client.Thin is
 
    use type Proxy_Ptr;
@@ -29,7 +29,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Display.all, Listener.all'Address, Data);
    end Display_Add_Listener;
 
-   procedure Display_Set_User_Data (Display : Display_Ptr; Data : Void_Ptr) is
+   procedure Display_Set_User_Data
+     (Display : Display_Ptr;
+      Data    : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Display.all, Data);
    end Display_Set_User_Data;
@@ -79,7 +81,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Registry.all, Listener.all'Address, Data);
    end Registry_Add_Listener;
 
-   procedure Registry_Set_User_Data (Registry : Registry_Ptr; Data : Void_Ptr) is
+   procedure Registry_Set_User_Data
+     (Registry : Registry_Ptr;
+      Data     : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Registry.all, Data);
    end Registry_Set_User_Data;
@@ -124,7 +128,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Callback.all, Listener.all'Address, Data);
    end Callback_Add_Listener;
 
-   procedure Callback_Set_User_Data (Callback : Callback_Ptr; Data : Void_Ptr) is
+   procedure Callback_Set_User_Data
+     (Callback : Callback_Ptr;
+      Data     : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Callback.all, Data);
    end Callback_Set_User_Data;
@@ -144,7 +150,9 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Destroy (Callback.all);
    end Callback_Destroy;
 
-   procedure Compositor_Set_User_Data (Compositor : Compositor_Ptr; Data : Void_Ptr) is
+   procedure Compositor_Set_User_Data
+     (Compositor : Compositor_Ptr;
+      Data       : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Compositor.all, Data);
    end Compositor_Set_User_Data;
@@ -186,7 +194,9 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Compositor_Create_Region;
 
-   procedure Shm_Pool_Set_User_Data (Shm_Pool : Shm_Pool_Ptr; Data : Void_Ptr) is
+   procedure Shm_Pool_Set_User_Data
+     (Shm_Pool : Shm_Pool_Ptr;
+      Data     : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Shm_Pool.all, Data);
    end Shm_Pool_Set_User_Data;
@@ -231,9 +241,14 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Shm_Pool_Create_Buffer;
 
-   procedure Shm_Pool_Resize (Shm_Pool : Shm_Pool_Ptr; Size : Integer) is
+   procedure Shm_Pool_Resize
+     (Shm_Pool : Shm_Pool_Ptr;
+      Size     : Integer) is
    begin
-      Wayland.API.Proxy_Marshal (Shm_Pool.all, Constants.Shm_Pool_Resize, Size);
+      Wayland.API.Proxy_Marshal
+        (Shm_Pool.all,
+         Constants.Shm_Pool_Resize,
+         Size);
    end Shm_Pool_Resize;
 
    function Shm_Add_Listener
@@ -244,7 +259,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Shm.all, Listener.all'Address, Data);
    end Shm_Add_Listener;
 
-   procedure Shm_Set_User_Data (Shm : Shm_Ptr; Data : Void_Ptr) is
+   procedure Shm_Set_User_Data
+     (Shm  : Shm_Ptr;
+      Data : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Shm.all, Data);
    end Shm_Set_User_Data;
@@ -264,7 +281,11 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Destroy (Shm.all);
    end Shm_Destroy;
 
-   function Shm_Create_Pool (Shm : Shm_Ptr; Fd : Integer; Size : Integer) return Shm_Pool_Ptr is
+   function Shm_Create_Pool
+     (Shm  : Shm_Ptr;
+      Fd   : Integer;
+      Size : Integer) return Shm_Pool_Ptr
+   is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Shm.all,
@@ -285,7 +306,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Buffer.all, Listener.all'Address, Data);
    end Buffer_Add_Listener;
 
-   procedure Buffer_Set_User_Data (Buffer : Buffer_Ptr; Data : Void_Ptr) is
+   procedure Buffer_Set_User_Data
+     (Buffer : Buffer_Ptr;
+      Data   : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Buffer.all, Data);
    end Buffer_Set_User_Data;
@@ -315,7 +338,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Data_Offer.all, Listener.all'Address, Data);
    end Data_Offer_Add_Listener;
 
-   procedure Data_Offer_Set_User_Data (Data_Offer : Data_Offer_Ptr; Data : Void_Ptr) is
+   procedure Data_Offer_Set_User_Data
+     (Data_Offer : Data_Offer_Ptr;
+      Data       : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Data_Offer.all, Data);
    end Data_Offer_Set_User_Data;
@@ -340,7 +365,7 @@ package body Wayland.Client.Thin is
    procedure Data_Offer_Accept
      (Data_Offer : Data_Offer_Ptr;
       Serial     : Unsigned_32;
-      Mime_Type  : Chars_Ptr) is
+      Mime_Type  : chars_ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Offer.all,
@@ -386,7 +411,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Data_Source.all, Listener.all'Address, Data);
    end Data_Source_Add_Listener;
 
-   procedure Data_Source_Set_User_Data (Data_Source : Data_Source_Ptr; Data : Void_Ptr) is
+   procedure Data_Source_Set_User_Data
+     (Data_Source : Data_Source_Ptr;
+      Data        : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Data_Source.all, Data);
    end Data_Source_Set_User_Data;
@@ -408,7 +435,9 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Destroy (Data_Source.all);
    end Data_Source_Destroy;
 
-   procedure Data_Source_Offer (Data_Source : Data_Source_Ptr; Mime_Type : Chars_Ptr) is
+   procedure Data_Source_Offer
+     (Data_Source : Data_Source_Ptr;
+      Mime_Type   : chars_ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Source.all,
@@ -416,7 +445,9 @@ package body Wayland.Client.Thin is
          Mime_Type);
    end Data_Source_Offer;
 
-   procedure Data_Source_Set_Actions (Data_Source : Data_Source_Ptr; Dnd_Actions : Unsigned_32) is
+   procedure Data_Source_Set_Actions
+     (Data_Source : Data_Source_Ptr;
+      Dnd_Actions : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Data_Source.all,
@@ -432,7 +463,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Data_Device.all, Listener.all'Address, Data);
    end Data_Device_Add_Listener;
 
-   procedure Data_Device_Set_User_Data (Data_Device : Data_Device_Ptr; Data : Void_Ptr) is
+   procedure Data_Device_Set_User_Data
+     (Data_Device : Data_Device_Ptr;
+      Data        : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Data_Device.all, Data);
    end Data_Device_Set_User_Data;
@@ -537,7 +570,9 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Data_Device_Manager_Get_Data_Device;
 
-   procedure Shell_Set_User_Data (Shell : Shell_Ptr; Data : Void_Ptr) is
+   procedure Shell_Set_User_Data
+     (Shell : Shell_Ptr;
+      Data  : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Shell.all, Data);
    end Shell_Set_User_Data;
@@ -580,7 +615,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Shell_Surface.all, Listener.all'Address, Data);
    end Shell_Surface_Add_Listener;
 
-   procedure Shell_Surface_Set_User_Data (Shell_Surface : Shell_Surface_Ptr; Data : Void_Ptr) is
+   procedure Shell_Surface_Set_User_Data
+     (Shell_Surface : Shell_Surface_Ptr;
+      Data          : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Shell_Surface.all, Data);
    end Shell_Surface_Set_User_Data;
@@ -600,7 +637,9 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Destroy (Shell_Surface.all);
    end Shell_Surface_Destroy;
 
-   procedure Shell_Surface_Pong (Shell_Surface : Shell_Surface_Ptr; Serial : Unsigned_32) is
+   procedure Shell_Surface_Pong
+     (Shell_Surface : Shell_Surface_Ptr;
+      Serial        : Unsigned_32) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -701,7 +740,7 @@ package body Wayland.Client.Thin is
 
    procedure Shell_Surface_Set_Title
      (Shell_Surface : Shell_Surface_Ptr;
-      Title         : Chars_Ptr) is
+      Title         : chars_ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -711,7 +750,7 @@ package body Wayland.Client.Thin is
 
    procedure Shell_Surface_Set_Class
      (Shell_Surface : Shell_Surface_Ptr;
-      Class_V       : Chars_Ptr) is
+      Class_V       : chars_ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Shell_Surface.all,
@@ -727,7 +766,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Surface.all, Listener.all'Address, Data);
    end Surface_Add_Listener;
 
-   procedure Surface_Set_User_Data (Surface : Surface_Ptr; Data : Void_Ptr) is
+   procedure Surface_Set_User_Data
+     (Surface : Surface_Ptr;
+      Data    : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Surface.all, Data);
    end Surface_Set_User_Data;
@@ -790,7 +831,9 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Surface_Frame;
 
-   procedure Surface_Set_Opaque_Region (Surface : Surface_Ptr; Region : Region_Ptr) is
+   procedure Surface_Set_Opaque_Region
+     (Surface : Surface_Ptr;
+      Region  : Region_Ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
@@ -798,7 +841,9 @@ package body Wayland.Client.Thin is
          Region.all'Address);
    end Surface_Set_Opaque_Region;
 
-   procedure Surface_Set_Input_Region (Surface : Surface_Ptr; Region : Region_Ptr) is
+   procedure Surface_Set_Input_Region
+     (Surface : Surface_Ptr;
+      Region  : Region_Ptr) is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
@@ -811,7 +856,9 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Marshal (Surface.all, Constants.Surface_Commit);
    end Surface_Commit;
 
-   procedure Surface_Set_Buffer_Transform (Surface : Surface_Ptr; Transform : Integer) is
+   procedure Surface_Set_Buffer_Transform
+     (Surface   : Surface_Ptr;
+      Transform : Integer) is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
@@ -819,7 +866,9 @@ package body Wayland.Client.Thin is
          Transform);
    end Surface_Set_Buffer_Transform;
 
-   procedure Surface_Set_Buffer_Scale (Surface : Surface_Ptr; Scale : Integer) is
+   procedure Surface_Set_Buffer_Scale
+     (Surface : Surface_Ptr;
+      Scale   : Integer) is
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
@@ -851,7 +900,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Seat.all, Listener.all'Address, Data);
    end Seat_Add_Listener;
 
-   procedure Seat_Set_User_Data (Seat : Seat_Ptr; Data : Void_Ptr) is
+   procedure Seat_Set_User_Data
+     (Seat : Seat_Ptr;
+      Data : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Seat.all, Data);
    end Seat_Set_User_Data;
@@ -917,7 +968,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Pointer.all, Listener.all'Address, Data);
    end Pointer_Add_Listener;
 
-   procedure Pointer_Set_User_Data (Pointer : Pointer_Ptr; Data : Void_Ptr) is
+   procedure Pointer_Set_User_Data
+     (Pointer : Pointer_Ptr;
+      Data    : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Pointer.all, Data);
    end Pointer_Set_User_Data;
@@ -966,7 +1019,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Keyboard.all, Listener.all'Address, Data);
    end Keyboard_Add_Listener;
 
-   procedure Keyboard_Set_User_Data (Keyboard : Keyboard_Ptr; Data : Void_Ptr) is
+   procedure Keyboard_Set_User_Data
+     (Keyboard : Keyboard_Ptr;
+      Data     : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Keyboard.all, Data);
    end Keyboard_Set_User_Data;
@@ -999,7 +1054,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Touch.all, Listener.all'Address, Data);
    end Touch_Add_Listener;
 
-   procedure Touch_Set_User_Data (Touch : Touch_Ptr; Data : Void_Ptr) is
+   procedure Touch_Set_User_Data
+     (Touch : Touch_Ptr;
+      Data  : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Touch.all, Data);
    end Touch_Set_User_Data;
@@ -1032,7 +1089,9 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Add_Listener (Output.all, Listener.all'Address, Data);
    end Output_Add_Listener;
 
-   procedure Output_Set_User_Data (Output : Output_Ptr; Data : Void_Ptr) is
+   procedure Output_Set_User_Data
+     (Output : Output_Ptr;
+      Data   : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Output.all, Data);
    end Output_Set_User_Data;
@@ -1057,7 +1116,9 @@ package body Wayland.Client.Thin is
       Wayland.API.Proxy_Marshal (Output.all, Constants.Output_Release);
    end Output_Release;
 
-   procedure Region_Set_User_Data (Region : Region_Ptr; Data : Void_Ptr) is
+   procedure Region_Set_User_Data
+     (Region : Region_Ptr;
+      Data   : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Region.all, Data);
    end Region_Set_User_Data;
@@ -1111,7 +1172,9 @@ package body Wayland.Client.Thin is
          Height);
    end Region_Subtract;
 
-   procedure Subcompositor_Set_User_Data (Subcompositor : Subcompositor_Ptr; Data : Void_Ptr) is
+   procedure Subcompositor_Set_User_Data
+     (Subcompositor : Subcompositor_Ptr;
+      Data          : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Subcompositor.all, Data);
    end Subcompositor_Set_User_Data;
@@ -1150,7 +1213,9 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Subcompositor_Get_Subsurface;
 
-   procedure Subsurface_Set_User_Data (Subsurface : Subsurface_Ptr; Data : Void_Ptr) is
+   procedure Subsurface_Set_User_Data
+     (Subsurface : Subsurface_Ptr;
+      Data       : Void_Ptr) is
    begin
       Wayland.API.Proxy_Set_User_Data (Subsurface.all, Data);
    end Subsurface_Set_User_Data;

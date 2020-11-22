@@ -6,7 +6,8 @@ with Ada.Text_IO;
 with C_Binding.Linux.Files;
 with C_Binding.Linux.File_Status;
 with C_Binding.Linux.Memory_Maps;
-with C_Binding.Linux.Wayland_Client;
+
+with Wayland.Client.Protocol;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -20,11 +21,12 @@ with C_Binding.Linux.Wayland_Client;
 -- and execute the executable from there.
 package body Client_Examples.Hdante_Hello_World is
 
-   package Wayland_Client renames C_Binding.Linux.Wayland_Client;
+   package Wayland_Client renames Wayland.Client.Protocol;
 
    procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
 
-   subtype Unsigned_32 is Wayland_Client.Unsigned_32;
+   subtype Unsigned_32 is Wayland.Unsigned_32;
+   subtype Fixed is Wayland.Fixed;
 
    use type Unsigned_32;
 
@@ -197,8 +199,8 @@ package body Client_Examples.Hdante_Hello_World is
       Pointer   : Wayland_Client.Pointer;
       Serial    : Unsigned_32;
       Surface   : Wayland_Client.Surface;
-      Surface_X : Wayland_Client.Fixed;
-      Surface_Y : Wayland_Client.Fixed) is
+      Surface_X : Fixed;
+      Surface_Y : Fixed) is
    begin
       Put_Line ("Pointer enter");
    end Mouse_Enter;
@@ -216,8 +218,8 @@ package body Client_Examples.Hdante_Hello_World is
      (Data      : not null Data_Ptr;
       Pointer   : Wayland_Client.Pointer;
       Time      : Unsigned_32;
-      Surface_X : Wayland_Client.Fixed;
-      Surface_Y : Wayland_Client.Fixed) is
+      Surface_X : Fixed;
+      Surface_Y : Fixed) is
    begin
       Put_Line ("Pointer motion");
    end Pointer_Motion;
@@ -239,7 +241,7 @@ package body Client_Examples.Hdante_Hello_World is
       Pointer : Wayland_Client.Pointer;
       Time    : Unsigned_32;
       Axis    : Unsigned_32;
-      Value   : Wayland_Client.Fixed) is
+      Value   : Fixed) is
    begin
       Put_Line ("Pointer axis");
    end Pointer_Axis;
@@ -298,8 +300,6 @@ package body Client_Examples.Hdante_Hello_World is
    --     CURSOR_HEIGHT : constant := 59;
    --     CURSOR_HOT_SPOT_X : constant := 10;
    --     CURSOR_HOT_SPOT_Y : constant := 35;
-   --
-   --
 
    Buffer        : Wayland_Client.Buffer;
    Pool          : Wayland_Client.Shm_Pool;
@@ -348,6 +348,24 @@ package body Client_Examples.Hdante_Hello_World is
       Display.Roundtrip;
       Registry.Destroy;
 
+      if not Compositor.Has_Proxy then
+         Put_Line ("Error: no compositor");
+         Display.Disconnect;
+         return;
+      end if;
+
+      if not Shm.Has_Proxy then
+         Put_Line ("Error: no shm");
+         Display.Disconnect;
+         return;
+      end if;
+
+      if not Shell.Has_Proxy then
+         Put_Line ("Error: no shell");
+         Display.Disconnect;
+         return;
+      end if;
+
       if Exists_Mouse then
          Put_Line ("Start mouse subscription");
          Seat.Get_Pointer (Pointer);
@@ -358,6 +376,8 @@ package body Client_Examples.Hdante_Hello_World is
                Put_Line ("Successfully subscribed to mouse events");
             when Error   =>
                Put_Line ("Failed to subscribe to mouse events");
+               Display.Disconnect;
+               return;
          end case;
       end if;
 
@@ -374,6 +394,7 @@ package body Client_Examples.Hdante_Hello_World is
 
       if Linux.Files.Is_Closed (Image) then
          Put_Line ("Error opening surface image");
+         Display.Disconnect;
          return;
       end if;
 
@@ -381,6 +402,7 @@ package body Client_Examples.Hdante_Hello_World is
 
       if not Is_Valid (File_Status) then
          Put_Line ("File does not exist?");
+         Display.Disconnect;
          return;
       end if;
 
@@ -397,11 +419,13 @@ package body Client_Examples.Hdante_Hello_World is
                           Pool);
       else
          Put_Line ("Failed to map file");
+         Display.Disconnect;
          return;
       end if;
 
       if not Pool.Has_Proxy then
          Put_Line ("Failed to create pool");
+         Display.Disconnect;
          return;
       end if;
 
@@ -409,6 +433,7 @@ package body Client_Examples.Hdante_Hello_World is
 
       if not Surface.Has_Proxy then
          Put_Line ("Failed to create surface");
+         Display.Disconnect;
          return;
       end if;
 
@@ -443,11 +468,11 @@ package body Client_Examples.Hdante_Hello_World is
 
       if not Buffer.Has_Proxy then
          Put_Line ("Failed to create buffer");
+         Display.Disconnect;
          return;
       end if;
 
       Surface.Attach (Buffer, 0, 0);
-
       Surface.Commit;
 
       Display.Dispatch;
@@ -465,14 +490,10 @@ package body Client_Examples.Hdante_Hello_World is
               := Ada.Real_Time.To_Time_Span (1.0);
 
             Timeout : constant Integer
-              := Integer (To_Duration ((Timestamp + Interval) - Clock)*1000);
-            -- The timeout to check for events in millisends
+              := Integer (To_Duration ((Timestamp + Interval) - Clock) * 1_000);
+            --  The timeout to check for events in millisends
          begin
-            if Timeout > 0 then
-               Events_Status := Display.Check_For_Events (Timeout);
-            else
-               Events_Status := Display.Check_For_Events (0);
-            end if;
+            Events_Status := Display.Check_For_Events (if Timeout > 0 then Timeout else 0);
          end;
 
          case Events_Status is

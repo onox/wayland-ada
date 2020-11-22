@@ -15,6 +15,14 @@ package Wayland is
 
    subtype Void_Ptr is System.Address;
 
+   type Wayland_Array_T is record
+      Size  : Unsigned_32;
+      Alloc : Unsigned_32;
+      Data  : Void_Ptr;
+   end record
+     with Convention => C_Pass_By_Copy;
+   --   TODO: Remove the trailing _T from the name of this type
+
 private
 
    function "+" (Text : String) return C_String is (C_String (Text & Nul));

@@ -1,16 +1,11 @@
-limited with Wayland.Client.Protocol;
-
 with Interfaces.C.Strings;
 
 with Wayland.API;
 
---  Mostly auto generated from Wayland.xml
+--  Mostly auto generated from /usr/share/wayland/wayland.xml
 private package Wayland.Client.Thin is
    pragma Preelaborate;
 
-   --  FIXME Move to package Wayland
---   subtype Fixed is Wayland.Client.Fixed;
-   subtype Wayland_Array_T is Wayland.Client.Protocol.Wayland_Array_T;
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
    --  Begin core parts
@@ -773,7 +768,7 @@ private package Wayland.Client.Thin is
 
    procedure Data_Device_Manager_Destroy (Data_Device_Manager : Data_Device_Manager_Ptr);
 
-   -- Create a new data source.
+   --  Create a new data source.
    function Data_Device_Manager_Create_Data_Source
      (Data_Device_Manager : Data_Device_Manager_Ptr) return Data_Source_Ptr;
 
