@@ -739,8 +739,7 @@ procedure XML_Parser is
                    (Wayland_XML.Name (Interface_Tag) & "_" &
                       Wayland_XML.Name (Request_Tag));
             begin
-               Put (File, "   " & Name & " : constant := " & Aida.To_String (I) & ";");
-               Put_Line (File, "");
+               Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (I) & ";");
 
                I := I + 1;
             end Generate_Code;
@@ -761,11 +760,10 @@ procedure XML_Parser is
                       Wayland_XML.Name (Event_Tag) & "_SINCE_VERSION");
             begin
                if Exists_Since_Attribute (Event_Tag) then
-                  Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_Attribute_As_Pos32 (Event_Tag)) & ";");
+                  Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (Since_Attribute_As_Pos32 (Event_Tag)) & ";");
                else
                   Put_Line (File, "   " & Name & " : constant := 1;");
                end if;
-               Put_Line (File, "");
             end Generate_Code;
 
          begin
@@ -785,11 +783,10 @@ procedure XML_Parser is
                       Wayland_XML.Name (Request_Tag) & "_SINCE_VERSION");
             begin
                if Exists_Since (Request_Tag) then
-                  Put (File, "   " & Name & " : constant := " & Aida.To_String (Since_As_Pos32 (Request_Tag)) & ";");
+                  Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (Since_As_Pos32 (Request_Tag)) & ";");
                else
                   Put_Line (File, "   " & Name & " : constant := 1;");
                end if;
-               Put_Line (File, "");
             end Generate_Code;
 
          begin
@@ -810,6 +807,7 @@ procedure XML_Parser is
       for Child of Children (Protocol_Tag.all) loop
          if Child.Kind_Id = Child_Interface then
             Handle_Interface (Child.Interface_Tag.all);
+            New_Line (File);
          end if;
       end loop;
    end Generate_Code_For_Numeric_Constants;
@@ -872,7 +870,7 @@ procedure XML_Parser is
 
          Generate_Code_For_Numeric_Constants (File);
 
-         Put_Line (File, "end " & Package_Name & ".Constants;");
+         Put_Line (File, "end Wayland." & Package_Name & ".Constants;");
 
          Ada.Text_IO.Close (File);
 
