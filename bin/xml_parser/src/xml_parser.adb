@@ -253,10 +253,9 @@ procedure XML_Parser is
       end Identify_Protocol_Tag;
 
       procedure Identify_Protocol_Children (File_Name : String) is
-
          function Identify_Copyright
            (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
-         return not null Wayland_XML.Copyright_Ptr
+           return not null Wayland_XML.Copyright_Ptr
          is
             Copyright_Tag : constant not null Wayland_XML.Copyright_Ptr
               := new Wayland_XML.Copyright_Tag;
@@ -276,9 +275,8 @@ procedure XML_Parser is
          end Identify_Copyright;
 
          function Identify_Description
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Description_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Description_Tag_Ptr
          is
             Description_Tag : constant not null Wayland_XML.Description_Tag_Ptr
               := new Wayland_XML.Description_Tag;
@@ -311,9 +309,8 @@ procedure XML_Parser is
          end Identify_Description;
 
          function Identify_Arg
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Arg_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Arg_Tag_Ptr
          is
             Arg_Tag : constant not null Wayland_XML.Arg_Tag_Ptr
               := new Wayland_XML.Arg_Tag;
@@ -345,7 +342,6 @@ procedure XML_Parser is
                   end if;
                end loop;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
 
@@ -353,9 +349,8 @@ procedure XML_Parser is
          end Identify_Arg;
 
          function Identify_Request
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Request_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Request_Tag_Ptr
          is
             Request_Tag : constant not null Wayland_XML.Request_Tag_Ptr
               := new Wayland_XML.Request_Tag;
@@ -403,7 +398,6 @@ procedure XML_Parser is
                   end if;
                end loop;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
 
@@ -411,9 +405,8 @@ procedure XML_Parser is
          end Identify_Request;
 
          function Identify_Event
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Event_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Event_Tag_Ptr
          is
             Event_Tag : constant not null Wayland_XML.Event_Tag_Ptr
               := new Wayland_XML.Event_Tag;
@@ -458,7 +451,6 @@ procedure XML_Parser is
                   end if;
                end loop;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
 
@@ -466,9 +458,8 @@ procedure XML_Parser is
          end Identify_Event;
 
          function Identify_Entry
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Entry_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Entry_Tag_Ptr
          is
             Entry_Tag : constant not null Wayland_XML.Entry_Tag_Ptr
               := new Wayland_XML.Entry_Tag;
@@ -558,7 +549,6 @@ procedure XML_Parser is
                   end loop;
                end if;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
 
@@ -566,9 +556,8 @@ procedure XML_Parser is
          end Identify_Entry;
 
          function Identify_Enum
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Enum_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Enum_Tag_Ptr
          is
             Enum_Tag : constant not null Wayland_XML.Enum_Tag_Ptr
               := new Wayland_XML.Enum_Tag;
@@ -623,7 +612,6 @@ procedure XML_Parser is
                   end if;
                end loop;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
 
@@ -631,9 +619,8 @@ procedure XML_Parser is
          end Identify_Enum;
 
          function Identify_Interface
-           (
-            Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr
-           ) return not null Wayland_XML.Interface_Tag_Ptr
+           (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
+           return not null Wayland_XML.Interface_Tag_Ptr
          is
             Interface_Tag : constant not null Wayland_XML.Interface_Tag_Ptr
               := new Wayland_XML.Interface_Tag;
@@ -671,28 +658,16 @@ procedure XML_Parser is
                               if Child.Id = Node_Kind_Tag then
                                  if Name (Child.Tag) = "description" then
                                     Append_Child
-                                      (
-                                       Interface_Tag.all,
-                                       Identify_Description (Child)
-                                      );
+                                      (Interface_Tag.all, Identify_Description (Child));
                                  elsif Name (Child.Tag) = "request" then
                                     Append_Child
-                                      (
-                                       Interface_Tag.all,
-                                       Identify_Request (Child)
-                                      );
+                                      (Interface_Tag.all, Identify_Request (Child));
                                  elsif Name (Child.Tag) = "event" then
                                     Append_Child
-                                      (
-                                       Interface_Tag.all,
-                                       Identify_Event (Child)
-                                      );
+                                      (Interface_Tag.all, Identify_Event (Child));
                                  elsif Name (Child.Tag) = "enum" then
                                     Append_Child
-                                      (
-                                       Interface_Tag.all,
-                                       Identify_Enum (Child)
-                                      );
+                                      (Interface_Tag.all, Identify_Enum (Child));
                                  else
                                     raise XML_Exception;
                                  end if;
@@ -711,7 +686,6 @@ procedure XML_Parser is
                   raise XML_Exception;
                end if;
             end Iterate;
-
          begin
             Iterate (Node.Tag);
             return Interface_Tag;
@@ -736,7 +710,6 @@ procedure XML_Parser is
                end if;
             end loop;
          end Iterate;
-
       begin
          Iterate (Root_Node.Tag);
 
@@ -1832,9 +1805,7 @@ procedure XML_Parser is
                                  end;
                                  Put_Line (File, " return " & Return_Type & ";");
                               else
-                                 Put_Line
-                                   (File,
-                                    "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                                 Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
                               end if;
                            end;
                         else
