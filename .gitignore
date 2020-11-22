@@ -1,14 +1,13 @@
 obj/
-bin/examples/connect_to_server/connect_to_server
+lib/
 bin/examples/find_compositor/find_compositor
 bin/examples/hdante_hello_world/hdante_hello_world
-lib/
 bin/xml_parser/xml_parser
 bin/all_executables-loc.xml
 bin/gnatinspect.db
 bin/gpsauto.cgpr
-bin/xml_parser/c_binding-linux-wayland_client.adb
-bin/xml_parser/c_binding-linux-wayland_client.ads
+bin/xml_parser/wayland-*.ads
+bin/xml_parser/wayland-*.adb
 bin/gnutls_examples/simple_client_example_with_X509_certificate_support/start
 bin/gnutls_examples/echo_server_with_X509_authentication/simple_server
 bin/gnutls_examples/simple_client_example_with_X509_certificate_support/simple_client
