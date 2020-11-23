@@ -248,6 +248,7 @@ package Wayland_XML is
    type Enum_Tag is limited private;
 
    function Children (This : aliased Enum_Tag) return Enum_Children_Ref;
+   function Entries (This : aliased Enum_Tag) return Enum_Children_Ref;
 
    procedure Append_Child
      (This : in out Enum_Tag;
@@ -779,6 +780,7 @@ private
       My_Bitfield : Nullable_Boolean;
       My_Since    : Nullable_Version;
       My_Children : aliased Enum_Child_Vectors.Vector;
+      My_Entries : aliased Enum_Child_Vectors.Vector;
    end record;
 
    function Name (This : Enum_Tag) return String is (This.My_Name.Value.all);
@@ -804,6 +806,10 @@ private
    function Children
      (This : aliased Enum_Tag) return Enum_Children_Ref is
      ((E => This.My_Children'Access));
+
+   function Entries
+     (This : aliased Enum_Tag) return Enum_Children_Ref is
+     ((E => This.My_Entries'Access));
 
    type Nullable_Since_Attribute (Exists : Boolean := False) is record
       case Exists is

@@ -16,8 +16,6 @@ with Xml_Parser_Utils;
 with Standard_Extensions; use Standard_Extensions;
 
 -- chars_ptr should be replaced with C_String in the thin Ada binding.
--- The enumeration subprogram arguments should
--- be used when applicable instead of Unsigned_32
 -- Pretty print this file with "gnatpp -M140"
 procedure XML_Parser is
 
@@ -44,6 +42,7 @@ procedure XML_Parser is
    use all type Wayland_XML.Event_Child_Kind_Id;
    use all type Wayland_XML.Arg_Type_Attribute;
    use all type Wayland_XML.Request_Child_Kind_Id;
+   use all type Wayland_XML.Enum_Child;
 
    package SF renames Ada.Strings.Fixed;
    package SU renames Ada.Strings.Unbounded;
@@ -821,6 +820,7 @@ procedure XML_Parser is
       procedure Generate_Code_For_The_Interface_Type;
       procedure Generate_Code_For_The_Interface_Constants;
       procedure Generate_Code_For_Enum_Constants;
+      procedure Generate_Private_Code_For_Enum_Constants;
       procedure Generate_Manually_Edited_Partial_Type_Declarations;
       procedure Generate_Code_For_The_Private_Part;
       procedure Generate_Use_Type_Declarions;
@@ -847,8 +847,12 @@ procedure XML_Parser is
             Generate_Code_For_Type_Declarations;
             Generate_Code_For_The_Interface_Type;
             Generate_Code_For_The_Interface_Constants;
-            Generate_Code_For_Enum_Constants;
             Generate_Manually_Edited_Partial_Type_Declarations;
+
+            New_Line (File);
+            Put_Line (File, "private");
+            New_Line (File);
+
             Generate_Code_For_The_Private_Part;
             Generate_Use_Type_Declarions;
             Generate_Manually_Edited_Code_For_Type_Definitions;
@@ -858,6 +862,27 @@ procedure XML_Parser is
 
             Ada.Text_IO.Close (File);
          end if;
+
+         -----------------------------------------------------------------------
+
+         Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-enums.ads");
+
+         Put_Line (File, "package Wayland." & Package_Name & ".Enums is");
+         Put_Line (File, "   pragma Preelaborate;");
+         New_Line (File);
+
+         Generate_Code_For_Enum_Constants;
+
+         New_Line (File);
+         Put_Line (File, "private");
+         New_Line (File);
+
+         Generate_Private_Code_For_Enum_Constants;
+
+         Put_Line (File, "end Wayland." & Package_Name & ".Enums;");
+
+         Ada.Text_IO.Close (File);
 
          -----------------------------------------------------------------------
 
@@ -969,6 +994,7 @@ procedure XML_Parser is
             end if;
          end loop;
 
+         --  FIXME Subprogram Display_Connect does not handle NULL value yet
          Put_Line (File, "   Default_Display_Name : constant String := ""wayland-0"";");
          New_Line (File);
       end Generate_Code_For_The_Interface_Constants;
@@ -987,43 +1013,57 @@ procedure XML_Parser is
                     Name (Interface_Tag),
                     Name (Enum_Tag));
 
-               procedure Generate_Code_For_Enum_Value
-                 (Entry_Tag : Wayland_XML.Entry_Tag)
+               procedure Generate_Code_For_Enum_Name
+                 (Entry_Tag  : Wayland_XML.Entry_Tag;
+                  Is_First   : Boolean;
+                  Is_Last    : Boolean)
                is
+                  --  FIXME Handle when name is a number
                   Name : constant String := Xml_Parser_Utils.Adaify_Name
-                    (Wayland_XML.Name (Interface_Tag) & "_" &
-                       Wayland_XML.Name (Enum_Tag) & "_" &
-                       Wayland_XML.Name (Entry_Tag));
+                    (Wayland_XML.Name (Entry_Tag));
+
+                  Prefix : constant String := (if Is_First then "" else "      ");
+                  Suffix : constant String := (if Is_Last then ");" else ",");
                begin
-                  if Is_Enum_Used then
-                     Put (File, "   " & Name & " : constant " & Enum_Type_Name);
-                  else
-                     Put (File, "   " & Name & " : constant Unsigned_32");
-                  end if;
-                  Put_Line (File, " := " & Value_As_String (Entry_Tag) & ";");
+                  Put_Line (File, Prefix & Name & Suffix);
                   declare
                      Summary_String : constant String := Summary (Entry_Tag);
                   begin
                      if Summary_String'Length > 0 then
-                        Put_Line (File, "   --  " & Summary_String);
-                     else
-                        Put_Line (File, "   --");
+                        Put_Line (File, "      --  " & Summary_String);
                      end if;
                   end;
-                  New_Line (File);
-               end Generate_Code_For_Enum_Value;
+               end Generate_Code_For_Enum_Name;
 
+               procedure Generate_Code_For_Unused_Enum
+                 (Entry_Tag  : Wayland_XML.Entry_Tag)
+               is
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name
+                    (Enum_Type_Name & "_" & Wayland_XML.Name (Entry_Tag));
+               begin
+                  Put (File, "   " & Name & " : constant Unsigned_32");
+                  Put_Line (File, " := " & Value_As_String (Entry_Tag) & ";");
+               end Generate_Code_For_Unused_Enum;
             begin
                if Is_Enum_Used then
-                  Put_Line (File, "   type " & Enum_Type_Name & " is new Unsigned_32;");
-                  New_Line (File);
+                  Put_Line (File, "   type " & Enum_Type_Name & " is");
+                  Put (File, "     (");
+                  for Child of Wayland_XML.Entries (Enum_Tag) loop
+                     if Child.Kind_Id = Child_Entry then
+                        Generate_Code_For_Enum_Name
+                          (Child.Entry_Tag.all,
+                           Wayland_XML.Entries (Enum_Tag).First_Element = Child,
+                           Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
+                     end if;
+                  end loop;
+               else
+                  for Child of Wayland_XML.Entries (Enum_Tag) loop
+                     if Child.Kind_Id = Child_Entry then
+                        Generate_Code_For_Unused_Enum (Child.Entry_Tag.all);
+                     end if;
+                  end loop;
                end if;
-
-               for Child of Wayland_XML.Children (Enum_Tag) loop
-                  if Child.Kind_Id = Child_Entry then
-                     Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
-                  end if;
-               end loop;
+               New_Line (File);
             end Generate_Code;
 
          begin
@@ -1040,6 +1080,77 @@ procedure XML_Parser is
             end if;
          end loop;
       end Generate_Code_For_Enum_Constants;
+
+      procedure Generate_Private_Code_For_Enum_Constants is
+         procedure Handle_Interface
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            procedure Generate_Code (Enum_Tag : aliased Wayland_XML.Enum_Tag) is
+               Enum_Type_Name : constant String := Xml_Parser_Utils.Adaify_Name
+                 (Name (Interface_Tag) & "_" & Name (Enum_Tag));
+
+               Is_Enum_Used : constant Boolean :=
+                 Xml_Parser_Utils.Exists_Reference_To_Enum
+                   (Protocol_Tag.all,
+                    Name (Interface_Tag),
+                    Name (Enum_Tag));
+
+               procedure Generate_Code_For_Enum_Value
+                 (Entry_Tag  : Wayland_XML.Entry_Tag;
+                  Max_Length : Natural;
+                  Is_First   : Boolean;
+                  Is_Last    : Boolean)
+               is
+                  --  FIXME Handle when name is a number
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name
+                    (Wayland_XML.Name (Entry_Tag));
+
+                  Prefix : constant String := (if Is_First then "" else "      ");
+                  Suffix : constant String := (if Is_Last then ");" else ",");
+               begin
+                  Put_Line (File, Prefix & SF.Head (Name, Max_Length, ' ') & " => " & Value_As_String (Entry_Tag) & Suffix);
+               end Generate_Code_For_Enum_Value;
+
+               Max_Length : Natural := 0;
+            begin
+               if not Is_Enum_Used then
+                  return;
+               end if;
+
+               for Child of Wayland_XML.Entries (Enum_Tag) loop
+                  if Child.Kind_Id = Child_Entry then
+                     Max_Length := Natural'Max (Max_Length, Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Entry_Tag.all))'Length);
+                  end if;
+               end loop;
+
+               Put_Line (File, "   for " & Enum_Type_Name & " use");
+               Put (File, "     (");
+               for Child of Wayland_XML.Entries (Enum_Tag) loop
+                  if Child.Kind_Id = Child_Entry then
+                     Generate_Code_For_Enum_Value
+                       (Child.Entry_Tag.all,
+                        Max_Length,
+                        Wayland_XML.Entries (Enum_Tag).First_Element = Child,
+                        Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
+                  end if;
+               end loop;
+               Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size");
+               New_Line (File);
+            end Generate_Code;
+         begin
+            for Child of Children (Interface_Tag) loop
+               if Child.Kind_Id = Child_Enum then
+                  Generate_Code (Child.Enum_Tag.all);
+               end if;
+            end loop;
+         end Handle_Interface;
+      begin
+         for Child of Children (Protocol_Tag.all) loop
+            if Child.Kind_Id = Child_Interface then
+               Handle_Interface (Child.Interface_Tag.all);
+            end if;
+         end loop;
+      end Generate_Private_Code_For_Enum_Constants;
 
       procedure Generate_Manually_Edited_Partial_Type_Declarations is
       begin
@@ -1369,9 +1480,6 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_The_Private_Part is
       begin
-         New_Line (File);
-         Put_Line (File, "private");
-         New_Line (File);
          Put_Line (File, "   subtype char_array is Interfaces.C.char_array;");
          New_Line (File);
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");

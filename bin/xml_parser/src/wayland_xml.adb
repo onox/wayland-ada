@@ -165,6 +165,7 @@ package body Wayland_XML is
       Child : constant Enum_Child := (Child_Entry, Item);
    begin
       This.My_Children.Append (Child);
+      This.My_Entries.Append (Child);
    end Append_Child;
 
    procedure Set_Name (This    : in out Event_Tag;
