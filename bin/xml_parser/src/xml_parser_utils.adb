@@ -10,10 +10,12 @@ package body Xml_Parser_Utils is
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
    use all type Wayland_XML.Arg_Tag;
+   use all type Wayland_XML.Event_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
    use all type Wayland_XML.Protocol_Tag;
    use all type Wayland_XML.Arg_Type_Attribute;
+   use all type Wayland_XML.Event_Child_Kind_Id;
    use all type Wayland_XML.Request_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
    use all type Wayland_XML.Protocol_Child_Kind_Id;
@@ -394,71 +396,73 @@ package body Xml_Parser_Utils is
    is
       Exists : Boolean := False;
 
-      Searched_For : constant String := Interface_Name & "." & Enum_Name;
+      Full_Name : constant String := Interface_Name & "." & Enum_Name;
 
       procedure Handle_Interface
         (Interface_Tag : aliased Wayland_XML.Interface_Tag)
       is
-         procedure Handle_Request
-           (Request_Tag : aliased Wayland_XML.Request_Tag)
-         is
-            procedure Handle_Arg (Arg_Tag : Wayland_XML.Arg_Tag) is
-            begin
-               if
-                 Exists_Type_Attribute (Arg_Tag) and then
-                 Type_Attribute (Arg_Tag) = Type_Unsigned_Integer and then
-                 Exists_Enum (Arg_Tag) and then
-                 Enum (Arg_Tag) = Searched_For
-               then
-                  Exists := True;
-               end if;
-            end Handle_Arg;
+         Expected_Interface : constant Boolean := Name (Interface_Tag) = Interface_Name;
 
+         procedure Handle_Arg (Arg_Tag : Wayland_XML.Arg_Tag) is
+         begin
+            if Exists_Type_Attribute (Arg_Tag)
+              and then Exists_Enum (Arg_Tag)
+              and then Enum (Arg_Tag) = (if Expected_Interface then Enum_Name else Full_Name)
+            then
+               if Type_Attribute (Arg_Tag) not in Type_Integer | Type_Unsigned_Integer then
+                  raise Constraint_Error with
+                    "Argument " & Enum (Arg_Tag) & " has unknown type " &
+                    Type_Attribute (Arg_Tag)'Image;
+               end if;
+
+               Exists := True;
+            end if;
+         end Handle_Arg;
+
+         procedure Handle_Request
+           (Request_Tag : aliased Wayland_XML.Request_Tag) is
          begin
             for Child of Children (Request_Tag) loop
-               case Child.Kind_Id is
-                  when Child_Dummy       => null;
-                  when Child_Description => null;
-                  when Child_Arg         =>
-                     Handle_Arg (Child.Arg_Tag.all);
-               end case;
-
-               if Exists then
-                  exit;
+               if Child.Kind_Id = Child_Arg then
+                  Handle_Arg (Child.Arg_Tag.all);
                end if;
+
+               exit when Exists;
             end loop;
          end Handle_Request;
 
+         procedure Handle_Event
+           (Event_Tag : aliased Wayland_XML.Event_Tag) is
+         begin
+            for Child of Children (Event_Tag) loop
+               if Child.Kind_Id = Child_Arg then
+                  Handle_Arg (Child.Arg_Tag.all);
+               end if;
+
+               exit when Exists;
+            end loop;
+         end Handle_Event;
       begin
          for Child of Children (Interface_Tag) loop
             case Child.Kind_Id is
-               when Child_Dummy   => null;
-               when Child_Description => null;
-               when Child_Request => Handle_Request (Child.Request_Tag.all);
-               when Child_Event   => null;
-               when Child_Enum    => null;
+               when Child_Request =>
+                  Handle_Request (Child.Request_Tag.all);
+               when Child_Event =>
+                  Handle_Event (Child.Event_Tag.all);
+               when others =>
+                  null;
             end case;
 
-            if Exists then
-               exit;
-            end if;
+            exit when Exists;
          end loop;
       end Handle_Interface;
-
    begin
       for Child of Children (Protocol_Tag) loop
-         case Child.Kind_Id is
-            when Child_Dummy =>
-               null;
-            when Child_Copyright =>
-               null;
-            when Child_Interface =>
-               Handle_Interface (Child.Interface_Tag.all);
-         end case;
-
-         if Exists then
-            exit;
+         if Child.Kind_Id = Child_Interface then
+            Handle_Interface (Child.Interface_Tag.all);
          end if;
+
+         exit when Exists;
       end loop;
 
       return Exists;

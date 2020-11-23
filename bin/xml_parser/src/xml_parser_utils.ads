@@ -65,9 +65,7 @@ package Xml_Parser_Utils is
       "="          => "=");
 
    type Intervals_Ref
-     (
-      Element : not null access constant Interval_Vectors.Vector
-     )
+     (Element : not null access constant Interval_Vectors.Vector)
    is limited null record with Implicit_Dereference => Element;
 
    type Interval_Identifier is tagged limited private;
