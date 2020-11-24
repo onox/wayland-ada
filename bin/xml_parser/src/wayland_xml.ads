@@ -240,6 +240,11 @@ package Wayland_XML is
       Element_Type => Enum_Child,
       "="          => "=");
 
+   function Is_Smaller_Enum_Value (Left, Right : Enum_Child) return Boolean is
+     (Value (Left.Entry_Tag.all) < Value (Right.Entry_Tag.all));
+
+   package Enum_Child_Sorting is new Enum_Child_Vectors.Generic_Sorting (Is_Smaller_Enum_Value);
+
    type Enum_Children_Ref
      (E : not null access constant Enum_Child_Vectors.Vector)
    is limited null record with
@@ -249,6 +254,8 @@ package Wayland_XML is
 
    function Children (This : aliased Enum_Tag) return Enum_Children_Ref;
    function Entries (This : aliased Enum_Tag) return Enum_Children_Ref;
+
+   procedure Sort_Entries (This : in out Enum_Tag);
 
    procedure Append_Child
      (This : in out Enum_Tag;

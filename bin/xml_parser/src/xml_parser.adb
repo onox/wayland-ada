@@ -610,6 +610,8 @@ procedure XML_Parser is
                      raise XML_Exception;
                   end if;
                end loop;
+
+               Sort_Entries (Enum_Tag.all);
             end Iterate;
          begin
             Iterate (Node.Tag);
@@ -1014,9 +1016,7 @@ procedure XML_Parser is
          Result : Natural := 0;
       begin
          for Child of Wayland_XML.Entries (Enum_Tag) loop
-            if Child.Kind_Id = Child_Entry then
-               Result := Natural'Max (Result, Get_Name (Child.Entry_Tag.all)'Length);
-            end if;
+            Result := Natural'Max (Result, Get_Name (Child.Entry_Tag.all)'Length);
          end loop;
 
          return Result;
@@ -1080,21 +1080,17 @@ procedure XML_Parser is
                if Is_Bitfield then
                   Put_Line (File, "   type " & Enum_Type_Name & " is record");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
-                     if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
-                     end if;
+                     Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
                   end loop;
                   Put_Line (File, "   end record;");
                else
                   Put_Line (File, "   type " & Enum_Type_Name & " is");
                   Put (File, "     (");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
-                     if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Entry
-                          (Child.Entry_Tag.all,
-                           Wayland_XML.Entries (Enum_Tag).First_Element = Child,
-                           Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
-                     end if;
+                     Generate_Code_For_Entry
+                       (Child.Entry_Tag.all,
+                        Wayland_XML.Entries (Enum_Tag).First_Element = Child,
+                        Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
                   end loop;
                end if;
                New_Line (File);
@@ -1183,9 +1179,7 @@ procedure XML_Parser is
                if Is_Bitfield then
                   Put_Line (File, "   for " & Enum_Type_Name & " use record");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
-                     if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
-                     end if;
+                     Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
                   end loop;
                   Put_Line (File, "   end record;");
                   Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
@@ -1193,12 +1187,10 @@ procedure XML_Parser is
                   Put_Line (File, "   for " & Enum_Type_Name & " use");
                   Put (File, "     (");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
-                     if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Entry
-                          (Child.Entry_Tag.all,
-                           Wayland_XML.Entries (Enum_Tag).First_Element = Child,
-                           Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
-                     end if;
+                     Generate_Code_For_Entry
+                       (Child.Entry_Tag.all,
+                        Wayland_XML.Entries (Enum_Tag).First_Element = Child,
+                        Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
                   end loop;
                   Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
                end if;
