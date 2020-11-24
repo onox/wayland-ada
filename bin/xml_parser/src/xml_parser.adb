@@ -58,6 +58,10 @@ procedure XML_Parser is
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
 
+   function Is_Deprecated (Interface_Tag : Wayland_XML.Interface_Tag) return Boolean is
+     (Name (Interface_Tag) in "wl_shell" | "wl_shell_surface");
+      --  wl_shell[_surface] are deprecated and replaced by the xdg-shell protocol
+
    function Get_Protocol_Name (Name : String) return String is
      (if Name = "wayland" then "client" else Name);
 
@@ -822,7 +826,7 @@ procedure XML_Parser is
 
    begin
       for Child of Children (Protocol_Tag.all) loop
-         if Child.Kind_Id = Child_Interface then
+         if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
             Handle_Interface (Child.Interface_Tag.all);
             New_Line (File);
          end if;
@@ -892,7 +896,6 @@ procedure XML_Parser is
 
          Put_Line (File, "package Wayland." & Package_Name & ".Enums is");
          Put_Line (File, "   pragma Preelaborate;");
-         New_Line (File);
 
          Generate_Code_For_Enum_Constants;
 
@@ -952,7 +955,6 @@ procedure XML_Parser is
          Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
          Put_Line (File, "");
          Put_Line (File, "   --  End core parts");
-         Put_Line (File, "");
 
          Create_Wl_Thin_Spec_File;
 
@@ -1014,7 +1016,7 @@ procedure XML_Parser is
          end Handle_Interface;
       begin
          for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
+            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                Handle_Interface (Child.Interface_Tag.all);
             end if;
          end loop;
@@ -1100,6 +1102,7 @@ procedure XML_Parser is
                   Generate_Summary_For_Entry (Entry_Tag);
                end Generate_Code_For_Entry;
             begin
+               New_Line (File);
                if Is_Bitfield then
                   Put_Line (File, "   type " & Enum_Type_Name & " is record");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
@@ -1116,14 +1119,8 @@ procedure XML_Parser is
                         Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
                   end loop;
                end if;
-               New_Line (File);
             end Generate_Code;
          begin
-            --  wl_shell[_surface] are deprecated and replaced by the xdg-shell protocol
-            if Name (Interface_Tag) in "wl_shell" | "wl_shell_surface" then
-               return;
-            end if;
-
             for Child of Children (Interface_Tag) loop
                if Child.Kind_Id = Child_Enum then
                   Generate_Code (Child.Enum_Tag.all);
@@ -1132,7 +1129,7 @@ procedure XML_Parser is
          end Handle_Interface;
       begin
          for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
+            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                Handle_Interface (Child.Interface_Tag.all);
             end if;
          end loop;
@@ -1678,40 +1675,35 @@ procedure XML_Parser is
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
+               Put_Line (File, "");
                Put_Line (File, "   " & Name & " : aliased Interface_T with");
                Put_Line (File, "      Import        => True,");
                Put_Line (File, "      Convention    => C,");
                Put_Line
                  (File,
                   "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
-               Put_Line (File, "");
             end Handle_Interface;
 
          begin
             for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface then
+               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
             end loop;
          end Generate_Code_For_Interface_Constants;
 
          procedure Generate_Code_For_Interface_Ptrs is
-
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
-
-               procedure Generate_Code_For_Interface_Ptr is
-                  Name : constant String := Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag);
-               begin
-                  Put_Line (File, "   type " & Name & " is new Proxy_Ptr;");
-               end Generate_Code_For_Interface_Ptr;
-
+               Name : constant String := Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag);
             begin
-               Generate_Code_For_Interface_Ptr;
+                  Put_Line (File, "   type " & Name & " is new Proxy_Ptr;");
             end Handle_Interface;
-
          begin
             for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface then
+               if Child.Kind_Id = Child_Interface
+                 and then not Is_Deprecated (Child.Interface_Tag.all)
+                 and then Name (Child.Interface_Tag.all) /= "wl_display"
+               then
                   Put_Line (File, "");
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
@@ -2051,7 +2043,6 @@ procedure XML_Parser is
                end Generate_Code_For_Requests;
 
             begin
---               Generate_Code_For_Enums;
                Generate_Code_For_Subprogram_Ptrs;
 
                if Xml_Parser_Utils.Exists_Any_Event_Tag (Interface_Tag) then
@@ -2074,7 +2065,7 @@ procedure XML_Parser is
 
          begin
             for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface then
+               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
             end loop;
@@ -2284,7 +2275,7 @@ procedure XML_Parser is
          New_Line (File);
 
          for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
+            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                Handle_Interface (Child.Interface_Tag.all);
             end if;
          end loop;
@@ -2740,7 +2731,7 @@ procedure XML_Parser is
 
          begin
             for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface then
+               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
                   Handle_Interface (Child.Interface_Tag.all);
                end if;
             end loop;
