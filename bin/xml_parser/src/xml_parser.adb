@@ -1201,7 +1201,6 @@ procedure XML_Parser is
                      end if;
                   end loop;
                   Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
-                  --  FIXME Unsigned_32'Size or Integer'Size?
                end if;
 
                New_Line (File);

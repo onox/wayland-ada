@@ -5,8 +5,8 @@ package Wayland is
 
    Nul : constant Character := Character'Val (0);
 
-   type Unsigned_32 is mod 2 ** 32
-     with Size => 32;
+   type Unsigned_32 is mod 2 ** Integer'Size
+     with Size => Integer'Size;
 
    type Fixed is new Integer;
 
