@@ -999,6 +999,29 @@ procedure XML_Parser is
          New_Line (File);
       end Generate_Code_For_The_Interface_Constants;
 
+      function Get_Name (Entry_Tag : Wayland_XML.Entry_Tag) return String is
+         --  Just because some entries in wl_output.transform start with a digit :/
+         Entry_Name : constant String := Name (Entry_Tag);
+      begin
+         return
+           (if Entry_Name in "90" | "180" | "270" then
+              "Rotate_" & Entry_Name
+            else
+              Xml_Parser_Utils.Adaify_Name (Entry_Name));
+      end Get_Name;
+
+      function Get_Max_Child_Length (Enum_Tag : aliased Wayland_XML.Enum_Tag) return Natural is
+         Result : Natural := 0;
+      begin
+         for Child of Wayland_XML.Entries (Enum_Tag) loop
+            if Child.Kind_Id = Child_Entry then
+               Result := Natural'Max (Result, Get_Name (Child.Entry_Tag.all)'Length);
+            end if;
+         end loop;
+
+         return Result;
+      end Get_Max_Child_Length;
+
       procedure Generate_Code_For_Enum_Constants is
          procedure Handle_Interface
            (Interface_Tag : aliased Wayland_XML.Interface_Tag)
@@ -1007,66 +1030,81 @@ procedure XML_Parser is
                Enum_Type_Name : constant String := Xml_Parser_Utils.Adaify_Name
                  (Name (Interface_Tag) & "_" & Name (Enum_Tag));
 
-               Is_Enum_Used : constant Boolean :=
-                 Xml_Parser_Utils.Exists_Reference_To_Enum
-                   (Protocol_Tag.all,
-                    Name (Interface_Tag),
-                    Name (Enum_Tag));
+               Is_Bitfield : constant Boolean :=
+                  Exists_Bitfield (Enum_Tag) and then Bitfield (Enum_Tag);
 
-               procedure Generate_Code_For_Enum_Name
+               Max_Length : constant Natural := Get_Max_Child_Length (Enum_Tag);
+
+               procedure Generate_Summary_For_Entry
+                 (Entry_Tag : Wayland_XML.Entry_Tag)
+               is
+                  Summary_String : constant String := Summary (Entry_Tag);
+               begin
+                  if Summary_String'Length > 0 then
+                     Put_Line (File, "      --  " & Summary_String);
+                  end if;
+               end Generate_Summary_For_Entry;
+
+               procedure Generate_Code_For_Entry_Component
+                 (Entry_Tag : Wayland_XML.Entry_Tag)
+               is
+                  Aligned_Name : constant String :=
+                    SF.Head (Get_Name (Entry_Tag), Max_Length, ' ');
+
+                  Value : constant Natural := Natural'Value (Value_As_String (Entry_Tag));
+               begin
+                  --  Ignore entry with value 0 because then all components of
+                  --  the record are False
+                  if Value = 0 then
+                     return;
+                  end if;
+
+                  Put_Line (File, "      " & Aligned_Name & " : Boolean := False;");
+                  Generate_Summary_For_Entry (Entry_Tag);
+               end Generate_Code_For_Entry_Component;
+
+               procedure Generate_Code_For_Entry
                  (Entry_Tag  : Wayland_XML.Entry_Tag;
                   Is_First   : Boolean;
                   Is_Last    : Boolean)
                is
-                  --  FIXME Handle when name is a number
-                  Name : constant String := Xml_Parser_Utils.Adaify_Name
-                    (Wayland_XML.Name (Entry_Tag));
+                  Aligned_Name : constant String := Get_Name (Entry_Tag);
 
                   Prefix : constant String := (if Is_First then "" else "      ");
                   Suffix : constant String := (if Is_Last then ");" else ",");
                begin
-                  Put_Line (File, Prefix & Name & Suffix);
-                  declare
-                     Summary_String : constant String := Summary (Entry_Tag);
-                  begin
-                     if Summary_String'Length > 0 then
-                        Put_Line (File, "      --  " & Summary_String);
-                     end if;
-                  end;
-               end Generate_Code_For_Enum_Name;
-
-               procedure Generate_Code_For_Unused_Enum
-                 (Entry_Tag  : Wayland_XML.Entry_Tag)
-               is
-                  Name : constant String := Xml_Parser_Utils.Adaify_Name
-                    (Enum_Type_Name & "_" & Wayland_XML.Name (Entry_Tag));
-               begin
-                  Put (File, "   " & Name & " : constant Unsigned_32");
-                  Put_Line (File, " := " & Value_As_String (Entry_Tag) & ";");
-               end Generate_Code_For_Unused_Enum;
+                  Put_Line (File, Prefix & Aligned_Name & Suffix);
+                  Generate_Summary_For_Entry (Entry_Tag);
+               end Generate_Code_For_Entry;
             begin
-               if Is_Enum_Used then
+               if Is_Bitfield then
+                  Put_Line (File, "   type " & Enum_Type_Name & " is record");
+                  for Child of Wayland_XML.Entries (Enum_Tag) loop
+                     if Child.Kind_Id = Child_Entry then
+                        Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
+                     end if;
+                  end loop;
+                  Put_Line (File, "   end record;");
+               else
                   Put_Line (File, "   type " & Enum_Type_Name & " is");
                   Put (File, "     (");
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
                      if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Enum_Name
+                        Generate_Code_For_Entry
                           (Child.Entry_Tag.all,
                            Wayland_XML.Entries (Enum_Tag).First_Element = Child,
                            Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
                      end if;
                   end loop;
-               else
-                  for Child of Wayland_XML.Entries (Enum_Tag) loop
-                     if Child.Kind_Id = Child_Entry then
-                        Generate_Code_For_Unused_Enum (Child.Entry_Tag.all);
-                     end if;
-                  end loop;
                end if;
                New_Line (File);
             end Generate_Code;
-
          begin
+            --  wl_shell[_surface] are deprecated and replaced by the xdg-shell protocol
+            if Name (Interface_Tag) in "wl_shell" | "wl_shell_surface" then
+               return;
+            end if;
+
             for Child of Children (Interface_Tag) loop
                if Child.Kind_Id = Child_Enum then
                   Generate_Code (Child.Enum_Tag.all);
@@ -1089,55 +1127,91 @@ procedure XML_Parser is
                Enum_Type_Name : constant String := Xml_Parser_Utils.Adaify_Name
                  (Name (Interface_Tag) & "_" & Name (Enum_Tag));
 
-               Is_Enum_Used : constant Boolean :=
-                 Xml_Parser_Utils.Exists_Reference_To_Enum
-                   (Protocol_Tag.all,
-                    Name (Interface_Tag),
-                    Name (Enum_Tag));
+               Is_Bitfield : constant Boolean :=
+                  Exists_Bitfield (Enum_Tag) and then Bitfield (Enum_Tag);
 
-               procedure Generate_Code_For_Enum_Value
+               Max_Length : constant Natural := Get_Max_Child_Length (Enum_Tag);
+
+               procedure Generate_Code_For_Entry_Component
+                 (Entry_Tag : Wayland_XML.Entry_Tag)
+               is
+                  Aligned_Name : constant String :=
+                    SF.Head (Get_Name (Entry_Tag), Max_Length, ' ');
+
+                  type U32 is mod 2 ** 32
+                    with Size => 32;
+
+                  Value : constant U32 := U32'Value (Value_As_String (Entry_Tag));
+               begin
+                  --  Ignore entry with value 0 because then all components of
+                  --  the record are False
+                  if Value = 0 then
+                     return;
+                  end if;
+
+                  if (Value and (Value - 1)) /= 0 then
+                     raise Constraint_Error with Value'Image & " is not a power of two";
+                  end if;
+
+                  declare
+                     Bit : Natural := 0;
+                  begin
+                     while Value > 2 ** Bit loop
+                        Bit := Bit + 1;
+                     end loop;
+
+                     Put_Line (File, "      " & Aligned_Name &
+                       " at 0 range " & Trim(Bit'Image) & " .. " & Trim (Bit'Image) & ";");
+                  end;
+               end Generate_Code_For_Entry_Component;
+
+               procedure Generate_Code_For_Entry
                  (Entry_Tag  : Wayland_XML.Entry_Tag;
-                  Max_Length : Natural;
                   Is_First   : Boolean;
                   Is_Last    : Boolean)
                is
-                  --  FIXME Handle when name is a number
-                  Name : constant String := Xml_Parser_Utils.Adaify_Name
-                    (Wayland_XML.Name (Entry_Tag));
+                  Aligned_Name : constant String :=
+                    SF.Head (Get_Name (Entry_Tag), Max_Length, ' ');
 
                   Prefix : constant String := (if Is_First then "" else "      ");
                   Suffix : constant String := (if Is_Last then ");" else ",");
                begin
-                  Put_Line (File, Prefix & SF.Head (Name, Max_Length, ' ') & " => " & Value_As_String (Entry_Tag) & Suffix);
-               end Generate_Code_For_Enum_Value;
-
-               Max_Length : Natural := 0;
+                  Put_Line (File, Prefix & Aligned_Name & " => " &
+                    Value_As_String (Entry_Tag) & Suffix);
+               end Generate_Code_For_Entry;
             begin
-               if not Is_Enum_Used then
-                  return;
+               if Is_Bitfield then
+                  Put_Line (File, "   for " & Enum_Type_Name & " use record");
+                  for Child of Wayland_XML.Entries (Enum_Tag) loop
+                     if Child.Kind_Id = Child_Entry then
+                        Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
+                     end if;
+                  end loop;
+                  Put_Line (File, "   end record;");
+                  Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
+               else
+                  Put_Line (File, "   for " & Enum_Type_Name & " use");
+                  Put (File, "     (");
+                  for Child of Wayland_XML.Entries (Enum_Tag) loop
+                     if Child.Kind_Id = Child_Entry then
+                        Generate_Code_For_Entry
+                          (Child.Entry_Tag.all,
+                           Wayland_XML.Entries (Enum_Tag).First_Element = Child,
+                           Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
+                     end if;
+                  end loop;
+                  Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
+                  --  FIXME Unsigned_32'Size or Integer'Size?
                end if;
 
-               for Child of Wayland_XML.Entries (Enum_Tag) loop
-                  if Child.Kind_Id = Child_Entry then
-                     Max_Length := Natural'Max (Max_Length, Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Child.Entry_Tag.all))'Length);
-                  end if;
-               end loop;
-
-               Put_Line (File, "   for " & Enum_Type_Name & " use");
-               Put (File, "     (");
-               for Child of Wayland_XML.Entries (Enum_Tag) loop
-                  if Child.Kind_Id = Child_Entry then
-                     Generate_Code_For_Enum_Value
-                       (Child.Entry_Tag.all,
-                        Max_Length,
-                        Wayland_XML.Entries (Enum_Tag).First_Element = Child,
-                        Wayland_XML.Entries (Enum_Tag).Last_Element = Child);
-                  end if;
-               end loop;
-               Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size");
                New_Line (File);
             end Generate_Code;
          begin
+            --  wl_shell[_surface] are deprecated and replaced by the xdg-shell protocol
+            if Name (Interface_Tag) in "wl_shell" | "wl_shell_surface" then
+               return;
+            end if;
+
             for Child of Children (Interface_Tag) loop
                if Child.Kind_Id = Child_Enum then
                   Generate_Code (Child.Enum_Tag.all);
