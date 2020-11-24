@@ -62,26 +62,42 @@ procedure XML_Parser is
      (if Name = "wayland" then "client" else Name);
 
    procedure Generate_Code_For_Arg
-     (File : Ada.Text_IO.File_Type;
-      Arg_Tag    : Wayland_XML.Arg_Tag;
-      Max_Length : Natural;
-      Is_Last    : Boolean) is
-   begin
-      declare
-         Arg_Name      : constant String
-           := Xml_Parser_Utils.Adaify_Variable_Name
-             (Name (Arg_Tag));
-         Arg_Type_Name : constant String :=
-           Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
-
-         Arg_Name_Aligned : constant String := SF.Head (Arg_Name, Max_Length, ' ');
+     (File          : Ada.Text_IO.File_Type;
+      Interface_Tag : Wayland_XML.Interface_Tag;
+      Arg_Tag       : Wayland_XML.Arg_Tag;
+      Max_Length    : Natural;
+      Is_Last       : Boolean)
+   is
+      function Get_Enum_Type_Name return String is
+         Result : String := Enum (Arg_Tag);
       begin
-         if Is_Last then
-            Put (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ")");
+         case SF.Count (Result, ".") is
+            when 0 =>
+               return Name (Interface_Tag) & "_" & Result;
+            when 1 =>
+               Result (SF.Index (Result, ".")) := '_';
+               return Result;
+            when others =>
+               raise XML_Exception;
+         end case;
+      end Get_Enum_Type_Name;
+
+      Arg_Name      : constant String
+        := Xml_Parser_Utils.Adaify_Variable_Name
+          (Name (Arg_Tag));
+      Arg_Type_Name : constant String :=
+        (if Exists_Enum (Arg_Tag) then
+           Xml_Parser_Utils.Adaify_Name (Get_Enum_Type_Name)
          else
-            Put_Line (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ";");
-         end if;
-      end;
+           Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag));
+
+      Arg_Name_Aligned : constant String := SF.Head (Arg_Name, Max_Length, ' ');
+   begin
+      if Is_Last then
+         Put (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ")");
+      else
+         Put_Line (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ";");
+      end if;
    end Generate_Code_For_Arg;
 
    type Parameter is record
@@ -840,10 +856,14 @@ procedure XML_Parser is
             Put_Line (File, "private with Interfaces.C.Strings;");
             Put_Line (File, "private with Wayland." & Package_Name & ".Thin;");
             New_Line (File);
+            Put_Line (File, "with Wayland." & Package_Name & ".Enums;");
+            New_Line (File);
             Put_Line (File, "with C_Binding.Linux.Files;");
             New_Line (File);
             Put_Line (File, "package Wayland." & Package_Name & ".Protocol is");
             Put_Line (File, "   pragma Preelaborate;");
+            New_Line (File);
+            Put_Line (File, "   use Wayland." & Package_Name & ".Enums;");
             New_Line (File);
 
             Generate_Code_For_Type_Declarations;
@@ -909,10 +929,13 @@ procedure XML_Parser is
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
          Put_Line (File, "with Wayland.API;");
+         Put_Line (File, "with Wayland." & Package_Name & ".Enums;");
          Put_Line (File, "");
          Put_Line (File, "--  Mostly auto generated from " & File_Name);
          Put_Line (File, "private package Wayland." & Package_Name & ".Thin is");
          Put_Line (File, "   pragma Preelaborate;");
+         Put_Line (File, "");
+         Put_Line (File, "   use Wayland." & Package_Name & ".Enums;");
          Put_Line (File, "");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
@@ -1297,7 +1320,7 @@ procedure XML_Parser is
          Put_Line (File, "                            Width    : Integer;");
          Put_Line (File, "                            Height   : Integer;");
          Put_Line (File, "                            Stride   : Integer;");
-         Put_Line (File, "                            Format   : Unsigned_32;");
+         Put_Line (File, "                            Format   : Shm_Format;");
          Put_Line (File, "                            Buffer : in out Protocol.Buffer) with");
          Put_Line (File, "     Global => null;");
          Put_Line (File, "");
@@ -1783,6 +1806,7 @@ procedure XML_Parser is
                            if Child.Kind_Id = Child_Arg then
                               Generate_Code_For_Arg
                                 (File,
+                                 Interface_Tag,
                                  Child.Arg_Tag.all,
                                  Max_Name_Length,
                                  Children (Event_Tag).Last_Element = Child);
@@ -1949,7 +1973,9 @@ procedure XML_Parser is
                         for Child of V loop
                            if Child.Kind_Id = Child_Arg then
                               Generate_Code_For_Arg
-                                (File, Child.Arg_Tag.all,
+                                (File,
+                                 Interface_Tag,
+                                 Child.Arg_Tag.all,
                                  Max_Name_Length,
                                  Child = Children (Request_Tag).Last_Element);
                            end if;
@@ -2298,6 +2324,8 @@ procedure XML_Parser is
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.adb");
 
+         Put_Line (File, "with Ada.Unchecked_Conversion;");
+         Put_Line (File, "");
          Put_Line (File, "with Wayland." & Package_Name & ".Constants;");
          Put_Line (File, "");
          Put_Line (File, "use Wayland." & Package_Name & ".Constants;");
@@ -2466,7 +2494,9 @@ procedure XML_Parser is
                                     for Child of V loop
                                        if Child.Kind_Id = Child_Arg then
                                           Generate_Code_For_Arg
-                                            (File, Child.Arg_Tag.all,
+                                            (File,
+                                             Interface_Tag,
+                                             Child.Arg_Tag.all,
                                              Max_Name_Length,
                                              Child = Children (Request_Tag).Last_Element);
                                        end if;
@@ -2553,7 +2583,12 @@ procedure XML_Parser is
 
                                  for Child of V loop
                                     if Child.Kind_Id = Child_Arg then
-                                       Generate_Code_For_Arg (File, Child.Arg_Tag.all, Max_Name_Length, False);
+                                       Generate_Code_For_Arg
+                                         (File,
+                                          Interface_Tag,
+                                          Child.Arg_Tag.all,
+                                          Max_Name_Length,
+                                          False);
                                     end if;
                                  end loop;
 
@@ -2642,7 +2677,9 @@ procedure XML_Parser is
                               for Child of V loop
                                  if Child.Kind_Id = Child_Arg then
                                     Generate_Code_For_Arg
-                                      (File, Child.Arg_Tag.all,
+                                      (File,
+                                       Interface_Tag,
+                                       Child.Arg_Tag.all,
                                        Max_Name_Length,
                                        Child = Children (Request_Tag).Last_Element);
                                  end if;
@@ -2729,22 +2766,22 @@ procedure XML_Parser is
          Put_Line (File, "   package body Registry_Objects_Subscriber is");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Object_Added (Unused_Data : Void_Ptr;");
-         Put_Line (File, "                                       Registry    : Wl.Registry_Ptr;");
-         Put_Line (File, "                                       Id          : Wl.Unsigned_32;");
-         Put_Line (File, "                                       Interface_V : Wl.chars_ptr;");
-         Put_Line (File, "                                       Version     : Wl.Unsigned_32) with");
+         Put_Line (File, "                                       Registry    : Protocol.Registry_Ptr;");
+         Put_Line (File, "                                       Id          : Unsigned_32;");
+         Put_Line (File, "                                       Interface_V : chars_ptr;");
+         Put_Line (File, "                                       Version     : Unsigned_32) with");
          Put_Line (File, "        Convention => C,");
          Put_Line (File, "        Global     => null;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Object_Added (Unused_Data : Void_Ptr;");
-         Put_Line (File, "                                       Registry    : Wl.Registry_Ptr;");
-         Put_Line (File, "                                       Id          : Wl.Unsigned_32;");
-         Put_Line (File, "                                       Interface_V : Wl.chars_ptr;");
-         Put_Line (File, "                                       Version     : Wl.Unsigned_32)");
+         Put_Line (File, "                                       Registry    : Protocol.Registry_Ptr;");
+         Put_Line (File, "                                       Id          : Unsigned_32;");
+         Put_Line (File, "                                       Interface_V : chars_ptr;");
+         Put_Line (File, "                                       Version     : Unsigned_32)");
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Unreferenced (Unused_Data);");
          Put_Line (File, "");
-         Put_Line (File, "         R : Wl.Registry := (");
+         Put_Line (File, "         R : Protocol.Registry := (");
          Put_Line (File, "                            My_Registry                 => Registry,");
          Put_Line (File, "                            My_Has_Started_Subscription => True");
          Put_Line (File, "                           );");
@@ -2753,15 +2790,15 @@ procedure XML_Parser is
          Put_Line (File, "      end Internal_Object_Added;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;");
-         Put_Line (File, "                                         Registry    : Wl.Registry_Ptr;");
-         Put_Line (File, "                                         Id          : Wl.Unsigned_32) with");
+         Put_Line (File, "                                         Registry    : Protocol.Registry_Ptr;");
+         Put_Line (File, "                                         Id          : Unsigned_32) with");
          Put_Line (File, "        Convention => C;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Object_Removed (Unused_Data : Void_Ptr;");
-         Put_Line (File, "                                         Registry    : Wl.Registry_Ptr;");
-         Put_Line (File, "                                         Id          : Wl.Unsigned_32)");
+         Put_Line (File, "                                         Registry    : Protocol.Registry_Ptr;");
+         Put_Line (File, "                                         Id          : Unsigned_32)");
          Put_Line (File, "      is");
-         Put_Line (File, "         R : Wl.Registry := (");
+         Put_Line (File, "         R : Protocol.Registry := (");
          Put_Line (File, "                            My_Registry                 => Registry,");
          Put_Line (File, "                            My_Has_Started_Subscription => True");
          Put_Line (File, "                           );");
@@ -2769,13 +2806,13 @@ procedure XML_Parser is
          Put_Line (File, "         Global_Object_Removed (Data, R, Id);");
          Put_Line (File, "      end Internal_Object_Removed;");
          Put_Line (File, "");
-         Put_Line (File, "      Listener : aliased Wl.Registry_Listener_T :=");
+         Put_Line (File, "      Listener : aliased Protocol.Registry_Listener_T :=");
          Put_Line (File, "        (");
          Put_Line (File, "         Global        => Internal_Object_Added'Unrestricted_Access,");
          Put_Line (File, "         Global_Remove => Internal_Object_Removed'Unrestricted_Access");
          Put_Line (File, "        );");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Start_Subscription (Registry : in out Wl.Registry) is");
+         Put_Line (File, "      procedure Start_Subscription (Registry : in out Protocol.Registry) is");
          Put_Line (File, "         I : Px.int;");
          Put_Line (File, "      begin");
          Put_Line (File, "         I := Wl_Thin.Registry_Add_Listener (Registry.My_Registry,");
@@ -2811,7 +2848,7 @@ procedure XML_Parser is
          Put_Line (File, "         Surface     : Wl_Thin.Shell_Surface_Ptr;");
          Put_Line (File, "         Serial      : Unsigned_32)");
          Put_Line (File, "      is");
-         Put_Line (File, "         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);");
+         Put_Line (File, "         S : Protocol.Shell_Surface := (My_Shell_Surface => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Shell_Surface_Ping (Data, S, Serial);");
          Put_Line (File, "      end Internal_Shell_Surface_Ping;");
@@ -2823,7 +2860,7 @@ procedure XML_Parser is
          Put_Line (File, "         Width       : Integer;");
          Put_Line (File, "         Height      : Integer)");
          Put_Line (File, "      is");
-         Put_Line (File, "         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);");
+         Put_Line (File, "         S : Protocol.Shell_Surface := (My_Shell_Surface => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Shell_Surface_Configure (Data, S, Edges, Width, Height);");
          Put_Line (File, "      end Internal_Shell_Surface_Configure;");
@@ -2832,7 +2869,7 @@ procedure XML_Parser is
          Put_Line (File, "        (Unused_Data : Void_Ptr;");
          Put_Line (File, "         Surface     : Wl_Thin.Shell_Surface_Ptr)");
          Put_Line (File, "      is");
-         Put_Line (File, "         S : Wl.Shell_Surface := (My_Shell_Surface => Surface);");
+         Put_Line (File, "         S : Protocol.Shell_Surface := (My_Shell_Surface => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Shell_Surface_Popup_Done (Data, S);");
          Put_Line (File, "      end Internal_Shell_Surface_Popup_Done;");
@@ -2844,7 +2881,7 @@ procedure XML_Parser is
          Put_Line (File, "         Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access");
          Put_Line (File, "        );");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Start_Subscription (Surface : in out Wl.Shell_Surface) is");
+         Put_Line (File, "      procedure Start_Subscription (Surface : in out Protocol.Shell_Surface) is");
          Put_Line (File, "         I : Px.int;");
          Put_Line (File, "      begin");
          Put_Line (File, "         I := Wl_Thin.Shell_Surface_Add_Listener");
@@ -2866,7 +2903,7 @@ procedure XML_Parser is
          Put_Line (File, "                                   Seat         : Wl_Thin.Seat_Ptr;");
          Put_Line (File, "                                   Capabilities : Unsigned_32)");
          Put_Line (File, "      is");
-         Put_Line (File, "         S : Wl.Seat := (");
+         Put_Line (File, "         S : Protocol.Seat := (");
          Put_Line (File, "                        My_Seat                     => Seat,");
          Put_Line (File, "                        My_Has_Started_Subscription => True");
          Put_Line (File, "                       );");
@@ -2885,7 +2922,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         N : String := Interfaces.C.Strings.Value (Name);");
          Put_Line (File, "");
-         Put_Line (File, "         S : Wl.Seat := (");
+         Put_Line (File, "         S : Protocol.Seat := (");
          Put_Line (File, "                        My_Seat                     => Seat,");
          Put_Line (File, "                        My_Has_Started_Subscription => True");
          Put_Line (File, "                       );");
@@ -2899,7 +2936,7 @@ procedure XML_Parser is
          Put_Line (File, "         Name         => Internal_Seat_Name'Unrestricted_Access");
          Put_Line (File, "        );");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Start_Subscription (S : in out Wl.Seat) is");
+         Put_Line (File, "      procedure Start_Subscription (S : in out Protocol.Seat) is");
          Put_Line (File, "         I : Px.int;");
          Put_Line (File, "      begin");
          Put_Line (File, "         I := Wl_Thin.Seat_Add_Listener (Seat     => S.My_Seat,");
@@ -2916,8 +2953,8 @@ procedure XML_Parser is
          Put_Line (File, "         Pointer     : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Serial      : Unsigned_32;");
          Put_Line (File, "         Surface     : Wl_Thin.Surface_Ptr;");
-         Put_Line (File, "         Surface_X   : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y   : Wl.Fixed) with");
+         Put_Line (File, "         Surface_X   : Fixed;");
+         Put_Line (File, "         Surface_Y   : Fixed) with");
          Put_Line (File, "        Convention => C;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Pointer_Leave");
@@ -2931,8 +2968,8 @@ procedure XML_Parser is
          Put_Line (File, "        (Data      : Void_Ptr;");
          Put_Line (File, "         Pointer   : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Time      : Unsigned_32;");
-         Put_Line (File, "         Surface_X : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y : Wl.Fixed) with");
+         Put_Line (File, "         Surface_X : Fixed;");
+         Put_Line (File, "         Surface_Y : Fixed) with");
          Put_Line (File, "        Convention => C;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Pointer_Button");
@@ -2949,7 +2986,7 @@ procedure XML_Parser is
          Put_Line (File, "         Pointer : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Time    : Unsigned_32;");
          Put_Line (File, "         Axis    : Unsigned_32;");
-         Put_Line (File, "         Value   : Wl.Fixed) with");
+         Put_Line (File, "         Value   : Fixed) with");
          Put_Line (File, "        Convention => C;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Pointer_Frame (Data    : Void_Ptr;");
@@ -2981,11 +3018,11 @@ procedure XML_Parser is
          Put_Line (File, "         Pointer     : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Serial      : Unsigned_32;");
          Put_Line (File, "         Surface     : Wl_Thin.Surface_Ptr;");
-         Put_Line (File, "         Surface_X   : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y   : Wl.Fixed)");
+         Put_Line (File, "         Surface_X   : Fixed;");
+         Put_Line (File, "         Surface_Y   : Fixed)");
          Put_Line (File, "      is");
-         Put_Line (File, "         P : Wl.Pointer := (My_Pointer => Pointer);");
-         Put_Line (File, "         S : Wl.Surface := (My_Surface => Surface);");
+         Put_Line (File, "         P : Protocol.Pointer := (My_Pointer => Pointer);");
+         Put_Line (File, "         S : Protocol.Surface := (My_Surface => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Pointer_Enter (Data, P, Serial, S, Surface_X, Surface_Y);");
          Put_Line (File, "      end Internal_Pointer_Enter;");
@@ -2996,8 +3033,8 @@ procedure XML_Parser is
          Put_Line (File, "         Serial      : Unsigned_32;");
          Put_Line (File, "         Surface     : Wl_Thin.Surface_Ptr)");
          Put_Line (File, "      is");
-         Put_Line (File, "         P : Wl.Pointer := (My_Pointer => Pointer);");
-         Put_Line (File, "         S : Wl.Surface := (My_Surface => Surface);");
+         Put_Line (File, "         P : Protocol.Pointer := (My_Pointer => Pointer);");
+         Put_Line (File, "         S : Protocol.Surface := (My_Surface => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Pointer_Leave (Data, P, Serial, S);");
          Put_Line (File, "      end Internal_Pointer_Leave;");
@@ -3006,8 +3043,8 @@ procedure XML_Parser is
          Put_Line (File, "        (Data      : Void_Ptr;");
          Put_Line (File, "         Pointer   : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Time      : Unsigned_32;");
-         Put_Line (File, "         Surface_X : Wl.Fixed;");
-         Put_Line (File, "         Surface_Y : Wl.Fixed) is");
+         Put_Line (File, "         Surface_X : Fixed;");
+         Put_Line (File, "         Surface_Y : Fixed) is");
          Put_Line (File, "      begin");
          Put_Line (File, "         null;");
          Put_Line (File, "      end Internal_Pointer_Motion;");
@@ -3020,7 +3057,7 @@ procedure XML_Parser is
          Put_Line (File, "         Button      : Unsigned_32;");
          Put_Line (File, "         State       : Unsigned_32)");
          Put_Line (File, "      is");
-         Put_Line (File, "         P : Wl.Pointer := (My_Pointer => Pointer);");
+         Put_Line (File, "         P : Protocol.Pointer := (My_Pointer => Pointer);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Pointer_Button (Data, P, Serial, Time, Button, State);");
          Put_Line (File, "      end Internal_Pointer_Button;");
@@ -3030,7 +3067,7 @@ procedure XML_Parser is
          Put_Line (File, "         Pointer : Wl_Thin.Pointer_Ptr;");
          Put_Line (File, "         Time    : Unsigned_32;");
          Put_Line (File, "         Axis    : Unsigned_32;");
-         Put_Line (File, "         Value   : Wl.Fixed) is");
+         Put_Line (File, "         Value   : Fixed) is");
          Put_Line (File, "      begin");
          Put_Line (File, "         null;");
          Put_Line (File, "      end Internal_Pointer_Axis;");
@@ -3080,7 +3117,7 @@ procedure XML_Parser is
          Put_Line (File, "         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access");
          Put_Line (File, "        );");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Start_Subscription (P : in out Wl.Pointer) is");
+         Put_Line (File, "      procedure Start_Subscription (P : in out Protocol.Pointer) is");
          Put_Line (File, "         I : Px.int;");
          Put_Line (File, "      begin");
          Put_Line (File, "         I := Wl_Thin.Pointer_Add_Listener (Pointer  => P.My_Pointer,");
@@ -3090,26 +3127,26 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   end Pointer_Subscriber;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Connect (Display : in out Wl.Display;");
+         Put_Line (File, "   procedure Connect (Display : in out Protocol.Display;");
          Put_Line (File, "                      Name    : C_String) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Display.My_Display := Wl_Thin.Display_Connect (Name);");
          Put_Line (File, "   end Connect;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Disconnect (Display : in out Wl.Display) is");
+         Put_Line (File, "   procedure Disconnect (Display : in out Protocol.Display) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      if Display.My_Display /= null then");
          Put_Line (File, "         Wl_Thin.Display_Disconnect (Display.My_Display);");
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Disconnect;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Registry (Display  : Wl.Display;");
-         Put_Line (File, "                           Registry : in out Wl.Registry) is");
+         Put_Line (File, "   procedure Get_Registry (Display  : Protocol.Display;");
+         Put_Line (File, "                           Registry : in out Protocol.Registry) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);");
          Put_Line (File, "   end Get_Registry;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Registry : in out Wl.Registry) is");
+         Put_Line (File, "   procedure Destroy (Registry : in out Protocol.Registry) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      if Registry.My_Registry /= null then");
          Put_Line (File, "         Wl_Thin.Registry_Destroy (Registry.My_Registry);");
@@ -3117,32 +3154,32 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Destroy;");
          Put_Line (File, "");
-         Put_Line (File, "   function Dispatch (Display : Wl.Display) return Int is");
+         Put_Line (File, "   function Dispatch (Display : Protocol.Display) return Int is");
          Put_Line (File, "   begin");
          Put_Line (File, "      return Wl_Thin.Display_Dispatch (Display.My_Display);");
          Put_Line (File, "   end Dispatch;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Dispatch (Display : Wl.Display) is");
+         Put_Line (File, "   procedure Dispatch (Display : Protocol.Display) is");
          Put_Line (File, "      I : Int;");
          Put_Line (File, "      pragma Unreferenced (I);");
          Put_Line (File, "   begin");
          Put_Line (File, "      I := Display.Dispatch;");
          Put_Line (File, "   end Dispatch;");
          Put_Line (File, "");
-         Put_Line (File, "   function Roundtrip (Display : Wl.Display) return Int is");
+         Put_Line (File, "   function Roundtrip (Display : Protocol.Display) return Int is");
          Put_Line (File, "   begin");
          Put_Line (File, "      return Wl_Thin.Display_Roundtrip (Display.My_Display);");
          Put_Line (File, "   end Roundtrip;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Roundtrip (Display : Wl.Display) is");
+         Put_Line (File, "   procedure Roundtrip (Display : Protocol.Display) is");
          Put_Line (File, "      I : Int;");
          Put_Line (File, "      pragma Unreferenced (I);");
          Put_Line (File, "   begin");
          Put_Line (File, "      I := Display.Roundtrip;");
          Put_Line (File, "   end Roundtrip;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Compositor  : in out Wl.Compositor;");
-         Put_Line (File, "                   Registry    : Wl.Registry;");
+         Put_Line (File, "   procedure Bind (Compositor  : in out Protocol.Compositor;");
+         Put_Line (File, "                   Registry    : Protocol.Registry;");
          Put_Line (File, "                   Id          : Unsigned_32;");
          Put_Line (File, "                   Version     : Unsigned_32)");
          Put_Line (File, "   is");
@@ -3158,15 +3195,15 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Bind;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Surface (Compositor : Wl.Compositor;");
-         Put_Line (File, "                             Surface    : in out Wl.Surface) is");
+         Put_Line (File, "   procedure Create_Surface (Compositor : Protocol.Compositor;");
+         Put_Line (File, "                             Surface    : in out Protocol.Surface) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Surface.My_Surface :=");
          Put_Line (File, "        Wl_Thin.Compositor_Create_Surface (Compositor.My_Compositor);");
          Put_Line (File, "   end Create_Surface;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Seat     : in out Wl.Seat;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
+         Put_Line (File, "   procedure Bind (Seat     : in out Protocol.Seat;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
          Put_Line (File, "                   Id       : Unsigned_32;");
          Put_Line (File, "                   Version  : Unsigned_32)");
          Put_Line (File, "   is");
@@ -3182,14 +3219,14 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Bind;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Pointer (Seat    : Wl.Seat;");
-         Put_Line (File, "                          Pointer : in out Wl.Pointer) is");
+         Put_Line (File, "   procedure Get_Pointer (Seat    : Protocol.Seat;");
+         Put_Line (File, "                          Pointer : in out Protocol.Pointer) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Pointer.My_Pointer := Wl_Thin.Seat_Get_Pointer (Seat.My_Seat);");
          Put_Line (File, "   end Get_Pointer;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Shell    : in out Wl.Shell;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
+         Put_Line (File, "   procedure Bind (Shell    : in out Protocol.Shell;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
          Put_Line (File, "                   Id       : Unsigned_32;");
          Put_Line (File, "                   Version  : Unsigned_32)");
          Put_Line (File, "   is");
@@ -3205,16 +3242,16 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Bind;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Get_Shell_Surface (Shell         : Wl.Shell;");
-         Put_Line (File, "                                Surface       : Wl.Surface;");
-         Put_Line (File, "                                Shell_Surface : in out Wl.Shell_Surface) is");
+         Put_Line (File, "   procedure Get_Shell_Surface (Shell         : Protocol.Shell;");
+         Put_Line (File, "                                Surface       : Protocol.Surface;");
+         Put_Line (File, "                                Shell_Surface : in out Protocol.Shell_Surface) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Shell_Surface.My_Shell_Surface :=");
          Put_Line (File, "        Wl_Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);");
          Put_Line (File, "   end Get_Shell_Surface;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Shm      : in out Wl.Shm;");
-         Put_Line (File, "                   Registry : Wl.Registry;");
+         Put_Line (File, "   procedure Bind (Shm      : in out Protocol.Shm;");
+         Put_Line (File, "                   Registry : Protocol.Registry;");
          Put_Line (File, "                   Id       : Unsigned_32;");
          Put_Line (File, "                   Version  : Unsigned_32)");
          Put_Line (File, "   is");
@@ -3230,23 +3267,23 @@ procedure XML_Parser is
          Put_Line (File, "      end if;");
          Put_Line (File, "   end Bind;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Pool (Shm             : Wl.Shm;");
+         Put_Line (File, "   procedure Create_Pool (Shm             : Protocol.Shm;");
          Put_Line (File, "                          File_Descriptor : Integer;");
          Put_Line (File, "                          Size            : Integer;");
-         Put_Line (File, "                          Pool            : in out Wl.Shm_Pool) is");
+         Put_Line (File, "                          Pool            : in out Protocol.Shm_Pool) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Pool.My_Shm_Pool := Wl_Thin.Shm_Create_Pool (Shm.My_Shm, File_Descriptor, Size);");
          Put_Line (File, "   end Create_Pool;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Create_Buffer (Pool   : Wl.Shm_Pool;");
+         Put_Line (File, "   procedure Create_Buffer (Pool     : Protocol.Shm_Pool;");
          Put_Line (File, "                            Offset   : Integer;");
          Put_Line (File, "                            Width    : Integer;");
          Put_Line (File, "                            Height   : Integer;");
          Put_Line (File, "                            Stride   : Integer;");
-         Put_Line (File, "                            Format   : Unsigned_32;");
-         Put_Line (File, "                            Buffer : in out Wl.Buffer) is");
+         Put_Line (File, "                            Format   : Shm_Format;");
+         Put_Line (File, "                            Buffer : in out Protocol.Buffer) is");
          Put_Line (File, "   begin");
-         Put_Line (File, "      Buffer.My_Buffer := Wl_Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,");
+         Put_Line (File, "      Buffer.My_Buffer := Thin.Shm_Pool_Create_Buffer (Pool.My_Shm_Pool,");
          Put_Line (File, "                                                          Offset,");
          Put_Line (File, "                                                          Width,");
          Put_Line (File, "                                                          Height,");
@@ -3254,31 +3291,31 @@ procedure XML_Parser is
          Put_Line (File, "                                                          Format);");
          Put_Line (File, "   end Create_Buffer;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Set_Toplevel (Surface : Wl.Shell_Surface) is");
+         Put_Line (File, "   procedure Set_Toplevel (Surface : Protocol.Shell_Surface) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Wl_Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);");
          Put_Line (File, "   end Set_Toplevel;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Pong (Surface : Wl.Shell_Surface;");
+         Put_Line (File, "   procedure Pong (Surface : Protocol.Shell_Surface;");
          Put_Line (File, "                   Serial  : Unsigned_32) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Wl_Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);");
          Put_Line (File, "   end Pong;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Attach (Surface : Wl.Surface;");
-         Put_Line (File, "                     Buffer  : Wl.Buffer;");
+         Put_Line (File, "   procedure Attach (Surface : Protocol.Surface;");
+         Put_Line (File, "                     Buffer  : Protocol.Buffer;");
          Put_Line (File, "                     X       : Integer;");
          Put_Line (File, "                     Y       : Integer) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Wl_Thin.Surface_Attach (Surface.My_Surface, Buffer.My_Buffer, X, Y);");
          Put_Line (File, "   end Attach;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Commit (Surface : Wl.Surface) is");
+         Put_Line (File, "   procedure Commit (Surface : Protocol.Surface) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Wl_Thin.Surface_Commit (Surface.My_Surface);");
          Put_Line (File, "   end Commit;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Surface : in out Wl.Surface) is");
+         Put_Line (File, "   procedure Destroy (Surface : in out Protocol.Surface) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      if Surface.My_Surface /= null then");
          Put_Line (File, "         Wl_Thin.Surface_Destroy (Surface.My_Surface);");
