@@ -80,33 +80,6 @@ private package Wayland.Client.Constants is
    Data_Device_Manager_Create_Data_Source_Since_Version : constant := 1;
    Data_Device_Manager_Get_Data_Device_Since_Version : constant := 1;
 
-   Shell_Get_Shell_Surface : constant := 0;
-   Shell_Get_Shell_Surface_Since_Version : constant := 1;
-
-   Shell_Surface_Pong : constant := 0;
-   Shell_Surface_Move : constant := 1;
-   Shell_Surface_Resize : constant := 2;
-   Shell_Surface_Set_Toplevel : constant := 3;
-   Shell_Surface_Set_Transient : constant := 4;
-   Shell_Surface_Set_Fullscreen : constant := 5;
-   Shell_Surface_Set_Popup : constant := 6;
-   Shell_Surface_Set_Maximized : constant := 7;
-   Shell_Surface_Set_Title : constant := 8;
-   Shell_Surface_Set_Class : constant := 9;
-   Shell_Surface_Ping_Since_Version : constant := 1;
-   Shell_Surface_Configure_Since_Version : constant := 1;
-   Shell_Surface_Popup_Done_Since_Version : constant := 1;
-   Shell_Surface_Pong_Since_Version : constant := 1;
-   Shell_Surface_Move_Since_Version : constant := 1;
-   Shell_Surface_Resize_Since_Version : constant := 1;
-   Shell_Surface_Set_Toplevel_Since_Version : constant := 1;
-   Shell_Surface_Set_Transient_Since_Version : constant := 1;
-   Shell_Surface_Set_Fullscreen_Since_Version : constant := 1;
-   Shell_Surface_Set_Popup_Since_Version : constant := 1;
-   Shell_Surface_Set_Maximized_Since_Version : constant := 1;
-   Shell_Surface_Set_Title_Since_Version : constant := 1;
-   Shell_Surface_Set_Class_Since_Version : constant := 1;
-
    Surface_Destroy : constant := 0;
    Surface_Attach : constant := 1;
    Surface_Damage : constant := 2;

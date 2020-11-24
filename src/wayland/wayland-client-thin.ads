@@ -1,10 +1,13 @@
 with Interfaces.C.Strings;
 
 with Wayland.API;
+with Wayland.Client.Enums;
 
 --  Mostly auto generated from /usr/share/wayland/wayland.xml
 private package Wayland.Client.Thin is
    pragma Preelaborate;
+
+   use Wayland.Client.Enums;
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
@@ -77,16 +80,6 @@ private package Wayland.Client.Thin is
       Convention    => C,
       External_Name => "wl_data_device_manager_interface";
 
-   Shell_Interface : aliased Interface_T with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_shell_interface";
-
-   Shell_Surface_Interface : aliased Interface_T with
-      Import        => True,
-      Convention    => C,
-      External_Name => "wl_shell_surface_interface";
-
    Surface_Interface : aliased Interface_T with
       Import        => True,
       Convention    => C,
@@ -132,8 +125,6 @@ private package Wayland.Client.Thin is
       Convention    => C,
       External_Name => "wl_subsurface_interface";
 
---   type Display_Ptr is new Proxy_Ptr;
-
    type Registry_Ptr is new Proxy_Ptr;
 
    type Callback_Ptr is new Proxy_Ptr;
@@ -153,10 +144,6 @@ private package Wayland.Client.Thin is
    type Data_Device_Ptr is new Proxy_Ptr;
 
    type Data_Device_Manager_Ptr is new Proxy_Ptr;
-
-   type Shell_Ptr is new Proxy_Ptr;
-
-   type Shell_Surface_Ptr is new Proxy_Ptr;
 
    type Surface_Ptr is new Proxy_Ptr;
 
@@ -353,7 +340,7 @@ private package Wayland.Client.Thin is
       Width    : Integer;
       Height   : Integer;
       Stride   : Integer;
-      Format   : Unsigned_32) return Buffer_Ptr;
+      Format   : Shm_Format) return Buffer_Ptr;
 
    --  This request will cause the server to remap the backing memory
    --  for the pool from the file descriptor passed when the pool was
@@ -366,7 +353,7 @@ private package Wayland.Client.Thin is
    type Shm_Format_Subprogram_Ptr is access procedure
      (Data   : Void_Ptr;
       Shm    : Shm_Ptr;
-      Format : Unsigned_32)
+      Format : Shm_Format)
    with Convention => C;
 
    type Shm_Listener_T is record
@@ -777,224 +764,6 @@ private package Wayland.Client.Thin is
      (Data_Device_Manager : Data_Device_Manager_Ptr;
       Seat                : Seat_Ptr) return Data_Device_Ptr;
 
-   procedure Shell_Set_User_Data
-     (Shell : Shell_Ptr;
-      Data  : Void_Ptr);
-
-   function Shell_Get_User_Data (Shell : Shell_Ptr) return Void_Ptr;
-
-   function Shell_Get_Version (Shell : Shell_Ptr) return Unsigned_32;
-
-   procedure Shell_Destroy (Shell : Shell_Ptr);
-
-   --  Create a shell surface for an existing surface. This gives
-   --  the wl_surface the role of a shell surface. If the wl_surface
-   --  already has another role, it raises a protocol error.
-   --
-   --  Only one shell surface can be associated with a given surface.
-   function Shell_Get_Shell_Surface
-     (Shell   : Shell_Ptr;
-      Surface : Surface_Ptr) return Shell_Surface_Ptr;
-
-   type Shell_Surface_Ping_Subprogram_Ptr is access procedure
-     (Data          : Void_Ptr;
-      Shell_Surface : Shell_Surface_Ptr;
-      Serial        : Unsigned_32)
-   with Convention => C;
-
-   type Shell_Surface_Configure_Subprogram_Ptr is access procedure
-     (Data          : Void_Ptr;
-      Shell_Surface : Shell_Surface_Ptr;
-      Edges         : Unsigned_32;
-      Width         : Integer;
-      Height        : Integer)
-   with Convention => C;
-
-   type Shell_Surface_Popup_Done_Subprogram_Ptr is access procedure
-     (Data          : Void_Ptr;
-      Shell_Surface : Shell_Surface_Ptr)
-   with Convention => C;
-
-   type Shell_Surface_Listener_T is record
-      Ping       : Shell_Surface_Ping_Subprogram_Ptr;
-      Configure  : Shell_Surface_Configure_Subprogram_Ptr;
-      Popup_Done : Shell_Surface_Popup_Done_Subprogram_Ptr;
-   end record
-     with Convention => C_Pass_By_Copy;
-
-   type Shell_Surface_Listener_Ptr is access all Shell_Surface_Listener_T;
-
-   function Shell_Surface_Add_Listener
-     (Shell_Surface : Shell_Surface_Ptr;
-      Listener      : Shell_Surface_Listener_Ptr;
-      Data          : Void_Ptr) return Interfaces.C.int;
-
-   procedure Shell_Surface_Set_User_Data
-     (Shell_Surface : Shell_Surface_Ptr;
-      Data          : Void_Ptr);
-
-   function Shell_Surface_Get_User_Data (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr;
-
-   function Shell_Surface_Get_Version (Shell_Surface : Shell_Surface_Ptr) return Unsigned_32;
-
-   procedure Shell_Surface_Destroy (Shell_Surface : Shell_Surface_Ptr);
-
-   --  A client must respond to a ping event with a pong request or
-   --  the client may be deemed unresponsive.
-   procedure Shell_Surface_Pong
-     (Shell_Surface : Shell_Surface_Ptr;
-      Serial        : Unsigned_32);
-
-   --  Start a pointer-driven move of the surface.
-   --
-   --  This request must be used in response to a button press event.
-   --  The server may ignore move requests depending on the state of
-   --  the surface (e.g. fullscreen or maximized).
-   procedure Shell_Surface_Move
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32);
-
-   --  Start a pointer-driven resizing of the surface.
-   --
-   --  This request must be used in response to a button press event.
-   --  The server may ignore resize requests depending on the state of
-   --  the surface (e.g. fullscreen or maximized).
-   procedure Shell_Surface_Resize
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32;
-      Edges         : Unsigned_32);
-
-   --  Map the surface as a toplevel surface.
-   --
-   --  A toplevel surface is not fullscreen, maximized or transient.
-   procedure Shell_Surface_Set_Toplevel (Shell_Surface : Shell_Surface_Ptr);
-
-   --  Map the surface relative to an existing surface.
-   --
-   --  The x and y arguments specify the location of the upper left
-   --  corner of the surface relative to the upper left corner of the
-   --  parent surface, in surface-local coordinates.
-   --
-   --  The flags argument controls details of the transient behaviour.
-   procedure Shell_Surface_Set_Transient
-     (Shell_Surface : Shell_Surface_Ptr;
-      Parent        : Surface_Ptr;
-      X             : Integer;
-      Y             : Integer;
-      Flags         : Unsigned_32);
-
-   --  Map the surface as a fullscreen surface.
-   --
-   --  If an output parameter is given then the surface will be made
-   --  fullscreen on that output. If the client does not specify the
-   --  output then the compositor will apply its policy - usually
-   --  choosing the output on which the surface has the biggest surface
-   --  area.
-   --
-   --  The client may specify a method to resolve a size conflict
-   --  between the output size and the surface size - this is provided
-   --  through the method parameter.
-   --
-   --  The framerate parameter is used only when the method is set
-   --  to "driver", to indicate the preferred framerate. A value of 0
-   --  indicates that the client does not care about framerate.  The
-   --  framerate is specified in mHz, that is framerate of 60000 is 60Hz.
-   --
-   --  A method of "scale" or "driver" implies a scaling operation of
-   --  the surface, either via a direct scaling operation or a change of
-   --  the output mode. This will override any kind of output scaling, so
-   --  that mapping a surface with a buffer size equal to the mode can
-   --  fill the screen independent of buffer_scale.
-   --
-   --  A method of "fill" means we don't scale up the buffer, however
-   --  any output scale is applied. This means that you may run into
-   --  an edge case where the application maps a buffer with the same
-   --  size of the output mode but buffer_scale 1 (thus making a
-   --  surface larger than the output). In this case it is allowed to
-   --  downscale the results to fit the screen.
-   --
-   --  The compositor must reply to this request with a configure event
-   --  with the dimensions for the output on which the surface will
-   --  be made fullscreen.
-   procedure Shell_Surface_Set_Fullscreen
-     (Shell_Surface : Shell_Surface_Ptr;
-      Method        : Unsigned_32;
-      Framerate     : Unsigned_32;
-      Output        : Output_Ptr);
-
-   --  Map the surface as a popup.
-   --
-   --  A popup surface is a transient surface with an added pointer
-   --  grab.
-   --
-   --  An existing implicit grab will be changed to owner-events mode,
-   --  and the popup grab will continue after the implicit grab ends
-   --  (i.e. releasing the mouse button does not cause the popup to
-   --  be unmapped).
-   --
-   --  The popup grab continues until the window is destroyed or a
-   --  mouse button is pressed in any other client's window. A click
-   --  in any of the client's surfaces is reported as normal, however,
-   --  clicks in other clients' surfaces will be discarded and trigger
-   --  the callback.
-   --
-   --  The x and y arguments specify the location of the upper left
-   --  corner of the surface relative to the upper left corner of the
-   --  parent surface, in surface-local coordinates.
-   procedure Shell_Surface_Set_Popup
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32;
-      Parent        : Surface_Ptr;
-      X             : Integer;
-      Y             : Integer;
-      Flags         : Unsigned_32);
-
-   --  Map the surface as a maximized surface.
-   --
-   --  If an output parameter is given then the surface will be
-   --  maximized on that output. If the client does not specify the
-   --  output then the compositor will apply its policy - usually
-   --  choosing the output on which the surface has the biggest surface
-   --  area.
-   --
-   --  The compositor will reply with a configure event telling
-   --  the expected new surface size. The operation is completed
-   --  on the next buffer attach to this surface.
-   --
-   --  A maximized surface typically fills the entire output it is
-   --  bound to, except for desktop elements such as panels. This is
-   --  the main difference between a maximized shell surface and a
-   --  fullscreen shell surface.
-   --
-   --  The details depend on the compositor implementation.
-   procedure Shell_Surface_Set_Maximized
-     (Shell_Surface : Shell_Surface_Ptr;
-      Output        : Output_Ptr);
-
-   --  Set a short title for the surface.
-   --
-   --  This string may be used to identify the surface in a task bar,
-   --  window list, or other user interface elements provided by the
-   --  compositor.
-   --
-   --  The string must be encoded in UTF-8.
-   procedure Shell_Surface_Set_Title
-     (Shell_Surface : Shell_Surface_Ptr;
-      Title         : chars_ptr);
-
-   --  Set a class for the surface.
-   --
-   --  The surface class identifies the general class of applications
-   --  to which the surface belongs. A common convention is to use the
-   --  file name (or the full path if it is a non-standard location) of
-   --  the application's .desktop file as the class.
-   procedure Shell_Surface_Set_Class
-     (Shell_Surface : Shell_Surface_Ptr;
-      Class_V       : chars_ptr);
-
    type Surface_Enter_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Surface : Surface_Ptr;
@@ -1241,7 +1010,7 @@ private package Wayland.Client.Thin is
    --  is raised.
    procedure Surface_Set_Buffer_Transform
      (Surface   : Surface_Ptr;
-      Transform : Integer);
+      Transform : Output_Transform);
 
    --  This request sets an optional scaling factor on how the compositor
    --  interprets the contents of the buffer attached to the window.
@@ -1312,7 +1081,7 @@ private package Wayland.Client.Thin is
    type Seat_Capabilities_Subprogram_Ptr is access procedure
      (Data         : Void_Ptr;
       Seat         : Seat_Ptr;
-      Capabilities : Unsigned_32)
+      Capabilities : Seat_Capability)
    with Convention => C;
 
    type Seat_Name_Subprogram_Ptr is access procedure
@@ -1405,14 +1174,14 @@ private package Wayland.Client.Thin is
       Serial  : Unsigned_32;
       Time    : Unsigned_32;
       Button  : Unsigned_32;
-      State   : Unsigned_32)
+      State   : Pointer_Button_State)
    with Convention => C;
 
    type Pointer_Axis_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Pointer : Pointer_Ptr;
       Time    : Unsigned_32;
-      Axis    : Unsigned_32;
+      Axis    : Pointer_Axis;
       Value   : Fixed)
    with Convention => C;
 
@@ -1424,20 +1193,20 @@ private package Wayland.Client.Thin is
    type Pointer_Axis_Source_Subprogram_Ptr is access procedure
      (Data        : Void_Ptr;
       Pointer     : Pointer_Ptr;
-      Axis_Source : Unsigned_32)
+      Axis_Source : Pointer_Axis_Source)
    with Convention => C;
 
    type Pointer_Axis_Stop_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Pointer : Pointer_Ptr;
       Time    : Unsigned_32;
-      Axis    : Unsigned_32)
+      Axis    : Pointer_Axis)
    with Convention => C;
 
    type Pointer_Axis_Discrete_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Pointer  : Pointer_Ptr;
-      Axis     : Unsigned_32;
+      Axis     : Pointer_Axis;
       Discrete : Integer)
    with Convention => C;
 
@@ -1519,7 +1288,7 @@ private package Wayland.Client.Thin is
    type Keyboard_Keymap_Subprogram_Ptr is access procedure
      (Data     : Void_Ptr;
       Keyboard : Keyboard_Ptr;
-      Format   : Unsigned_32;
+      Format   : Keyboard_Keymap_Format;
       Fd       : Integer;
       Size     : Unsigned_32)
    with Convention => C;
@@ -1545,7 +1314,7 @@ private package Wayland.Client.Thin is
       Serial   : Unsigned_32;
       Time     : Unsigned_32;
       Key      : Unsigned_32;
-      State    : Unsigned_32)
+      State    : Keyboard_Key_State)
    with Convention => C;
 
    type Keyboard_Modifiers_Subprogram_Ptr is access procedure
@@ -1684,16 +1453,16 @@ private package Wayland.Client.Thin is
       Y               : Integer;
       Physical_Width  : Integer;
       Physical_Height : Integer;
-      Subpixel        : Integer;
+      Subpixel        : Output_Subpixel;
       Make            : chars_ptr;
       Model           : chars_ptr;
-      Transform       : Integer)
+      Transform       : Output_Transform)
    with Convention => C;
 
    type Output_Mode_Subprogram_Ptr is access procedure
      (Data    : Void_Ptr;
       Output  : Output_Ptr;
-      Flags   : Unsigned_32;
+      Flags   : Output_Mode;
       Width   : Integer;
       Height  : Integer;
       Refresh : Integer)

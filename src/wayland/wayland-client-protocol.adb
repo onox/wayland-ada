@@ -218,12 +218,12 @@ package body Wayland.Client.Protocol is
 
       procedure Internal_Format (Data   : Void_Ptr;
                                  Shm    : Thin.Shm_Ptr;
-                                 Format : Unsigned_32) with
+                                 Format : Shm_Format) with
         Convention => C;
 
       procedure Internal_Format (Data   : Void_Ptr;
                                  Shm    : Thin.Shm_Ptr;
-                                 Format : Unsigned_32)
+                                 Format : Shm_Format)
       is
          S : constant Protocol.Shm := (My_Shm => Shm);
       begin
@@ -638,97 +638,6 @@ package body Wayland.Client.Protocol is
 
    end Data_Device_Events;
 
-   package body Shell_Surface_Events is
-
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
-
-      procedure Internal_Shell_Surface_Ping
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr;
-         Serial  : Unsigned_32) with
-        Convention => C;
-
-      procedure Internal_Shell_Surface_Configure
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr;
-         Edges   : Unsigned_32;
-         Width   : Integer;
-         Height  : Integer) with
-        Convention => C;
-
-      procedure Internal_Shell_Surface_Popup_Done
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr) with
-        Convention => C;
-
-      procedure Internal_Shell_Surface_Ping
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr;
-         Serial  : Unsigned_32)
-      is
-         S : constant Protocol.Shell_Surface
-           := (My_Shell_Surface => Surface);
-      begin
-         Shell_Surface_Ping (Data_Ptr (Conversion.To_Pointer (Data)),
-                             S,
-                             Serial);
-      end Internal_Shell_Surface_Ping;
-
-      procedure Internal_Shell_Surface_Configure
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr;
-         Edges   : Unsigned_32;
-         Width   : Integer;
-         Height  : Integer)
-      is
-         S : constant Protocol.Shell_Surface
-           := (My_Shell_Surface => Surface);
-      begin
-         Shell_Surface_Configure (Data_Ptr (Conversion.To_Pointer (Data)),
-                                  S,
-                                  Edges,
-                                  Width,
-                                  Height);
-      end Internal_Shell_Surface_Configure;
-
-      procedure Internal_Shell_Surface_Popup_Done
-        (Data    : Void_Ptr;
-         Surface : Thin.Shell_Surface_Ptr)
-      is
-         S : constant Protocol.Shell_Surface
-           := (My_Shell_Surface => Surface);
-      begin
-         Shell_Surface_Popup_Done (Data_Ptr (Conversion.To_Pointer (Data)), S);
-      end Internal_Shell_Surface_Popup_Done;
-
-      Listener : aliased Thin.Shell_Surface_Listener_T :=
-        (
-         Ping       => Internal_Shell_Surface_Ping'Unrestricted_Access,
-         Configure  => Internal_Shell_Surface_Configure'Unrestricted_Access,
-         Popup_Done => Internal_Shell_Surface_Popup_Done'Unrestricted_Access
-        );
-
-      function Subscribe
-        (Surface : in out Protocol.Shell_Surface;
-         Data    : not null Data_Ptr) return Call_Result_Code
-      is
-         I : int;
-      begin
-         I := Thin.Shell_Surface_Add_Listener
-           (Surface.My_Shell_Surface,
-            Listener'Access,
-            Data.all'Address);
-
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
-      end Subscribe;
-
-   end Shell_Surface_Events;
-
    package body Surface_Events is
 
       package Conversion is new
@@ -794,12 +703,12 @@ package body Wayland.Client.Protocol is
 
       procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
                                             Seat         : Thin.Seat_Ptr;
-                                            Capabilities : Unsigned_32) with
+                                            Capabilities : Seat_Capability) with
         Convention => C;
 
       procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
                                             Seat         : Thin.Seat_Ptr;
-                                            Capabilities : Unsigned_32)
+                                            Capabilities : Seat_Capability)
       is
          S : constant Protocol.Seat := (My_Seat => Seat);
       begin
@@ -886,14 +795,14 @@ package body Wayland.Client.Protocol is
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Button  : Unsigned_32;
-         State   : Unsigned_32) with
+         State   : Pointer_Button_State) with
         Convention => C;
 
       procedure Internal_Pointer_Axis
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Unsigned_32;
+         Axis    : Pointer_Axis;
          Value   : Fixed) with
         Convention => C;
 
@@ -904,20 +813,20 @@ package body Wayland.Client.Protocol is
       procedure Internal_Pointer_Axis_Source
         (Data        : Void_Ptr;
          Pointer     : Thin.Pointer_Ptr;
-         Axis_Source : Unsigned_32) with
+         Axis_Source : Pointer_Axis_Source) with
         Convention => C;
 
       procedure Internal_Pointer_Axis_Stop
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Unsigned_32) with
+         Axis    : Pointer_Axis) with
         Convention => C;
 
       procedure Internal_Pointer_Axis_Discrete
         (Data     : Void_Ptr;
          Pointer  : Thin.Pointer_Ptr;
-         Axis     : Unsigned_32;
+         Axis     : Pointer_Axis;
          Discrete : Integer) with
         Convention => C;
 
@@ -974,7 +883,7 @@ package body Wayland.Client.Protocol is
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Button  : Unsigned_32;
-         State   : Unsigned_32)
+         State   : Pointer_Button_State)
       is
          P : constant Protocol.Pointer := (My_Pointer => Pointer);
       begin
@@ -990,12 +899,12 @@ package body Wayland.Client.Protocol is
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Unsigned_32;
+         Axis    : Pointer_Axis;
          Value   : Fixed)
       is
          P : constant Protocol.Pointer := (My_Pointer => Pointer);
       begin
-         Pointer_Axis (Data_Ptr (Conversion.To_Pointer (Data)),
+         Pointer_Scroll (Data_Ptr (Conversion.To_Pointer (Data)),
                        P,
                        Time,
                        Axis,
@@ -1013,11 +922,11 @@ package body Wayland.Client.Protocol is
       procedure Internal_Pointer_Axis_Source
         (Data        : Void_Ptr;
          Pointer     : Thin.Pointer_Ptr;
-         Axis_Source : Unsigned_32)
+         Axis_Source : Pointer_Axis_Source)
       is
          P : constant Protocol.Pointer := (My_Pointer => Pointer);
       begin
-         Pointer_Axis_Source (Data_Ptr (Conversion.To_Pointer (Data)),
+         Pointer_Scroll_Source (Data_Ptr (Conversion.To_Pointer (Data)),
                               P,
                               Axis_Source);
       end Internal_Pointer_Axis_Source;
@@ -1026,11 +935,11 @@ package body Wayland.Client.Protocol is
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Unsigned_32)
+         Axis    : Pointer_Axis)
       is
          P : constant Protocol.Pointer := (My_Pointer => Pointer);
       begin
-         Pointer_Axis_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
+         Pointer_Scroll_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
                             P,
                             Time,
                             Axis);
@@ -1039,12 +948,12 @@ package body Wayland.Client.Protocol is
       procedure Internal_Pointer_Axis_Discrete
         (Data     : Void_Ptr;
          Pointer  : Thin.Pointer_Ptr;
-         Axis     : Unsigned_32;
+         Axis     : Pointer_Axis;
          Discrete : Integer)
       is
          P : constant Protocol.Pointer := (My_Pointer => Pointer);
       begin
-         Pointer_Axis_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
+         Pointer_Scroll_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
                                 P,
                                 Axis,
                                 Discrete);
@@ -1089,7 +998,7 @@ package body Wayland.Client.Protocol is
 
       procedure Internal_Keymap (Data     : Void_Ptr;
                                  Keyboard : Thin.Keyboard_Ptr;
-                                 Format   : Unsigned_32;
+                                 Format   : Keyboard_Keymap_Format;
                                  Fd       : Integer;
                                  Size     : Unsigned_32) with
         Convention => C;
@@ -1112,7 +1021,7 @@ package body Wayland.Client.Protocol is
                               Serial   : Unsigned_32;
                               Time     : Unsigned_32;
                               Key      : Unsigned_32;
-                              State    : Unsigned_32) with
+                              State    : Keyboard_Key_State) with
         Convention => C;
 
       procedure Internal_Modifiers (Data           : Void_Ptr;
@@ -1132,7 +1041,7 @@ package body Wayland.Client.Protocol is
 
       procedure Internal_Keymap (Data     : Void_Ptr;
                                  Keyboard : Thin.Keyboard_Ptr;
-                                 Format   : Unsigned_32;
+                                 Format   : Keyboard_Keymap_Format;
                                  Fd       : Integer;
                                  Size     : Unsigned_32)
       is
@@ -1180,7 +1089,7 @@ package body Wayland.Client.Protocol is
                               Serial   : Unsigned_32;
                               Time     : Unsigned_32;
                               Key      : Unsigned_32;
-                              State    : Unsigned_32)
+                              State    : Keyboard_Key_State)
       is
          K : constant Protocol.Keyboard := (My_Keyboard => Keyboard);
       begin
@@ -1438,15 +1347,15 @@ package body Wayland.Client.Protocol is
                                    Y               : Integer;
                                    Physical_Width  : Integer;
                                    Physical_Height : Integer;
-                                   Subpixel        : Integer;
+                                   Subpixel        : Output_Subpixel;
                                    Make            : chars_ptr;
                                    Model           : chars_ptr;
-                                   Transform       : Integer) with
+                                   Transform       : Output_Transform) with
         Convention => C;
 
       procedure Internal_Mode (Data    : Void_Ptr;
                                Output  : Thin.Output_Ptr;
-                               Flags   : Unsigned_32;
+                               Flags   : Output_Mode;
                                Width   : Integer;
                                Height  : Integer;
                                Refresh : Integer) with
@@ -1467,10 +1376,10 @@ package body Wayland.Client.Protocol is
                                    Y               : Integer;
                                    Physical_Width  : Integer;
                                    Physical_Height : Integer;
-                                   Subpixel        : Integer;
+                                   Subpixel        : Output_Subpixel;
                                    Make            : chars_ptr;
                                    Model           : chars_ptr;
-                                   Transform       : Integer)
+                                   Transform       : Output_Transform)
       is
          O : constant Protocol.Output := (My_Output => Output);
          Ma : constant String := Interfaces.C.Strings.Value (Make);
@@ -1490,7 +1399,7 @@ package body Wayland.Client.Protocol is
 
       procedure Internal_Mode (Data    : Void_Ptr;
                                Output  : Thin.Output_Ptr;
-                               Flags   : Unsigned_32;
+                               Flags   : Output_Mode;
                                Width   : Integer;
                                Height  : Integer;
                                Refresh : Integer)
@@ -1741,31 +1650,6 @@ package body Wayland.Client.Protocol is
       Seat.My_Seat := null;
    end Release;
 
-   procedure Get_Proxy (Shell    : in out Protocol.Shell;
-                        Registry : Protocol.Registry;
-                        Id       : Unsigned_32;
-                        Version  : Unsigned_32)
-   is
-      P : constant Thin.Proxy_Ptr :=
-        Thin.Registry_Bind (Registry    => Registry.My_Registry,
-                               Name        => Id,
-                               Interface_V => Thin.Shell_Interface'Access,
-                               New_Id      => Version);
-
-   begin
-      if P /= null then
-         Shell.My_Shell := P.all'Access;
-      end if;
-   end Get_Proxy;
-
-   procedure Get_Shell_Surface (Shell         : Protocol.Shell;
-                                Surface       : Protocol.Surface;
-                                Shell_Surface : in out Protocol.Shell_Surface) is
-   begin
-      Shell_Surface.My_Shell_Surface :=
-        Thin.Shell_Get_Shell_Surface (Shell.My_Shell, Surface.My_Surface);
-   end Get_Shell_Surface;
-
    procedure Get_Proxy (Shm      : in out Protocol.Shm;
                         Registry : Protocol.Registry;
                         Id       : Unsigned_32;
@@ -1821,7 +1705,7 @@ package body Wayland.Client.Protocol is
                                                           Width,
                                                           Height,
                                                           Stride,
-                                                          Unsigned_32 (Format));
+                                                          Format);
    end Create_Buffer;
 
    procedure Resize (Pool : Protocol.Shm_Pool;
@@ -1916,116 +1800,6 @@ package body Wayland.Client.Protocol is
                                       Preferred_Action);
    end Set_Actions;
 
-   function Get_Version (Surface : Shell_Surface) return Unsigned_32 is
-   begin
-      return Thin.Shell_Surface_Get_Version (Surface.My_Shell_Surface);
-   end Get_Version;
-
-   procedure Destroy (Surface : in out Shell_Surface) is
-   begin
-      if Surface.My_Shell_Surface /= null then
-         Thin.Shell_Surface_Destroy (Surface.My_Shell_Surface);
-         Surface.My_Shell_Surface := null;
-      end if;
-   end Destroy;
-
-   procedure Pong (Surface : Protocol.Shell_Surface;
-                   Serial  : Unsigned_32) is
-   begin
-      Thin.Shell_Surface_Pong (Surface.My_Shell_Surface, Serial);
-   end Pong;
-
-   procedure Move (Surface : Shell_Surface;
-                   Seat    : Protocol.Seat;
-                   Serial  : Unsigned_32) is
-   begin
-      Thin.Shell_Surface_Move (Surface.My_Shell_Surface,
-                                  Seat.My_Seat,
-                                  Serial);
-   end Move;
-
-   procedure Resize (Surface : Shell_Surface;
-                     Seat    : Protocol.Seat;
-                     Serial  : Unsigned_32;
-                     Edges   : Unsigned_32) is
-   begin
-      Thin.Shell_Surface_Resize (Surface.My_Shell_Surface,
-                                    Seat.My_Seat,
-                                    Serial,
-                                    Edges);
-   end Resize;
-
-   procedure Set_Toplevel (Surface : Protocol.Shell_Surface) is
-   begin
-      Thin.Shell_Surface_Set_Toplevel (Surface.My_Shell_Surface);
-   end Set_Toplevel;
-
-   procedure Set_Transient (Surface : Shell_Surface;
-                            Parent  : Protocol.Surface;
-                            X       : Integer;
-                            Y       : Integer;
-                            Flags   : Unsigned_32) is
-   begin
-      Thin.Shell_Surface_Set_Transient (Surface.My_Shell_Surface,
-                                           Parent.My_Surface,
-                                           X,
-                                           Y,
-                                           Flags);
-   end Set_Transient;
-
-   procedure Set_Fullscreen (Surface   : Shell_Surface;
-                             Method    : Unsigned_32;
-                             Framerate : Unsigned_32;
-                             Output    : Protocol.Output) is
-   begin
-      Thin.Shell_Surface_Set_Fullscreen (Surface.My_Shell_Surface,
-                                            Method,
-                                            Framerate,
-                                            Output.My_Output);
-   end Set_Fullscreen;
-
-   procedure Set_Popup (Surface : Shell_Surface;
-                        Seat    : Protocol.Seat;
-                        Serial  : Unsigned_32;
-                        Parent  : Protocol.Surface;
-                        X       : Integer;
-                        Y       : Integer;
-                        Flags   : Unsigned_32) is
-   begin
-      Thin.Shell_Surface_Set_Popup (Surface.My_Shell_Surface,
-                                       Seat.My_Seat,
-                                       Serial,
-                                       Parent.My_Surface,
-                                       X,
-                                       Y,
-                                       Flags);
-   end Set_Popup;
-
-   procedure Set_Maximized (Surface : Shell_Surface;
-                            Output  : Protocol.Output) is
-   begin
-      Thin.Shell_Surface_Set_Maximized (Surface.My_Shell_Surface,
-                                           Output.My_Output);
-   end Set_Maximized;
-
-   procedure Set_Title (Surface : Shell_Surface;
-                        Title   : String) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
-         Constants.Shell_Surface_Set_Title,
-         +Title);
-   end Set_Title;
-
-   procedure Set_Class (Surface : Shell_Surface;
-                        Class_V : String) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Wayland.API.Proxy (Surface.My_Shell_Surface.all),
-         Constants.Shell_Surface_Set_Class,
-         +Class_V);
-   end Set_Class;
-
    procedure Attach (Surface : Protocol.Surface;
                      Buffer  : Protocol.Buffer;
                      X       : Integer;
@@ -2071,10 +1845,9 @@ package body Wayland.Client.Protocol is
    end Commit;
 
    procedure Set_Buffer_Transform (Surface   : Protocol.Surface;
-                                   Transform : Integer) is
+                                   Transform : Output_Transform) is
    begin
-      Thin.Surface_Set_Buffer_Transform (Surface.My_Surface,
-                                            Transform);
+      Thin.Surface_Set_Buffer_Transform (Surface.My_Surface, Transform);
    end Set_Buffer_Transform;
 
    procedure Set_Buffer_Scale (Surface : Protocol.Surface;

@@ -1,3 +1,5 @@
+with Ada.Unchecked_Conversion;
+
 with Wayland.Client.Constants;
 
 use Wayland.Client.Constants;
@@ -224,8 +226,10 @@ package body Wayland.Client.Thin is
       Width    : Integer;
       Height   : Integer;
       Stride   : Integer;
-      Format   : Unsigned_32) return Buffer_Ptr
+      Format   : Shm_Format) return Buffer_Ptr
    is
+      function Convert is new Ada.Unchecked_Conversion (Shm_Format, Unsigned_32);
+
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor
           (Shm_Pool.all,
@@ -236,7 +240,7 @@ package body Wayland.Client.Thin is
            Width,
            Height,
            Stride,
-           Format);
+           Convert (Format));
    begin
       return (if P /= null then P.all'Access else null);
    end Shm_Pool_Create_Buffer;
@@ -570,194 +574,6 @@ package body Wayland.Client.Thin is
       return (if P /= null then P.all'Access else null);
    end Data_Device_Manager_Get_Data_Device;
 
-   procedure Shell_Set_User_Data
-     (Shell : Shell_Ptr;
-      Data  : Void_Ptr) is
-   begin
-      Wayland.API.Proxy_Set_User_Data (Shell.all, Data);
-   end Shell_Set_User_Data;
-
-   function Shell_Get_User_Data (Shell : Shell_Ptr) return Void_Ptr is
-   begin
-      return Wayland.API.Proxy_Get_User_Data (Shell.all);
-   end Shell_Get_User_Data;
-
-   function Shell_Get_Version (Shell : Shell_Ptr) return Unsigned_32 is
-   begin
-      return Wayland.API.Proxy_Get_Version (Shell.all);
-   end Shell_Get_Version;
-
-   procedure Shell_Destroy (Shell : Shell_Ptr) is
-   begin
-      Wayland.API.Proxy_Destroy (Shell.all);
-   end Shell_Destroy;
-
-   function Shell_Get_Shell_Surface
-     (Shell   : Shell_Ptr;
-      Surface : Surface_Ptr) return Shell_Surface_Ptr
-   is
-      P : constant Proxy_Ptr :=
-        Wayland.API.Proxy_Marshal_Constructor
-          (Shell.all,
-           Constants.Shell_Get_Shell_Surface,
-           Shell_Surface_Interface'Access,
-           0,
-           Surface.all'Address);
-   begin
-      return (if P /= null then P.all'Access else null);
-   end Shell_Get_Shell_Surface;
-
-   function Shell_Surface_Add_Listener
-     (Shell_Surface : Shell_Surface_Ptr;
-      Listener      : Shell_Surface_Listener_Ptr;
-      Data          : Void_Ptr) return Interfaces.C.int is
-   begin
-      return Wayland.API.Proxy_Add_Listener (Shell_Surface.all, Listener.all'Address, Data);
-   end Shell_Surface_Add_Listener;
-
-   procedure Shell_Surface_Set_User_Data
-     (Shell_Surface : Shell_Surface_Ptr;
-      Data          : Void_Ptr) is
-   begin
-      Wayland.API.Proxy_Set_User_Data (Shell_Surface.all, Data);
-   end Shell_Surface_Set_User_Data;
-
-   function Shell_Surface_Get_User_Data (Shell_Surface : Shell_Surface_Ptr) return Void_Ptr is
-   begin
-      return Wayland.API.Proxy_Get_User_Data (Shell_Surface.all);
-   end Shell_Surface_Get_User_Data;
-
-   function Shell_Surface_Get_Version (Shell_Surface : Shell_Surface_Ptr) return Unsigned_32 is
-   begin
-      return Wayland.API.Proxy_Get_Version (Shell_Surface.all);
-   end Shell_Surface_Get_Version;
-
-   procedure Shell_Surface_Destroy (Shell_Surface : Shell_Surface_Ptr) is
-   begin
-      Wayland.API.Proxy_Destroy (Shell_Surface.all);
-   end Shell_Surface_Destroy;
-
-   procedure Shell_Surface_Pong
-     (Shell_Surface : Shell_Surface_Ptr;
-      Serial        : Unsigned_32) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Pong,
-         Serial);
-   end Shell_Surface_Pong;
-
-   procedure Shell_Surface_Move
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Move,
-         Seat.all'Address,
-         Serial);
-   end Shell_Surface_Move;
-
-   procedure Shell_Surface_Resize
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32;
-      Edges         : Unsigned_32) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Resize,
-         Seat.all'Address,
-         Serial,
-         Edges);
-   end Shell_Surface_Resize;
-
-   procedure Shell_Surface_Set_Toplevel (Shell_Surface : Shell_Surface_Ptr) is
-   begin
-      Wayland.API.Proxy_Marshal (Shell_Surface.all, Constants.Shell_Surface_Set_Toplevel);
-   end Shell_Surface_Set_Toplevel;
-
-   procedure Shell_Surface_Set_Transient
-     (Shell_Surface : Shell_Surface_Ptr;
-      Parent        : Surface_Ptr;
-      X             : Integer;
-      Y             : Integer;
-      Flags         : Unsigned_32) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Transient,
-         Parent.all'Address,
-         X,
-         Y,
-         Flags);
-   end Shell_Surface_Set_Transient;
-
-   procedure Shell_Surface_Set_Fullscreen
-     (Shell_Surface : Shell_Surface_Ptr;
-      Method        : Unsigned_32;
-      Framerate     : Unsigned_32;
-      Output        : Output_Ptr) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Fullscreen,
-         Method,
-         Framerate,
-         Output.all'Address);
-   end Shell_Surface_Set_Fullscreen;
-
-   procedure Shell_Surface_Set_Popup
-     (Shell_Surface : Shell_Surface_Ptr;
-      Seat          : Seat_Ptr;
-      Serial        : Unsigned_32;
-      Parent        : Surface_Ptr;
-      X             : Integer;
-      Y             : Integer;
-      Flags         : Unsigned_32) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Popup,
-         Seat.all'Address,
-         Serial,
-         Parent.all'Address,
-         X,
-         Y,
-         Flags);
-   end Shell_Surface_Set_Popup;
-
-   procedure Shell_Surface_Set_Maximized
-     (Shell_Surface : Shell_Surface_Ptr;
-      Output        : Output_Ptr) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Maximized,
-         Output.all'Address);
-   end Shell_Surface_Set_Maximized;
-
-   procedure Shell_Surface_Set_Title
-     (Shell_Surface : Shell_Surface_Ptr;
-      Title         : chars_ptr) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Title,
-         Title);
-   end Shell_Surface_Set_Title;
-
-   procedure Shell_Surface_Set_Class
-     (Shell_Surface : Shell_Surface_Ptr;
-      Class_V       : chars_ptr) is
-   begin
-      Wayland.API.Proxy_Marshal
-        (Shell_Surface.all,
-         Constants.Shell_Surface_Set_Class,
-         Class_V);
-   end Shell_Surface_Set_Class;
-
    function Surface_Add_Listener
      (Surface  : Surface_Ptr;
       Listener : Surface_Listener_Ptr;
@@ -858,12 +674,14 @@ package body Wayland.Client.Thin is
 
    procedure Surface_Set_Buffer_Transform
      (Surface   : Surface_Ptr;
-      Transform : Integer) is
+      Transform : Output_Transform)
+   is
+      function Convert is new Ada.Unchecked_Conversion (Output_Transform, Integer);
    begin
       Wayland.API.Proxy_Marshal
         (Surface.all,
          Constants.Surface_Set_Buffer_Transform,
-         Transform);
+         Convert (Transform));
    end Surface_Set_Buffer_Transform;
 
    procedure Surface_Set_Buffer_Scale

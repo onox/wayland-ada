@@ -24,116 +24,116 @@ package Wayland.Client.Enums is
       --  32-bit RGB format, [31:0] x:R:G:B 8:8:8:8 little endian
       C_8,
       --  8-bit color index format, [7:0] C
-      Rgb_332,
-      --  8-bit RGB format, [7:0] R:G:B 3:3:2
-      Bgr_233,
-      --  8-bit BGR format, [7:0] B:G:R 2:3:3
-      Xrgb_4444,
-      --  16-bit xRGB format, [15:0] x:R:G:B 4:4:4:4 little endian
-      Xbgr_4444,
-      --  16-bit xBGR format, [15:0] x:B:G:R 4:4:4:4 little endian
-      Rgbx_4444,
-      --  16-bit RGBx format, [15:0] R:G:B:x 4:4:4:4 little endian
-      Bgrx_4444,
-      --  16-bit BGRx format, [15:0] B:G:R:x 4:4:4:4 little endian
-      Argb_4444,
-      --  16-bit ARGB format, [15:0] A:R:G:B 4:4:4:4 little endian
-      Abgr_4444,
-      --  16-bit ABGR format, [15:0] A:B:G:R 4:4:4:4 little endian
-      Rgba_4444,
-      --  16-bit RBGA format, [15:0] R:G:B:A 4:4:4:4 little endian
-      Bgra_4444,
-      --  16-bit BGRA format, [15:0] B:G:R:A 4:4:4:4 little endian
-      Xrgb_1555,
-      --  16-bit xRGB format, [15:0] x:R:G:B 1:5:5:5 little endian
-      Xbgr_1555,
-      --  16-bit xBGR 1555 format, [15:0] x:B:G:R 1:5:5:5 little endian
-      Rgbx_5551,
-      --  16-bit RGBx 5551 format, [15:0] R:G:B:x 5:5:5:1 little endian
-      Bgrx_5551,
-      --  16-bit BGRx 5551 format, [15:0] B:G:R:x 5:5:5:1 little endian
-      Argb_1555,
-      --  16-bit ARGB 1555 format, [15:0] A:R:G:B 1:5:5:5 little endian
-      Abgr_1555,
-      --  16-bit ABGR 1555 format, [15:0] A:B:G:R 1:5:5:5 little endian
-      Rgba_5551,
-      --  16-bit RGBA 5551 format, [15:0] R:G:B:A 5:5:5:1 little endian
-      Bgra_5551,
-      --  16-bit BGRA 5551 format, [15:0] B:G:R:A 5:5:5:1 little endian
-      Rgb_565,
-      --  16-bit RGB 565 format, [15:0] R:G:B 5:6:5 little endian
-      Bgr_565,
-      --  16-bit BGR 565 format, [15:0] B:G:R 5:6:5 little endian
-      Rgb_888,
-      --  24-bit RGB format, [23:0] R:G:B little endian
-      Bgr_888,
-      --  24-bit BGR format, [23:0] B:G:R little endian
-      Xbgr_8888,
-      --  32-bit xBGR format, [31:0] x:B:G:R 8:8:8:8 little endian
-      Rgbx_8888,
-      --  32-bit RGBx format, [31:0] R:G:B:x 8:8:8:8 little endian
-      Bgrx_8888,
-      --  32-bit BGRx format, [31:0] B:G:R:x 8:8:8:8 little endian
-      Abgr_8888,
-      --  32-bit ABGR format, [31:0] A:B:G:R 8:8:8:8 little endian
-      Rgba_8888,
-      --  32-bit RGBA format, [31:0] R:G:B:A 8:8:8:8 little endian
-      Bgra_8888,
-      --  32-bit BGRA format, [31:0] B:G:R:A 8:8:8:8 little endian
-      Xrgb_2101010,
-      --  32-bit xRGB format, [31:0] x:R:G:B 2:10:10:10 little endian
-      Xbgr_2101010,
-      --  32-bit xBGR format, [31:0] x:B:G:R 2:10:10:10 little endian
-      Rgbx_1010102,
-      --  32-bit RGBx format, [31:0] R:G:B:x 10:10:10:2 little endian
-      Bgrx_1010102,
-      --  32-bit BGRx format, [31:0] B:G:R:x 10:10:10:2 little endian
-      Argb_2101010,
-      --  32-bit ARGB format, [31:0] A:R:G:B 2:10:10:10 little endian
-      Abgr_2101010,
-      --  32-bit ABGR format, [31:0] A:B:G:R 2:10:10:10 little endian
-      Rgba_1010102,
-      --  32-bit RGBA format, [31:0] R:G:B:A 10:10:10:2 little endian
       Bgra_1010102,
       --  32-bit BGRA format, [31:0] B:G:R:A 10:10:10:2 little endian
-      Yuyv,
-      --  packed YCbCr format, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian
-      Yvyu,
-      --  packed YCbCr format, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian
-      Uyvy,
-      --  packed YCbCr format, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian
-      Vyuy,
-      --  packed YCbCr format, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian
-      Ayuv,
-      --  packed AYCbCr format, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian
-      Nv_12,
-      --  2 plane YCbCr Cr:Cb format, 2x2 subsampled Cr:Cb plane
-      Nv_21,
-      --  2 plane YCbCr Cb:Cr format, 2x2 subsampled Cb:Cr plane
-      Nv_16,
-      --  2 plane YCbCr Cr:Cb format, 2x1 subsampled Cr:Cb plane
-      Nv_61,
-      --  2 plane YCbCr Cb:Cr format, 2x1 subsampled Cb:Cr plane
-      Yuv_410,
-      --  3 plane YCbCr format, 4x4 subsampled Cb (1) and Cr (2) planes
-      Yvu_410,
-      --  3 plane YCbCr format, 4x4 subsampled Cr (1) and Cb (2) planes
+      Rgba_1010102,
+      --  32-bit RGBA format, [31:0] R:G:B:A 10:10:10:2 little endian
+      Abgr_2101010,
+      --  32-bit ABGR format, [31:0] A:B:G:R 2:10:10:10 little endian
+      Xbgr_2101010,
+      --  32-bit xBGR format, [31:0] x:B:G:R 2:10:10:10 little endian
+      Argb_2101010,
+      --  32-bit ARGB format, [31:0] A:R:G:B 2:10:10:10 little endian
+      Xrgb_2101010,
+      --  32-bit xRGB format, [31:0] x:R:G:B 2:10:10:10 little endian
+      Bgrx_1010102,
+      --  32-bit BGRx format, [31:0] B:G:R:x 10:10:10:2 little endian
+      Rgbx_1010102,
+      --  32-bit RGBx format, [31:0] R:G:B:x 10:10:10:2 little endian
       Yuv_411,
       --  3 plane YCbCr format, 4x1 subsampled Cb (1) and Cr (2) planes
       Yvu_411,
       --  3 plane YCbCr format, 4x1 subsampled Cr (1) and Cb (2) planes
+      Nv_21,
+      --  2 plane YCbCr Cb:Cr format, 2x2 subsampled Cb:Cr plane
+      Nv_61,
+      --  2 plane YCbCr Cb:Cr format, 2x1 subsampled Cb:Cr plane
+      Bgra_4444,
+      --  16-bit BGRA format, [15:0] B:G:R:A 4:4:4:4 little endian
+      Rgba_4444,
+      --  16-bit RBGA format, [15:0] R:G:B:A 4:4:4:4 little endian
+      Abgr_4444,
+      --  16-bit ABGR format, [15:0] A:B:G:R 4:4:4:4 little endian
+      Xbgr_4444,
+      --  16-bit xBGR format, [15:0] x:B:G:R 4:4:4:4 little endian
+      Argb_4444,
+      --  16-bit ARGB format, [15:0] A:R:G:B 4:4:4:4 little endian
+      Xrgb_4444,
+      --  16-bit xRGB format, [15:0] x:R:G:B 4:4:4:4 little endian
       Yuv_420,
       --  3 plane YCbCr format, 2x2 subsampled Cb (1) and Cr (2) planes
+      Nv_12,
+      --  2 plane YCbCr Cr:Cb format, 2x2 subsampled Cr:Cb plane
       Yvu_420,
       --  3 plane YCbCr format, 2x2 subsampled Cr (1) and Cb (2) planes
-      Yuv_422,
-      --  3 plane YCbCr format, 2x1 subsampled Cb (1) and Cr (2) planes
-      Yvu_422,
-      --  3 plane YCbCr format, 2x1 subsampled Cr (1) and Cb (2) planes
+      Bgrx_4444,
+      --  16-bit BGRx format, [15:0] B:G:R:x 4:4:4:4 little endian
+      Rgbx_4444,
+      --  16-bit RGBx format, [15:0] R:G:B:x 4:4:4:4 little endian
+      Bgra_8888,
+      --  32-bit BGRA format, [31:0] B:G:R:A 8:8:8:8 little endian
+      Rgba_8888,
+      --  32-bit RGBA format, [31:0] R:G:B:A 8:8:8:8 little endian
+      Abgr_8888,
+      --  32-bit ABGR format, [31:0] A:B:G:R 8:8:8:8 little endian
+      Xbgr_8888,
+      --  32-bit xBGR format, [31:0] x:B:G:R 8:8:8:8 little endian
+      Bgr_888,
+      --  24-bit BGR format, [23:0] B:G:R little endian
+      Rgb_888,
+      --  24-bit RGB format, [23:0] R:G:B little endian
       Yuv_444,
       --  3 plane YCbCr format, non-subsampled Cb (1) and Cr (2) planes
-      Yvu_444);
+      Yvu_444,
       --  3 plane YCbCr format, non-subsampled Cr (1) and Cb (2) planes
+      Bgrx_8888,
+      --  32-bit BGRx format, [31:0] B:G:R:x 8:8:8:8 little endian
+      Rgbx_8888,
+      --  32-bit RGBx format, [31:0] R:G:B:x 8:8:8:8 little endian
+      Bgra_5551,
+      --  16-bit BGRA 5551 format, [15:0] B:G:R:A 5:5:5:1 little endian
+      Rgba_5551,
+      --  16-bit RGBA 5551 format, [15:0] R:G:B:A 5:5:5:1 little endian
+      Abgr_1555,
+      --  16-bit ABGR 1555 format, [15:0] A:B:G:R 1:5:5:5 little endian
+      Xbgr_1555,
+      --  16-bit xBGR 1555 format, [15:0] x:B:G:R 1:5:5:5 little endian
+      Argb_1555,
+      --  16-bit ARGB 1555 format, [15:0] A:R:G:B 1:5:5:5 little endian
+      Xrgb_1555,
+      --  16-bit xRGB format, [15:0] x:R:G:B 1:5:5:5 little endian
+      Bgrx_5551,
+      --  16-bit BGRx 5551 format, [15:0] B:G:R:x 5:5:5:1 little endian
+      Rgbx_5551,
+      --  16-bit RGBx 5551 format, [15:0] R:G:B:x 5:5:5:1 little endian
+      Bgr_565,
+      --  16-bit BGR 565 format, [15:0] B:G:R 5:6:5 little endian
+      Rgb_565,
+      --  16-bit RGB 565 format, [15:0] R:G:B 5:6:5 little endian
+      Yuv_422,
+      --  3 plane YCbCr format, 2x1 subsampled Cb (1) and Cr (2) planes
+      Nv_16,
+      --  2 plane YCbCr Cr:Cb format, 2x1 subsampled Cr:Cb plane
+      Yvu_422,
+      --  3 plane YCbCr format, 2x1 subsampled Cr (1) and Cb (2) planes
+      Rgb_332,
+      --  8-bit RGB format, [7:0] R:G:B 3:3:2
+      Bgr_233,
+      --  8-bit BGR format, [7:0] B:G:R 2:3:3
+      Yvu_410,
+      --  3 plane YCbCr format, 4x4 subsampled Cr (1) and Cb (2) planes
+      Yuv_410,
+      --  3 plane YCbCr format, 4x4 subsampled Cb (1) and Cr (2) planes
+      Yvyu,
+      --  packed YCbCr format, [31:0] Cb0:Y1:Cr0:Y0 8:8:8:8 little endian
+      Ayuv,
+      --  packed AYCbCr format, [31:0] A:Y:Cb:Cr 8:8:8:8 little endian
+      Yuyv,
+      --  packed YCbCr format, [31:0] Cr0:Y1:Cb0:Y0 8:8:8:8 little endian
+      Vyuy,
+      --  packed YCbCr format, [31:0] Y1:Cb0:Y0:Cr0 8:8:8:8 little endian
+      Uyvy);
+      --  packed YCbCr format, [31:0] Y1:Cr0:Y0:Cb0 8:8:8:8 little endian
 
    type Data_Offer_Error is
      (Invalid_Finish,
@@ -264,7 +264,6 @@ package Wayland.Client.Enums is
      (Bad_Surface);
       --  wl_surface is not a sibling or the parent
 
-
 private
 
    for Display_Error use
@@ -283,61 +282,61 @@ private
      (Argb_8888    => 0,
       Xrgb_8888    => 1,
       C_8          => 538982467,
-      Rgb_332      => 943867730,
-      Bgr_233      => 944916290,
-      Xrgb_4444    => 842093144,
-      Xbgr_4444    => 842089048,
-      Rgbx_4444    => 842094674,
-      Bgrx_4444    => 842094658,
-      Argb_4444    => 842093121,
-      Abgr_4444    => 842089025,
-      Rgba_4444    => 842088786,
-      Bgra_4444    => 842088770,
-      Xrgb_1555    => 892424792,
-      Xbgr_1555    => 892420696,
-      Rgbx_5551    => 892426322,
-      Bgrx_5551    => 892426306,
-      Argb_1555    => 892424769,
-      Abgr_1555    => 892420673,
-      Rgba_5551    => 892420434,
-      Bgra_5551    => 892420418,
-      Rgb_565      => 909199186,
-      Bgr_565      => 909199170,
-      Rgb_888      => 875710290,
-      Bgr_888      => 875710274,
-      Xbgr_8888    => 875709016,
-      Rgbx_8888    => 875714642,
-      Bgrx_8888    => 875714626,
-      Abgr_8888    => 875708993,
-      Rgba_8888    => 875708754,
-      Bgra_8888    => 875708738,
-      Xrgb_2101010 => 808669784,
-      Xbgr_2101010 => 808665688,
-      Rgbx_1010102 => 808671314,
-      Bgrx_1010102 => 808671298,
-      Argb_2101010 => 808669761,
-      Abgr_2101010 => 808665665,
-      Rgba_1010102 => 808665426,
       Bgra_1010102 => 808665410,
-      Yuyv         => 1448695129,
-      Yvyu         => 1431918169,
-      Uyvy         => 1498831189,
-      Vyuy         => 1498765654,
-      Ayuv         => 1448433985,
-      Nv_12        => 842094158,
-      Nv_21        => 825382478,
-      Nv_16        => 909203022,
-      Nv_61        => 825644622,
-      Yuv_410      => 961959257,
-      Yvu_410      => 961893977,
+      Rgba_1010102 => 808665426,
+      Abgr_2101010 => 808665665,
+      Xbgr_2101010 => 808665688,
+      Argb_2101010 => 808669761,
+      Xrgb_2101010 => 808669784,
+      Bgrx_1010102 => 808671298,
+      Rgbx_1010102 => 808671314,
       Yuv_411      => 825316697,
       Yvu_411      => 825316953,
+      Nv_21        => 825382478,
+      Nv_61        => 825644622,
+      Bgra_4444    => 842088770,
+      Rgba_4444    => 842088786,
+      Abgr_4444    => 842089025,
+      Xbgr_4444    => 842089048,
+      Argb_4444    => 842093121,
+      Xrgb_4444    => 842093144,
       Yuv_420      => 842093913,
+      Nv_12        => 842094158,
       Yvu_420      => 842094169,
-      Yuv_422      => 909202777,
-      Yvu_422      => 909203033,
+      Bgrx_4444    => 842094658,
+      Rgbx_4444    => 842094674,
+      Bgra_8888    => 875708738,
+      Rgba_8888    => 875708754,
+      Abgr_8888    => 875708993,
+      Xbgr_8888    => 875709016,
+      Bgr_888      => 875710274,
+      Rgb_888      => 875710290,
       Yuv_444      => 875713881,
-      Yvu_444      => 875714137);
+      Yvu_444      => 875714137,
+      Bgrx_8888    => 875714626,
+      Rgbx_8888    => 875714642,
+      Bgra_5551    => 892420418,
+      Rgba_5551    => 892420434,
+      Abgr_1555    => 892420673,
+      Xbgr_1555    => 892420696,
+      Argb_1555    => 892424769,
+      Xrgb_1555    => 892424792,
+      Bgrx_5551    => 892426306,
+      Rgbx_5551    => 892426322,
+      Bgr_565      => 909199170,
+      Rgb_565      => 909199186,
+      Yuv_422      => 909202777,
+      Nv_16        => 909203022,
+      Yvu_422      => 909203033,
+      Rgb_332      => 943867730,
+      Bgr_233      => 944916290,
+      Yvu_410      => 961893977,
+      Yuv_410      => 961959257,
+      Yvyu         => 1431918169,
+      Ayuv         => 1448433985,
+      Yuyv         => 1448695129,
+      Vyuy         => 1498765654,
+      Uyvy         => 1498831189);
    for Shm_Format'Size use Unsigned_32'Size;
 
    for Data_Offer_Error use
