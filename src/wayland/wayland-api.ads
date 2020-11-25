@@ -309,7 +309,7 @@ private package Wayland.API is
    --                           Connection Handling                           --
    -----------------------------------------------------------------------------
 
-   function Display_Connect (Name : C_String) return Display_Ptr
+   function Display_Connect (Name : Interfaces.C.Strings.chars_ptr) return Display_Ptr
      with Import, Convention => C, External_Name => "wl_display_connect";
 
 --   function Display_Connect_To_FD (FD : int) return Display_Ptr

@@ -177,18 +177,13 @@ package Wayland.Client.Protocol is
                    Version  : Unsigned_32)
      with Pre => not Object.Has_Proxy and Registry.Has_Proxy;
 
-   procedure Get_Surface_Proxy (Object  : Compositor;
-                                Surface : in out Protocol.Surface)
+   procedure Create_Surface (Object  : Compositor;
+                             Surface : in out Protocol.Surface)
      with Pre => Object.Has_Proxy;
-   --  Ask the compositor to create a new surface. When success, Surface has
-   --  When success Surface.Has_Proxy = True,
-   --  otherwise Surface.Has_Proxy = False.
 
-   procedure Get_Region_Proxy (Object : Compositor;
-                               Region : in out Protocol.Region)
+   procedure Create_Region (Object : Compositor;
+                            Region : in out Protocol.Region)
      with Pre => Object.Has_Proxy;
-   --  Ask the compositor to create a new region.
-   --  When success Region.Has_Proxy = True, otherwise Region.Has_Proxy = False.
 
    type Shm_Pool is tagged limited private;
 
@@ -266,12 +261,10 @@ package Wayland.Client.Protocol is
                         Serial    : Unsigned_32;
                         Mime_Type : String)
      with Pre => Object.Has_Proxy;
-   --  Indicate that the client can accept the given mime type.
 
    procedure Do_Not_Accept (Object : Data_Offer;
                             Serial : Unsigned_32)
      with Pre => Object.Has_Proxy;
-   --  Indicate that the client does not accept the given mime type.
 
    procedure Receive (Object          : Data_Offer;
                       Mime_Type       : String;
@@ -303,7 +296,7 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Set_Actions (Object      : Data_Source;
-                          Dnd_Actions : Unsigned_32)  --  TODO Data_Device_Manager_Dnd_Action?
+                          Dnd_Actions : Unsigned_32)
      with Pre => Object.Has_Proxy;
 
    type Data_Device is tagged limited private;
@@ -347,13 +340,13 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Create_Data_Source (Object : Data_Device_Manager;
-                                 Source : in out Data_Source);
-   --  Create a new data source.
+                                 Source : in out Data_Source)
+     with Pre => Object.Has_Proxy;
 
    procedure Get_Data_Device (Object : Data_Device_Manager;
                               Seat   : Protocol.Seat;
-                              Device : in out Data_Device);
-   --  Create a new data device for a given seat.
+                              Device : in out Data_Device)
+     with Pre => Object.Has_Proxy;
 
    type Surface is tagged limited private;
 
@@ -566,21 +559,21 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Set_Position (Object : Subsurface; X, Y : Integer)
-     with Pre => Subsurface.Has_Proxy;
+     with Pre => Object.Has_Proxy;
 
    procedure Place_Above (Object  : Subsurface;
                           Sibling : Surface)
-     with Pre => Subsurface.Has_Proxy and Sibling.Has_Proxy;
+     with Pre => Object.Has_Proxy and Sibling.Has_Proxy;
 
    procedure Place_Below (Object  : Subsurface;
                           Sibling : Surface)
-     with Pre => Subsurface.Has_Proxy and Sibling.Has_Proxy;
+     with Pre => Object.Has_Proxy and Sibling.Has_Proxy;
 
    procedure Set_Sync (Object : Subsurface)
-     with Pre => Subsurface.Has_Proxy;
+     with Pre => Object.Has_Proxy;
 
    procedure Set_Desync (Object : Subsurface)
-     with Pre => Subsurface.Has_Proxy;
+     with Pre => Object.Has_Proxy;
 
    generic
       type Data_Type is limited private;

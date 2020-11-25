@@ -22,7 +22,7 @@ package body Client_Examples.Find_Compositor is
       Put_Line ("Got a registry event for " & Name & " version" & Version'Image & " id" & Id'Image);
 
       if Name = "wl_compositor" then
-         Data.Compositor.Get_Proxy (Registry, Id, Version);
+         Data.Compositor.Bind (Registry, Id, Version);
       end if;
    end Global_Registry_Handler;
 
