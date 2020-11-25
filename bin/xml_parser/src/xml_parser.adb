@@ -2386,6 +2386,36 @@ procedure XML_Parser is
       end Create_Wl_Thin_Body_File;
 
       procedure Generate_Manually_Edited_Code is
+         procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name /= "Display" then
+               Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      if Object.Proxy /= null then");
+               Put_Line (File, "         Thin." & Name & "_Destroy (" & Name & ".Proxy);");
+               Put_Line (File, "         " & Name & ".Proxy := null;");
+               Put_Line (File, "      end if;");
+               Put_Line (File, "   end Destroy;");
+               Put_Line (File, "");
+            end if;
+
+            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
+            Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy);");
+            Put_Line (File, "");
+
+            if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
+               Put_Line (File, "   procedure Release (Object : in out " & Name & ") is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      if Object.Proxy /= null then");
+               Put_Line (File, "         Thin." & Name & "_Release (" & Name & ".Proxy);");
+               Put_Line (File, "         " & Name & ".Proxy := null;");
+               Put_Line (File, "      end if;");
+               Put_Line (File, "   end Release;");
+               Put_Line (File, "");
+            end if;
+         end Handle_Interface;
       begin
          Put_Line (File, "   use type Wl_Thin.Proxy_Ptr;");
          Put_Line (File, "");
@@ -2693,6 +2723,9 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   end Pointer_Events;");
          Put_Line (File, "");
+
+         Iterate_Over_Interfaces (Handle_Interface'Access);
+
          Put_Line (File, "   procedure Connect (Object : in out Display) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Display.My_Display := Wl_Thin.Display_Connect (null);");
@@ -2710,14 +2743,6 @@ procedure XML_Parser is
          Put_Line (File, "   begin");
          Put_Line (File, "      Registry.My_Registry := Wl_Thin.Display_Get_Registry (Display.My_Display);");
          Put_Line (File, "   end Get_Registry;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Registry : in out Protocol.Registry) is");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if Registry.My_Registry /= null then");
-         Put_Line (File, "         Wl_Thin.Registry_Destroy (Registry.My_Registry);");
-         Put_Line (File, "         Registry.My_Registry := null;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Destroy;");
          Put_Line (File, "");
          Put_Line (File, "   function Dispatch (Object : Display) return Int is");
          Put_Line (File, "   begin");
@@ -2843,14 +2868,6 @@ procedure XML_Parser is
          Put_Line (File, "   begin");
          Put_Line (File, "      Wl_Thin.Surface_Commit (Surface.My_Surface);");
          Put_Line (File, "   end Commit;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Destroy (Surface : in out Protocol.Surface) is");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if Surface.My_Surface /= null then");
-         Put_Line (File, "         Wl_Thin.Surface_Destroy (Surface.My_Surface);");
-         Put_Line (File, "         Surface.My_Surface := null;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Destroy;");
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
    begin
