@@ -1,8 +1,5 @@
 with Ada.Containers.Vectors;
---  with Standard_Extensions; use Standard_Extensions;
 with Aida.Deepend;
-
---  pragma Elaborate_All (Standard_Extensions);
 
 package Wayland_XML is
 

@@ -1575,101 +1575,7 @@ procedure XML_Parser is
 
       procedure Create_Wl_Thin_Spec_File is
 
---           procedure Generate_Code_For_Numeric_Constants is
---
---              procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
---
---                 procedure Generate_Code_For_Opcodes is
---
---                    I : Integer := 0;
---
---                    procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
---                       Name : constant String := Xml_Parser_Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name);
---                    begin
---                       Ada.Text_IO.Put (File, Name);
---                       Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (I));
---                       Put_Line (File, ";");
---                       Put_Line (File, "");
---
---                       I := I + 1;
---                    end Generate_Code;
---
---                 begin
---                    for Child of Interface_Tag.Children loop
---                       if Child.Kind_Id = Child_Request then
---                          Generate_Code (Child.Request_Tag.all);
---                       end if;
---                    end loop;
---                 end Generate_Code_For_Opcodes;
---
---                 procedure Generate_Code_For_Event_Since_Version is
---
---                    procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag) is
---                       Name : constant String := Xml_Parser_Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Event_Tag.Name & "_SINCE_VERSION");
---                    begin
---                       if Event_Tag.Exists_Since_Attribute then
---                          Ada.Text_IO.Put (File, Name);
---                          Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (Event_Tag.Since_Attribute_As_Pos32));
---                          Put_Line (File, ";");
---                          Put_Line (File, "");
---                       else
---                          Ada.Text_IO.Put (File, Name);
---                          Put_Line (File, " : constant := 1;");
---                          Put_Line (File, "");
---                       end if;
---                    end Generate_Code;
---
---                 begin
---                    for Child of Interface_Tag.Children loop
---                       if Child.Kind_Id = Child_Event then
---                          Generate_Code (Child.Event_Tag.all);
---                       end if;
---                    end loop;
---                 end Generate_Code_For_Event_Since_Version;
---
---                 procedure Generate_Code_For_Opcodes_Since_Version is
---
---                    procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
---                       Name : constant String := Xml_Parser_Utils.Make_Upper_Case (Interface_Tag.Name & "_" & Request_Tag.Name & "_SINCE_VERSION");
---                    begin
---                       if Request_Tag.Exists_Since then
---                          Ada.Text_IO.Put (File, Name);
---                          Ada.Text_IO.Put (File, " : constant := " & Aida.To_String (Request_Tag.Since_As_Pos32));
---                          Put_Line (File, ";");
---                          Put_Line (File, "");
---                       else
---                          Ada.Text_IO.Put (File, Name);
---                          Put_Line (File, " : constant := 1;");
---                          Put_Line (File, "");
---                       end if;
---                    end Generate_Code;
---
---                 begin
---                    for Child of Interface_Tag.Children loop
---                       if Child.Kind_Id = Child_Request then
---                          Generate_Code (Child.Request_Tag.all);
---                       end if;
---                    end loop;
---                 end Generate_Code_For_Opcodes_Since_Version;
---
---              begin
---                 Generate_Code_For_Opcodes;
---                 Generate_Code_For_Event_Since_Version;
---                 Generate_Code_For_Opcodes_Since_Version;
---              end Handle_Interface;
---
---           begin
---              for Child of Protocol_Tag.Children loop
---                 if Child.Kind_Id = Child_Interface then
---                    Handle_Interface (Child.Interface_Tag.all);
---                 end if;
---              end loop;
---
---              Generate_Code_For_Interface_Constants;
---           end Generate_Code_For_Numeric_Constants;
-
          procedure Generate_Code_For_Interface_Constants is
-
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
                Name : constant String
                  := Xml_Parser_Utils.Adaify_Name
@@ -1683,7 +1589,6 @@ procedure XML_Parser is
                  (File,
                   "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
             end Handle_Interface;
-
          begin
             for Child of Children (Protocol_Tag.all) loop
                if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
@@ -1715,39 +1620,6 @@ procedure XML_Parser is
             procedure Handle_Interface
               (Interface_Tag : aliased Wayland_XML.Interface_Tag)
             is
-
---                 procedure Generate_Code_For_Enums is
---
---                    procedure Generate_Code (Enum_Tag : Wayland_XML.Enum_Tag) is
---                       Enum_Type_Name : constant String := Xml_Parser_Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_T");
---
---                       procedure Generate_Code_For_Enum_Value (Entry_Tag : Wayland_XML.Entry_Tag) is
---                          Name : constant String := Xml_Parser_Utils.Adaify_Name (Interface_Tag.Name & "_" & Enum_Tag.Name & "_" & Entry_Tag.Name);
---                       begin
---                          Put_Line (File, "-- " & Entry_Tag.Summary);
---                          Put_Line (File, Name & " : constant " & Enum_Type_Name & " := " & Entry_Tag.Value_As_String & ";");
---                          Put_Line (File, "");
---                       end Generate_Code_For_Enum_Value;
---
---                    begin
---                       Put_Line (File, "type " & Enum_Type_Name & " is new Unsigned_32;");
---
---                       for Child of Enum_Tag.Children loop
---                          if Child.Kind_Id = Child_Entry then
---                             Generate_Code_For_Enum_Value (Child.Entry_Tag.all);
---                          end if;
---                       end loop;
---                       Put_Line (File, "");
---                    end Generate_Code;
---
---                 begin
---                    for Child of Interface_Tag.Children loop
---                       if Child.Kind_Id = Child_Enum then
---                          Generate_Code (Child.Enum_Tag.all);
---                       end if;
---                    end loop;
---                 end Generate_Code_For_Enums;
-
                procedure Generate_Code_For_Subprogram_Ptrs is
 
                   procedure Generate_Code_For_Subprogram
@@ -3325,10 +3197,3 @@ exception
    when Unknown_Exception : others =>
       Put_Line (Ada.Exceptions.Exception_Information (Unknown_Exception));
 end XML_Parser;
-
---  When using tagged types in Wayland_XML and object-prefix notation.
---  Storage size: 1_000_000
---  Storage used: 0_585_452
---
---  Latest:
---  Storage used: 0_544_260
