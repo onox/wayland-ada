@@ -181,6 +181,16 @@ procedure XML_Parser is
       end if;
    end Generate_Pretty_Code_For_Subprogram;
 
+   procedure Iterate_Over_Interfaces
+     (Process : not null access procedure (Interface_Tag : aliased Wayland_XML.Interface_Tag)) is
+   begin
+      for Child of Children (Protocol_Tag.all) loop
+         if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
+            Process (Child.Interface_Tag.all);
+         end if;
+      end loop;
+   end Iterate_Over_Interfaces;
+
    procedure Read_Wayland_XML_File (File_Name : String) is
 
       procedure Check_Wayland_XML_File_Exists;
@@ -822,15 +832,11 @@ procedure XML_Parser is
          Generate_Code_For_Opcodes;
          Generate_Code_For_Event_Since_Version;
          Generate_Code_For_Opcodes_Since_Version;
+         New_Line (File);
       end Handle_Interface;
 
    begin
-      for Child of Children (Protocol_Tag.all) loop
-         if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-            Handle_Interface (Child.Interface_Tag.all);
-            New_Line (File);
-         end if;
-      end loop;
+      Iterate_Over_Interfaces (Handle_Interface'Access);
    end Generate_Code_For_Numeric_Constants;
 
    procedure Create_Wayland_Spec_File (File_Name : String) is
@@ -955,10 +961,10 @@ procedure XML_Parser is
          Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
          Put_Line (File, "");
          Put_Line (File, "   --  End core parts");
+         Put_Line (File, "");
 
          Create_Wl_Thin_Spec_File;
 
-         Put_Line (File, "");
          Put_Line (File, "end Wayland." & Package_Name & ".Thin;");
 
          Ada.Text_IO.Close (File);
@@ -968,21 +974,15 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_Type_Declarations is
          procedure Handle_Interface
-           (Interface_Tag : Wayland_XML.Interface_Tag)
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
          is
             Name : constant String
-              := Xml_Parser_Utils.Adaify_Name
-                (Wayland_XML.Name (Interface_Tag));
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             Put_Line (File, "   type " & Name & ";");
          end Handle_Interface;
       begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
-
+         Iterate_Over_Interfaces (Handle_Interface'Access);
          New_Line (File);
 
          Put_Line (File, "   pragma Linker_Options (""-lwayland-client"");");
@@ -1004,7 +1004,7 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_The_Interface_Constants is
          procedure Handle_Interface
-           (Interface_Tag : Wayland_XML.Interface_Tag)
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
          is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name
@@ -1015,11 +1015,7 @@ procedure XML_Parser is
             New_Line (File);
          end Handle_Interface;
       begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
+         Iterate_Over_Interfaces (Handle_Interface'Access);
 
          --  FIXME Subprogram Display_Connect does not handle NULL value yet
          Put_Line (File, "   Default_Display_Name : constant String := ""wayland-0"";");
@@ -1128,11 +1124,7 @@ procedure XML_Parser is
             end loop;
          end Handle_Interface;
       begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
+         Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Code_For_Enum_Constants;
 
       procedure Generate_Private_Code_For_Enum_Constants is
@@ -1230,11 +1222,7 @@ procedure XML_Parser is
             end loop;
          end Handle_Interface;
       begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
+         Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Private_Code_For_Enum_Constants;
 
       procedure Generate_Manually_Edited_Partial_Type_Declarations is
@@ -1576,44 +1564,33 @@ procedure XML_Parser is
       procedure Create_Wl_Thin_Spec_File is
 
          procedure Generate_Code_For_Interface_Constants is
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
+            procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
                Name : constant String
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
-               Put_Line (File, "");
                Put_Line (File, "   " & Name & " : aliased Interface_T with");
                Put_Line (File, "      Import        => True,");
                Put_Line (File, "      Convention    => C,");
-               Put_Line
-                 (File,
-                  "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
+               Put_Line (File, "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
+               New_Line (File);
             end Handle_Interface;
          begin
-            for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-                  Handle_Interface (Child.Interface_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Interfaces (Handle_Interface'Access);
          end Generate_Code_For_Interface_Constants;
 
          procedure Generate_Code_For_Interface_Ptrs is
-            procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
+            procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
                Interface_Ptr_Name : constant String :=
                  Xml_Parser_Utils.Adaify_Name (Name (Interface_Tag)) & "_Ptr";
             begin
-               Put_Line (File, "   type " & Interface_Ptr_Name & " is new Proxy_Ptr;");
+               if Interface_Ptr_Name /= "Display_Ptr" then
+                  Put_Line (File, "   type " & Interface_Ptr_Name & " is new Proxy_Ptr;");
+                  New_Line (File);
+               end if;
             end Handle_Interface;
          begin
-            for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface
-                 and then not Is_Deprecated (Child.Interface_Tag.all)
-                 and then Name (Child.Interface_Tag.all) /= "wl_display"
-               then
-                  Put_Line (File, "");
-                  Handle_Interface (Child.Interface_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Interfaces (Handle_Interface'Access);
          end Generate_Code_For_Interface_Ptrs;
 
          procedure Generate_Code_For_Each_Interface is
@@ -1685,8 +1662,8 @@ procedure XML_Parser is
                begin
                   for Child of Children (Interface_Tag) loop
                      if Child.Kind_Id = Child_Event then
-                        Put_Line (File, "");
                         Generate_Code_For_Subprogram (Child.Event_Tag.all);
+                        New_Line (File);
                      end if;
                   end loop;
                end Generate_Code_For_Subprogram_Ptrs;
@@ -1919,13 +1896,12 @@ procedure XML_Parser is
                Generate_Code_For_Subprogram_Ptrs;
 
                if Xml_Parser_Utils.Exists_Any_Event_Tag (Interface_Tag) then
-                  Put_Line (File, "");
                   Generate_Code_For_Listener_Type_Definition;
                   Put_Line (File, "");
                   Generate_Code_For_Add_Listener_Subprogram_Declaration;
+                  Put_Line (File, "");
                end if;
 
-               Put_Line (File, "");
                Generate_Code_For_Set_User_Data_Subprogram_Declaration;
                Put_Line (File, "");
                Generate_Code_For_Get_User_Data_Subprogram_Declaration;
@@ -1934,14 +1910,11 @@ procedure XML_Parser is
                Put_Line (File, "");
                Generate_Code_For_Destroy_Subprogram_Declaration;
                Generate_Code_For_Requests;
+               New_Line (File);
             end Handle_Interface;
 
          begin
-            for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-                  Handle_Interface (Child.Interface_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Interfaces (Handle_Interface'Access);
          end Generate_Code_For_Each_Interface;
 
       begin
@@ -1951,21 +1924,14 @@ procedure XML_Parser is
       end Create_Wl_Thin_Spec_File;
 
       procedure Generate_Use_Type_Declarions is
-
-         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
+         procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
             Name : constant String
-              := Xml_Parser_Utils.Adaify_Name
-                (Wayland_XML.Name (Interface_Tag));
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             Put_Line (File, "   use type Thin." & Name & "_Ptr;");
          end Handle_Interface;
-
       begin
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
+         Iterate_Over_Interfaces (Handle_Interface'Access);
 
          New_Line (File);
       end Generate_Use_Type_Declarions;
@@ -2126,18 +2092,15 @@ procedure XML_Parser is
       end Generate_Manually_Edited_Code_For_Type_Definitions;
 
       procedure Generate_Private_Code_For_The_Interface_Constants is
-
-         procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
+         procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name
                 (Wayland_XML.Name (Interface_Tag) & "_Interface");
          begin
             Put_Line (File, "   " & Name & " : constant Interface_Type :=");
-            Put (File, "     (My_Interface => Thin.");
-            Put_Line (File, Name & "'Access);");
+            Put_Line (File, "     (My_Interface => Thin." & Name & "'Access);");
             New_Line (File);
          end Handle_Interface;
-
       begin
          Put_Line (File, "   type Interface_Type is tagged limited record");
          Put_Line (File, "      My_Interface : not null Thin.Interface_Ptr;");
@@ -2147,11 +2110,7 @@ procedure XML_Parser is
          Put_Line (File, "     (Value (I.My_Interface.Name));");
          New_Line (File);
 
-         for Child of Children (Protocol_Tag.all) loop
-            if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-               Handle_Interface (Child.Interface_Tag.all);
-            end if;
-         end loop;
+         Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Private_Code_For_The_Interface_Constants;
 
    begin
@@ -2603,11 +2562,7 @@ procedure XML_Parser is
             end Handle_Interface;
 
          begin
-            for Child of Children (Protocol_Tag.all) loop
-               if Child.Kind_Id = Child_Interface and then not Is_Deprecated (Child.Interface_Tag.all) then
-                  Handle_Interface (Child.Interface_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Interfaces (Handle_Interface'Access);
          end Generate_Code_For_Protocol_Tag_Children;
       begin
          Generate_Code_For_Protocol_Tag_Children;
