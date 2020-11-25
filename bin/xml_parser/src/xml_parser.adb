@@ -1599,9 +1599,10 @@ procedure XML_Parser is
 
          procedure Generate_Code_For_Interface_Ptrs is
             procedure Handle_Interface (Interface_Tag : Wayland_XML.Interface_Tag) is
-               Name : constant String := Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag);
+               Interface_Ptr_Name : constant String :=
+                 Xml_Parser_Utils.Adaify_Name (Name (Interface_Tag)) & "_Ptr";
             begin
-                  Put_Line (File, "   type " & Name & " is new Proxy_Ptr;");
+               Put_Line (File, "   type " & Interface_Ptr_Name & " is new Proxy_Ptr;");
             end Handle_Interface;
          begin
             for Child of Children (Protocol_Tag.all) loop
@@ -1657,7 +1658,7 @@ procedure XML_Parser is
                            Interface_Name_Aligned : constant String := SF.Head (Interface_Name, Max_Name_Length, ' ');
                         begin
                            Put_Line (File, "     (" & SF.Head ("Data", Max_Name_Length, ' ') & " : Void_Ptr;");
-                           Put (File, "      " & Interface_Name_Aligned & " : " & Xml_Parser_Utils.Interface_Ptr_Name (Interface_Tag));
+                           Put (File, "      " & Interface_Name_Aligned & " : " & Interface_Name & "_Ptr");
                         end;
 
                         if V.Length = 0 then

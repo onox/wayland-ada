@@ -14,8 +14,6 @@ package Xml_Parser_Utils is
    -- in "Interface_V".
    function Adaify_Variable_Name (Old_Name : String) return String;
 
-   function Make_Upper_Case (Source : String) return String;
-
    function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String;
 
    function Number_Of_Args
@@ -35,16 +33,8 @@ package Xml_Parser_Utils is
      (Request_Tag : aliased Wayland_XML.Request_Tag) return String with
      Pre => Is_Interface_Specified (Request_Tag);
 
-   function Interface_Ptr_Name
-     (Interface_Tag : Wayland_XML.Interface_Tag) return String;
-
    function Is_Request_Destructor
      (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;
-
-   function Exists_Reference_To_Enum
-     (Protocol_Tag   : aliased Wayland_XML.Protocol_Tag;
-      Interface_Name : String;
-      Enum_Name      : String) return Boolean;
 
    function Exists_Destructor
      (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean;
