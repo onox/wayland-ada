@@ -993,6 +993,8 @@ procedure XML_Parser is
 
       procedure Generate_Code_For_The_Interface_Type is
       begin
+         Put_Line (File, "   type Call_Result_Code is (Success, Error);");
+         New_Line (File);
          Put_Line (File, "   type Interface_Type is tagged limited private;");
          Put_Line (File, "   --  This type name ends with _Type because 'interface'");
          Put_Line (File, "   --  is a reserved keyword in the Ada programming language.");
@@ -1243,6 +1245,13 @@ procedure XML_Parser is
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
 
+            if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
+               Put_Line (File, "   procedure Release (Object : in out " & Name & ")");
+               Put_Line (File, "     with Pre  => Object.Has_Proxy,");
+               Put_Line (File, "          Post => not Object.Has_Proxy;");
+               Put_Line (File, "");
+            end if;
+
             if Name = "Display" then
                Put_Line (File, "   function Is_Connected (Object : Display) return Boolean renames Has_Proxy;");
                Put_Line (File, "");
@@ -1250,11 +1259,42 @@ procedure XML_Parser is
                Put_Line (File, "     with Pre => not Object.Is_Connected;");
                Put_Line (File, "   --  Attempts connecting with the Wayland server");
                Put_Line (File, "");
+               Put_Line (File, "   type Check_For_Events_Status is (Events_Need_Processing, No_Events, Error);");
+               Put_Line (File, "");
+               Put_Line (File, "   function Check_For_Events");
+               Put_Line (File, "     (Object  : Display;");
+               Put_Line (File, "      Timeout : Integer) return Check_For_Events_Status;");
+               Put_Line (File, "   --  The timeout is given in milliseconds");
+               Put_Line (File, "");
                Put_Line (File, "   function Dispatch (Object : Display) return Integer");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Process incoming events");
                Put_Line (File, "");
                Put_Line (File, "   procedure Dispatch (Object : Display)");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Process incoming events. Ignores error code. TODO To be removed?");
+               Put_Line (File, "");
+               Put_Line (File, "   function Dispatch_Pending (Object : Display) return Integer");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Dispatch default queue events without reading from");
+               Put_Line (File, "   --  the display file descriptor");
+               Put_Line (File, "   --");
+               Put_Line (File, "   --  This function dispatches events on the main event queue.");
+               Put_Line (File, "   --  It does not attempt to read the display fd and simply returns zero");
+               Put_Line (File, "   --  if the main queue is empty, i.e., it doesn't block.");
+               Put_Line (File, "   --");
+               Put_Line (File, "   --  Returns the number of dispatched events or -1 on failure");
+               Put_Line (File, "");
+               Put_Line (File, "   function Prepare_Read (Object : Display) return Integer");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Prepare to read events from the display's file descriptor");
+               Put_Line (File, "");
+               Put_Line (File, "   function Read_Events (Object : Display) return Call_Result_Code");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Cancel_Read (Object : Display)");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Cancel read intention on display's file descriptor");
                Put_Line (File, "");
                Put_Line (File, "   function Roundtrip (Object : Display) return Integer");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
@@ -1271,56 +1311,79 @@ procedure XML_Parser is
                Put_Line (File, "      Registry : in out Protocol.Registry)");
                Put_Line (File, "   with Pre => Object.Is_Connected and not Registry.Has_Proxy;");
                Put_Line (File, "");
+               Put_Line (File, "   function Sync (Object : Display) return Callback");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "");
             elsif Name = "Compositor" then
-               Put_Line (File, "   procedure Bind (Compositor  : in out Protocol.Compositor;");
-               Put_Line (File, "                   Registry    : Protocol.Registry;");
-               Put_Line (File, "                   Id          : Unsigned_32;");
-               Put_Line (File, "                   Version     : Unsigned_32)");
-               Put_Line (File, "     with Pre => Registry.Has_Proxy;");
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Create_Surface (Compositor : Protocol.Compositor;");
-               Put_Line (File, "                             Surface    : in out Protocol.Surface);");
-               Put_Line (File, "");
-            elsif Name = "Seat" then
-               Put_Line (File, "   procedure Bind (Seat     : in out Protocol.Seat;");
+               Put_Line (File, "   procedure Bind (Object   : in out Compositor;");
                Put_Line (File, "                   Registry : Protocol.Registry;");
                Put_Line (File, "                   Id       : Unsigned_32;");
                Put_Line (File, "                   Version  : Unsigned_32)");
-               Put_Line (File, "     with Pre => Registry.Has_Proxy;");
+               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
                Put_Line (File, "");
-               Put_Line (File, "   procedure Get_Pointer (Seat    : Protocol.Seat;");
-               Put_Line (File, "                          Pointer : in out Protocol.Pointer);");
+               Put_Line (File, "   procedure Create_Surface (Object  : Compositor;");
+               Put_Line (File, "                             Surface : in out Protocol.Surface);");
+               Put_Line (File, "");
+            elsif Name = "Seat" then
+               Put_Line (File, "   procedure Bind (Object   : in out Seat;");
+               Put_Line (File, "                   Registry : Protocol.Registry;");
+               Put_Line (File, "                   Id       : Unsigned_32;");
+               Put_Line (File, "                   Version  : Unsigned_32)");
+               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Pointer (Object  : Seat;");
+               Put_Line (File, "                          Pointer : in out Protocol.Pointer)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and not Pointer.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Keyboard (Object   : Seat;");
+               Put_Line (File, "                           Keyboard : in out Protocol.Keyboard)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and not Keyboard.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Touch (Object : Seat;");
+               Put_Line (File, "                        Touch  : in out Protocol.Touch)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and not Touch.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Shm_Pool" then
-               Put_Line (File, "   procedure Create_Buffer (Pool   : Protocol.Shm_Pool;");
+               Put_Line (File, "   procedure Create_Buffer (Object : Shm_Pool;");
                Put_Line (File, "                            Offset : Integer;");
                Put_Line (File, "                            Width  : Integer;");
                Put_Line (File, "                            Height : Integer;");
                Put_Line (File, "                            Stride : Integer;");
                Put_Line (File, "                            Format : Shm_Format;");
-               Put_Line (File, "                            Buffer : in out Protocol.Buffer);");
+               Put_Line (File, "                            Buffer : in out Protocol.Buffer)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Resize (Object : Shm_Pool;");
+               Put_Line (File, "                     Size   : Positive)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Shm" then
-               Put_Line (File, "   procedure Bind (Shm      : in out Protocol.Shm;");
+               Put_Line (File, "   procedure Bind (Object   : in out Shm;");
                Put_Line (File, "                   Registry : Protocol.Registry;");
                Put_Line (File, "                   Id       : Unsigned_32;");
                Put_Line (File, "                   Version  : Unsigned_32)");
-               Put_Line (File, "     with Pre => Registry.Has_Proxy;");
+               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
                Put_Line (File, "");
-               Put_Line (File, "   procedure Create_Pool (Shm             : Protocol.Shm;");
-               Put_Line (File, "                          File_Descriptor : Integer;");
+               Put_Line (File, "   procedure Create_Pool (Object          : Shm;");
+               Put_Line (File, "                          File_Descriptor : C_Binding.Linux.Files.File;");
                Put_Line (File, "                          Size            : Integer;");
                Put_Line (File, "                          Pool            : in out Shm_Pool);");
                Put_Line (File, "");
             elsif Name = "Surface" then
-               Put_Line (File, "   procedure Attach (Surface : Protocol.Surface;");
-               Put_Line (File, "                     Buffer  : Protocol.Buffer;");
-               Put_Line (File, "                     X       : Integer;");
-               Put_Line (File, "                     Y       : Integer)");
-               Put_Line (File, "     with Pre => Surface.Has_Proxy and Buffer.Has_Proxy;");
+               Put_Line (File, "   procedure Attach (Object : Surface;");
+               Put_Line (File, "                     Buffer : Protocol.Buffer;");
+               Put_Line (File, "                     X, Y   : Integer)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and Buffer.Has_Proxy;");
                Put_Line (File, "");
-               Put_Line (File, "   procedure Commit (Surface : Protocol.Surface)");
-               Put_Line (File, "     with Pre => Surface.Has_Proxy;");
+               Put_Line (File, "   procedure Commit (Object : Surface)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy;");
+               Put_Line (File, "");
+            elsif Name = "Subcompositor" then
+               Put_Line (File, "   procedure Get_Subsurface (Object     : Subcompositor;");
+               Put_Line (File, "                             Surface    : Protocol.Surface;");
+               Put_Line (File, "                             Parent     : Protocol.Surface;");
+               Put_Line (File, "                             Subsurface : in out Protocol.Subsurface)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and Surface.Has_Proxy and Parent.Has_Proxy;");
                Put_Line (File, "");
             end if;
          end Handle_Interface;
@@ -1427,7 +1490,6 @@ procedure XML_Parser is
          Put_Line (File, "         Pointer  : Protocol.Pointer;");
          Put_Line (File, "         Axis     : Pointer_Axis;");
          Put_Line (File, "         Discrete : Integer);");
-         Put_Line (File, "");
          Put_Line (File, "   package Pointer_Events is");
          Put_Line (File, "");
          Put_Line (File, "      procedure Start_Subscription (P : in out Pointer);");
