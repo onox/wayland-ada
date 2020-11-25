@@ -48,11 +48,6 @@ package body Wayland.Client.Thin is
       return Wayland.API.Proxy_Get_Version (Display.all);
    end Display_Get_Version;
 
-   procedure Display_Destroy (Display : Display_Ptr) is
-   begin
-      Wayland.API.Proxy_Destroy (Display.all);
-   end Display_Destroy;
-
    function Display_Sync (Display : Display_Ptr) return Callback_Ptr is
       P : constant Proxy_Ptr :=
         Wayland.API.Proxy_Marshal_Constructor

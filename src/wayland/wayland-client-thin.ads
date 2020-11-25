@@ -198,8 +198,6 @@ private package Wayland.Client.Thin is
 
    function Display_Get_Version (Display : Display_Ptr) return Unsigned_32;
 
-   procedure Display_Destroy (Display : Display_Ptr);
-
    --  The sync request asks the server to emit the 'done' event
    --  on the returned wl_callback object.  Since requests are
    --  handled in-order and events are delivered in-order, this can
