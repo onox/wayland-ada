@@ -45,50 +45,32 @@ package Wayland.Client.Protocol is
      with Global => null;
 
    Display_Interface : constant Interface_Type;
-
    Registry_Interface : constant Interface_Type;
-
    Callback_Interface : constant Interface_Type;
-
    Compositor_Interface : constant Interface_Type;
-
    Shm_Pool_Interface : constant Interface_Type;
-
    Shm_Interface : constant Interface_Type;
-
    Buffer_Interface : constant Interface_Type;
-
    Data_Offer_Interface : constant Interface_Type;
-
    Data_Source_Interface : constant Interface_Type;
-
    Data_Device_Interface : constant Interface_Type;
-
    Data_Device_Manager_Interface : constant Interface_Type;
-
    Surface_Interface : constant Interface_Type;
-
    Seat_Interface : constant Interface_Type;
-
    Pointer_Interface : constant Interface_Type;
-
    Keyboard_Interface : constant Interface_Type;
-
    Touch_Interface : constant Interface_Type;
-
    Output_Interface : constant Interface_Type;
-
    Region_Interface : constant Interface_Type;
-
    Subcompositor_Interface : constant Interface_Type;
-
    Subsurface_Interface : constant Interface_Type;
 
    Default_Display_Name : constant String := "wayland-0";
 
    type Subcompositor is tagged limited private;
 
-   function Has_Proxy (Subcompositor : Protocol.Subcompositor) return Boolean;
+   function Has_Proxy (Object : Subcompositor) return Boolean
+     with Global => null;
 
    procedure Destroy (S : in out Protocol.Subcompositor) with
      Pre    => S.Has_Proxy,
@@ -104,7 +86,8 @@ package Wayland.Client.Protocol is
 
    type Compositor is tagged limited private;
 
-   function Has_Proxy (Compositor : Protocol.Compositor) return Boolean;
+   function Has_Proxy (Object : Compositor) return Boolean
+     with Global => null;
 
    procedure Get_Proxy (Compositor  : in out Protocol.Compositor;
                         Registry    : Protocol.Registry;
@@ -131,7 +114,8 @@ package Wayland.Client.Protocol is
 
    type Data_Device_Manager is tagged limited private;
 
-   function Has_Proxy (Data_Device_Manager : Protocol.Data_Device_Manager) return Boolean;
+   function Has_Proxy (Object : Data_Device_Manager) return Boolean
+     with Global => null;
 
    procedure Destroy (Manager : in out Data_Device_Manager) with
      Pre    => Manager.Has_Proxy,
@@ -151,7 +135,8 @@ package Wayland.Client.Protocol is
 
    type Seat is tagged limited private;
 
-   function Has_Proxy (Seat : Protocol.Seat) return Boolean;
+   function Has_Proxy (Object : Seat) return Boolean
+     with Global => null;
 
    function Get_Version (Seat : Protocol.Seat) return Unsigned_32 with
      Pre => Seat.Has_Proxy;
@@ -179,7 +164,8 @@ package Wayland.Client.Protocol is
 
    type Pointer is tagged limited private;
 
-   function Has_Proxy (Pointer : Protocol.Pointer) return Boolean;
+   function Has_Proxy (Object : Pointer) return Boolean
+     with Global => null;
 
    function Get_Version (Pointer : Protocol.Pointer) return Unsigned_32 with
      Pre => Pointer.Has_Proxy;
@@ -201,7 +187,8 @@ package Wayland.Client.Protocol is
 
    type Shm is tagged limited private;
 
-   function Has_Proxy (Shm : Protocol.Shm) return Boolean;
+   function Has_Proxy (Object : Shm) return Boolean
+     with Global => null;
 
    procedure Get_Proxy (Shm      : in out Protocol.Shm;
                         Registry : Protocol.Registry;
@@ -223,7 +210,8 @@ package Wayland.Client.Protocol is
 
    type Shm_Pool is tagged limited private;
 
-   function Has_Proxy (Pool : Protocol.Shm_Pool) return Boolean;
+   function Has_Proxy (Object : Shm_Pool) return Boolean
+     with Global => null;
 
    procedure Create_Buffer (Pool   : Protocol.Shm_Pool;
                             Offset : Integer;
@@ -247,7 +235,8 @@ package Wayland.Client.Protocol is
 
    type Data_Device is tagged limited private;
 
-   function Has_Proxy (Data_Device : Protocol.Data_Device) return Boolean;
+   function Has_Proxy (Object : Data_Device) return Boolean
+     with Global => null;
 
    procedure Destroy (Device : in out Data_Device) with
      Pre    => Device.Has_Proxy,
@@ -275,7 +264,8 @@ package Wayland.Client.Protocol is
 
    type Subsurface is tagged limited private;
 
-   function Has_Proxy (Subsurface : Protocol.Subsurface) return Boolean;
+   function Has_Proxy (Object : Subsurface) return Boolean
+     with Global => null;
 
    procedure Destroy (Subsurface : in out Protocol.Subsurface) with
      Pre    => Subsurface.Has_Proxy,
@@ -305,7 +295,8 @@ package Wayland.Client.Protocol is
 
    type Surface is tagged limited private;
 
-   function Has_Proxy (Surface : Protocol.Surface) return Boolean;
+   function Has_Proxy (Object : Surface) return Boolean
+     with Global => null;
 
    procedure Attach (Surface : Protocol.Surface;
                      Buffer  : Protocol.Buffer;
@@ -355,7 +346,8 @@ package Wayland.Client.Protocol is
 
    type Buffer is tagged limited private;
 
-   function Has_Proxy (Buffer : Protocol.Buffer) return Boolean;
+   function Has_Proxy (Object : Buffer) return Boolean
+     with Global => null;
 
    function Get_Version (Buffer : Protocol.Buffer) return Unsigned_32 with
      Pre => Buffer.Has_Proxy;
@@ -367,7 +359,10 @@ package Wayland.Client.Protocol is
    type Display is tagged limited private with
      Default_Initial_Condition => not Display.Is_Connected;
 
-   function Is_Connected (Display : Protocol.Display) return Boolean;
+   function Has_Proxy (Object : Display) return Boolean
+     with Global => null;
+
+   function Is_Connected (Object : Display) return Boolean renames Has_Proxy;
 
    procedure Connect (Display : in out Protocol.Display;
                       Name    : String := Default_Display_Name) with
@@ -436,7 +431,8 @@ package Wayland.Client.Protocol is
 
    type Registry is tagged limited private;
 
-   function Has_Proxy (Registry : Protocol.Registry) return Boolean;
+   function Has_Proxy (Object : Registry) return Boolean
+     with Global => null;
 
    procedure Destroy (Registry : in out Protocol.Registry) with
      Pre  => Registry.Has_Proxy,
@@ -447,7 +443,8 @@ package Wayland.Client.Protocol is
 
    type Callback is tagged limited private;
 
-   function Has_Proxy (Callback : Protocol.Callback) return Boolean;
+   function Has_Proxy (Object : Callback) return Boolean
+     with Global => null;
 
    procedure Destroy (Callback : in out Protocol.Callback) with
      Pre    => Callback.Has_Proxy,
@@ -459,7 +456,8 @@ package Wayland.Client.Protocol is
    type Data_Offer is tagged limited private;
    --  Provides drag and drop functionality in a Wayland application
 
-   function Has_Proxy (Offer : Data_Offer) return Boolean;
+   function Has_Proxy (Object : Data_Offer) return Boolean
+     with Global => null;
 
    procedure Destroy (Offer : in out Data_Offer) with
      Pre    => Offer.Has_Proxy,
@@ -494,7 +492,8 @@ package Wayland.Client.Protocol is
 
    type Data_Source is tagged limited private;
 
-   function Has_Proxy (Data_Source : Protocol.Data_Source) return Boolean;
+   function Has_Proxy (Object : Data_Source) return Boolean
+     with Global => null;
 
    procedure Destroy (Source : in out Data_Source) with
      Pre    => Source.Has_Proxy,
@@ -513,7 +512,8 @@ package Wayland.Client.Protocol is
 
    type Keyboard is tagged limited private;
 
-   function Has_Proxy (Keyboard : Protocol.Keyboard) return Boolean;
+   function Has_Proxy (Object : Keyboard) return Boolean
+     with Global => null;
 
    procedure Destroy (Keyboard : in out Protocol.Keyboard) with
      Pre    => Keyboard.Has_Proxy,
@@ -528,7 +528,8 @@ package Wayland.Client.Protocol is
 
    type Touch is tagged limited private;
 
-   function Has_Proxy (Touch : Protocol.Touch) return Boolean;
+   function Has_Proxy (Object : Touch) return Boolean
+     with Global => null;
 
    procedure Destroy (Touch : in out Protocol.Touch) with
      Pre    => Touch.Has_Proxy,
@@ -543,7 +544,8 @@ package Wayland.Client.Protocol is
 
    type Output is tagged limited private;
 
-   function Has_Proxy (Output : Protocol.Output) return Boolean;
+   function Has_Proxy (Object : Output) return Boolean
+     with Global => null;
 
    procedure Destroy (Output : in out Protocol.Output) with
      Pre    => Output.Has_Proxy,
@@ -558,7 +560,8 @@ package Wayland.Client.Protocol is
 
    type Region is tagged limited private;
 
-   function Has_Proxy (Region : Protocol.Region) return Boolean;
+   function Has_Proxy (Object : Region) return Boolean
+     with Global => null;
 
    procedure Destroy (Region : in out Protocol.Region) with
      Pre    => Region.Has_Proxy,
@@ -851,8 +854,9 @@ package Wayland.Client.Protocol is
          Axis    : Pointer_Axis;
          Value   : Fixed);
 
-      with procedure Pointer_Frame (Data    : not null Data_Ptr;
-                                    Pointer : Protocol.Pointer);
+      with procedure Pointer_Frame
+        (Data    : not null Data_Ptr;
+         Pointer : Protocol.Pointer);
 
       with procedure Pointer_Scroll_Source
         (Data        : not null Data_Ptr;
@@ -1018,8 +1022,7 @@ private
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
-   function Value
-     (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
+   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;
 
    use type Thin.Display_Ptr;
    use type Thin.Registry_Ptr;
@@ -1043,138 +1046,145 @@ private
    use type Thin.Subsurface_Ptr;
 
    type Display is tagged limited record
-      My_Display : Thin.Display_Ptr;
-      My_Fd      : Integer;
+      Proxy : Thin.Display_Ptr;
+      My_Fd : Integer;
    end record;
 
-   function Is_Connected (Display : Protocol.Display) return Boolean is
-     (Display.My_Display /= null);
+   function Has_Proxy (Object : Display) return Boolean is
+     (Object.Proxy /= null);
 
    type Registry is tagged limited record
-      My_Registry : Thin.Registry_Ptr;
+      Proxy : Thin.Registry_Ptr;
    end record;
 
-   function Has_Proxy (Registry : Protocol.Registry) return Boolean is
-     (Registry.My_Registry /= null);
-
-   type Compositor is tagged limited record
-      My_Compositor : Thin.Compositor_Ptr;
-   end record;
-
-   function Has_Proxy (Compositor : Protocol.Compositor) return Boolean is
-     (Compositor.My_Compositor /= null);
-
-   type Pointer is tagged limited record
-      My_Pointer : Thin.Pointer_Ptr;
-   end record;
-
-   function Has_Proxy (Pointer : Protocol.Pointer) return Boolean is
-     (Pointer.My_Pointer /= null);
-
-   type Seat is tagged limited record
-      My_Seat : Thin.Seat_Ptr;
-   end record;
-
-   function Has_Proxy (Seat : Protocol.Seat) return Boolean is
-     (Seat.My_Seat /= null);
-
-   type Shm is tagged limited record
-      My_Shm : Thin.Shm_Ptr;
-   end record;
-
-   function Has_Proxy (Shm : Protocol.Shm) return Boolean is (Shm.My_Shm /= null);
-
-   type Shm_Pool is tagged limited record
-      My_Shm_Pool : Thin.Shm_Pool_Ptr;
-   end record;
-
-   function Has_Proxy (Pool : Shm_Pool) return Boolean is
-     (Pool.My_Shm_Pool /= null);
-
-   type Buffer is tagged limited record
-      My_Buffer : Thin.Buffer_Ptr;
-   end record;
-
-   function Has_Proxy (Buffer : Protocol.Buffer) return Boolean is
-     (Buffer.My_Buffer /= null);
-
-   type Surface is tagged limited record
-      My_Surface : Thin.Surface_Ptr;
-   end record;
-
-   function Has_Proxy (Surface : Protocol.Surface) return Boolean is
-     (Surface.My_Surface /= null);
+   function Has_Proxy (Object : Registry) return Boolean is
+     (Object.Proxy /= null);
 
    type Callback is tagged limited record
-      My_Callback : Thin.Callback_Ptr;
+      Proxy : Thin.Callback_Ptr;
    end record;
+
+   function Has_Proxy (Object : Callback) return Boolean is
+     (Object.Proxy /= null);
+
+   type Compositor is tagged limited record
+      Proxy : Thin.Compositor_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Compositor) return Boolean is
+     (Object.Proxy /= null);
+
+   type Shm_Pool is tagged limited record
+      Proxy : Thin.Shm_Pool_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Shm_Pool) return Boolean is
+     (Object.Proxy /= null);
+
+   type Shm is tagged limited record
+      Proxy : Thin.Shm_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Shm) return Boolean is
+     (Object.Proxy /= null);
+
+   type Buffer is tagged limited record
+      Proxy : Thin.Buffer_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Buffer) return Boolean is
+     (Object.Proxy /= null);
 
    type Data_Offer is tagged limited record
-      My_Data_Offer : Thin.Data_Offer_Ptr;
+      Proxy : Thin.Data_Offer_Ptr;
    end record;
+
+   function Has_Proxy (Object : Data_Offer) return Boolean is
+     (Object.Proxy /= null);
 
    type Data_Source is tagged limited record
-      My_Data_Source : Thin.Data_Source_Ptr;
+      Proxy : Thin.Data_Source_Ptr;
    end record;
 
-   function Has_Proxy (Data_Source : Protocol.Data_Source) return Boolean is
-     (Data_Source.My_Data_Source /= null);
+   function Has_Proxy (Object : Data_Source) return Boolean is
+     (Object.Proxy /= null);
 
    type Data_Device is tagged limited record
-      My_Data_Device : Thin.Data_Device_Ptr;
+      Proxy : Thin.Data_Device_Ptr;
    end record;
 
-   function Has_Proxy (Data_Device : Protocol.Data_Device) return Boolean is
-     (Data_Device.My_Data_Device /= null);
+   function Has_Proxy (Object : Data_Device) return Boolean is
+     (Object.Proxy /= null);
 
    type Data_Device_Manager is tagged limited record
-      My_Data_Device_Manager : Thin.Data_Device_Manager_Ptr;
+      Proxy : Thin.Data_Device_Manager_Ptr;
    end record;
 
-   function Has_Proxy (Data_Device_Manager : Protocol.Data_Device_Manager) return Boolean is
-     (Data_Device_Manager.My_Data_Device_Manager /= null);
+   function Has_Proxy (Object : Data_Device_Manager) return Boolean is
+     (Object.Proxy /= null);
+
+   type Surface is tagged limited record
+      Proxy : Thin.Surface_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Surface) return Boolean is
+     (Object.Proxy /= null);
+
+   type Seat is tagged limited record
+      Proxy : Thin.Seat_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Seat) return Boolean is
+     (Object.Proxy /= null);
+
+   type Pointer is tagged limited record
+      Proxy : Thin.Pointer_Ptr;
+   end record;
+
+   function Has_Proxy (Object : Pointer) return Boolean is
+     (Object.Proxy /= null);
 
    type Keyboard is tagged limited record
-      My_Keyboard : Thin.Keyboard_Ptr;
+      Proxy : Thin.Keyboard_Ptr;
    end record;
 
-   function Has_Proxy (Keyboard : Protocol.Keyboard) return Boolean is
-     (Keyboard.My_Keyboard /= null);
+   function Has_Proxy (Object : Keyboard) return Boolean is
+     (Object.Proxy /= null);
 
    type Touch is tagged limited record
-      My_Touch : Thin.Touch_Ptr;
+      Proxy : Thin.Touch_Ptr;
    end record;
 
-   function Has_Proxy (Touch : Protocol.Touch) return Boolean is
-     (Touch.My_Touch /= null);
+   function Has_Proxy (Object : Touch) return Boolean is
+     (Object.Proxy /= null);
 
    type Output is tagged limited record
-      My_Output : Thin.Output_Ptr;
+      Proxy : Thin.Output_Ptr;
    end record;
 
-   function Has_Proxy (Output : Protocol.Output) return Boolean is
-     (Output.My_Output /= null);
+   function Has_Proxy (Object : Output) return Boolean is
+     (Object.Proxy /= null);
 
    type Region is tagged limited record
-      My_Region : Thin.Region_Ptr;
+      Proxy : Thin.Region_Ptr;
    end record;
 
-   function Has_Proxy (Region : Protocol.Region) return Boolean is
-     (Region.My_Region /= null);
+   function Has_Proxy (Object : Region) return Boolean is
+     (Object.Proxy /= null);
 
    type Subcompositor is tagged limited record
-      My_Subcompositor : Thin.Subcompositor_Ptr;
+      Proxy : Thin.Subcompositor_Ptr;
    end record;
 
-   function Has_Proxy (Subcompositor : Protocol.Subcompositor) return Boolean is
-     (Subcompositor.My_Subcompositor /= null);
+   function Has_Proxy (Object : Subcompositor) return Boolean is
+     (Object.Proxy /= null);
 
    type Subsurface is tagged limited record
-      My_Subsurface : Thin.Subsurface_Ptr;
+      Proxy : Thin.Subsurface_Ptr;
    end record;
 
-   function Has_Proxy (Subsurface : Protocol.Subsurface) return Boolean is
-     (Subsurface.My_Subsurface /= null);
+   function Has_Proxy (Object : Subsurface) return Boolean is
+     (Object.Proxy /= null);
 
    type Interface_Type is tagged limited record
       My_Interface : not null Thin.Interface_Ptr;
