@@ -10,26 +10,26 @@ package Wayland.Client.Protocol is
 
    use Wayland.Client.Enums;
 
-   type Display;
-   type Registry;
-   type Callback;
-   type Compositor;
-   type Shm_Pool;
-   type Shm;
-   type Buffer;
-   type Data_Offer;
-   type Data_Source;
-   type Data_Device;
-   type Data_Device_Manager;
-   type Surface;
-   type Seat;
-   type Pointer;
-   type Keyboard;
-   type Touch;
-   type Output;
-   type Region;
-   type Subcompositor;
-   type Subsurface;
+   type Display is tagged limited private;
+   type Registry is tagged limited private;
+   type Callback is tagged limited private;
+   type Compositor is tagged limited private;
+   type Shm_Pool is tagged limited private;
+   type Shm is tagged limited private;
+   type Buffer is tagged limited private;
+   type Data_Offer is tagged limited private;
+   type Data_Source is tagged limited private;
+   type Data_Device is tagged limited private;
+   type Data_Device_Manager is tagged limited private;
+   type Surface is tagged limited private;
+   type Seat is tagged limited private;
+   type Pointer is tagged limited private;
+   type Keyboard is tagged limited private;
+   type Touch is tagged limited private;
+   type Output is tagged limited private;
+   type Region is tagged limited private;
+   type Subcompositor is tagged limited private;
+   type Subsurface is tagged limited private;
 
    pragma Linker_Options ("-lwayland-client");
    --  Added this linker option here to avoid adding it
@@ -65,8 +65,7 @@ package Wayland.Client.Protocol is
    Subcompositor_Interface : constant Interface_Type;
    Subsurface_Interface : constant Interface_Type;
 
-   type Display is tagged limited private
-     with Default_Initial_Condition => not Display.Is_Connected;
+--     with Default_Initial_Condition => not Display.Is_Connected;
 
    function Has_Proxy (Object : Display) return Boolean
      with Global => null;
@@ -129,13 +128,11 @@ package Wayland.Client.Protocol is
 
    procedure Get_Registry
      (Object   : Display;
-      Registry : in out Protocol.Registry)
+      Registry : in out Protocol.Registry'Class)
    with Pre => Object.Is_Connected and not Registry.Has_Proxy;
 
-   function Sync (Object : Display) return Callback
+   function Sync (Object : Display) return Callback'Class
      with Pre => Object.Is_Connected;
-
-   type Registry is tagged limited private;
 
    function Has_Proxy (Object : Registry) return Boolean
      with Global => null;
@@ -147,8 +144,6 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Registry) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
-   type Callback is tagged limited private;
-
    function Has_Proxy (Object : Callback) return Boolean
      with Global => null;
 
@@ -158,8 +153,6 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Callback) return Unsigned_32
      with Pre => Object.Has_Proxy;
-
-   type Compositor is tagged limited private;
 
    function Has_Proxy (Object : Compositor) return Boolean
      with Global => null;
@@ -172,20 +165,18 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Bind (Object   : in out Compositor;
-                   Registry : Protocol.Registry;
+                   Registry : Protocol.Registry'Class;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
      with Pre => not Object.Has_Proxy and Registry.Has_Proxy;
 
    procedure Create_Surface (Object  : Compositor;
-                             Surface : in out Protocol.Surface)
+                             Surface : in out Protocol.Surface'Class)
      with Pre => Object.Has_Proxy;
 
    procedure Create_Region (Object : Compositor;
-                            Region : in out Protocol.Region)
+                            Region : in out Protocol.Region'Class)
      with Pre => Object.Has_Proxy;
-
-   type Shm_Pool is tagged limited private;
 
    function Has_Proxy (Object : Shm_Pool) return Boolean
      with Global => null;
@@ -198,19 +189,17 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Create_Buffer (Object : Shm_Pool;
-                            Offset : Integer;
-                            Width  : Integer;
-                            Height : Integer;
-                            Stride : Integer;
+                            Offset : Natural;
+                            Width  : Natural;
+                            Height : Natural;
+                            Stride : Natural;
                             Format : Shm_Format;
-                            Buffer : in out Protocol.Buffer)
+                            Buffer : in out Protocol.Buffer'Class)
      with Pre => Object.Has_Proxy;
 
    procedure Resize (Object : Shm_Pool;
                      Size   : Positive)
      with Pre => Object.Has_Proxy;
-
-   type Shm is tagged limited private;
 
    function Has_Proxy (Object : Shm) return Boolean
      with Global => null;
@@ -223,17 +212,15 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Bind (Object   : in out Shm;
-                   Registry : Protocol.Registry;
+                   Registry : Protocol.Registry'Class;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
      with Pre => not Object.Has_Proxy and Registry.Has_Proxy;
 
    procedure Create_Pool (Object          : Shm;
                           File_Descriptor : C_Binding.Linux.Files.File;
-                          Size            : Integer;
-                          Pool            : in out Shm_Pool);
-
-   type Buffer is tagged limited private;
+                          Size            : Positive;
+                          Pool            : in out Shm_Pool'Class);
 
    function Has_Proxy (Object : Buffer) return Boolean
      with Global => null;
@@ -244,8 +231,6 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Buffer) return Unsigned_32
      with Pre => Object.Has_Proxy;
-
-   type Data_Offer is tagged limited private;
 
    function Has_Proxy (Object : Data_Offer) return Boolean
      with Global => null;
@@ -279,8 +264,6 @@ package Wayland.Client.Protocol is
                           Preferred_Action : Unsigned_32)
      with Pre => Object.Has_Proxy;
 
-   type Data_Source is tagged limited private;
-
    function Has_Proxy (Object : Data_Source) return Boolean
      with Global => null;
 
@@ -299,8 +282,6 @@ package Wayland.Client.Protocol is
                           Dnd_Actions : Unsigned_32)
      with Pre => Object.Has_Proxy;
 
-   type Data_Device is tagged limited private;
-
    function Has_Proxy (Object : Data_Device) return Boolean
      with Global => null;
 
@@ -316,18 +297,16 @@ package Wayland.Client.Protocol is
           Post => not Object.Has_Proxy;
 
    procedure Start_Drag (Object : Data_Device;
-                         Source : Data_Source;
-                         Origin : Surface;
-                         Icon   : Surface;
+                         Source : Data_Source'Class;
+                         Origin : Surface'Class;
+                         Icon   : Surface'Class;
                          Serial : Unsigned_32)
      with Pre => Object.Has_Proxy and Source.Has_Proxy and Origin.Has_Proxy and Icon.Has_Proxy;
 
    procedure Set_Selection (Object : Data_Device;
-                            Source : Data_Source;
+                            Source : Data_Source'Class;
                             Serial : Unsigned_32)
      with Pre => Object.Has_Proxy and Source.Has_Proxy;
-
-   type Data_Device_Manager is tagged limited private;
 
    function Has_Proxy (Object : Data_Device_Manager) return Boolean
      with Global => null;
@@ -340,15 +319,13 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Create_Data_Source (Object : Data_Device_Manager;
-                                 Source : in out Data_Source)
+                                 Source : in out Data_Source'Class)
      with Pre => Object.Has_Proxy;
 
    procedure Get_Data_Device (Object : Data_Device_Manager;
-                              Seat   : Protocol.Seat;
-                              Device : in out Data_Device)
+                              Seat   : Protocol.Seat'Class;
+                              Device : in out Data_Device'Class)
      with Pre => Object.Has_Proxy;
-
-   type Surface is tagged limited private;
 
    function Has_Proxy (Object : Surface) return Boolean
      with Global => null;
@@ -361,25 +338,25 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Attach (Object : Surface;
-                     Buffer : Protocol.Buffer;
+                     Buffer : Protocol.Buffer'Class;
                      X, Y   : Integer)
      with Pre => Object.Has_Proxy and Buffer.Has_Proxy;
 
    procedure Damage (Object : Surface;
                      X, Y   : Integer;
-                     Width  : Integer;
-                     Height : Integer)
+                     Width  : Natural;
+                     Height : Natural)
      with Pre => Object.Has_Proxy;
 
-   function Frame (Object : Surface) return Callback
+   function Frame (Object : Surface) return Callback'Class
      with Pre => Object.Has_Proxy;
 
    procedure Set_Opaque_Region (Object : Surface;
-                                Region : Protocol.Region)
+                                Region : Protocol.Region'Class)
      with Pre => Object.Has_Proxy;
 
    procedure Set_Input_Region (Object : Surface;
-                               Region : Protocol.Region)
+                               Region : Protocol.Region'Class)
      with Pre => Object.Has_Proxy;
 
    procedure Commit (Object : Surface)
@@ -390,16 +367,14 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Set_Buffer_Scale (Object : Surface;
-                               Scale  : Integer)
+                               Scale  : Positive)
      with Pre => Object.Has_Proxy;
 
    procedure Damage_Buffer (Object : Surface;
                             X, Y   : Integer;
-                            Width  : Integer;
-                            Height : Integer)
+                            Width  : Natural;
+                            Height : Natural)
      with Pre => Object.Has_Proxy;
-
-   type Seat is tagged limited private;
 
    function Has_Proxy (Object : Seat) return Boolean
      with Global => null;
@@ -416,24 +391,22 @@ package Wayland.Client.Protocol is
           Post => not Object.Has_Proxy;
 
    procedure Bind (Object   : in out Seat;
-                   Registry : Protocol.Registry;
+                   Registry : Protocol.Registry'Class;
                    Id       : Unsigned_32;
                    Version  : Unsigned_32)
      with Pre => not Object.Has_Proxy and Registry.Has_Proxy;
 
    procedure Get_Pointer (Object  : Seat;
-                          Pointer : in out Protocol.Pointer)
+                          Pointer : in out Protocol.Pointer'Class)
      with Pre => Object.Has_Proxy and not Pointer.Has_Proxy;
 
    procedure Get_Keyboard (Object   : Seat;
-                           Keyboard : in out Protocol.Keyboard)
+                           Keyboard : in out Protocol.Keyboard'Class)
      with Pre => Object.Has_Proxy and not Keyboard.Has_Proxy;
 
    procedure Get_Touch (Object : Seat;
-                        Touch  : in out Protocol.Touch)
+                        Touch  : in out Protocol.Touch'Class)
      with Pre => Object.Has_Proxy and not Touch.Has_Proxy;
-
-   type Pointer is tagged limited private;
 
    function Has_Proxy (Object : Pointer) return Boolean
      with Global => null;
@@ -451,12 +424,10 @@ package Wayland.Client.Protocol is
 
    procedure Set_Cursor (Object    : Pointer;
                          Serial    : Unsigned_32;
-                         Surface   : Protocol.Surface;
+                         Surface   : Protocol.Surface'Class;
                          Hotspot_X : Integer;
                          Hotspot_Y : Integer)
      with Pre => Object.Has_Proxy;
-
-   type Keyboard is tagged limited private;
 
    function Has_Proxy (Object : Keyboard) return Boolean
      with Global => null;
@@ -472,8 +443,6 @@ package Wayland.Client.Protocol is
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
-   type Touch is tagged limited private;
-
    function Has_Proxy (Object : Touch) return Boolean
      with Global => null;
 
@@ -487,8 +456,6 @@ package Wayland.Client.Protocol is
    procedure Release (Object : in out Touch)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
-
-   type Output is tagged limited private;
 
    function Has_Proxy (Object : Output) return Boolean
      with Global => null;
@@ -504,8 +471,6 @@ package Wayland.Client.Protocol is
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
-   type Region is tagged limited private;
-
    function Has_Proxy (Object : Region) return Boolean
      with Global => null;
 
@@ -518,17 +483,15 @@ package Wayland.Client.Protocol is
 
    procedure Add (Object : Region;
                   X, Y   : Integer;
-                  Width  : Integer;
-                  Height : Integer)
+                  Width  : Natural;
+                  Height : Natural)
      with Pre => Object.Has_Proxy;
 
    procedure Subtract (Object : Region;
                        X, Y   : Integer;
-                       Width  : Integer;
-                       Height : Integer)
+                       Width  : Natural;
+                       Height : Natural)
      with Pre => Object.Has_Proxy;
-
-   type Subcompositor is tagged limited private;
 
    function Has_Proxy (Object : Subcompositor) return Boolean
      with Global => null;
@@ -541,12 +504,10 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Get_Subsurface (Object     : Subcompositor;
-                             Surface    : Protocol.Surface;
-                             Parent     : Protocol.Surface;
-                             Subsurface : in out Protocol.Subsurface)
+                             Surface    : Protocol.Surface'Class;
+                             Parent     : Protocol.Surface'Class;
+                             Subsurface : in out Protocol.Subsurface'Class)
      with Pre => Object.Has_Proxy and Surface.Has_Proxy and Parent.Has_Proxy;
-
-   type Subsurface is tagged limited private;
 
    function Has_Proxy (Object : Subsurface) return Boolean
      with Global => null;
@@ -562,11 +523,11 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    procedure Place_Above (Object  : Subsurface;
-                          Sibling : Surface)
+                          Sibling : Surface'Class)
      with Pre => Object.Has_Proxy and Sibling.Has_Proxy;
 
    procedure Place_Below (Object  : Subsurface;
-                          Sibling : Surface)
+                          Sibling : Surface'Class)
      with Pre => Object.Has_Proxy and Sibling.Has_Proxy;
 
    procedure Set_Sync (Object : Subsurface)

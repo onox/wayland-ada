@@ -9,9 +9,9 @@ package body Wayland.Client.Thin is
 
    use type Proxy_Ptr;
 
-   function Display_Connect (Name : C_String) return Display_Ptr is
+   function Display_Connect return Display_Ptr is
    begin
-      return Wayland.API.Display_Connect (Name);
+      return Wayland.API.Display_Connect (Interfaces.C.Strings.Null_Ptr);
    end Display_Connect;
 
    procedure Display_Disconnect (This : in out Display_Ptr) is

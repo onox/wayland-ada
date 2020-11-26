@@ -19,7 +19,7 @@ private package Wayland.Client.Thin is
    subtype Display_Ptr   is Wayland.API.Display_Ptr;
    subtype Interface_Ptr is Wayland.API.Interface_Ptr;
 
-   function Display_Connect (Name : C_String) return Display_Ptr;
+   function Display_Connect return Display_Ptr;
 
    procedure Display_Disconnect (This : in out Display_Ptr);
 
