@@ -25,6 +25,8 @@ package body Wayland.Client.Protocol is
 
    package body Display_Events is
 
+      subtype Data_Type is Display'Class;
+
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Error
@@ -48,10 +50,11 @@ package body Wayland.Client.Protocol is
          Code      : Unsigned_32;
          Message   : chars_ptr)
       is
-         D : constant Protocol.Display := (Proxy => Display);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Display);
+
          M : constant String := Interfaces.C.Strings.Value (Message);
       begin
-         Error (Data_Ptr (Conversion.To_Pointer (Data)), D, Object_Id, Code, M);
+         Error (Conversion.To_Pointer (Data).all, Object_Id, Code, M);
       end Internal_Error;
 
       procedure Internal_Delete_Id
@@ -59,9 +62,9 @@ package body Wayland.Client.Protocol is
          Display : Thin.Display_Ptr;
          Id      : Unsigned_32)
       is
-         D : constant Protocol.Display := (Proxy => Display);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Display);
       begin
-         Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
+         Delete_Id (Conversion.To_Pointer (Data).all, Id);
       end Internal_Delete_Id;
 
       Listener : aliased Thin.Display_Listener_T
@@ -69,21 +72,22 @@ package body Wayland.Client.Protocol is
             Delete_Id => Internal_Delete_Id'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Display;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Display'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Display_Add_Listener
            (Display  => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Display_Events;
 
    package body Registry_Events is
+
+      subtype Data_Type is Registry'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -108,10 +112,10 @@ package body Wayland.Client.Protocol is
          Interface_V : Protocol.Chars_Ptr;
          Version     : Unsigned_32)
       is
-         R : constant Protocol.Registry := (Proxy => Registry);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Registry);
       begin
          Global_Object_Added
-           (Data_Ptr (Conversion.To_Pointer (Data)), R, Id, Value (Interface_V), Version);
+           (Conversion.To_Pointer (Data).all, Id, Value (Interface_V), Version);
       end Internal_Object_Added;
 
       procedure Internal_Object_Removed
@@ -119,9 +123,9 @@ package body Wayland.Client.Protocol is
          Registry : Thin.Registry_Ptr;
          Id       : Unsigned_32)
       is
-         R : constant Protocol.Registry := (Proxy => Registry);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Registry);
       begin
-         Global_Object_Removed (Data_Ptr (Conversion.To_Pointer (Data)), R, Id);
+         Global_Object_Removed (Conversion.To_Pointer (Data).all, Id);
       end Internal_Object_Removed;
 
       Listener : aliased Protocol.Registry_Listener_T :=
@@ -131,15 +135,14 @@ package body Wayland.Client.Protocol is
       --  this generic can only be instantiated at library level.
 
       function Subscribe
-        (Object : in out Protocol.Registry;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Protocol.Registry'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Registry_Add_Listener
            (Registry => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
@@ -147,6 +150,8 @@ package body Wayland.Client.Protocol is
 
    package body Callback_Events is
 
+      subtype Data_Type is Callback'Class;
+
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Done
@@ -160,24 +165,23 @@ package body Wayland.Client.Protocol is
          Callback      : Thin.Callback_Ptr;
          Callback_Data : Unsigned_32)
       is
-         C : constant Protocol.Callback := (Proxy => Callback);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Callback);
       begin
-         Done (Data_Ptr (Conversion.To_Pointer (Data)), C, Callback_Data);
+         Done (Conversion.To_Pointer (Data).all, Callback_Data);
       end Internal_Done;
 
       Listener : aliased Thin.Callback_Listener_T
         := (Done => Internal_Done'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Callback;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Callback'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Callback_Add_Listener
            (Callback => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
@@ -185,6 +189,8 @@ package body Wayland.Client.Protocol is
 
    package body Shm_Events is
 
+      subtype Data_Type is Shm'Class;
+
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Format
@@ -198,25 +204,24 @@ package body Wayland.Client.Protocol is
          Shm    : Thin.Shm_Ptr;
          Format : Shm_Format)
       is
-         S : constant Protocol.Shm := (Proxy => Shm);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Shm);
       begin
          Shm_Events.Format
-           (Data_Ptr (Conversion.To_Pointer (Data)), S, Format);
+           (Conversion.To_Pointer (Data).all, Format);
       end Internal_Format;
 
       Listener : aliased Thin.Shm_Listener_T
         := (Format => Internal_Format'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Shm;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Shm'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Shm_Add_Listener
            (Shm      => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
@@ -224,6 +229,8 @@ package body Wayland.Client.Protocol is
 
    package body Buffer_Events is
 
+      subtype Data_Type is Buffer'Class;
+
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Release
@@ -235,24 +242,23 @@ package body Wayland.Client.Protocol is
         (Data   : Void_Ptr;
          Buffer : Thin.Buffer_Ptr)
       is
-         B : constant Protocol.Buffer := (Proxy => Buffer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Buffer);
       begin
-         Release (Data_Ptr (Conversion.To_Pointer (Data)), B);
+         Release (Conversion.To_Pointer (Data).all);
       end Internal_Release;
 
       Listener : aliased Thin.Buffer_Listener_T
         := (Release => Internal_Release'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Buffer;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Buffer'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Buffer_Add_Listener
            (Buffer   => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
@@ -260,6 +266,8 @@ package body Wayland.Client.Protocol is
 
    package body Data_Offer_Events is
 
+      subtype Data_Type is Data_Offer'Class;
+
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Offer
@@ -285,10 +293,11 @@ package body Wayland.Client.Protocol is
          Data_Offer : Thin.Data_Offer_Ptr;
          Mime_Type  : chars_ptr)
       is
-         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);
+
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
-         Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
+         Offer (Conversion.To_Pointer (Data).all, M);
       end Internal_Offer;
 
       procedure Internal_Source_Actions
@@ -296,10 +305,10 @@ package body Wayland.Client.Protocol is
          Data_Offer     : Thin.Data_Offer_Ptr;
          Source_Actions : Unsigned_32)
       is
-         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);
       begin
          Data_Offer_Events.Source_Actions
-           (Data_Ptr (Conversion.To_Pointer (Data)), D, Source_Actions);
+           (Conversion.To_Pointer (Data).all, Source_Actions);
       end Internal_Source_Actions;
 
       procedure Internal_Action
@@ -307,9 +316,9 @@ package body Wayland.Client.Protocol is
          Data_Offer : Thin.Data_Offer_Ptr;
          Dnd_Action : Unsigned_32)
       is
-         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);
       begin
-         Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
+         Action (Conversion.To_Pointer (Data).all, Dnd_Action);
       end Internal_Action;
 
       Listener : aliased Thin.Data_Offer_Listener_T
@@ -318,21 +327,22 @@ package body Wayland.Client.Protocol is
             Action         => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Data_Offer;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Data_Offer'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Data_Offer_Add_Listener
            (Data_Offer => Object.Proxy,
             Listener   => Listener'Access,
-            Data       => Data.all'Address);
+            Data       => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Offer_Events;
 
    package body Data_Source_Events is
+
+      subtype Data_Type is Data_Source'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -375,10 +385,11 @@ package body Wayland.Client.Protocol is
          Data_Source : Thin.Data_Source_Ptr;
          Mime_Type   : chars_ptr)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
+
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
-         Target (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
+         Target (Conversion.To_Pointer (Data).all, M);
       end Internal_Target;
 
       procedure Internal_Send
@@ -387,37 +398,38 @@ package body Wayland.Client.Protocol is
          Mime_Type   : chars_ptr;
          Fd          : Integer)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
+
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
-         Send (Data_Ptr (Conversion.To_Pointer (Data)), D, M, Fd);
+         Send (Conversion.To_Pointer (Data).all, M, Fd);
       end Internal_Send;
 
       procedure Internal_Cancelled
         (Data        : Void_Ptr;
          Data_Source : Thin.Data_Source_Ptr)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
       begin
-         Cancelled (Data_Ptr (Conversion.To_Pointer (Data)), D);
+         Cancelled (Conversion.To_Pointer (Data).all);
       end Internal_Cancelled;
 
       procedure Internal_Dnd_Drop_Performed
         (Data        : Void_Ptr;
          Data_Source : Thin.Data_Source_Ptr)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
       begin
-         Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
+         Dnd_Drop_Performed (Conversion.To_Pointer (Data).all);
       end Internal_Dnd_Drop_Performed;
 
       procedure Internal_Dnd_Finished
         (Data        : Void_Ptr;
          Data_Source : Thin.Data_Source_Ptr)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
       begin
-         Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
+         Dnd_Drop_Performed (Conversion.To_Pointer (Data).all);
       end Internal_Dnd_Finished;
 
       procedure Internal_Action
@@ -425,9 +437,9 @@ package body Wayland.Client.Protocol is
          Data_Source : Thin.Data_Source_Ptr;
          Dnd_Action  : Unsigned_32)
       is
-         D : constant Protocol.Data_Source := (Proxy => Data_Source);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);
       begin
-         Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
+         Action (Conversion.To_Pointer (Data).all, Dnd_Action);
       end Internal_Action;
 
       Listener : aliased Thin.Data_Source_Listener_T
@@ -440,21 +452,22 @@ package body Wayland.Client.Protocol is
             Action             => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Data_Source;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Data_Source'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Data_Source_Add_Listener
            (Data_Source => Object.Proxy,
             Listener    => Listener'Access,
-            Data        => Data.all'Address);
+            Data        => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Source_Events;
 
    package body Data_Device_Events is
+
+      subtype Data_Type is Data_Device'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -501,9 +514,9 @@ package body Wayland.Client.Protocol is
          Data_Device : Thin.Data_Device_Ptr;
          Id          : Unsigned_32)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
       begin
-         Data_Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
+         Data_Offer (Conversion.To_Pointer (Data).all, Id);
       end Internal_Data_Offer;
 
       procedure Internal_Enter
@@ -514,20 +527,21 @@ package body Wayland.Client.Protocol is
          X, Y        : Fixed;
          Id          : Thin.Data_Offer_Ptr)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
+
          S : constant Protocol.Surface     := (Proxy => Surface);
          Offer : constant Protocol.Data_Offer := (Proxy => Id);
       begin
-         Enter (Data_Ptr (Conversion.To_Pointer (Data)), D, Serial, S, X, Y, Offer);
+         Enter (Conversion.To_Pointer (Data).all, Serial, S, X, Y, Offer);
       end Internal_Enter;
 
       procedure Internal_Leave
         (Data        : Void_Ptr;
          Data_Device : Thin.Data_Device_Ptr)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
       begin
-         Leave (Data_Ptr (Conversion.To_Pointer (Data)), D);
+         Leave (Conversion.To_Pointer (Data).all);
       end Internal_Leave;
 
       procedure Internal_Motion
@@ -536,18 +550,18 @@ package body Wayland.Client.Protocol is
          Time        : Unsigned_32;
          X, Y        : Fixed)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
       begin
-         Motion (Data_Ptr (Conversion.To_Pointer (Data)), D, Time, X, Y);
+         Motion (Conversion.To_Pointer (Data).all, Time, X, Y);
       end Internal_Motion;
 
       procedure Internal_Drop
         (Data        : Void_Ptr;
          Data_Device : Thin.Data_Device_Ptr)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
       begin
-         Drop (Data_Ptr (Conversion.To_Pointer (Data)), D);
+         Drop (Conversion.To_Pointer (Data).all);
       end Internal_Drop;
 
       procedure Internal_Selection
@@ -555,10 +569,11 @@ package body Wayland.Client.Protocol is
          Data_Device : Thin.Data_Device_Ptr;
          Id          : Thin.Data_Offer_Ptr)
       is
-         D : constant Protocol.Data_Device := (Proxy => Data_Device);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);
+
          Offer : constant Protocol.Data_Offer := (Proxy => Id);
       begin
-         Selection (Data_Ptr (Conversion.To_Pointer (Data)), D, Offer);
+         Selection (Conversion.To_Pointer (Data).all, Offer);
       end Internal_Selection;
 
       Listener : aliased Thin.Data_Device_Listener_T
@@ -570,21 +585,22 @@ package body Wayland.Client.Protocol is
             Selection  => Internal_Selection'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Data_Device;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Data_Device'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Data_Device_Add_Listener
            (Data_Device => Object.Proxy,
             Listener    => Listener'Access,
-            Data        => Data.all'Address);
+            Data        => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Device_Events;
 
    package body Surface_Events is
+
+      subtype Data_Type is Surface'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -605,10 +621,11 @@ package body Wayland.Client.Protocol is
          Surface : Thin.Surface_Ptr;
          Output  : Thin.Output_Ptr)
       is
-         S : constant Protocol.Surface := (Proxy => Surface);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Surface);
+
          O : constant Protocol.Output := (Proxy => Output);
       begin
-         Enter (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
+         Enter (Conversion.To_Pointer (Data).all, O);
       end Internal_Enter;
 
       procedure Internal_Leave
@@ -616,10 +633,11 @@ package body Wayland.Client.Protocol is
          Surface : Thin.Surface_Ptr;
          Output  : Thin.Output_Ptr)
       is
-         S : constant Protocol.Surface := (Proxy => Surface);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Surface);
+
          O : constant Protocol.Output := (Proxy => Output);
       begin
-         Leave (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
+         Leave (Conversion.To_Pointer (Data).all, O);
       end Internal_Leave;
 
       Listener : aliased Thin.Surface_Listener_T
@@ -627,21 +645,22 @@ package body Wayland.Client.Protocol is
             Leave => Internal_Leave'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Surface;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Surface'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Surface_Add_Listener
            (Surface  => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Surface_Events;
 
    package body Seat_Events is
+
+      subtype Data_Type is Seat'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -662,11 +681,9 @@ package body Wayland.Client.Protocol is
          Seat         : Thin.Seat_Ptr;
          Capabilities : Seat_Capability)
       is
-         S : constant Protocol.Seat := (Proxy => Seat);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Seat);
       begin
-         Seat_Capabilities (Data_Ptr (Conversion.To_Pointer (Data)),
-                            S,
-                            Capabilities);
+         Seat_Capabilities (Conversion.To_Pointer (Data).all, Capabilities);
       end Internal_Seat_Capabilities;
 
       procedure Internal_Seat_Name
@@ -676,9 +693,9 @@ package body Wayland.Client.Protocol is
       is
          N : constant String := Interfaces.C.Strings.Value (Name);
 
-         S : constant Protocol.Seat := (Proxy => Seat);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Seat);
       begin
-         Seat_Name (Data_Ptr (Conversion.To_Pointer (Data)), S, N);
+         Seat_Name (Conversion.To_Pointer (Data).all, N);
       end Internal_Seat_Name;
 
       Seat_Listener : aliased Thin.Seat_Listener_T :=
@@ -686,21 +703,22 @@ package body Wayland.Client.Protocol is
          Name         => Internal_Seat_Name'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Seat;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Seat'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Seat_Add_Listener
            (Seat     => Object.Proxy,
             Listener => Seat_Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Seat_Events;
 
    package body Pointer_Events is
+
+      subtype Data_Type is Pointer'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -778,15 +796,11 @@ package body Wayland.Client.Protocol is
          Surface_X : Fixed;
          Surface_Y : Fixed)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
+
          S : constant Protocol.Surface := (Proxy => Surface);
       begin
-         Pointer_Enter (Data_Ptr (Conversion.To_Pointer (Data)),
-                        P,
-                        Serial,
-                        S,
-                        Surface_X,
-                        Surface_Y);
+         Pointer_Enter (Conversion.To_Pointer (Data).all, Serial, S, Surface_X, Surface_Y);
       end Internal_Pointer_Enter;
 
       procedure Internal_Pointer_Leave
@@ -795,10 +809,11 @@ package body Wayland.Client.Protocol is
          Serial  : Unsigned_32;
          Surface : Thin.Surface_Ptr)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
+
          S : constant Protocol.Surface := (Proxy => Surface);
       begin
-         Pointer_Leave (Data_Ptr (Conversion.To_Pointer (Data)), P, Serial, S);
+         Pointer_Leave (Conversion.To_Pointer (Data).all, Serial, S);
       end Internal_Pointer_Leave;
 
       procedure Internal_Pointer_Motion
@@ -808,13 +823,9 @@ package body Wayland.Client.Protocol is
          Surface_X : Fixed;
          Surface_Y : Fixed)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Motion (Data_Ptr (Conversion.To_Pointer (Data)),
-                         P,
-                         Time,
-                         Surface_X,
-                         Surface_Y);
+         Pointer_Motion (Conversion.To_Pointer (Data).all, Time, Surface_X, Surface_Y);
       end Internal_Pointer_Motion;
 
       procedure Internal_Pointer_Button
@@ -825,14 +836,9 @@ package body Wayland.Client.Protocol is
          Button  : Unsigned_32;
          State   : Pointer_Button_State)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Button (Data_Ptr (Conversion.To_Pointer (Data)),
-                         P,
-                         Serial,
-                         Time,
-                         Button,
-                         State);
+         Pointer_Button (Conversion.To_Pointer (Data).all, Serial, Time, Button, State);
       end Internal_Pointer_Button;
 
       procedure Internal_Pointer_Axis
@@ -842,21 +848,17 @@ package body Wayland.Client.Protocol is
          Axis    : Pointer_Axis;
          Value   : Fixed)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Scroll (Data_Ptr (Conversion.To_Pointer (Data)),
-                       P,
-                       Time,
-                       Axis,
-                       Value);
+         Pointer_Scroll (Conversion.To_Pointer (Data).all, Time, Axis, Value);
       end Internal_Pointer_Axis;
 
       procedure Internal_Pointer_Frame (Data    : Void_Ptr;
                                         Pointer : Thin.Pointer_Ptr)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Frame (Data_Ptr (Conversion.To_Pointer (Data)), P);
+         Pointer_Frame (Conversion.To_Pointer (Data).all);
       end Internal_Pointer_Frame;
 
       procedure Internal_Pointer_Axis_Source
@@ -864,11 +866,9 @@ package body Wayland.Client.Protocol is
          Pointer     : Thin.Pointer_Ptr;
          Axis_Source : Pointer_Axis_Source)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Scroll_Source (Data_Ptr (Conversion.To_Pointer (Data)),
-                              P,
-                              Axis_Source);
+         Pointer_Scroll_Source (Conversion.To_Pointer (Data).all, Axis_Source);
       end Internal_Pointer_Axis_Source;
 
       procedure Internal_Pointer_Axis_Stop
@@ -877,12 +877,9 @@ package body Wayland.Client.Protocol is
          Time    : Unsigned_32;
          Axis    : Pointer_Axis)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Scroll_Stop (Data_Ptr (Conversion.To_Pointer (Data)),
-                            P,
-                            Time,
-                            Axis);
+         Pointer_Scroll_Stop (Conversion.To_Pointer (Data).all, Time, Axis);
       end Internal_Pointer_Axis_Stop;
 
       procedure Internal_Pointer_Axis_Discrete
@@ -891,12 +888,9 @@ package body Wayland.Client.Protocol is
          Axis     : Pointer_Axis;
          Discrete : Integer)
       is
-         P : constant Protocol.Pointer := (Proxy => Pointer);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);
       begin
-         Pointer_Scroll_Discrete (Data_Ptr (Conversion.To_Pointer (Data)),
-                                P,
-                                Axis,
-                                Discrete);
+         Pointer_Scroll_Discrete (Conversion.To_Pointer (Data).all, Axis, Discrete);
       end Internal_Pointer_Axis_Discrete;
 
       Pointer_Listener : aliased Thin.Pointer_Listener_T :=
@@ -911,21 +905,22 @@ package body Wayland.Client.Protocol is
          Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Pointer;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Pointer'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Pointer_Add_Listener
            (Pointer  => Object.Proxy,
             Listener => Pointer_Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Pointer_Events;
 
    package body Keyboard_Events is
+
+      subtype Data_Type is Keyboard'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -985,9 +980,9 @@ package body Wayland.Client.Protocol is
          Fd       : Integer;
          Size     : Unsigned_32)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
       begin
-         Keymap (Data_Ptr (Conversion.To_Pointer (Data)), K, Format, Fd, Size);
+         Keymap (Conversion.To_Pointer (Data).all, Format, Fd, Size);
       end Internal_Keymap;
 
       procedure Internal_Enter
@@ -997,10 +992,11 @@ package body Wayland.Client.Protocol is
          Surface  : Thin.Surface_Ptr;
          Keys     : Wayland_Array_T)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
+
          S : constant Protocol.Surface  := (Proxy => Surface);
       begin
-         Enter (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, S, Keys);
+         Enter (Conversion.To_Pointer (Data).all, Serial, S, Keys);
       end Internal_Enter;
 
       procedure Internal_Leave
@@ -1009,10 +1005,11 @@ package body Wayland.Client.Protocol is
          Serial   : Unsigned_32;
          Surface  : Thin.Surface_Ptr)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
+
          S : constant Protocol.Surface  := (Proxy => Surface);
       begin
-         Leave (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, S);
+         Leave (Conversion.To_Pointer (Data).all, Serial, S);
       end Internal_Leave;
 
       procedure Internal_Key
@@ -1023,9 +1020,9 @@ package body Wayland.Client.Protocol is
          Key      : Unsigned_32;
          State    : Keyboard_Key_State)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
       begin
-         Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, Time, Key, State);
+         Keyboard_Events.Key (Conversion.To_Pointer (Data).all, Serial, Time, Key, State);
       end Internal_Key;
 
       procedure Internal_Modifiers
@@ -1037,11 +1034,10 @@ package body Wayland.Client.Protocol is
          Mods_Locked    : Unsigned_32;
          Group          : Unsigned_32)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
       begin
          Modifiers
-           (Data_Ptr (Conversion.To_Pointer (Data)),
-            K,
+           (Conversion.To_Pointer (Data).all,
             Serial,
             Mods_Depressed,
             Mods_Latched,
@@ -1055,9 +1051,9 @@ package body Wayland.Client.Protocol is
          Rate     : Integer;
          Delay_V  : Integer)
       is
-         K : constant Protocol.Keyboard := (Proxy => Keyboard);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);
       begin
-         Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)), K, Rate, Delay_V);
+         Repeat_Info (Conversion.To_Pointer (Data).all, Rate, Delay_V);
       end Internal_Repeat_Info;
 
       Listener : aliased Thin.Keyboard_Listener_T
@@ -1069,21 +1065,22 @@ package body Wayland.Client.Protocol is
             Repeat_Info => Internal_Repeat_Info'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Keyboard;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Keyboard'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Keyboard_Add_Listener
            (Keyboard => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Keyboard_Events;
 
    package body Touch_Events is
+
+      subtype Data_Type is Touch'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -1147,10 +1144,11 @@ package body Wayland.Client.Protocol is
          Id      : Integer;
          X, Y    : Fixed)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
+
          S : constant Protocol.Surface := (Proxy => Surface);
       begin
-         Down (Data_Ptr (Conversion.To_Pointer (Data)), T, Serial, Time, S, Id, X, Y);
+         Down (Conversion.To_Pointer (Data).all, Serial, Time, S, Id, X, Y);
       end Internal_Down;
 
       procedure Internal_Up
@@ -1160,9 +1158,9 @@ package body Wayland.Client.Protocol is
          Time   : Unsigned_32;
          Id     : Integer)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Up (Data_Ptr (Conversion.To_Pointer (Data)), T, Serial, Time, Id);
+         Up (Conversion.To_Pointer (Data).all, Serial, Time, Id);
       end Internal_Up;
 
       procedure Internal_Motion
@@ -1172,27 +1170,27 @@ package body Wayland.Client.Protocol is
          Id    : Integer;
          X, Y  : Fixed)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Motion (Data_Ptr (Conversion.To_Pointer (Data)), T, Time, Id, X, Y);
+         Motion (Conversion.To_Pointer (Data).all, Time, Id, X, Y);
       end Internal_Motion;
 
       procedure Internal_Frame
         (Data  : Void_Ptr;
          Touch : Thin.Touch_Ptr)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Frame (Data_Ptr (Conversion.To_Pointer (Data)), T);
+         Frame (Conversion.To_Pointer (Data).all);
       end Internal_Frame;
 
       procedure Internal_Cancel
         (Data  : Void_Ptr;
          Touch : Thin.Touch_Ptr)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
+         Cancel (Conversion.To_Pointer (Data).all);
       end Internal_Cancel;
 
       procedure Internal_Shape
@@ -1202,9 +1200,9 @@ package body Wayland.Client.Protocol is
          Major : Fixed;
          Minor : Fixed)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Shape (Data_Ptr (Conversion.To_Pointer (Data)), T, Id, Major, Minor);
+         Shape (Conversion.To_Pointer (Data).all, Id, Major, Minor);
       end Internal_Shape;
 
       procedure Internal_Orientation
@@ -1213,9 +1211,9 @@ package body Wayland.Client.Protocol is
          Id          : Integer;
          Orientation : Fixed)
       is
-         T : constant Protocol.Touch := (Proxy => Touch);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);
       begin
-         Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)), T, Id, Orientation);
+         Touch_Events.Orientation (Conversion.To_Pointer (Data).all, Id, Orientation);
       end Internal_Orientation;
 
       Listener : aliased Thin.Touch_Listener_T
@@ -1228,21 +1226,22 @@ package body Wayland.Client.Protocol is
             Orientation => Internal_Orientation'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Touch;
-         Data  : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Touch'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Touch_Add_Listener
            (Touch    => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Touch_Events;
 
    package body Output_Events is
+
+      subtype Data_Type is Output'Class;
 
       package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
@@ -1289,13 +1288,13 @@ package body Wayland.Client.Protocol is
          Model           : chars_ptr;
          Transform       : Output_Transform)
       is
-         O : constant Protocol.Output := (Proxy => Output);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Output);
+
          Ma : constant String := Interfaces.C.Strings.Value (Make);
          Mo : constant String := Interfaces.C.Strings.Value (Model);
       begin
          Geometry
-           (Data_Ptr (Conversion.To_Pointer (Data)),
-            O,
+           (Conversion.To_Pointer (Data).all,
             X,
             Y,
             Physical_Width,
@@ -1314,11 +1313,10 @@ package body Wayland.Client.Protocol is
          Height  : Integer;
          Refresh : Integer)
       is
-         O : constant Protocol.Output := (Proxy => Output);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Output);
       begin
          Mode
-           (Data_Ptr (Conversion.To_Pointer (Data)),
-            O,
+           (Conversion.To_Pointer (Data).all,
             Flags,
             Width,
             Height,
@@ -1329,9 +1327,9 @@ package body Wayland.Client.Protocol is
         (Data   : Void_Ptr;
          Output : Thin.Output_Ptr)
       is
-         O : constant Protocol.Output := (Proxy => Output);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Output);
       begin
-         Done (Data_Ptr (Conversion.To_Pointer (Data)), O);
+         Done (Conversion.To_Pointer (Data).all);
       end Internal_Done;
 
       procedure Internal_Scale
@@ -1339,9 +1337,9 @@ package body Wayland.Client.Protocol is
          Output : Thin.Output_Ptr;
          Factor : Integer)
       is
-         O : constant Protocol.Output := (Proxy => Output);
+         pragma Assert (Conversion.To_Pointer (Data).Proxy = Output);
       begin
-         Scale (Data_Ptr (Conversion.To_Pointer (Data)), O, Factor);
+         Scale (Conversion.To_Pointer (Data).all, Factor);
       end Internal_Scale;
 
       Listener : aliased Thin.Output_Listener_T
@@ -1351,15 +1349,14 @@ package body Wayland.Client.Protocol is
             Scale    => Internal_Scale'Unrestricted_Access);
 
       function Subscribe
-        (Object : in out Output;
-         Data   : not null Data_Ptr) return Call_Result_Code
+        (Object : aliased in out Output'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Output_Add_Listener
            (Output   => Object.Proxy,
             Listener => Listener'Access,
-            Data     => Data.all'Address);
+            Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
 

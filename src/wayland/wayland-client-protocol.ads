@@ -535,12 +535,8 @@ package Wayland.Client.Protocol is
      with Pre => Object.Has_Proxy;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Error
-        (Data      : not null Data_Ptr;
-         Display   : Protocol.Display;
+        (Display   : in out Protocol.Display'Class;
          Object_Id : Void_Ptr;
          Code      : Unsigned_32;
          Message   : String);
@@ -548,340 +544,257 @@ package Wayland.Client.Protocol is
       --  of the API can potentially be improved upon.
 
       with procedure Delete_Id
-        (Data    : not null Data_Ptr;
-         Display : Protocol.Display;
+        (Display : in out Protocol.Display'Class;
          Id      : Unsigned_32);
    package Display_Events is
 
       function Subscribe
-        (Object : in out Display;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Display'Class) return Call_Result_Code;
 
    end Display_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Global_Object_Added
-        (Data     : not null Data_Ptr;
-         Registry : Protocol.Registry;
+        (Registry : in out Protocol.Registry'Class;
          Id       : Unsigned_32;
          Name     : String;
          Version  : Unsigned_32);
 
       with procedure Global_Object_Removed
-        (Data     : not null Data_Ptr;
-         Registry : Protocol.Registry;
+        (Registry : in out Protocol.Registry'Class;
          Id       : Unsigned_32);
    package Registry_Events is
 
       function Subscribe
-        (Object : in out Registry;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Registry'Class) return Call_Result_Code;
 
    end Registry_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Done
-        (Data          : not null Data_Ptr;
-         Callback      : Protocol.Callback;
+        (Callback      : in out Protocol.Callback'Class;
          Callback_Data : Unsigned_32);
    package Callback_Events is
 
       function Subscribe
-        (Object : in out Callback;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Callback'Class) return Call_Result_Code;
 
    end Callback_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Format
-        (Data   : not null Data_Ptr;
-         Shm    : Protocol.Shm;
+        (Shm    : in out Protocol.Shm'Class;
          Format : Shm_Format);
    package Shm_Events is
 
       function Subscribe
-        (Object : in out Shm;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Shm'Class) return Call_Result_Code;
 
    end Shm_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Release
-        (Data   : not null Data_Ptr;
-         Buffer : Protocol.Buffer);
+        (Buffer : in out Protocol.Buffer'Class);
    package Buffer_Events is
 
       function Subscribe
-        (Object : in out Buffer;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Buffer'Class) return Call_Result_Code;
 
    end Buffer_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Offer
-        (Data       : not null Data_Ptr;
-         Data_Offer : Protocol.Data_Offer;
+        (Data_Offer : in out Protocol.Data_Offer'Class;
          Mime_Type  : String);
 
       with procedure Source_Actions
-        (Data           : not null Data_Ptr;
-         Data_Offer     : Protocol.Data_Offer;
+        (Data_Offer     : in out Protocol.Data_Offer'Class;
          Source_Actions : Unsigned_32);
 
       with procedure Action
-        (Data       : not null Data_Ptr;
-         Data_Offer : Protocol.Data_Offer;
+        (Data_Offer : in out Protocol.Data_Offer'Class;
          Dnd_Action : Unsigned_32);
    package Data_Offer_Events is
 
       function Subscribe
-        (Object : in out Data_Offer;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Data_Offer'Class) return Call_Result_Code;
 
    end Data_Offer_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Target
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source;
+        (Data_Source : in out Protocol.Data_Source'Class;
          Mime_Type   : String);
 
       with procedure Send
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source;
+        (Data_Source : in out Protocol.Data_Source'Class;
          Mime_Type   : String;
          Fd          : Integer);
 
       with procedure Cancelled
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source);
+        (Data_Source : in out Protocol.Data_Source'Class);
 
       with procedure Dnd_Drop_Performed
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source);
+        (Data_Source : in out Protocol.Data_Source'Class);
 
       with procedure Dnd_Finished
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source);
+        (Data_Source : in out Protocol.Data_Source'Class);
 
       with procedure Action
-        (Data        : not null Data_Ptr;
-         Data_Source : Protocol.Data_Source;
+        (Data_Source : in out Protocol.Data_Source'Class;
          Dnd_Action  : Unsigned_32);
    package Data_Source_Events is
 
       function Subscribe
-        (Object : in out Data_Source;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Data_Source'Class) return Call_Result_Code;
 
    end Data_Source_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Data_Offer
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device;
+        (Data_Device : in out Protocol.Data_Device'Class;
          Id          : Unsigned_32);
 
       with procedure Enter
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device;
+        (Data_Device : in out Protocol.Data_Device'Class;
          Serial      : Unsigned_32;
          Surface     : Protocol.Surface;
          X, Y        : Fixed;
          Id          : Protocol.Data_Offer);
 
       with procedure Leave
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device);
+        (Data_Device : in out Protocol.Data_Device'Class);
 
       with procedure Motion
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device;
+        (Data_Device : in out Protocol.Data_Device'Class;
          Time        : Unsigned_32;
          X, Y        : Fixed);
 
       with procedure Drop
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device);
+        (Data_Device : in out Protocol.Data_Device'Class);
 
       with procedure Selection
-        (Data        : not null Data_Ptr;
-         Data_Device : Protocol.Data_Device;
+        (Data_Device : in out Protocol.Data_Device'Class;
          Id          : Protocol.Data_Offer);
    package Data_Device_Events is
 
       function Subscribe
-        (Object : in out Data_Device;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Data_Device'Class) return Call_Result_Code;
 
    end Data_Device_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Enter
-        (Data    : not null Data_Ptr;
-         Surface : Protocol.Surface;
+        (Surface : in out Protocol.Surface'Class;
          Output  : Protocol.Output);
 
       with procedure Leave
-        (Data    : not null Data_Ptr;
-         Surface : Protocol.Surface;
+        (Surface : in out Protocol.Surface'Class;
          Output  : Protocol.Output);
    package Surface_Events is
 
       function Subscribe
-        (Object : in out Surface;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Surface'Class) return Call_Result_Code;
 
    end Surface_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Seat_Capabilities
-        (Data         : not null Data_Ptr;
-         Seat         : Protocol.Seat;
+        (Seat         : in out Protocol.Seat'Class;
          Capabilities : Seat_Capability);
 
       with procedure Seat_Name
-        (Data : not null Data_Ptr;
-         Seat : Protocol.Seat;
+        (Seat : in out Protocol.Seat'Class;
          Name : String);
    package Seat_Events is
 
       function Subscribe
-        (Object : in out Seat;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Seat'Class) return Call_Result_Code;
 
    end Seat_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Pointer_Enter
-        (Data      : not null Data_Ptr;
-         Pointer   : Protocol.Pointer;
+        (Pointer   : in out Protocol.Pointer'Class;
          Serial    : Unsigned_32;
          Surface   : Protocol.Surface;
          Surface_X : Fixed;
          Surface_Y : Fixed);
 
       with procedure Pointer_Leave
-        (Data    : not null Data_Ptr;
-         Pointer : Protocol.Pointer;
+        (Pointer : in out Protocol.Pointer'Class;
          Serial  : Unsigned_32;
          Surface : Protocol.Surface);
 
       with procedure Pointer_Motion
-        (Data      : not null Data_Ptr;
-         Pointer   : Protocol.Pointer;
+        (Pointer   : in out Protocol.Pointer'Class;
          Time      : Unsigned_32;
          Surface_X : Fixed;
          Surface_Y : Fixed);
 
       with procedure Pointer_Button
-        (Data    : not null Data_Ptr;
-         Pointer : Protocol.Pointer;
+        (Pointer : in out Protocol.Pointer'Class;
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Button  : Unsigned_32;
          State   : Pointer_Button_State);
 
       with procedure Pointer_Scroll
-        (Data    : not null Data_Ptr;
-         Pointer : Protocol.Pointer;
+        (Pointer : in out Protocol.Pointer'Class;
          Time    : Unsigned_32;
          Axis    : Pointer_Axis;
          Value   : Fixed);
 
       with procedure Pointer_Frame
-        (Data    : not null Data_Ptr;
-         Pointer : Protocol.Pointer);
+        (Pointer : in out Protocol.Pointer'Class);
 
       with procedure Pointer_Scroll_Source
-        (Data        : not null Data_Ptr;
-         Pointer     : Protocol.Pointer;
+        (Pointer     : in out Protocol.Pointer'Class;
          Axis_Source : Pointer_Axis_Source);
 
       with procedure Pointer_Scroll_Stop
-        (Data    : not null Data_Ptr;
-         Pointer : Protocol.Pointer;
+        (Pointer : in out Protocol.Pointer'Class;
          Time    : Unsigned_32;
          Axis    : Pointer_Axis);
 
       with procedure Pointer_Scroll_Discrete
-        (Data     : not null Data_Ptr;
-         Pointer  : Protocol.Pointer;
+        (Pointer  : in out Protocol.Pointer'Class;
          Axis     : Pointer_Axis;
          Discrete : Integer);
    package Pointer_Events is
 
       function Subscribe
-        (Object : in out Pointer;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Pointer'Class) return Call_Result_Code;
 
    end Pointer_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Keymap
-        (Data     : not null Data_Ptr;
-         Keyboard : Protocol.Keyboard;
+        (Keyboard : in out Protocol.Keyboard'Class;
          Format   : Keyboard_Keymap_Format;
          Fd       : Integer;
          Size     : Unsigned_32);
 
       with procedure Enter
-        (Data     : not null Data_Ptr;
-         Keyboard : Protocol.Keyboard;
+        (Keyboard : in out Protocol.Keyboard'Class;
          Serial   : Unsigned_32;
          Surface  : Protocol.Surface;
          Keys     : Wayland_Array_T);
 
       with procedure Leave
-        (Data     : not null Data_Ptr;
-         Keyboard : Protocol.Keyboard;
+        (Keyboard : in out Protocol.Keyboard'Class;
          Serial   : Unsigned_32;
          Surface  : Protocol.Surface);
 
       with procedure Key
-        (Data     : not null Data_Ptr;
-         Keyboard : Protocol.Keyboard;
+        (Keyboard : in out Protocol.Keyboard'Class;
          Serial   : Unsigned_32;
          Time     : Unsigned_32;
          Key      : Unsigned_32;
          State    : Keyboard_Key_State);
 
       with procedure Modifiers
-        (Data           : not null Data_Ptr;
-         Keyboard       : Protocol.Keyboard;
+        (Keyboard       : in out Protocol.Keyboard'Class;
          Serial         : Unsigned_32;
          Mods_Depressed : Unsigned_32;
          Mods_Latched   : Unsigned_32;
@@ -889,25 +802,19 @@ package Wayland.Client.Protocol is
          Group          : Unsigned_32);
 
       with procedure Repeat_Info
-        (Data     : not null Data_Ptr;
-         Keyboard : Protocol.Keyboard;
+        (Keyboard : in out Protocol.Keyboard'Class;
          Rate     : Integer;
          Delay_V  : Integer);
    package Keyboard_Events is
 
       function Subscribe
-        (Object : in out Keyboard;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Keyboard'Class) return Call_Result_Code;
 
    end Keyboard_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Down
-        (Data    : not null Data_Ptr;
-         Touch   : Protocol.Touch;
+        (Touch   : in out Protocol.Touch'Class;
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Surface : Protocol.Surface;
@@ -915,54 +822,43 @@ package Wayland.Client.Protocol is
          X, Y    : Fixed);
 
       with procedure Up
-        (Data   : not null Data_Ptr;
-         Touch  : Protocol.Touch;
+        (Touch  : in out Protocol.Touch'Class;
          Serial : Unsigned_32;
          Time   : Unsigned_32;
          Id     : Integer);
 
       with procedure Motion
-        (Data  : not null Data_Ptr;
-         Touch : Protocol.Touch;
+        (Touch : in out Protocol.Touch'Class;
          Time  : Unsigned_32;
          Id    : Integer;
          X, Y  : Fixed);
 
       with procedure Frame
-        (Data  : not null Data_Ptr;
-         Touch : Protocol.Touch);
+        (Touch : in out Protocol.Touch'Class);
 
       with procedure Cancel
-        (Data  : not null Data_Ptr;
-         Touch : Protocol.Touch);
+        (Touch : in out Protocol.Touch'Class);
 
       with procedure Shape
-        (Data  : not null Data_Ptr;
-         Touch : Protocol.Touch;
+        (Touch : in out Protocol.Touch'Class;
          Id    : Integer;
          Major : Fixed;
          Minor : Fixed);
 
       with procedure Orientation
-        (Data        : not null Data_Ptr;
-         Touch       : Protocol.Touch;
+        (Touch       : in out Protocol.Touch'Class;
          Id          : Integer;
          Orientation : Fixed);
    package Touch_Events is
 
       function Subscribe
-        (Object : in out Touch;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Touch'Class) return Call_Result_Code;
 
    end Touch_Events;
 
    generic
-      type Data_Type is limited private;
-      type Data_Ptr is access all Data_Type;
-
       with procedure Geometry
-        (Data            : not null Data_Ptr;
-         Output          : Protocol.Output;
+        (Output          : in out Protocol.Output'Class;
          X, Y            : Integer;
          Physical_Width  : Integer;
          Physical_Height : Integer;
@@ -972,26 +868,22 @@ package Wayland.Client.Protocol is
          Transform       : Output_Transform);
 
       with procedure Mode
-        (Data    : not null Data_Ptr;
-         Output  : Protocol.Output;
+        (Output  : in out Protocol.Output'Class;
          Flags   : Output_Mode;
          Width   : Integer;
          Height  : Integer;
          Refresh : Integer);
 
       with procedure Done
-        (Data   : not null Data_Ptr;
-         Output : Protocol.Output);
+        (Output : in out Protocol.Output'Class);
 
       with procedure Scale
-        (Data   : not null Data_Ptr;
-         Output : Protocol.Output;
+        (Output : in out Protocol.Output'Class;
          Factor : Integer);
    package Output_Events is
 
       function Subscribe
-        (Object : in out Output;
-         Data   : not null Data_Ptr) return Call_Result_Code;
+        (Object : aliased in out Output'Class) return Call_Result_Code;
 
    end Output_Events;
 
