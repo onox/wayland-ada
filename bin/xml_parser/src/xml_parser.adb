@@ -1222,7 +1222,6 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
---            Put_Line (File, "     with Default_Initial_Condition => not Display.Is_Connected;");
             Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
             Put_Line (File, "     with Global => null;");
             Put_Line (File, "");

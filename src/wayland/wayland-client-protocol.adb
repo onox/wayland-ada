@@ -25,95 +25,81 @@ package body Wayland.Client.Protocol is
 
    package body Display_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Error (Data      : Void_Ptr;
-                                Display   : Thin.Display_Ptr;
-                                Object_Id : Void_Ptr;
-                                Code      : Unsigned_32;
-                                Message   : chars_ptr) with
-        Convention => C;
+      procedure Internal_Error
+        (Data      : Void_Ptr;
+         Display   : Thin.Display_Ptr;
+         Object_Id : Void_Ptr;
+         Code      : Unsigned_32;
+         Message   : chars_ptr)
+      with Convention => C;
 
-      procedure Internal_Delete_Id (Data    : Void_Ptr;
-                                    Display : Thin.Display_Ptr;
-                                    Id      : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Delete_Id
+        (Data    : Void_Ptr;
+         Display : Thin.Display_Ptr;
+         Id      : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Error (Data      : Void_Ptr;
-                                Display   : Thin.Display_Ptr;
-                                Object_Id : Void_Ptr;
-                                Code      : Unsigned_32;
-                                Message   : chars_ptr)
+      procedure Internal_Error
+        (Data      : Void_Ptr;
+         Display   : Thin.Display_Ptr;
+         Object_Id : Void_Ptr;
+         Code      : Unsigned_32;
+         Message   : chars_ptr)
       is
-         D : constant Protocol.Display
-           := (
-               Proxy                  => Display,
-               My_Fd                       =>
-                 Wayland.API.Display_Get_File_Descriptor (Display)
-              );
+         D : constant Protocol.Display := (Proxy => Display);
          M : constant String := Interfaces.C.Strings.Value (Message);
       begin
-         Error (Data_Ptr (Conversion.To_Pointer (Data)),
-                D,
-                Object_Id,
-                Code,
-                M);
+         Error (Data_Ptr (Conversion.To_Pointer (Data)), D, Object_Id, Code, M);
       end Internal_Error;
 
-      procedure Internal_Delete_Id (Data    : Void_Ptr;
-                                    Display : Thin.Display_Ptr;
-                                    Id      : Unsigned_32)
+      procedure Internal_Delete_Id
+        (Data    : Void_Ptr;
+         Display : Thin.Display_Ptr;
+         Id      : Unsigned_32)
       is
-         D : constant Protocol.Display
-           := (
-               Proxy                  => Display,
-               My_Fd                       =>
-                 Wayland.API.Display_Get_File_Descriptor (Display)
-              );
+         D : constant Protocol.Display := (Proxy => Display);
       begin
-         Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)),
-                    D,
-                    Id);
+         Delete_Id (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
       end Internal_Delete_Id;
 
       Listener : aliased Thin.Display_Listener_T
-        := (
-            Error     => Internal_Error'Unrestricted_Access,
-            Delete_Id => Internal_Delete_Id'Unrestricted_Access
-           );
+        := (Error     => Internal_Error'Unrestricted_Access,
+            Delete_Id => Internal_Delete_Id'Unrestricted_Access);
 
       function Subscribe
-        (Display : in out Protocol.Display;
-         Data    : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Display;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Display_Add_Listener (Display.Proxy,
-                                            Listener'Access,
-                                            Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Display_Add_Listener
+           (Display  => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Display_Events;
 
    package body Registry_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Object_Added
         (Data        : Void_Ptr;
          Registry    : Thin.Registry_Ptr;
          Id          : Unsigned_32;
          Interface_V : Protocol.Chars_Ptr;
-         Version     : Unsigned_32) with
-        Convention => C,
-        Global     => null;
+         Version     : Unsigned_32)
+      with Convention => C;
+
+      procedure Internal_Object_Removed
+        (Data     : Void_Ptr;
+         Registry : Thin.Registry_Ptr;
+         Id       : Unsigned_32)
+      with Convention => C;
 
       procedure Internal_Object_Added
         (Data        : Void_Ptr;
@@ -124,21 +110,14 @@ package body Wayland.Client.Protocol is
       is
          R : constant Protocol.Registry := (Proxy => Registry);
       begin
-         Global_Object_Added (Data_Ptr (Conversion.To_Pointer (Data)),
-                              R,
-                              Id,
-                              Value (Interface_V),
-                              Version);
+         Global_Object_Added
+           (Data_Ptr (Conversion.To_Pointer (Data)), R, Id, Value (Interface_V), Version);
       end Internal_Object_Added;
 
-      procedure Internal_Object_Removed (Data     : Void_Ptr;
-                                         Registry : Thin.Registry_Ptr;
-                                         Id       : Unsigned_32) with
-        Convention => C;
-
-      procedure Internal_Object_Removed (Data     : Void_Ptr;
-                                         Registry : Thin.Registry_Ptr;
-                                         Id       : Unsigned_32)
+      procedure Internal_Object_Removed
+        (Data     : Void_Ptr;
+         Registry : Thin.Registry_Ptr;
+         Id       : Unsigned_32)
       is
          R : constant Protocol.Registry := (Proxy => Registry);
       begin
@@ -146,44 +125,40 @@ package body Wayland.Client.Protocol is
       end Internal_Object_Removed;
 
       Listener : aliased Protocol.Registry_Listener_T :=
-        (
-         Global        => Internal_Object_Added'Unrestricted_Access,
-         Global_Remove => Internal_Object_Removed'Unrestricted_Access
-        );
-      -- Note: It should be safe to use Unrestricted_Access here since
-      -- this generic can only be instantiated at library level.
+        (Global        => Internal_Object_Added'Unrestricted_Access,
+         Global_Remove => Internal_Object_Removed'Unrestricted_Access);
+      --  Note: It should be safe to use Unrestricted_Access here since
+      --  this generic can only be instantiated at library level.
 
       function Subscribe
-        (Registry : in out Protocol.Registry;
-         Data     : not null Data_Ptr) return Call_Result_Code is
+        (Object : in out Protocol.Registry;
+         Data   : not null Data_Ptr) return Call_Result_Code
+      is
          I : int;
       begin
-         I := Thin.Registry_Add_Listener (Registry.Proxy,
-                                             Listener'Access,
-                                             Data.all'Address);
-
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Registry_Add_Listener
+           (Registry => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Registry_Events;
 
    package body Callback_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Done (Data          : Void_Ptr;
-                               Callback      : Thin.Callback_Ptr;
-                               Callback_Data : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Done
+        (Data          : Void_Ptr;
+         Callback      : Thin.Callback_Ptr;
+         Callback_Data : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Done (Data          : Void_Ptr;
-                               Callback      : Thin.Callback_Ptr;
-                               Callback_Data : Unsigned_32)
+      procedure Internal_Done
+        (Data          : Void_Ptr;
+         Callback      : Thin.Callback_Ptr;
+         Callback_Data : Unsigned_32)
       is
          C : constant Protocol.Callback := (Proxy => Callback);
       begin
@@ -194,36 +169,34 @@ package body Wayland.Client.Protocol is
         := (Done => Internal_Done'Unrestricted_Access);
 
       function Subscribe
-        (Callback : in out Protocol.Callback;
-         Data     : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Callback;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Callback_Add_Listener (Callback.Proxy,
-                                             Listener'Access,
-                                             Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Callback_Add_Listener
+           (Callback => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Callback_Events;
 
    package body Shm_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Format (Data   : Void_Ptr;
-                                 Shm    : Thin.Shm_Ptr;
-                                 Format : Shm_Format) with
-        Convention => C;
+      procedure Internal_Format
+        (Data   : Void_Ptr;
+         Shm    : Thin.Shm_Ptr;
+         Format : Shm_Format)
+      with Convention => C;
 
-      procedure Internal_Format (Data   : Void_Ptr;
-                                 Shm    : Thin.Shm_Ptr;
-                                 Format : Shm_Format)
+      procedure Internal_Format
+        (Data   : Void_Ptr;
+         Shm    : Thin.Shm_Ptr;
+         Format : Shm_Format)
       is
          S : constant Protocol.Shm := (Proxy => Shm);
       begin
@@ -235,34 +208,32 @@ package body Wayland.Client.Protocol is
         := (Format => Internal_Format'Unrestricted_Access);
 
       function Subscribe
-        (Shm  : in out Protocol.Shm;
-         Data : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Shm;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Shm_Add_Listener (Shm.Proxy,
-                                        Listener'Access,
-                                        Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Shm_Add_Listener
+           (Shm      => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Shm_Events;
 
    package body Buffer_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Release (Data   : Void_Ptr;
-                                  Buffer : Thin.Buffer_Ptr) with
-        Convention => C;
+      procedure Internal_Release
+        (Data   : Void_Ptr;
+         Buffer : Thin.Buffer_Ptr)
+      with Convention => C;
 
-      procedure Internal_Release (Data   : Void_Ptr;
-                                  Buffer : Thin.Buffer_Ptr)
+      procedure Internal_Release
+        (Data   : Void_Ptr;
+         Buffer : Thin.Buffer_Ptr)
       is
          B : constant Protocol.Buffer := (Proxy => Buffer);
       begin
@@ -273,51 +244,48 @@ package body Wayland.Client.Protocol is
         := (Release => Internal_Release'Unrestricted_Access);
 
       function Subscribe
-        (Buffer : in out Protocol.Buffer;
+        (Object : in out Buffer;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Buffer_Add_Listener (Buffer.Proxy,
-                                           Listener'Access,
-                                           Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Buffer_Add_Listener
+           (Buffer   => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Buffer_Events;
 
    package body Data_Offer_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Offer (Data       : Void_Ptr;
-                                Data_Offer : Thin.Data_Offer_Ptr;
-                                Mime_Type  : chars_ptr) with
-        Convention => C;
+      procedure Internal_Offer
+        (Data       : Void_Ptr;
+         Data_Offer : Thin.Data_Offer_Ptr;
+         Mime_Type  : chars_ptr)
+      with Convention => C;
 
       procedure Internal_Source_Actions
         (Data           : Void_Ptr;
          Data_Offer     : Thin.Data_Offer_Ptr;
-         Source_Actions : Unsigned_32) with
-        Convention => C;
+         Source_Actions : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Action (Data       : Void_Ptr;
-                                 Data_Offer : Thin.Data_Offer_Ptr;
-                                 Dnd_Action : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Action
+        (Data       : Void_Ptr;
+         Data_Offer : Thin.Data_Offer_Ptr;
+         Dnd_Action : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Offer (Data       : Void_Ptr;
-                                Data_Offer : Thin.Data_Offer_Ptr;
-                                Mime_Type  : chars_ptr)
+      procedure Internal_Offer
+        (Data       : Void_Ptr;
+         Data_Offer : Thin.Data_Offer_Ptr;
+         Mime_Type  : chars_ptr)
       is
-         D : constant Protocol.Data_Offer
-           := (Proxy => Data_Offer);
-
+         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
@@ -328,25 +296,20 @@ package body Wayland.Client.Protocol is
          Data_Offer     : Thin.Data_Offer_Ptr;
          Source_Actions : Unsigned_32)
       is
-         D : constant Protocol.Data_Offer
-           := (Proxy => Data_Offer);
+         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
       begin
          Data_Offer_Events.Source_Actions
-           (Data_Ptr (Conversion.To_Pointer (Data)),
-            D,
-            Source_Actions);
+           (Data_Ptr (Conversion.To_Pointer (Data)), D, Source_Actions);
       end Internal_Source_Actions;
 
-      procedure Internal_Action (Data       : Void_Ptr;
-                                 Data_Offer : Thin.Data_Offer_Ptr;
-                                 Dnd_Action : Unsigned_32)
+      procedure Internal_Action
+        (Data       : Void_Ptr;
+         Data_Offer : Thin.Data_Offer_Ptr;
+         Dnd_Action : Unsigned_32)
       is
-         D : constant Protocol.Data_Offer
-           := (Proxy => Data_Offer);
+         D : constant Protocol.Data_Offer := (Proxy => Data_Offer);
       begin
-         Action (Data_Ptr (Conversion.To_Pointer (Data)),
-                 D,
-                 Dnd_Action);
+         Action (Data_Ptr (Conversion.To_Pointer (Data)), D, Dnd_Action);
       end Internal_Action;
 
       Listener : aliased Thin.Data_Offer_Listener_T
@@ -355,83 +318,84 @@ package body Wayland.Client.Protocol is
             Action         => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Data_Offer : in out Protocol.Data_Offer;
-         Data       : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Data_Offer;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Data_Offer_Add_Listener (Data_Offer.Proxy,
-                                               Listener'Access,
-                                               Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Data_Offer_Add_Listener
+           (Data_Offer => Object.Proxy,
+            Listener   => Listener'Access,
+            Data       => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Offer_Events;
 
    package body Data_Source_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Target (Data        : Void_Ptr;
-                                 Data_Source : Thin.Data_Source_Ptr;
-                                 Mime_Type   : chars_ptr) with
-        Convention => C;
+      procedure Internal_Target
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Mime_Type   : chars_ptr)
+      with Convention => C;
 
-      procedure Internal_Send (Data        : Void_Ptr;
-                               Data_Source : Thin.Data_Source_Ptr;
-                               Mime_Type   : chars_ptr;
-                               Fd          : Integer) with
-        Convention => C;
+      procedure Internal_Send
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Mime_Type   : chars_ptr;
+         Fd          : Integer)
+      with Convention => C;
 
-      procedure Internal_Cancelled (Data        : Void_Ptr;
-                                    Data_Source : Thin.Data_Source_Ptr) with
-        Convention => C;
+      procedure Internal_Cancelled
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr)
+      with Convention => C;
 
       procedure Internal_Dnd_Drop_Performed
         (Data        : Void_Ptr;
-         Data_Source : Thin.Data_Source_Ptr) with
-        Convention => C;
+         Data_Source : Thin.Data_Source_Ptr)
+      with Convention => C;
 
       procedure Internal_Dnd_Finished
         (Data        : Void_Ptr;
-         Data_Source : Thin.Data_Source_Ptr) with
-        Convention => C;
+         Data_Source : Thin.Data_Source_Ptr)
+      with Convention => C;
 
-      procedure Internal_Action (Data        : Void_Ptr;
-                                 Data_Source : Thin.Data_Source_Ptr;
-                                 Dnd_Action  : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Action
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Dnd_Action  : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Target (Data        : Void_Ptr;
-                                 Data_Source : Thin.Data_Source_Ptr;
-                                 Mime_Type   : chars_ptr)
+      procedure Internal_Target
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Mime_Type   : chars_ptr)
       is
          D : constant Protocol.Data_Source := (Proxy => Data_Source);
-
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Target (Data_Ptr (Conversion.To_Pointer (Data)), D, M);
       end Internal_Target;
 
-      procedure Internal_Send (Data        : Void_Ptr;
-                               Data_Source : Thin.Data_Source_Ptr;
-                               Mime_Type   : chars_ptr;
-                               Fd          : Integer)
+      procedure Internal_Send
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Mime_Type   : chars_ptr;
+         Fd          : Integer)
       is
          D : constant Protocol.Data_Source := (Proxy => Data_Source);
-
          M : constant String := Interfaces.C.Strings.Value (Mime_Type);
       begin
          Send (Data_Ptr (Conversion.To_Pointer (Data)), D, M, Fd);
       end Internal_Send;
 
-      procedure Internal_Cancelled (Data        : Void_Ptr;
-                                    Data_Source : Thin.Data_Source_Ptr)
+      procedure Internal_Cancelled
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr)
       is
          D : constant Protocol.Data_Source := (Proxy => Data_Source);
       begin
@@ -447,17 +411,19 @@ package body Wayland.Client.Protocol is
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Dnd_Drop_Performed;
 
-      procedure Internal_Dnd_Finished (Data        : Void_Ptr;
-                                       Data_Source : Thin.Data_Source_Ptr)
+      procedure Internal_Dnd_Finished
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr)
       is
          D : constant Protocol.Data_Source := (Proxy => Data_Source);
       begin
          Dnd_Drop_Performed (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Dnd_Finished;
 
-      procedure Internal_Action (Data        : Void_Ptr;
-                                 Data_Source : Thin.Data_Source_Ptr;
-                                 Dnd_Action  : Unsigned_32)
+      procedure Internal_Action
+        (Data        : Void_Ptr;
+         Data_Source : Thin.Data_Source_Ptr;
+         Dnd_Action  : Unsigned_32)
       is
          D : constant Protocol.Data_Source := (Proxy => Data_Source);
       begin
@@ -474,122 +440,120 @@ package body Wayland.Client.Protocol is
             Action             => Internal_Action'Unrestricted_Access);
 
       function Subscribe
-        (Data_Source : in out Protocol.Data_Source;
-         Data       : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Data_Source;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Data_Source_Add_Listener (Data_Source.Proxy,
-                                                Listener'Access,
-                                                Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Data_Source_Add_Listener
+           (Data_Source => Object.Proxy,
+            Listener    => Listener'Access,
+            Data        => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Source_Events;
 
    package body Data_Device_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Data_Offer (Data        : Void_Ptr;
-                                     Data_Device : Thin.Data_Device_Ptr;
-                                     Id          : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Data_Offer
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Id          : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Enter (Data        : Void_Ptr;
-                                Data_Device : Thin.Data_Device_Ptr;
-                                Serial      : Unsigned_32;
-                                Surface     : Thin.Surface_Ptr;
-                                X           : Fixed;
-                                Y           : Fixed;
-                                Id          : Thin.Data_Offer_Ptr) with
-        Convention => C;
+      procedure Internal_Enter
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Serial      : Unsigned_32;
+         Surface     : Thin.Surface_Ptr;
+         X, Y        : Fixed;
+         Id          : Thin.Data_Offer_Ptr)
+      with Convention => C;
 
-      procedure Internal_Leave (Data        : Void_Ptr;
-                                Data_Device : Thin.Data_Device_Ptr) with
-        Convention => C;
+      procedure Internal_Leave
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr)
+      with Convention => C;
 
-      procedure Internal_Motion (Data        : Void_Ptr;
-                                 Data_Device : Thin.Data_Device_Ptr;
-                                 Time        : Unsigned_32;
-                                 X           : Fixed;
-                                 Y           : Fixed) with
-        Convention => C;
+      procedure Internal_Motion
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Time        : Unsigned_32;
+         X, Y        : Fixed)
+      with Convention => C;
 
-      procedure Internal_Drop (Data        : Void_Ptr;
-                               Data_Device : Thin.Data_Device_Ptr) with
-        Convention => C;
+      procedure Internal_Drop
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr)
+      with Convention => C;
 
-      procedure Internal_Selection (Data        : Void_Ptr;
-                                    Data_Device : Thin.Data_Device_Ptr;
-                                    Id          : Thin.Data_Offer_Ptr) with
-        Convention => C;
+      procedure Internal_Selection
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Id          : Thin.Data_Offer_Ptr)
+      with Convention => C;
 
-      procedure Internal_Data_Offer (Data        : Void_Ptr;
-                                     Data_Device : Thin.Data_Device_Ptr;
-                                     Id          : Unsigned_32)
+      procedure Internal_Data_Offer
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Id          : Unsigned_32)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
       begin
          Data_Offer (Data_Ptr (Conversion.To_Pointer (Data)), D, Id);
       end Internal_Data_Offer;
 
-      procedure Internal_Enter (Data        : Void_Ptr;
-                                Data_Device : Thin.Data_Device_Ptr;
-                                Serial      : Unsigned_32;
-                                Surface     : Thin.Surface_Ptr;
-                                X           : Fixed;
-                                Y           : Fixed;
-                                Id          : Thin.Data_Offer_Ptr)
+      procedure Internal_Enter
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Serial      : Unsigned_32;
+         Surface     : Thin.Surface_Ptr;
+         X, Y        : Fixed;
+         Id          : Thin.Data_Offer_Ptr)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
          S : constant Protocol.Surface     := (Proxy => Surface);
          Offer : constant Protocol.Data_Offer := (Proxy => Id);
       begin
-         Enter (Data_Ptr (Conversion.To_Pointer (Data)),
-                D,
-                Serial,
-                S,
-                X,
-                Y,
-                Offer);
+         Enter (Data_Ptr (Conversion.To_Pointer (Data)), D, Serial, S, X, Y, Offer);
       end Internal_Enter;
 
-      procedure Internal_Leave (Data        : Void_Ptr;
-                                Data_Device : Thin.Data_Device_Ptr)
+      procedure Internal_Leave
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
       begin
          Leave (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Leave;
 
-      procedure Internal_Motion (Data        : Void_Ptr;
-                                 Data_Device : Thin.Data_Device_Ptr;
-                                 Time        : Unsigned_32;
-                                 X           : Fixed;
-                                 Y           : Fixed)
+      procedure Internal_Motion
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Time        : Unsigned_32;
+         X, Y        : Fixed)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
       begin
          Motion (Data_Ptr (Conversion.To_Pointer (Data)), D, Time, X, Y);
       end Internal_Motion;
 
-      procedure Internal_Drop (Data        : Void_Ptr;
-                               Data_Device : Thin.Data_Device_Ptr)
+      procedure Internal_Drop
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
       begin
          Drop (Data_Ptr (Conversion.To_Pointer (Data)), D);
       end Internal_Drop;
 
-      procedure Internal_Selection (Data        : Void_Ptr;
-                                    Data_Device : Thin.Data_Device_Ptr;
-                                    Id          : Thin.Data_Offer_Ptr)
+      procedure Internal_Selection
+        (Data        : Void_Ptr;
+         Data_Device : Thin.Data_Device_Ptr;
+         Id          : Thin.Data_Offer_Ptr)
       is
          D : constant Protocol.Data_Device := (Proxy => Data_Device);
          Offer : constant Protocol.Data_Offer := (Proxy => Id);
@@ -606,41 +570,40 @@ package body Wayland.Client.Protocol is
             Selection  => Internal_Selection'Unrestricted_Access);
 
       function Subscribe
-        (Data_Device : in out Protocol.Data_Device;
-         Data        : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Data_Device;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Data_Device_Add_Listener (Data_Device.Proxy,
-                                                Listener'Access,
-                                                Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Data_Device_Add_Listener
+           (Data_Device => Object.Proxy,
+            Listener    => Listener'Access,
+            Data        => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Data_Device_Events;
 
    package body Surface_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Enter (Data    : Void_Ptr;
-                                Surface : Thin.Surface_Ptr;
-                                Output  : Thin.Output_Ptr) with
-        Convention => C;
+      procedure Internal_Enter
+        (Data    : Void_Ptr;
+         Surface : Thin.Surface_Ptr;
+         Output  : Thin.Output_Ptr)
+      with Convention => C;
 
-      procedure Internal_Leave (Data    : Void_Ptr;
-                                Surface : Thin.Surface_Ptr;
-                                Output  : Thin.Output_Ptr) with
-        Convention => C;
+      procedure Internal_Leave
+        (Data    : Void_Ptr;
+         Surface : Thin.Surface_Ptr;
+         Output  : Thin.Output_Ptr)
+      with Convention => C;
 
-      procedure Internal_Enter (Data    : Void_Ptr;
-                                Surface : Thin.Surface_Ptr;
-                                Output  : Thin.Output_Ptr)
+      procedure Internal_Enter
+        (Data    : Void_Ptr;
+         Surface : Thin.Surface_Ptr;
+         Output  : Thin.Output_Ptr)
       is
          S : constant Protocol.Surface := (Proxy => Surface);
          O : constant Protocol.Output := (Proxy => Output);
@@ -648,9 +611,10 @@ package body Wayland.Client.Protocol is
          Enter (Data_Ptr (Conversion.To_Pointer (Data)), S, O);
       end Internal_Enter;
 
-      procedure Internal_Leave (Data    : Void_Ptr;
-                                Surface : Thin.Surface_Ptr;
-                                Output  : Thin.Output_Ptr)
+      procedure Internal_Leave
+        (Data    : Void_Ptr;
+         Surface : Thin.Surface_Ptr;
+         Output  : Thin.Output_Ptr)
       is
          S : constant Protocol.Surface := (Proxy => Surface);
          O : constant Protocol.Output := (Proxy => Output);
@@ -663,37 +627,40 @@ package body Wayland.Client.Protocol is
             Leave => Internal_Leave'Unrestricted_Access);
 
       function Subscribe
-        (Surface : in out Protocol.Surface;
-         Data    : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Surface;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Surface_Add_Listener (Surface.Proxy,
-                                            Listener'Access,
-                                            Data.all'Address);
-
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Surface_Add_Listener
+           (Surface  => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Surface_Events;
 
    package body Seat_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
-                                            Seat         : Thin.Seat_Ptr;
-                                            Capabilities : Seat_Capability) with
-        Convention => C;
+      procedure Internal_Seat_Capabilities
+        (Data         : Void_Ptr;
+         Seat         : Thin.Seat_Ptr;
+         Capabilities : Seat_Capability)
+      with Convention => C;
 
-      procedure Internal_Seat_Capabilities (Data         : Void_Ptr;
-                                            Seat         : Thin.Seat_Ptr;
-                                            Capabilities : Seat_Capability)
+      procedure Internal_Seat_Name
+        (Data : Void_Ptr;
+         Seat : Thin.Seat_Ptr;
+         Name : Interfaces.C.Strings.Chars_Ptr)
+      with Convention => C;
+
+      procedure Internal_Seat_Capabilities
+        (Data         : Void_Ptr;
+         Seat         : Thin.Seat_Ptr;
+         Capabilities : Seat_Capability)
       is
          S : constant Protocol.Seat := (Proxy => Seat);
       begin
@@ -701,12 +668,6 @@ package body Wayland.Client.Protocol is
                             S,
                             Capabilities);
       end Internal_Seat_Capabilities;
-
-      procedure Internal_Seat_Name
-        (Data : Void_Ptr;
-         Seat : Thin.Seat_Ptr;
-         Name : Interfaces.C.Strings.Chars_Ptr) with
-        Convention => C;
 
       procedure Internal_Seat_Name
         (Data : Void_Ptr;
@@ -721,34 +682,27 @@ package body Wayland.Client.Protocol is
       end Internal_Seat_Name;
 
       Seat_Listener : aliased Thin.Seat_Listener_T :=
-        (
-         Capabilities => Internal_Seat_Capabilities'Unrestricted_Access,
-         Name         => Internal_Seat_Name'Unrestricted_Access
-        );
+        (Capabilities => Internal_Seat_Capabilities'Unrestricted_Access,
+         Name         => Internal_Seat_Name'Unrestricted_Access);
 
       function Subscribe
-        (Seat : in out Protocol.Seat;
-         Data : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Seat;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Seat_Add_Listener
-           (Seat     => Seat.Proxy,
+           (Seat     => Object.Proxy,
             Listener => Seat_Listener'Access,
             Data     => Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Seat_Events;
 
    package body Pointer_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
       procedure Internal_Pointer_Enter
         (Data      : Void_Ptr;
@@ -756,23 +710,23 @@ package body Wayland.Client.Protocol is
          Serial    : Unsigned_32;
          Surface   : Thin.Surface_Ptr;
          Surface_X : Fixed;
-         Surface_Y : Fixed) with
-        Convention => C;
+         Surface_Y : Fixed)
+      with Convention => C;
 
       procedure Internal_Pointer_Leave
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Serial  : Unsigned_32;
-         Surface : Thin.Surface_Ptr) with
-        Convention => C;
+         Surface : Thin.Surface_Ptr)
+      with Convention => C;
 
       procedure Internal_Pointer_Motion
         (Data      : Void_Ptr;
          Pointer   : Thin.Pointer_Ptr;
          Time      : Unsigned_32;
          Surface_X : Fixed;
-         Surface_Y : Fixed) with
-        Convention => C;
+         Surface_Y : Fixed)
+      with Convention => C;
 
       procedure Internal_Pointer_Button
         (Data    : Void_Ptr;
@@ -780,40 +734,41 @@ package body Wayland.Client.Protocol is
          Serial  : Unsigned_32;
          Time    : Unsigned_32;
          Button  : Unsigned_32;
-         State   : Pointer_Button_State) with
-        Convention => C;
+         State   : Pointer_Button_State)
+      with Convention => C;
 
       procedure Internal_Pointer_Axis
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
          Axis    : Pointer_Axis;
-         Value   : Fixed) with
-        Convention => C;
+         Value   : Fixed)
+      with Convention => C;
 
-      procedure Internal_Pointer_Frame (Data    : Void_Ptr;
-                                        Pointer : Thin.Pointer_Ptr) with
-        Convention => C;
+      procedure Internal_Pointer_Frame
+        (Data    : Void_Ptr;
+         Pointer : Thin.Pointer_Ptr)
+      with Convention => C;
 
       procedure Internal_Pointer_Axis_Source
         (Data        : Void_Ptr;
          Pointer     : Thin.Pointer_Ptr;
-         Axis_Source : Pointer_Axis_Source) with
-        Convention => C;
+         Axis_Source : Pointer_Axis_Source)
+      with Convention => C;
 
       procedure Internal_Pointer_Axis_Stop
         (Data    : Void_Ptr;
          Pointer : Thin.Pointer_Ptr;
          Time    : Unsigned_32;
-         Axis    : Pointer_Axis) with
-        Convention => C;
+         Axis    : Pointer_Axis)
+      with Convention => C;
 
       procedure Internal_Pointer_Axis_Discrete
         (Data     : Void_Ptr;
          Pointer  : Thin.Pointer_Ptr;
          Axis     : Pointer_Axis;
-         Discrete : Integer) with
-        Convention => C;
+         Discrete : Integer)
+      with Convention => C;
 
       procedure Internal_Pointer_Enter
         (Data      : Void_Ptr;
@@ -945,8 +900,7 @@ package body Wayland.Client.Protocol is
       end Internal_Pointer_Axis_Discrete;
 
       Pointer_Listener : aliased Thin.Pointer_Listener_T :=
-        (
-         Enter         => Internal_Pointer_Enter'Unrestricted_Access,
+        (Enter         => Internal_Pointer_Enter'Unrestricted_Access,
          Leave         => Internal_Pointer_Leave'Unrestricted_Access,
          Motion        => Internal_Pointer_Motion'Unrestricted_Access,
          Button        => Internal_Pointer_Button'Unrestricted_Access,
@@ -954,168 +908,156 @@ package body Wayland.Client.Protocol is
          Frame         => Internal_Pointer_Frame'Unrestricted_Access,
          Axis_Source   => Internal_Pointer_Axis_Source'Unrestricted_Access,
          Axis_Stop     => Internal_Pointer_Axis_Stop'Unrestricted_Access,
-         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access
-        );
+         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access);
 
       function Subscribe
-        (Pointer : in out Protocol.Pointer;
-         Data    : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Pointer;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Pointer_Add_Listener
-           (Pointer  => Pointer.Proxy,
+           (Pointer  => Object.Proxy,
             Listener => Pointer_Listener'Access,
             Data     => Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Pointer_Events;
 
    package body Keyboard_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Keymap (Data     : Void_Ptr;
-                                 Keyboard : Thin.Keyboard_Ptr;
-                                 Format   : Keyboard_Keymap_Format;
-                                 Fd       : Integer;
-                                 Size     : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Keymap
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Format   : Keyboard_Keymap_Format;
+         Fd       : Integer;
+         Size     : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Enter (Data     : Void_Ptr;
-                                Keyboard : Thin.Keyboard_Ptr;
-                                Serial   : Unsigned_32;
-                                Surface  : Thin.Surface_Ptr;
-                                Keys     : Wayland_Array_T) with
-        Convention => C;
+      procedure Internal_Enter
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Surface  : Thin.Surface_Ptr;
+         Keys     : Wayland_Array_T)
+      with Convention => C;
 
-      procedure Internal_Leave (Data     : Void_Ptr;
-                                Keyboard : Thin.Keyboard_Ptr;
-                                Serial   : Unsigned_32;
-                                Surface  : Thin.Surface_Ptr) with
-        Convention => C;
+      procedure Internal_Leave
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Surface  : Thin.Surface_Ptr)
+      with Convention => C;
 
-      procedure Internal_Key (Data     : Void_Ptr;
-                              Keyboard : Thin.Keyboard_Ptr;
-                              Serial   : Unsigned_32;
-                              Time     : Unsigned_32;
-                              Key      : Unsigned_32;
-                              State    : Keyboard_Key_State) with
-        Convention => C;
+      procedure Internal_Key
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Time     : Unsigned_32;
+         Key      : Unsigned_32;
+         State    : Keyboard_Key_State)
+      with Convention => C;
 
-      procedure Internal_Modifiers (Data           : Void_Ptr;
-                                    Keyboard       : Thin.Keyboard_Ptr;
-                                    Serial         : Unsigned_32;
-                                    Mods_Depressed : Unsigned_32;
-                                    Mods_Latched   : Unsigned_32;
-                                    Mods_Locked    : Unsigned_32;
-                                    Group          : Unsigned_32) with
-        Convention => C;
+      procedure Internal_Modifiers
+        (Data           : Void_Ptr;
+         Keyboard       : Thin.Keyboard_Ptr;
+         Serial         : Unsigned_32;
+         Mods_Depressed : Unsigned_32;
+         Mods_Latched   : Unsigned_32;
+         Mods_Locked    : Unsigned_32;
+         Group          : Unsigned_32)
+      with Convention => C;
 
-      procedure Internal_Repeat_Info (Data     : Void_Ptr;
-                                      Keyboard : Thin.Keyboard_Ptr;
-                                      Rate     : Integer;
-                                      Delay_V  : Integer) with
-        Convention => C;
+      procedure Internal_Repeat_Info
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Rate     : Integer;
+         Delay_V  : Integer)
+      with Convention => C;
 
-      procedure Internal_Keymap (Data     : Void_Ptr;
-                                 Keyboard : Thin.Keyboard_Ptr;
-                                 Format   : Keyboard_Keymap_Format;
-                                 Fd       : Integer;
-                                 Size     : Unsigned_32)
+      procedure Internal_Keymap
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Format   : Keyboard_Keymap_Format;
+         Fd       : Integer;
+         Size     : Unsigned_32)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
       begin
-         Keymap (Data_Ptr (Conversion.To_Pointer (Data)),
-                 K,
-                 Format,
-                 Fd,
-                 Size);
+         Keymap (Data_Ptr (Conversion.To_Pointer (Data)), K, Format, Fd, Size);
       end Internal_Keymap;
 
-      procedure Internal_Enter (Data     : Void_Ptr;
-                                Keyboard : Thin.Keyboard_Ptr;
-                                Serial   : Unsigned_32;
-                                Surface  : Thin.Surface_Ptr;
-                                Keys     : Wayland_Array_T)
+      procedure Internal_Enter
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Surface  : Thin.Surface_Ptr;
+         Keys     : Wayland_Array_T)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
          S : constant Protocol.Surface  := (Proxy => Surface);
       begin
-         Enter (Data_Ptr (Conversion.To_Pointer (Data)),
-                K,
-                Serial,
-                S,
-                Keys);
+         Enter (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, S, Keys);
       end Internal_Enter;
 
-      procedure Internal_Leave (Data     : Void_Ptr;
-                                Keyboard : Thin.Keyboard_Ptr;
-                                Serial   : Unsigned_32;
-                                Surface  : Thin.Surface_Ptr)
+      procedure Internal_Leave
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Surface  : Thin.Surface_Ptr)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
          S : constant Protocol.Surface  := (Proxy => Surface);
       begin
-         Leave (Data_Ptr (Conversion.To_Pointer (Data)),
-                K,
-                Serial,
-                S);
+         Leave (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, S);
       end Internal_Leave;
 
-      procedure Internal_Key (Data     : Void_Ptr;
-                              Keyboard : Thin.Keyboard_Ptr;
-                              Serial   : Unsigned_32;
-                              Time     : Unsigned_32;
-                              Key      : Unsigned_32;
-                              State    : Keyboard_Key_State)
+      procedure Internal_Key
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Serial   : Unsigned_32;
+         Time     : Unsigned_32;
+         Key      : Unsigned_32;
+         State    : Keyboard_Key_State)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
       begin
-         Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)),
-                              K,
-                              Serial,
-                              Time,
-                              Key,
-                              State);
+         Keyboard_Events.Key (Data_Ptr (Conversion.To_Pointer (Data)), K, Serial, Time, Key, State);
       end Internal_Key;
 
-      procedure Internal_Modifiers (Data           : Void_Ptr;
-                                    Keyboard       : Thin.Keyboard_Ptr;
-                                    Serial         : Unsigned_32;
-                                    Mods_Depressed : Unsigned_32;
-                                    Mods_Latched   : Unsigned_32;
-                                    Mods_Locked    : Unsigned_32;
-                                    Group          : Unsigned_32)
+      procedure Internal_Modifiers
+        (Data           : Void_Ptr;
+         Keyboard       : Thin.Keyboard_Ptr;
+         Serial         : Unsigned_32;
+         Mods_Depressed : Unsigned_32;
+         Mods_Latched   : Unsigned_32;
+         Mods_Locked    : Unsigned_32;
+         Group          : Unsigned_32)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
       begin
-         Modifiers (Data_Ptr (Conversion.To_Pointer (Data)),
-                    K,
-                    Serial,
-                    Mods_Depressed,
-                    Mods_Latched,
-                    Mods_Locked,
-                    Group);
+         Modifiers
+           (Data_Ptr (Conversion.To_Pointer (Data)),
+            K,
+            Serial,
+            Mods_Depressed,
+            Mods_Latched,
+            Mods_Locked,
+            Group);
       end Internal_Modifiers;
 
-      procedure Internal_Repeat_Info (Data     : Void_Ptr;
-                                      Keyboard : Thin.Keyboard_Ptr;
-                                      Rate     : Integer;
-                                      Delay_V  : Integer)
+      procedure Internal_Repeat_Info
+        (Data     : Void_Ptr;
+         Keyboard : Thin.Keyboard_Ptr;
+         Rate     : Integer;
+         Delay_V  : Integer)
       is
          K : constant Protocol.Keyboard := (Proxy => Keyboard);
       begin
-         Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)),
-                      K,
-                      Rate,
-                      Delay_V);
+         Repeat_Info (Data_Ptr (Conversion.To_Pointer (Data)), K, Rate, Delay_V);
       end Internal_Repeat_Info;
 
       Listener : aliased Thin.Keyboard_Listener_T
@@ -1127,171 +1069,153 @@ package body Wayland.Client.Protocol is
             Repeat_Info => Internal_Repeat_Info'Unrestricted_Access);
 
       function Subscribe
-        (Keyboard : in out Protocol.Keyboard;
-         Data     : not null Data_Ptr) return Call_Result_Code
+        (Object : in out Keyboard;
+         Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Keyboard_Add_Listener
-           (Keyboard => Keyboard.Proxy,
+           (Keyboard => Object.Proxy,
             Listener => Listener'Access,
             Data     => Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Keyboard_Events;
 
    package body Touch_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Down (Data    : Void_Ptr;
-                               Touch   : Thin.Touch_Ptr;
-                               Serial  : Unsigned_32;
-                               Time    : Unsigned_32;
-                               Surface : Thin.Surface_Ptr;
-                               Id      : Integer;
-                               X       : Fixed;
-                               Y       : Fixed) with
-        Convention => C;
+      procedure Internal_Down
+        (Data    : Void_Ptr;
+         Touch   : Thin.Touch_Ptr;
+         Serial  : Unsigned_32;
+         Time    : Unsigned_32;
+         Surface : Thin.Surface_Ptr;
+         Id      : Integer;
+         X, Y    : Fixed)
+      with Convention => C;
 
-      procedure Internal_Up (Data   : Void_Ptr;
-                             Touch  : Thin.Touch_Ptr;
-                             Serial : Unsigned_32;
-                             Time   : Unsigned_32;
-                             Id     : Integer) with
-        Convention => C;
+      procedure Internal_Up
+        (Data   : Void_Ptr;
+         Touch  : Thin.Touch_Ptr;
+         Serial : Unsigned_32;
+         Time   : Unsigned_32;
+         Id     : Integer)
+      with Convention => C;
 
-      procedure Internal_Motion (Data  : Void_Ptr;
-                                 Touch : Thin.Touch_Ptr;
-                                 Time  : Unsigned_32;
-                                 Id    : Integer;
-                                 X     : Fixed;
-                                 Y     : Fixed) with
-        Convention => C;
+      procedure Internal_Motion
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr;
+         Time  : Unsigned_32;
+         Id    : Integer;
+         X, Y  : Fixed)
+      with Convention => C;
 
-      procedure Internal_Frame (Data  : Void_Ptr;
-                                Touch : Thin.Touch_Ptr) with
-        Convention => C;
+      procedure Internal_Frame
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr)
+      with Convention => C;
 
-      procedure Internal_Cancel (Data  : Void_Ptr;
-                                 Touch : Thin.Touch_Ptr) with
-        Convention => C;
+      procedure Internal_Cancel
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr)
+      with Convention => C;
 
-      procedure Internal_Shape (Data  : Void_Ptr;
-                                Touch : Thin.Touch_Ptr;
-                                Id    : Integer;
-                                Major : Fixed;
-                                Minor : Fixed) with
-        Convention => C;
+      procedure Internal_Shape
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr;
+         Id    : Integer;
+         Major : Fixed;
+         Minor : Fixed)
+      with Convention => C;
 
-      procedure Internal_Orientation (Data        : Void_Ptr;
-                                      Touch       : Thin.Touch_Ptr;
-                                      Id          : Integer;
-                                      Orientation : Fixed) with
-        Convention => C;
+      procedure Internal_Orientation
+        (Data        : Void_Ptr;
+         Touch       : Thin.Touch_Ptr;
+         Id          : Integer;
+         Orientation : Fixed)
+      with Convention => C;
 
-      procedure Internal_Down (Data    : Void_Ptr;
-                               Touch   : Thin.Touch_Ptr;
-                               Serial  : Unsigned_32;
-                               Time    : Unsigned_32;
-                               Surface : Thin.Surface_Ptr;
-                               Id      : Integer;
-                               X       : Fixed;
-                               Y       : Fixed)
+      procedure Internal_Down
+        (Data    : Void_Ptr;
+         Touch   : Thin.Touch_Ptr;
+         Serial  : Unsigned_32;
+         Time    : Unsigned_32;
+         Surface : Thin.Surface_Ptr;
+         Id      : Integer;
+         X, Y    : Fixed)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
          S : constant Protocol.Surface := (Proxy => Surface);
       begin
-         Down (Data_Ptr (Conversion.To_Pointer (Data)),
-               T,
-               Serial,
-               Time,
-               S,
-               Id,
-               X,
-               Y);
+         Down (Data_Ptr (Conversion.To_Pointer (Data)), T, Serial, Time, S, Id, X, Y);
       end Internal_Down;
 
-      procedure Internal_Up (Data   : Void_Ptr;
-                             Touch  : Thin.Touch_Ptr;
-                             Serial : Unsigned_32;
-                             Time   : Unsigned_32;
-                             Id     : Integer)
+      procedure Internal_Up
+        (Data   : Void_Ptr;
+         Touch  : Thin.Touch_Ptr;
+         Serial : Unsigned_32;
+         Time   : Unsigned_32;
+         Id     : Integer)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
-         Up (Data_Ptr (Conversion.To_Pointer (Data)),
-             T,
-             Serial,
-             Time,
-             Id);
+         Up (Data_Ptr (Conversion.To_Pointer (Data)), T, Serial, Time, Id);
       end Internal_Up;
 
-      procedure Internal_Motion (Data  : Void_Ptr;
-                                 Touch : Thin.Touch_Ptr;
-                                 Time  : Unsigned_32;
-                                 Id    : Integer;
-                                 X     : Fixed;
-                                 Y     : Fixed)
+      procedure Internal_Motion
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr;
+         Time  : Unsigned_32;
+         Id    : Integer;
+         X, Y  : Fixed)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
-         Motion (Data_Ptr (Conversion.To_Pointer (Data)),
-                 T,
-                 Time,
-                 Id,
-                 X,
-                 Y);
+         Motion (Data_Ptr (Conversion.To_Pointer (Data)), T, Time, Id, X, Y);
       end Internal_Motion;
 
-      procedure Internal_Frame (Data  : Void_Ptr;
-                                Touch : Thin.Touch_Ptr)
+      procedure Internal_Frame
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
          Frame (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Frame;
 
-      procedure Internal_Cancel (Data  : Void_Ptr;
-                                 Touch : Thin.Touch_Ptr)
+      procedure Internal_Cancel
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
          Cancel (Data_Ptr (Conversion.To_Pointer (Data)), T);
       end Internal_Cancel;
 
-      procedure Internal_Shape (Data  : Void_Ptr;
-                                Touch : Thin.Touch_Ptr;
-                                Id    : Integer;
-                                Major : Fixed;
-                                Minor : Fixed)
+      procedure Internal_Shape
+        (Data  : Void_Ptr;
+         Touch : Thin.Touch_Ptr;
+         Id    : Integer;
+         Major : Fixed;
+         Minor : Fixed)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
-         Shape (Data_Ptr (Conversion.To_Pointer (Data)),
-                T,
-                Id,
-                Major,
-                Minor);
+         Shape (Data_Ptr (Conversion.To_Pointer (Data)), T, Id, Major, Minor);
       end Internal_Shape;
 
-      procedure Internal_Orientation (Data        : Void_Ptr;
-                                      Touch       : Thin.Touch_Ptr;
-                                      Id          : Integer;
-                                      Orientation : Fixed)
+      procedure Internal_Orientation
+        (Data        : Void_Ptr;
+         Touch       : Thin.Touch_Ptr;
+         Id          : Integer;
+         Orientation : Fixed)
       is
          T : constant Protocol.Touch := (Proxy => Touch);
       begin
-         Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)),
-                                   T,
-                                   Id,
-                                   Orientation);
+         Touch_Events.Orientation (Data_Ptr (Conversion.To_Pointer (Data)), T, Id, Orientation);
       end Internal_Orientation;
 
       Listener : aliased Thin.Touch_Listener_T
@@ -1304,112 +1228,116 @@ package body Wayland.Client.Protocol is
             Orientation => Internal_Orientation'Unrestricted_Access);
 
       function Subscribe
-        (Touch : in out Protocol.Touch;
+        (Object : in out Touch;
          Data  : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Touch_Add_Listener (Touch    => Touch.Proxy,
-                                          Listener => Listener'Access,
-                                          Data     => Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Touch_Add_Listener
+           (Touch    => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Touch_Events;
 
    package body Output_Events is
 
-      package Conversion is new
-        System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
 
-      procedure Internal_Geometry (Data            : Void_Ptr;
-                                   Output          : Thin.Output_Ptr;
-                                   X               : Integer;
-                                   Y               : Integer;
-                                   Physical_Width  : Integer;
-                                   Physical_Height : Integer;
-                                   Subpixel        : Output_Subpixel;
-                                   Make            : chars_ptr;
-                                   Model           : chars_ptr;
-                                   Transform       : Output_Transform) with
-        Convention => C;
+      procedure Internal_Geometry
+        (Data            : Void_Ptr;
+         Output          : Thin.Output_Ptr;
+         X, Y            : Integer;
+         Physical_Width  : Integer;
+         Physical_Height : Integer;
+         Subpixel        : Output_Subpixel;
+         Make            : chars_ptr;
+         Model           : chars_ptr;
+         Transform       : Output_Transform)
+      with Convention => C;
 
-      procedure Internal_Mode (Data    : Void_Ptr;
-                               Output  : Thin.Output_Ptr;
-                               Flags   : Output_Mode;
-                               Width   : Integer;
-                               Height  : Integer;
-                               Refresh : Integer) with
-        Convention => C;
+      procedure Internal_Mode
+        (Data    : Void_Ptr;
+         Output  : Thin.Output_Ptr;
+         Flags   : Output_Mode;
+         Width   : Integer;
+         Height  : Integer;
+         Refresh : Integer)
+      with Convention => C;
 
-      procedure Internal_Done (Data   : Void_Ptr;
-                               Output : Thin.Output_Ptr) with
-        Convention => C;
+      procedure Internal_Done
+        (Data   : Void_Ptr;
+         Output : Thin.Output_Ptr)
+      with Convention => C;
 
-      procedure Internal_Scale (Data   : Void_Ptr;
-                                Output : Thin.Output_Ptr;
-                                Factor : Integer) with
-        Convention => C;
+      procedure Internal_Scale
+        (Data   : Void_Ptr;
+         Output : Thin.Output_Ptr;
+         Factor : Integer)
+      with Convention => C;
 
-      procedure Internal_Geometry (Data            : Void_Ptr;
-                                   Output          : Thin.Output_Ptr;
-                                   X               : Integer;
-                                   Y               : Integer;
-                                   Physical_Width  : Integer;
-                                   Physical_Height : Integer;
-                                   Subpixel        : Output_Subpixel;
-                                   Make            : chars_ptr;
-                                   Model           : chars_ptr;
-                                   Transform       : Output_Transform)
+      procedure Internal_Geometry
+        (Data            : Void_Ptr;
+         Output          : Thin.Output_Ptr;
+         X, Y            : Integer;
+         Physical_Width  : Integer;
+         Physical_Height : Integer;
+         Subpixel        : Output_Subpixel;
+         Make            : chars_ptr;
+         Model           : chars_ptr;
+         Transform       : Output_Transform)
       is
          O : constant Protocol.Output := (Proxy => Output);
          Ma : constant String := Interfaces.C.Strings.Value (Make);
          Mo : constant String := Interfaces.C.Strings.Value (Model);
       begin
-         Geometry (Data_Ptr (Conversion.To_Pointer (Data)),
-                   O,
-                   X,
-                   Y,
-                   Physical_Width,
-                   Physical_Height,
-                   Subpixel,
-                   Ma,
-                   Mo,
-                   Transform);
+         Geometry
+           (Data_Ptr (Conversion.To_Pointer (Data)),
+            O,
+            X,
+            Y,
+            Physical_Width,
+            Physical_Height,
+            Subpixel,
+            Ma,
+            Mo,
+            Transform);
       end Internal_Geometry;
 
-      procedure Internal_Mode (Data    : Void_Ptr;
-                               Output  : Thin.Output_Ptr;
-                               Flags   : Output_Mode;
-                               Width   : Integer;
-                               Height  : Integer;
-                               Refresh : Integer)
+      procedure Internal_Mode
+        (Data    : Void_Ptr;
+         Output  : Thin.Output_Ptr;
+         Flags   : Output_Mode;
+         Width   : Integer;
+         Height  : Integer;
+         Refresh : Integer)
       is
          O : constant Protocol.Output := (Proxy => Output);
       begin
-         Mode (Data_Ptr (Conversion.To_Pointer (Data)),
-               O,
-               Flags,
-               Width,
-               Height,
-               Refresh);
+         Mode
+           (Data_Ptr (Conversion.To_Pointer (Data)),
+            O,
+            Flags,
+            Width,
+            Height,
+            Refresh);
       end Internal_Mode;
 
-      procedure Internal_Done (Data   : Void_Ptr;
-                               Output : Thin.Output_Ptr)
+      procedure Internal_Done
+        (Data   : Void_Ptr;
+         Output : Thin.Output_Ptr)
       is
          O : constant Protocol.Output := (Proxy => Output);
       begin
          Done (Data_Ptr (Conversion.To_Pointer (Data)), O);
       end Internal_Done;
 
-      procedure Internal_Scale (Data   : Void_Ptr;
-                                Output : Thin.Output_Ptr;
-                                Factor : Integer)
+      procedure Internal_Scale
+        (Data   : Void_Ptr;
+         Output : Thin.Output_Ptr;
+         Factor : Integer)
       is
          O : constant Protocol.Output := (Proxy => Output);
       begin
@@ -1423,19 +1351,16 @@ package body Wayland.Client.Protocol is
             Scale    => Internal_Scale'Unrestricted_Access);
 
       function Subscribe
-        (Output : in out Protocol.Output;
+        (Object : in out Output;
          Data   : not null Data_Ptr) return Call_Result_Code
       is
          I : int;
       begin
-         I := Thin.Output_Add_Listener (Output   => Output.Proxy,
-                                           Listener => Listener'Access,
-                                           Data     => Data.all'Address);
-         if I = 0 then
-            return Success;
-         else
-            return Error;
-         end if;
+         I := Thin.Output_Add_Listener
+           (Output   => Object.Proxy,
+            Listener => Listener'Access,
+            Data     => Data.all'Address);
+         return (if I = 0 then Success else Error);
       end Subscribe;
 
    end Output_Events;
@@ -1443,12 +1368,11 @@ package body Wayland.Client.Protocol is
    procedure Connect (Object : in out Display) is
    begin
       Object.Proxy := Thin.Display_Connect;
-      if Object.Proxy /= null then
-         Object.My_Fd := Wayland.API.Display_Get_File_Descriptor (Object.Proxy);
-         if Object.My_Fd = -1 then
-            Object.Disconnect;
-            Object.Proxy := null;
-         end if;
+
+      if Object.Proxy /= null
+        and then Wayland.API.Display_Get_File_Descriptor (Object.Proxy) = -1
+      then
+         raise Program_Error;
       end if;
    end Connect;
 
@@ -1464,7 +1388,8 @@ package body Wayland.Client.Protocol is
       Timeout : Integer) return Check_For_Events_Status
    is
       I : constant Integer :=
-        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout (Object.My_Fd, Timeout);
+        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout
+          (Wayland.API.Display_Get_File_Descriptor (Object.Proxy), Timeout);
    begin
       case I is
          when 1..Integer'Last   => return Events_Need_Processing;

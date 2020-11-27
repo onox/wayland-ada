@@ -65,8 +65,6 @@ package Wayland.Client.Protocol is
    Subcompositor_Interface : constant Interface_Type;
    Subsurface_Interface : constant Interface_Type;
 
---     with Default_Initial_Condition => not Display.Is_Connected;
-
    function Has_Proxy (Object : Display) return Boolean
      with Global => null;
 
@@ -553,8 +551,9 @@ package Wayland.Client.Protocol is
                                 Id      : Unsigned_32);
    package Display_Events is
 
-      function Subscribe (Display : in out Protocol.Display;
-                          Data    : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Display;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Display_Events;
 
@@ -573,10 +572,9 @@ package Wayland.Client.Protocol is
                                             Id       : Unsigned_32);
    package Registry_Events is
 
-      function Subscribe (Registry : in out Protocol.Registry;
-                          Data     : not null Data_Ptr) return Call_Result_Code;
-      --  Starts subcription to global objects addded and removed events.
-      --  To stop subscription, call Registry.Destroy.
+      function Subscribe
+        (Object : in out Registry;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Registry_Events;
 
@@ -589,8 +587,9 @@ package Wayland.Client.Protocol is
                            Callback_Data : Unsigned_32);
    package Callback_Events is
 
-      function Subscribe (Callback : in out Protocol.Callback;
-                          Data     : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Callback;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Callback_Events;
 
@@ -603,8 +602,9 @@ package Wayland.Client.Protocol is
                              Format : Shm_Format);
    package Shm_Events is
 
-      function Subscribe (Shm  : in out Protocol.Shm;
-                          Data : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Shm;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Shm_Events;
 
@@ -616,8 +616,9 @@ package Wayland.Client.Protocol is
                               Buffer : Protocol.Buffer);
    package Buffer_Events is
 
-      function Subscribe (Buffer : in out Protocol.Buffer;
-                          Data   : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Buffer;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Buffer_Events;
 
@@ -639,8 +640,8 @@ package Wayland.Client.Protocol is
    package Data_Offer_Events is
 
       function Subscribe
-        (Data_Offer : in out Protocol.Data_Offer;
-         Data       : not null Data_Ptr) return Call_Result_Code;
+        (Object : in out Data_Offer;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Offer_Events;
 
@@ -673,8 +674,8 @@ package Wayland.Client.Protocol is
    package Data_Source_Events is
 
       function Subscribe
-        (Data_Source : in out Protocol.Data_Source;
-         Data        : not null Data_Ptr) return Call_Result_Code;
+        (Object : in out Data_Source;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Source_Events;
 
@@ -712,8 +713,8 @@ package Wayland.Client.Protocol is
    package Data_Device_Events is
 
       function Subscribe
-        (Data_Device : in out Protocol.Data_Device;
-         Data        : not null Data_Ptr) return Call_Result_Code;
+        (Object : in out Data_Device;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Data_Device_Events;
 
@@ -733,8 +734,8 @@ package Wayland.Client.Protocol is
    package Surface_Events is
 
       function Subscribe
-        (Surface : in out Protocol.Surface;
-         Data    : not null Data_Ptr) return Call_Result_Code;
+        (Object : in out Surface;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Surface_Events;
 
@@ -753,8 +754,9 @@ package Wayland.Client.Protocol is
          Name : String);
    package Seat_Events is
 
-      function Subscribe (Seat : in out Protocol.Seat;
-                          Data : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Seat;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Seat_Events;
 
@@ -820,11 +822,11 @@ package Wayland.Client.Protocol is
          Discrete : Integer);
    package Pointer_Events is
 
-      function Subscribe (Pointer : in out Protocol.Pointer;
-                          Data    : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Pointer;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Pointer_Events;
-   --  Pointer Axis Events are for example scroll wheel rotation
 
    generic
       type Data_Type is limited private;
@@ -868,8 +870,9 @@ package Wayland.Client.Protocol is
                                   Delay_V  : Integer);
    package Keyboard_Events is
 
-      function Subscribe (Keyboard : in out Protocol.Keyboard;
-                          Data     : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Keyboard;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Keyboard_Events;
 
@@ -917,8 +920,9 @@ package Wayland.Client.Protocol is
                                   Orientation : Fixed);
    package Touch_Events is
 
-      function Subscribe (Touch : in out Protocol.Touch;
-                          Data  : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Touch;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Touch_Events;
 
@@ -952,8 +956,9 @@ package Wayland.Client.Protocol is
                             Factor : Integer);
    package Output_Events is
 
-      function Subscribe (Output : in out Protocol.Output;
-                          Data   : not null Data_Ptr) return Call_Result_Code;
+      function Subscribe
+        (Object : in out Output;
+         Data   : not null Data_Ptr) return Call_Result_Code;
 
    end Output_Events;
 
@@ -988,7 +993,6 @@ private
 
    type Display is tagged limited record
       Proxy : Thin.Display_Ptr;
-      My_Fd : Integer;
    end record;
 
    function Has_Proxy (Object : Display) return Boolean is
