@@ -8,13 +8,10 @@ package body Client_Examples.Find_Compositor is
       Compositor : aliased Wayland.Client.Protocol.Compositor;
    end record;
 
-   type Data_Ptr is access all Data_Type;
-
-   Data : aliased Data_Type;
+   Data : Data_Type;
 
    procedure Global_Registry_Handler
-     (Data       : not null Data_Ptr;
-      Registry   : Wayland.Client.Protocol.Registry;
+     (Registry   : in out Wayland.Client.Protocol.Registry'Class;
       Id         : Wayland.Unsigned_32;
       Name       : String;
       Version    : Wayland.Unsigned_32) is
@@ -27,17 +24,14 @@ package body Client_Examples.Find_Compositor is
    end Global_Registry_Handler;
 
    procedure Global_Registry_Remover
-     (Data     : not null Data_Ptr;
-      Registry : Wayland.Client.Protocol.Registry;
+     (Registry : in out Wayland.Client.Protocol.Registry'Class;
       Id       : Wayland.Unsigned_32) is
    begin
       Put_Line ("Got a registry losing event for" & Id'Image);
    end Global_Registry_Remover;
 
    package Registry_Events is new Wayland.Client.Protocol.Registry_Events
-     (Data_Type             => Data_Type,
-      Data_Ptr              => Data_Ptr,
-      Global_Object_Added   => Global_Registry_Handler,
+     (Global_Object_Added   => Global_Registry_Handler,
       Global_Object_Removed => Global_Registry_Remover);
 
    Display  : Wayland.Client.Protocol.Display;
@@ -60,7 +54,7 @@ package body Client_Examples.Find_Compositor is
          return;
       end if;
 
-      Call_Result := Registry_Events.Subscribe (Registry, Data'Access);
+      Call_Result := Registry_Events.Subscribe (Registry);
       case Call_Result is
          when Success =>
             Put_Line ("Successfully subscribed to registry events");
