@@ -191,6 +191,24 @@ procedure XML_Parser is
       end loop;
    end Iterate_Over_Interfaces;
 
+   function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
+     (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
+
+   procedure Get_Max_Arg_Length
+     (Request_Tag : aliased Wayland_XML.Request_Tag;
+      V           : in out Wayland_XML.Request_Child_Vectors.Vector;
+      Length      : in out Natural) is
+   begin
+      for Child of Children (Request_Tag) loop
+         if Child.Kind_Id = Child_Arg then
+            if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
+               V.Append (Child);
+               Length := Natural'Max (Length, Get_Name (Child.Arg_Tag.all)'Length);
+            end if;
+         end if;
+      end loop;
+   end Get_Max_Arg_Length;
+
    procedure Read_Wayland_XML_File (File_Name : String) is
 
       procedure Check_Wayland_XML_File_Exists;
@@ -2015,9 +2033,6 @@ procedure XML_Parser is
                         end loop;
                      end Generate_Comment;
 
-                     function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
-                       (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
-
                      Subprogram_Name : constant String
                        := Xml_Parser_Utils.Adaify_Name
                          (Name (Interface_Tag) & "_" & Name (Request_Tag));
@@ -2033,19 +2048,7 @@ procedure XML_Parser is
 
                         function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                      begin
-                        for Child of Children (Request_Tag) loop
-                           if Child.Kind_Id = Child_Arg then
-                              if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                 V.Append (Child);
-
-                                 declare
-                                    Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                 begin
-                                    Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                 end;
-                              end if;
-                           end if;
-                        end loop;
+                        Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
                         Put_Line (File, "   " & Subprogram_Kind & " " & Subprogram_Name);
                         Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
@@ -2375,9 +2378,6 @@ procedure XML_Parser is
 
                procedure Generate_Code_For_Requests is
 
-                  function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
-                    (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
-
                   procedure Generate_Code_For_Subprogram_Implementation
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
@@ -2410,19 +2410,7 @@ procedure XML_Parser is
 
                                     function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                                  begin
-                                    for Child of Children (Request_Tag) loop
-                                       if Child.Kind_Id = Child_Arg then
-                                          if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                             V.Append (Child);
-
-                                             declare
-                                                Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                             begin
-                                                Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                             end;
-                                          end if;
-                                       end if;
-                                    end loop;
+                                    Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
                                     Put_Line (File, "   function " & Subprogram_Name);
                                     Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
@@ -2468,7 +2456,6 @@ procedure XML_Parser is
                                     Put_Line (File, "   begin");
                                     Put_Line (File, "      return (if P /= null then P.all'Access else null);");
                                     Put_Line (File, "   end " & Subprogram_Name & ";");
-
                                  end;
                               else
                                  Put_Line
@@ -2500,19 +2487,7 @@ procedure XML_Parser is
 
                                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                               begin
-                                 for Child of Children (Request_Tag) loop
-                                    if Child.Kind_Id = Child_Arg then
-                                       if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                          V.Append (Child);
-
-                                          declare
-                                             Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                          begin
-                                             Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                          end;
-                                       end if;
-                                    end if;
-                                 end loop;
+                                 Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
                                  Put_Line (File, "   function " & Subprogram_Name);
                                  Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
@@ -2593,19 +2568,7 @@ procedure XML_Parser is
 
                               function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                            begin
-                              for Child of Children (Request_Tag) loop
-                                 if Child.Kind_Id = Child_Arg then
-                                    if Type_Attribute (Child.Arg_Tag.all) /= Type_New_Id then
-                                       V.Append (Child);
-
-                                       declare
-                                          Arg_Name : constant String := Get_Name (Child.Arg_Tag.all);
-                                       begin
-                                          Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
-                                       end;
-                                    end if;
-                                 end if;
-                              end loop;
+                              Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
                               Put_Line (File, "   procedure " & Subprogram_Name);
                               Put_Line (File, "     (" & Align (Name) & " : " & Ptr_Name & ";");
