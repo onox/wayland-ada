@@ -190,6 +190,28 @@ procedure XML_Parser is
       end loop;
    end Iterate_Over_Interfaces;
 
+   procedure Iterate_Over_Requests
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag;
+      Process       : not null access procedure (Request_Tag : aliased Wayland_XML.Request_Tag)) is
+   begin
+      for Child of Children (Interface_Tag) loop
+         if Child.Kind_Id = Child_Request then
+            Process (Child.Request_Tag.all);
+         end if;
+      end loop;
+   end Iterate_Over_Requests;
+
+   procedure Iterate_Over_Events
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag;
+      Process       : not null access procedure (Event_Tag : aliased Wayland_XML.Event_Tag)) is
+   begin
+      for Child of Children (Interface_Tag) loop
+         if Child.Kind_Id = Child_Event then
+            Process (Child.Event_Tag.all);
+         end if;
+      end loop;
+   end Iterate_Over_Events;
+
    function Get_Name (Arg_Tag   : Wayland_XML.Arg_Tag) return String is
      (Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag)));
 
@@ -763,7 +785,7 @@ procedure XML_Parser is
             I : Integer := 0;
 
             procedure Generate_Code
-              (Request_Tag : Wayland_XML.Request_Tag)
+              (Request_Tag : aliased Wayland_XML.Request_Tag)
             is
                Name : constant String
                  := Xml_Parser_Utils.Adaify_Name
@@ -775,16 +797,11 @@ procedure XML_Parser is
                I := I + 1;
             end Generate_Code;
          begin
-            for Child of Children (Interface_Tag) loop
-               if Child.Kind_Id = Child_Request then
-                  Generate_Code (Child.Request_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Requests (Interface_Tag, Generate_Code'Access);
          end Generate_Code_For_Opcodes;
 
          procedure Generate_Code_For_Event_Since_Version is
-
-            procedure Generate_Code (Event_Tag : Wayland_XML.Event_Tag) is
+            procedure Generate_Code (Event_Tag : aliased Wayland_XML.Event_Tag) is
                Name : constant String
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_" &
@@ -796,18 +813,12 @@ procedure XML_Parser is
                   Put_Line (File, "   " & Name & " : constant := 1;");
                end if;
             end Generate_Code;
-
          begin
-            for Child of Children (Interface_Tag) loop
-               if Child.Kind_Id = Child_Event then
-                  Generate_Code (Child.Event_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Events (Interface_Tag, Generate_Code'Access);
          end Generate_Code_For_Event_Since_Version;
 
          procedure Generate_Code_For_Opcodes_Since_Version is
-
-            procedure Generate_Code (Request_Tag : Wayland_XML.Request_Tag) is
+            procedure Generate_Code (Request_Tag : aliased Wayland_XML.Request_Tag) is
                Name : constant String
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_" &
@@ -819,13 +830,8 @@ procedure XML_Parser is
                   Put_Line (File, "   " & Name & " : constant := 1;");
                end if;
             end Generate_Code;
-
          begin
-            for Child of Children (Interface_Tag) loop
-               if Child.Kind_Id = Child_Request then
-                  Generate_Code (Child.Request_Tag.all);
-               end if;
-            end loop;
+            Iterate_Over_Requests (Interface_Tag, Generate_Code'Access);
          end Generate_Code_For_Opcodes_Since_Version;
 
       begin
@@ -1896,23 +1902,20 @@ procedure XML_Parser is
 
                      New_Line (File);
                      Put_Line (File, "   with Convention => C;");
+                     New_Line (File);
                   end Generate_Code_For_Subprogram;
                begin
-                  for Child of Children (Interface_Tag) loop
-                     if Child.Kind_Id = Child_Event then
-                        Generate_Code_For_Subprogram (Child.Event_Tag.all);
-                        New_Line (File);
-                     end if;
-                  end loop;
+                  Iterate_Over_Events (Interface_Tag, Generate_Code_For_Subprogram'Access);
                end Generate_Code_For_Subprogram_Ptrs;
 
                procedure Generate_Code_For_Listener_Type_Definition is
                   function Get_Name (Event_Tag   : Wayland_XML.Event_Tag) return String is
                     (Xml_Parser_Utils.Adaify_Name (Name (Event_Tag)));
 
+                  Name_Length : Natural := 0;
+
                   procedure Generate_Code_For_Record_Component
-                    (Event_Tag   : Wayland_XML.Event_Tag;
-                     Name_Length : Natural)
+                    (Event_Tag : aliased Wayland_XML.Event_Tag)
                   is
                      Component_Name      : constant String := Get_Name (Event_Tag);
 
@@ -1932,8 +1935,6 @@ procedure XML_Parser is
                   Ptr_Name : constant String
                     := Xml_Parser_Utils.Adaify_Name
                       (Wayland_XML.Name (Interface_Tag) & "_Listener_Ptr");
-
-                  Max_Name_Length : Natural := 0;
                begin
                   Put_Line (File, "   type " & Name & " is record");
 
@@ -1942,16 +1943,12 @@ procedure XML_Parser is
                         declare
                            Arg_Name : constant String := Get_Name (Child.Event_Tag.all);
                         begin
-                           Max_Name_Length := Natural'Max (Max_Name_Length, Arg_Name'Length);
+                           Name_Length := Natural'Max (Name_Length, Arg_Name'Length);
                         end;
                      end if;
                   end loop;
 
-                  for Child of Children (Interface_Tag) loop
-                     if Child.Kind_Id = Child_Event then
-                        Generate_Code_For_Record_Component (Child.Event_Tag.all, Max_Name_Length);
-                     end if;
-                  end loop;
+                  Iterate_Over_Events (Interface_Tag, Generate_Code_For_Record_Component'Access);
                   Put_Line (File, "   end record");
                   Put_Line (File, "     with Convention => C_Pass_By_Copy;");
                   Put_Line (File, "");
@@ -2108,11 +2105,7 @@ procedure XML_Parser is
                      end if;
                   end Generate_Code_For_Subprogram_Declaration;
                begin
-                  for Child of Children (Interface_Tag) loop
-                     if Child.Kind_Id = Child_Request then
-                        Generate_Code_For_Subprogram_Declaration (Child.Request_Tag.all);
-                     end if;
-                  end loop;
+                  Iterate_Over_Requests (Interface_Tag, Generate_Code_For_Subprogram_Declaration'Access);
                end Generate_Code_For_Requests;
 
             begin
@@ -2579,11 +2572,7 @@ procedure XML_Parser is
                   end Generate_Code_For_Subprogram_Implementation;
 
                begin
-                  for Child of Children (Interface_Tag) loop
-                     if Child.Kind_Id = Child_Request then
-                        Generate_Code_For_Subprogram_Implementation (Child.Request_Tag.all);
-                     end if;
-                  end loop;
+                  Iterate_Over_Requests (Interface_Tag, Generate_Code_For_Subprogram_Implementation'Access);
                end Generate_Code_For_Requests;
 
                Name : constant String :=
