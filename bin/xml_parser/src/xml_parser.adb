@@ -2,8 +2,7 @@ with Ada.Command_Line;
 with Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Sequential_IO;
-with Ada.Streams;
+with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
@@ -212,57 +211,40 @@ procedure XML_Parser is
    procedure Read_Wayland_XML_File (File_Name : String) is
 
       procedure Check_Wayland_XML_File_Exists;
-      procedure Allocate_Space_For_Wayland_XML_Contents;
-      procedure Read_Contents_Of_Wayland_XML;
+      procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String);
       procedure Parse_Contents (File_Name : String);
       procedure Identify_Protocol_Tag;
       procedure Identify_Protocol_Children (File_Name : String);
 
       procedure Check_Wayland_XML_File_Exists is
       begin
-         if Ada.Directories.Exists (File_Name) then
-            Allocate_Space_For_Wayland_XML_Contents;
-         else
-            Put_Line ("Could not find " & File_Name & "!");
+         if not Ada.Directories.Exists (File_Name) then
+            raise Constraint_Error with File_Name & " does not exist";
          end if;
-      end Check_Wayland_XML_File_Exists;
 
-      File_Size : Natural;
+         Allocate_Space_For_Wayland_XML_Contents (File_Name);
+         Parse_Contents (File_Name);
+      end Check_Wayland_XML_File_Exists;
 
       File_Contents : Aida.Deepend.String_Ptr;
 
-      procedure Allocate_Space_For_Wayland_XML_Contents is
-      begin
-         File_Size := Natural (Ada.Directories.Size (File_Name));
+      procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String) is
+         package IO renames Ada.Streams.Stream_IO;
 
-         if File_Size > 4 then
-            File_Contents := new String (1 .. File_Size);
-            Read_Contents_Of_Wayland_XML;
-         else
-            Put_Line ("File " & File_Name & " is too small!");
-         end if;
-      end Allocate_Space_For_Wayland_XML_Contents;
-
-      pragma Unmodified (File_Size);
-      pragma Unmodified (File_Contents);
-
-      procedure Read_Contents_Of_Wayland_XML is
-         package IO is new Ada.Sequential_IO (Ada.Streams.Stream_Element);
-
+         Size : constant Natural := Natural (Ada.Directories.Size (File_Name));
          File : IO.File_Type;
-         SE   : Ada.Streams.Stream_Element;
+
+         subtype File_String is String (1 .. Size);
       begin
          IO.Open (File, IO.In_File, File_Name);
 
-         for I in File_Contents.all'First .. File_Contents.all'Last loop
-            IO.Read (File, SE);
-            File_Contents (I) := Character'Val (SE);
-         end loop;
+         File_Contents := new File_String;
+         File_String'Read (IO.Stream (File), File_Contents.all);
 
          IO.Close (File);
+      end Allocate_Space_For_Wayland_XML_Contents;
 
-         Parse_Contents (File_Name);
-      end Read_Contents_Of_Wayland_XML;
+      pragma Unmodified (File_Contents);
 
       Root_Node : Aida.Deepend.XML_DOM_Parser.Node_Ptr;
 
