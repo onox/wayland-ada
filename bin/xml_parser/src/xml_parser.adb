@@ -2304,12 +2304,8 @@ procedure XML_Parser is
             procedure Handle_Interface
               (Interface_Tag : aliased Wayland_XML.Interface_Tag)
             is
-               procedure Generate_Code_For_Add_Listener_Subprogram_Implementations is
-                  Name : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-                  Function_Name     : constant String := Name & "_Add_Listener";
-                  Ptr_Listener_Name : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag) & "_Listener_Ptr");
+               procedure Generate_Code_For_Add_Listener_Subprogram_Implementations (Name : String) is
+                  Ptr_Listener_Name : constant String := Name & "_Listener_Ptr";
                begin
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Add_Listener", "Interfaces.C.int",
@@ -2317,50 +2313,38 @@ procedure XML_Parser is
                        (+"Data", +"Void_Ptr")));
                   Put_Line (File, "   begin");
                   Put_Line (File, "      return Wayland.API.Proxy_Add_Listener (" & Name & ".all, Listener.all'Address, Data);");
-                  Put_Line (File, "   end " & Function_Name & ";");
+                  Put_Line (File, "   end " & Name & "_Add_Listener;");
                end Generate_Code_For_Add_Listener_Subprogram_Implementations;
 
-               procedure Generate_Code_For_Set_User_Data_Subprogram_Implementations is
-                  Name            : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-                  Subprogram_Name : constant String := Name & "_Set_User_Data";
+               procedure Generate_Code_For_Set_User_Data_Subprogram_Implementations (Name : String) is
                begin
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Set_User_Data", "",
                       (1 => (+"Data", +"Void_Ptr")));
                   Put_Line (File, "   begin");
                   Put_Line (File, "      Wayland.API.Proxy_Set_User_Data (" & Name & ".all, Data);");
-                  Put_Line (File, "   end " & Subprogram_Name & ";");
+                  Put_Line (File, "   end " & Name & "_Set_User_Data;");
                end Generate_Code_For_Set_User_Data_Subprogram_Implementations;
 
-               procedure Generate_Code_For_Get_User_Data_Subprogram_Implementations is
-                  Name            : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-                  Subprogram_Name : constant String := Name & "_Get_User_Data";
+               procedure Generate_Code_For_Get_User_Data_Subprogram_Implementations (Name : String) is
                begin
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Get_User_Data", "Void_Ptr");
                   Put_Line (File, "   begin");
                   Put_Line (File, "      return Wayland.API.Proxy_Get_User_Data (" & Name & ".all);");
-                  Put_Line (File, "   end " & Subprogram_Name & ";");
+                  Put_Line (File, "   end " & Name & "_Get_User_Data;");
                end Generate_Code_For_Get_User_Data_Subprogram_Implementations;
 
-               procedure Generate_Code_For_Get_Version_Subprogram_Implementations is
-                  Name            : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-                  Subprogram_Name : constant String := Name & "_Get_Version";
+               procedure Generate_Code_For_Get_Version_Subprogram_Implementations (Name : String) is
                begin
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Get_Version", "Unsigned_32");
                   Put_Line (File, "   begin");
                   Put_Line (File, "      return Wayland.API.Proxy_Get_Version (" & Name & ".all);");
-                  Put_Line (File, "   end " & Subprogram_Name & ";");
+                  Put_Line (File, "   end " & Name & "_Get_Version;");
                end Generate_Code_For_Get_Version_Subprogram_Implementations;
 
-               procedure Generate_Code_For_Destroy_Subprogram_Implementations is
-                  Name            : constant String :=
-                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-                  Subprogram_Name : constant String := Name & "_Destroy";
+               procedure Generate_Code_For_Destroy_Subprogram_Implementations (Name : String) is
                begin
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Destroy", "");
@@ -2373,7 +2357,7 @@ procedure XML_Parser is
                   end if;
 
                   Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
-                  Put_Line (File, "   end " & Subprogram_Name & ";");
+                  Put_Line (File, "   end " & Name & "_Destroy;");
                end Generate_Code_For_Destroy_Subprogram_Implementations;
 
                procedure Generate_Code_For_Requests is
@@ -2620,22 +2604,24 @@ procedure XML_Parser is
                   end loop;
                end Generate_Code_For_Requests;
 
+               Name : constant String :=
+                 Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
             begin
                if Xml_Parser_Utils.Exists_Any_Event_Tag (Interface_Tag) then
                   Put_Line (File, "");
-                  Generate_Code_For_Add_Listener_Subprogram_Implementations;
+                  Generate_Code_For_Add_Listener_Subprogram_Implementations (Name);
                end if;
 
                Put_Line (File, "");
-               Generate_Code_For_Set_User_Data_Subprogram_Implementations;
+               Generate_Code_For_Set_User_Data_Subprogram_Implementations (Name);
                Put_Line (File, "");
-               Generate_Code_For_Get_User_Data_Subprogram_Implementations;
+               Generate_Code_For_Get_User_Data_Subprogram_Implementations (Name);
                Put_Line (File, "");
-               Generate_Code_For_Get_Version_Subprogram_Implementations;
+               Generate_Code_For_Get_Version_Subprogram_Implementations (Name);
 
                if Wayland_XML.Name (Interface_Tag) /= "wl_display" then
                   Put_Line (File, "");
-                  Generate_Code_For_Destroy_Subprogram_Implementations;
+                  Generate_Code_For_Destroy_Subprogram_Implementations (Name);
                end if;
 
                Generate_Code_For_Requests;
