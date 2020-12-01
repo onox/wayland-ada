@@ -1,7 +1,6 @@
 with Ada.Command_Line;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Directories;
-with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
 with Ada.Strings.Hash;
@@ -15,8 +14,6 @@ with Xml_Parser_Utils;
 
 with Standard_Extensions; use Standard_Extensions;
 
--- chars_ptr should be replaced with C_String in the thin Ada binding.
--- Pretty print this file with "gnatpp -M140"
 procedure XML_Parser is
 
    use type Ada.Containers.Count_Type;
@@ -4400,7 +4397,4 @@ begin
    Read_Wayland_XML_File
      (File_Name       => Ada.Command_Line.Argument (1),
       Enable_Comments => False);
-exception
-   when Unknown_Exception : others =>
-      Put_Line (Ada.Exceptions.Exception_Information (Unknown_Exception));
 end XML_Parser;
