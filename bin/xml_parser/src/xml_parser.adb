@@ -52,8 +52,8 @@ procedure XML_Parser is
 
    XML_Exception : exception;
 
-   procedure Read_Wayland_XML_File (File_Name : String);
-   procedure Create_Wayland_Spec_File (File_Name : String);
+   procedure Read_Wayland_XML_File (File_Name : String; Enable_Comments : Boolean);
+   procedure Create_Wayland_Spec_File (File_Name : String; Enable_Comments : Boolean);
    procedure Create_Wayland_Body_File (File_Name : String);
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
@@ -244,7 +244,7 @@ procedure XML_Parser is
       end loop;
    end Get_Max_Arg_Length;
 
-   procedure Read_Wayland_XML_File (File_Name : String) is
+   procedure Read_Wayland_XML_File (File_Name : String; Enable_Comments : Boolean) is
 
       procedure Check_Wayland_XML_File_Exists;
       procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String);
@@ -780,7 +780,7 @@ procedure XML_Parser is
       begin
          Iterate (Root_Node.Tag);
 
-         Create_Wayland_Spec_File (File_Name);
+         Create_Wayland_Spec_File (File_Name, Enable_Comments);
          Create_Wayland_Body_File (File_Name);
       end Identify_Protocol_Children;
 
@@ -859,7 +859,7 @@ procedure XML_Parser is
       Iterate_Over_Interfaces (Handle_Interface'Access);
    end Generate_Code_For_Numeric_Constants;
 
-   procedure Create_Wayland_Spec_File (File_Name : String) is
+   procedure Create_Wayland_Spec_File (File_Name : String; Enable_Comments : Boolean) is
       File : Ada.Text_IO.File_Type;
 
       procedure Create_Wl_Thin_Spec_File;
@@ -2066,10 +2066,9 @@ procedure XML_Parser is
                   begin
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
                         Put_Line (File, "");
-                        if Exists_Description (Request_Tag) then
+                        if Enable_Comments and Exists_Description (Request_Tag) then
                            Generate_Comment
-                             (Xml_Parser_Utils.Remove_Tabs
-                                (Description (Request_Tag)));
+                             (Xml_Parser_Utils.Remove_Tabs (Description (Request_Tag)));
                         end if;
 
                         if Xml_Parser_Utils.Is_Interface_Specified (Request_Tag) then
@@ -2112,10 +2111,9 @@ procedure XML_Parser is
                         null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
                      else
                         Put_Line (File, "");
-                        if Exists_Description (Request_Tag) then
+                        if Enable_Comments and Exists_Description (Request_Tag) then
                            Generate_Comment
-                             (Xml_Parser_Utils.Remove_Tabs
-                                (Description (Request_Tag)));
+                             (Xml_Parser_Utils.Remove_Tabs (Description (Request_Tag)));
                         end if;
                         if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 0 then
                            declare
@@ -4399,7 +4397,9 @@ procedure XML_Parser is
    end Create_Wayland_Body_File;
 
 begin
-   Read_Wayland_XML_File (Ada.Command_Line.Argument (1));
+   Read_Wayland_XML_File
+     (File_Name       => Ada.Command_Line.Argument (1),
+      Enable_Comments => False);
 exception
    when Unknown_Exception : others =>
       Put_Line (Ada.Exceptions.Exception_Information (Unknown_Exception));
