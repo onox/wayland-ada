@@ -1075,7 +1075,7 @@ procedure XML_Parser is
                procedure Generate_Summary_For_Entry
                  (Entry_Tag : Wayland_XML.Entry_Tag)
                is
-                  Summary_String : constant String := Summary (Entry_Tag);
+                  Summary_String : constant String := (if Exists_Summary (Entry_Tag) then Summary (Entry_Tag) else "");
                begin
                   if Summary_String'Length > 0 then
                      Put_Line (File, "      --  " & Summary_String);

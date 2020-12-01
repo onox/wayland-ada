@@ -175,7 +175,7 @@ package body Aida.Deepend.XML_DOM_Parser is
          when Expecting_Default =>
             if not Argument.Current_Nodes.Is_Empty then
                if
-                 Attribute_Name'Length > 0 and Attribute_Value'Length > 0
+                 Attribute_Name'Length > 0
                then
                   declare
                      Attr : not null Attribute_Ptr
