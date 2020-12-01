@@ -30,6 +30,8 @@ with Xml_Parser_Utils;
 
 procedure XML_Parser is
 
+   Out_Folder : constant String := "../../src/wayland/";
+
    use type Ada.Containers.Count_Type;
    use type Wayland_XML.Event_Child;
    use type Wayland_XML.Request_Child;
@@ -906,7 +908,7 @@ procedure XML_Parser is
       begin
          if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-protocol.ads");
+              (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-protocol.ads");
 
             Put_Line (File, "private with Interfaces.C.Strings;");
             Put_Line (File, "private with Wayland." & Package_Name & ".Thin;");
@@ -942,7 +944,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & ".ads");
+           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & ".ads");
 
          Put_Line (File, "package Wayland." & Package_Name & " is");
          Put_Line (File, "   pragma Pure;");
@@ -953,7 +955,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-enums.ads");
+           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-enums.ads");
 
          Put_Line (File, "package Wayland." & Package_Name & ".Enums is");
          Put_Line (File, "   pragma Preelaborate;");
@@ -973,7 +975,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-constants.ads");
+           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-constants.ads");
 
          Put_Line (File, "private package Wayland." & Package_Name & ".Constants is");
          Put_Line (File, "   pragma Pure;");
@@ -988,7 +990,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.ads");
+           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-thin.ads");
 
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
@@ -2268,7 +2270,7 @@ procedure XML_Parser is
       begin
          if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-protocol.adb");
+              (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-protocol.adb");
 
             Put_Line (File, "with System.Address_To_Access_Conversions;");
             New_Line (File);
@@ -2292,7 +2294,7 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-thin.adb");
+           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-thin.adb");
 
          Put_Line (File, "with Ada.Unchecked_Conversion;");
          Put_Line (File, "");
