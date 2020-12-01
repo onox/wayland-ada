@@ -914,6 +914,17 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
+           (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & ".ads");
+
+         Put_Line (File, "package Wayland." & Package_Name & " is");
+         Put_Line (File, "   pragma Pure;");
+         Put_Line (File, "end Wayland." & Package_Name & ";");
+
+         Ada.Text_IO.Close (File);
+
+         -----------------------------------------------------------------------
+
+         Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File, "wayland-" & Protocol_Name & "-enums.ads");
 
          Put_Line (File, "package Wayland." & Package_Name & ".Enums is");
