@@ -1795,13 +1795,12 @@ package body Wayland.Client.Protocol is
 
    procedure Do_Accept (Object    : Data_Offer;
                         Serial    : Unsigned_32;
-                        Mime_Type : String) is
+                        Mime_Type : String)
+   is
+      MT : Interfaces.C.Strings.chars_ptr := Interfaces.C.Strings.New_String (Mime_Type);
    begin
-      Wayland.API.Proxy_Marshal
-        (Wayland.API.Proxy (Object.Proxy.all),
-         Constants.Data_Offer_Accept,
-         Serial,
-         +Mime_Type);
+      Thin.Data_Offer_Accept (Object.Proxy, Serial, MT);
+      Interfaces.C.Strings.Free (MT);
    end Do_Accept;
 
    procedure Do_Not_Accept (Object : Data_Offer;
@@ -1812,10 +1811,12 @@ package body Wayland.Client.Protocol is
 
    procedure Receive (Object          : Data_Offer;
                       Mime_Type       : String;
-                      File_Descriptor : Integer) is
+                      File_Descriptor : Integer)
+   is
+      MT : Interfaces.C.Strings.chars_ptr := Interfaces.C.Strings.New_String (Mime_Type);
    begin
-      Thin.Data_Offer_Receive
-        (Object.Proxy, +Mime_Type, File_Descriptor);
+      Thin.Data_Offer_Receive (Object.Proxy, MT, File_Descriptor);
+      Interfaces.C.Strings.Free (MT);
    end Receive;
 
    procedure Finish (Object : Data_Offer) is

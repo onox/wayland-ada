@@ -491,7 +491,7 @@ private package Wayland.Client.Thin is
    --  determine acceptance.
    procedure Data_Offer_Receive
      (Data_Offer : Data_Offer_Ptr;
-      Mime_Type  : C_String;
+      Mime_Type  : chars_ptr;
       Fd         : Integer);
 
    --  Notifies the compositor that the drag destination successfully

@@ -375,7 +375,7 @@ package body Wayland.Client.Thin is
 
    procedure Data_Offer_Receive
      (Data_Offer : Data_Offer_Ptr;
-      Mime_Type  : C_String;
+      Mime_Type  : chars_ptr;
       Fd         : Integer) is
    begin
       Wayland.API.Proxy_Marshal
