@@ -28,8 +28,6 @@ with Aida.Deepend.XML_DOM_Parser;
 with Wayland_XML;
 with Xml_Parser_Utils;
 
-with Standard_Extensions; use Standard_Extensions;
-
 procedure XML_Parser is
 
    use type Ada.Containers.Count_Type;
@@ -59,6 +57,20 @@ procedure XML_Parser is
 
    package SF renames Ada.Strings.Fixed;
    package SU renames Ada.Strings.Unbounded;
+
+   function Trim (Value : String) return String is (SF.Trim (Value, Ada.Strings.Both));
+
+   procedure Put
+     (File : Ada.Text_IO.File_Type;
+      Item : String) renames Ada.Text_IO.Put;
+
+   procedure Put_Line
+     (File : Ada.Text_IO.File_Type;
+      Item : String) renames Ada.Text_IO.Put_Line;
+
+   procedure New_Line
+     (File    : Ada.Text_IO.File_Type;
+      Spacing : Ada.Text_IO.Positive_Count := 1) renames Ada.Text_IO.New_Line;
 
    function "+" (Value : String) return SU.Unbounded_String renames SU.To_Unbounded_String;
    function "+" (Value : SU.Unbounded_String) return String renames SU.To_String;
@@ -304,7 +316,7 @@ procedure XML_Parser is
            (File_Contents.all, Call_Result, Root_Node);
 
          if Call_Result.Has_Failed then
-            Put_Line (Call_Result.Message);
+            raise XML_Exception with Call_Result.Message;
          else
             Identify_Protocol_Tag;
             Identify_Protocol_Children (File_Name);
@@ -2043,7 +2055,7 @@ procedure XML_Parser is
                      begin
                         for Interval of Interval_Identifier.Intervals loop
                            declare
-                              Comment : constant String := Ada.Strings.Fixed.Trim (Text (Interval.First .. Interval.Last), Ada.Strings.Both);
+                              Comment : constant String := Trim (Text (Interval.First .. Interval.Last));
                            begin
                               if Comment'Length > 0 then
                                  Put_Line (File, "   --  " & Comment);
