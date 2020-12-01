@@ -22,20 +22,9 @@ package body Aida with SPARK_Mode is
    use type Interfaces.Unsigned_32;
    use type Ada.Containers.Hash_Type;
 
---     function Is_Digit (C : Character) return Boolean is
---     begin
---        return C in '0' .. '9';
---     end Is_Digit;
-
    function To_Integer (Source : in Digit_Character) return Integer is
    begin
       return Character'Pos (Source) - Character'Pos ('0');
-   end To_Integer;
-
-   procedure To_Integer (Source : in     Character;
-                       Target :    out Integer) is
-   begin
-      Target := Character'Pos (Source) - Character'Pos ('0');
    end To_Integer;
 
    function To_Char (This : Integer) return Character is
@@ -199,29 +188,6 @@ package body Aida with SPARK_Mode is
       end if;
 
       return Result (P + 1 .. Index_T'Last);
-   end To_String;
-
-   function To_Hash_Type
-     (This : Integer) return Ada.Containers.Hash_Type
-   is
-      X : Interfaces.Unsigned_32 := (if This >= 0 then
-                                        Interfaces.Unsigned_32 (This)
-                                     elsif This = Integer'First then
-                                        1001
-                                     else
-                                        Interfaces.Unsigned_32 (-This));
-   begin
-      X := (Interfaces.Shift_Right (X, 16) xor X) * 16#45d9f3b#;
-      X := (Interfaces.Shift_Right (X, 16) xor X) * 16#45d9f3b#;
-      X := (Interfaces.Shift_Right (X, 16) xor X);
-
-      return Ada.Containers.Hash_Type (X);
-   end To_Hash_Type;
-
-   function To_String (This : Float) return String is
-      pragma SPARK_Mode (Off);
-   begin
-      return Float'Image (This);
    end To_String;
 
    procedure To_Integer (Source     : in  String;
@@ -617,132 +583,6 @@ package body Aida with SPARK_Mode is
          end if;
       end if;
    end To_Integer;
-
-   procedure To_Float (Source     : in  String;
-                       Target     : out Float;
-                       Has_Failed : out Boolean)
-   is
-      pragma SPARK_Mode (Off);
-   begin
-      Target := Float'Value (Source);
-      Has_Failed := False;
-   exception
-      when Constraint_Error =>
-         Has_Failed := True;
-   end To_Float;
-
-   function Is_Latin1_Graphic_Characters (Text : String) return Boolean is
-      Result : Boolean := True;
-   begin
-      for I in Text'Range loop
-         if not Ada.Characters.Handling.Is_Graphic (Text (I)) then
-            Result := False;
-            exit;
-         end if;
-      end loop;
-
-      return Result;
-   end Is_Latin1_Graphic_Characters;
-
-   function Starts_With (This         : String;
-                         Searched_For : String) return Boolean
-   is
-      Result : Boolean;
-   begin
-      if Searched_For'Length > This'Length then
-         Result := False;
-      else
-         Result :=
-           (for all Index in Searched_For'Range =>
-              This (Index - Searched_For'First + This'First) =
-                Searched_For (Index));
-      end if;
-
-      return Result;
-   end Starts_With;
-
-   function To_Hash_Type (This : String) return Ada.Containers.Hash_Type is
-      H : Ada.Containers.Hash_Type := 0;
-      A : Ada.Containers.Hash_Type := 31_415;
-      B : constant Ada.Containers.Hash_Type := 27_183;
-   begin
-      for I in Positive range This'First .. This'Last loop
-         H := A * H + Character'Pos (This (I));
-         A := A * B;
-         pragma Loop_Variant (Increases => I);
-      end loop;
-
-      return H;
-   end To_Hash_Type;
-
-   function Concat (Left, Right : String) return String is
-      S : String (1 .. Left'Length + Right'Length) := (others => ' ');
-   begin
-      S (1 .. Left'Length) := Left (Left'First .. Left'Last);
-      S (1 + Left'Length .. Left'Length + Right'Length)
-        := Right (Right'First .. Right'Last);
-      return S;
-   end Concat;
-
-   procedure Initialize (This : in out Bounded_String; Text : String) is
-   begin
-      for I in Integer range 1 .. Text'Length loop
-         This.Text (I) := Text (Text'First - 1 + I);
-         pragma Loop_Invariant
-           (for all J in Integer range 1 .. I =>
-              This.Text (J) = Text (Text'First - 1 + J));
-         pragma Loop_Variant (Increases => I);
-      end loop;
-
-      This.Text_Length := Text'Length;
-   end Initialize;
-
-   procedure Initialize2 (This : out Bounded_String; Text : String) is
-   begin
-      This.Text := (others => ' ');
-      for I in Integer range 1 .. Text'Length loop
-         This.Text (I) := Text (Text'First - 1 + I);
-         pragma Loop_Invariant
-           (for all J in Integer range 1 .. I =>
-              This.Text (J) = Text (Text'First - 1 + J));
-         pragma Loop_Variant (Increases => I);
-      end loop;
-
-      This.Text_Length := Text'Length;
-   end Initialize2;
-
-   procedure Append (Target : in out Bounded_String; Source : String) is
-   begin
-      for I in Integer range Source'First .. Source'Last loop
-         Target.Text (Target.Text_Length + 1 + (I - Source'First)) :=
-           Source (I);
-      end loop;
-      Target.Text_Length := Target.Text_Length + Source'Length;
-   end Append;
-
-   function To_Hash_Type
-     (This : Bounded_String) return Ada.Containers.Hash_Type is
-   begin
-      return Aida.To_Hash_Type (This.Text (1 .. Length (This)));
-   end To_Hash_Type;
-
-   function Equals (This : Bounded_String; Object : String) return Boolean is
-      Result : Boolean := True;
-   begin
-      if Length (This) = Object'Length then
-         if Object'Length > 0 then
-            Result :=
-              This.Text (1 .. This.Text_Length) = Object (Object'Range);
-         end if;
-      end if;
-
-      return Result;
-   end Equals;
-
-   function To_String (This : Bounded_String) return String is
-   begin
-      return This.Text (1 .. This.Text_Length);
-   end To_String;
 
    procedure Initialize (This    : in out Call_Result;
                          Code_1 : Integer;
