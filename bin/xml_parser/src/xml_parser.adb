@@ -1,9 +1,10 @@
 with Ada.Command_Line;
-with Ada.Containers;
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
+with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -64,12 +65,19 @@ procedure XML_Parser is
    function Get_Protocol_Name (Name : String) return String is
      (if Name = "wayland" then "client" else Name);
 
+   package String_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Key_Type        => String,
+      Element_Type    => String,
+      Hash            => Ada.Strings.Hash,
+      Equivalent_Keys => "=");
+
    procedure Generate_Code_For_Arg
      (File          : Ada.Text_IO.File_Type;
       Interface_Tag : Wayland_XML.Interface_Tag;
       Arg_Tag       : Wayland_XML.Arg_Tag;
       Max_Length    : Natural;
-      Is_Last       : Boolean)
+      Is_Last       : Boolean;
+      Enum_Types    : in out String_Maps.Map)
    is
       function Get_Enum_Type_Name return String is
          Result : String := Enum (Arg_Tag);
@@ -86,16 +94,22 @@ procedure XML_Parser is
       end Get_Enum_Type_Name;
 
       Arg_Name      : constant String
-        := Xml_Parser_Utils.Adaify_Variable_Name
-          (Name (Arg_Tag));
+        := Xml_Parser_Utils.Adaify_Variable_Name (Name (Arg_Tag));
+      Arg_Type : constant String :=
+        Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag);
+
       Arg_Type_Name : constant String :=
         (if Exists_Enum (Arg_Tag) then
            Xml_Parser_Utils.Adaify_Name (Get_Enum_Type_Name)
          else
-           Xml_Parser_Utils.Arg_Type_As_String (Arg_Tag));
+           Arg_Type);
 
       Arg_Name_Aligned : constant String := SF.Head (Arg_Name, Max_Length, ' ');
    begin
+      if Arg_Type_Name /= Arg_Type then
+         Enum_Types.Include (Arg_Type_Name, Arg_Type);
+      end if;
+
       if Is_Last then
          Put (File, "      " & Arg_Name_Aligned & " : " & Arg_Type_Name & ")");
       else
@@ -1863,6 +1877,7 @@ procedure XML_Parser is
 
                      declare
                         Max_Name_Length : Natural := Interface_Name'Length;
+                        Dont_Care : String_Maps.Map;
                      begin
                         for Child of V loop
                            declare
@@ -1895,7 +1910,8 @@ procedure XML_Parser is
                                  Interface_Tag,
                                  Child.Arg_Tag.all,
                                  Max_Name_Length,
-                                 Children (Event_Tag).Last_Element = Child);
+                                 Children (Event_Tag).Last_Element = Child,
+                                 Dont_Care);
                            end if;
                         end loop;
                      end;
@@ -2024,6 +2040,7 @@ procedure XML_Parser is
 
                      procedure Generate_Pretty_Function_Code (Subprogram_Kind : String; Max_Name_Length : in out Natural) is
                         V : Wayland_XML.Request_Child_Vectors.Vector;
+                        Dont_Care : String_Maps.Map;
 
                         function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                      begin
@@ -2039,7 +2056,8 @@ procedure XML_Parser is
                                  Interface_Tag,
                                  Child.Arg_Tag.all,
                                  Max_Name_Length,
-                                 Child = Children (Request_Tag).Last_Element);
+                                 Child = Children (Request_Tag).Last_Element,
+                                 Dont_Care);
                            end if;
                         end loop;
                      end Generate_Pretty_Function_Code;
@@ -2353,14 +2371,17 @@ procedure XML_Parser is
 
                      procedure Generate_Arguments (Spaces : Natural; V : Wayland_XML.Request_Child_Vectors.Vector) is
                         use SF;
+
+                        function Get_Value (Child : Wayland_XML.Arg_Tag; Value : String) return String is
+                          (if Exists_Enum (Child) then "Convert (" & Value & ")" else Value);
                      begin
                         for Child of V loop
                            if Child.Kind_Id = Child_Arg then
                               Put_Line (File, ",");
                               if Type_Attribute (Child.Arg_Tag.all) /= Type_Object then
-                                 Put (File, Spaces * " " & Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all)));
+                                 Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))));
                               else
-                                 Put (File, Spaces * " " & Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all)) & ".all'Address");
+                                 Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))) & ".all'Address");
                               end if;
                            end if;
                         end loop;
@@ -2385,6 +2406,19 @@ procedure XML_Parser is
                         Put_Line (File, "      return (if P /= null then P.all'Access else null);");
                         Put_Line (File, "   end " & Subprogram_Name & ";");
                      end Generate_Code_After_Arguments;
+
+                     Enum_Types : String_Maps.Map;
+
+                     procedure Generate_Conversion_Code_For_Args is
+                        procedure Generate_Convert (Cursor : String_Maps.Cursor) is
+                           From : constant String := String_Maps.Key (Cursor);
+                           To   : constant String := String_Maps.Element (Cursor);
+                        begin
+                           Put_Line (File, "      function Convert is new Ada.Unchecked_Conversion (" & From & ", " & To & ");");
+                        end Generate_Convert;
+                     begin
+                        Enum_Types.Iterate (Generate_Convert'Access);
+                     end Generate_Conversion_Code_For_Args;
 
                      V : Wayland_XML.Request_Child_Vectors.Vector;
 
@@ -2411,12 +2445,17 @@ procedure XML_Parser is
                                           Interface_Tag,
                                           Child.Arg_Tag.all,
                                           Max_Name_Length,
-                                          Child = Children (Request_Tag).Last_Element);
+                                          Child = Children (Request_Tag).Last_Element,
+                                          Enum_Types);
                                     end if;
                                  end loop;
 
                                  Put_Line (File, " return " & Return_Type);
                                  Put_Line (File, "   is");
+                                 Generate_Conversion_Code_For_Args;
+                                 if not Enum_Types.Is_Empty then
+                                    Put_Line (File, "");
+                                 end if;
                               else
                                  Put_Line
                                    (File,
@@ -2441,12 +2480,20 @@ procedure XML_Parser is
                                        Interface_Tag,
                                        Child.Arg_Tag.all,
                                        Max_Name_Length,
-                                       False);
+                                       False,
+                                       Enum_Types);
                                  end if;
                               end loop;
 
                               Put_Line (File, "      " & Align ("Interface_V") & " : Interface_Ptr;");
-                              Put_Line (File, "      " & Align ("New_Id") & " : Unsigned_32) return Proxy_Ptr is");
+                              Put (File, "      " & Align ("New_Id") & " : Unsigned_32) return Proxy_Ptr");
+                              if Enum_Types.Is_Empty then
+                                 Put_Line (File, " is");
+                              else
+                                 Put_Line (File, "");
+                                 Put_Line (File, "is");
+                                 Generate_Conversion_Code_For_Args;
+                              end if;
                               Put_Line (File, "   begin");
                               Put_Line (File, "      return Wayland.API.Proxy_Marshal_Constructor_Versioned");
                               Put_Line (File, "        (" & Name & ".all,");
@@ -2484,11 +2531,19 @@ procedure XML_Parser is
                                     Interface_Tag,
                                     Child.Arg_Tag.all,
                                     Max_Name_Length,
-                                    Child = Children (Request_Tag).Last_Element);
+                                    Child = Children (Request_Tag).Last_Element,
+                                    Enum_Types);
                               end if;
                            end loop;
 
-                           Put_Line (File, " is");
+                           if Enum_Types.Is_Empty then
+                              Put_Line (File, " is");
+                           else
+                              Put_Line (File, "");
+                              Put_Line (File, "   is");
+                              Generate_Conversion_Code_For_Args;
+                           end if;
+
                            Put_Line (File, "   begin");
                            Put_Line (File, "      Wayland.API.Proxy_Marshal");
                            Put_Line (File, "        (" & Name & ".all,");
