@@ -2082,7 +2082,12 @@ procedure XML_Parser is
                                  end;
                                  Put_Line (File, " return " & Return_Type & ";");
                               else
-                                 Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                                 if 27 + Subprogram_Name'Length + Name'Length + Ptr_Name'Length + Return_Type'Length <= Max_Line_Length then
+                                    Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                                 else
+                                    Put_Line (File, "   function " & Subprogram_Name);
+                                    Put_Line (File, "     (" & Name & " : " & Ptr_Name & ") return " & Return_Type & ";");
+                                 end if;
                               end if;
                            end;
                         else
@@ -2457,9 +2462,13 @@ procedure XML_Parser is
                                     Put_Line (File, "");
                                  end if;
                               else
-                                 Put_Line
-                                   (File,
-                                    "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & " is");
+                                 if 27 + Subprogram_Name'Length + Name'Length + Ptr_Name'Length + Return_Type'Length <= Max_Line_Length then
+                                    Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return " & Return_Type & " is");
+                                 else
+                                    Put_Line (File, "   function " & Subprogram_Name);
+                                    Put_Line (File, "     (" & Name & " : " & Ptr_Name & ") return " & Return_Type);
+                                    Put_Line (File, "   is");
+                                 end if;
                               end if;
                               Generate_Code_Before_Arguments;
                               Generate_Arguments (11, V);
