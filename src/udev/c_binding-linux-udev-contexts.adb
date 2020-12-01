@@ -8,19 +8,12 @@ package body C_Binding.Linux.Udev.Contexts is
 
    function Udev_Ref (Udev : Udev_Ptr) return Udev_Ptr;
    pragma Import (C, Udev_Ref, "udev_ref");
-   --  Acquire a udev context object.
-   --  Returns the argument that it was passed, unmodified.
 
    function Udev_Unref (Udev : Udev_Ptr) return Udev_Ptr;
    pragma Import (C, Udev_Unref, "udev_unref");
-   --  Release a udev context object.
-   --  Always returns null.
 
    function Udev_New return Udev_Ptr;
    pragma Import (C, Udev_New, "udev_new");
-   --  Create a udev context object
-   --  On success, returns a pointer to the allocated udev context.
-   --  On failure, null is returned.
 
    procedure Udev_Set_Log_Fn
      (Udev : Udev_Ptr;
@@ -33,9 +26,6 @@ package body C_Binding.Linux.Udev.Contexts is
          Format   : Interfaces.C.Strings.Chars_Ptr;
          Args     : access System.Address));
    pragma Import (C, Udev_Set_Log_Fn, "udev_set_log_fn");
-   --  The built-in logging writes to stderr. It can be overridden
-   --  by a custom function, to plug log messages into
-   --  the users' logging functionality.
 
    function Udev_Get_Log_Priority (Udev : Udev_Ptr) return Int;
    pragma Import (C, Udev_Get_Log_Priority, "udev_get_log_priority");
@@ -46,65 +36,40 @@ package body C_Binding.Linux.Udev.Contexts is
    function Udev_Get_Userdata
      (Udev : Udev_Ptr) return System.Address;
    pragma Import (C, Udev_Get_Userdata, "udev_get_userdata");
-   --  Retrieve stored data pointer from library context. This might be
-   --  useful to access from callbacks like a custom logging function.
 
    procedure Udev_Set_Userdata
      (Udev     : Udev_Ptr;
       Userdata : System.Address);
    pragma Import (C, Udev_Set_Userdata, "udev_set_userdata");
-   --  Store custom userdata in the library context.
 
    function Udev_Enumerate_New
      (Udev : Udev_Ptr) return Udev_Enumerate_Ptr;
    pragma Import (C, Udev_Enumerate_New, "udev_enumerate_new");
-   --  Create a udev enumerate object.
-   --  On success, returns a pointer to the allocated udev monitor.
-   --  On failure, null is returned.
 
    function Udev_Monitor_New_From_Netlink
      (Arg1 : Udev_Ptr;
       Arg2 : C_String) return Udev_Monitor_Ptr;
    pragma Import
      (C, Udev_Monitor_New_From_Netlink, "udev_monitor_new_from_netlink");
-   --  Create a udev monitor object.
-   --  On success, returns a pointer to the allocated udev monitor.
-   --  On failure, null is returned.
 
    function Udev_Device_New_From_Devnum
      (
-      Udev : Udev_Ptr;      --  udev library context
-      Arg2 : Char;          --  char or block device
-      Arg3 : Unsigned_Long  --  device major/minor number
+      Udev : Udev_Ptr;
+      Arg2 : Char;
+      Arg3 : Unsigned_Long
      ) return Udev_Device_Ptr;
    pragma Import
      (C, Udev_Device_New_From_Devnum, "udev_device_new_from_devnum");
-   --  Create new udev device, and fill in information from the sys device
-   --  and the udev database entry. The device is looked-up by its
-   --  major/minor number and type. Character and block device numbers are
-   --  not unique across the two types.
-   --
-   --  Returns a new udev device, or null, if it does not exist.
-   --  The initial refcount is 1, and needs to be decremented to release
-   --  the resources of the udev device.
 
    function Udev_Device_New_From_Subsystem_Sysname
-     (Udev : Udev_Ptr;   --  udev library context
-      Arg2 : C_String;   --  the subsystem of the device
-      Arg3 : C_String    --  the name of the device
+     (Udev : Udev_Ptr;
+      Arg2 : C_String;
+      Arg3 : C_String
      ) return Udev_Device_Ptr;
    pragma Import
      (C,
       Udev_Device_New_From_Subsystem_Sysname,
       "udev_device_new_from_subsystem_sysname");
-   --  Create new udev device, and fill in information from the sys device
-   --  and the udev database entry. The device is looked up by the subsystem
-   --  and name string of the device, like "mem" / "zero", or "block" / "sda".
-   --
-   --  Returns a new udev device, or null, if it does not exist.
-   --
-   --  The initial refcount is 1, and needs to be decremented to release
-   --  the resources of the udev device.
 
    function Udev_Device_New_From_Device_Id
      (Udev : Udev_Ptr;
@@ -190,7 +155,7 @@ package body C_Binding.Linux.Udev.Contexts is
          Format   : Interfaces.C.Strings.Chars_Ptr;
          Args     : access System.Address)
       is
-         pragma Unreferenced (Args);  --  What to do with this?
+         pragma Unreferenced (Args);  --  TODO What to do with this?
 
          C : Context;
       begin

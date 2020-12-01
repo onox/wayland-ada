@@ -45,7 +45,7 @@ package body C_Binding.Linux.GnuTLS.X509 is
 
    function Set_Trust_CAs_File
      (Credentials : Certificate_Credentials.Credentials;
-      Name        : String;  --  Certificate Authority File Name
+      Name        : String;
       Format      : Certificate_Format) return Set_Trust_CAs_File_Result
    is
       Result : constant Interfaces.C.int

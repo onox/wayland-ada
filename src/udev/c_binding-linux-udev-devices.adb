@@ -13,26 +13,16 @@ package body C_Binding.Linux.Udev.Devices is
    function Udev_Device_Get_Udev
      (Arg1 : Udev_Device_Ptr) return Udev_Ptr;
    pragma Import (C, Udev_Device_Get_Udev, "udev_device_get_udev");
-   --  Retrieve the udev library context the device was created with.
 
    function Udev_Device_New_From_Syspath
      (Udev    : Udev_Ptr;
       Syspath : C_String) return Udev_Device_Ptr;
    pragma Import
      (C, Udev_Device_New_From_Syspath, "udev_device_new_from_syspath");
-   --  Create the device object based on information found in /sys,
-   --  annotated with properties from the udev-internal device database.
-   --  A syspath is any subdirectory of /sys, with the restriction that a
-   --  subdirectory of /sys/devices (or a symlink to one) represents a real
-   --  device and as such must contain a uevent file.
 
    function Udev_Device_Get_Parent
      (Device : Udev_Device_Ptr) return Udev_Device_Ptr;
    pragma Import (C, Udev_Device_Get_Parent, "udev_device_get_parent");
-   --  On success, returns a pointer to the parent device.
-   --  No additional reference to this device is acquired,
-   --  but the child device owns a reference to such a parent device.
-   --  On failure, null is returned.
 
    function Udev_Device_Get_Parent_With_Subsystem_Devtype
      (Device    : Udev_Device_Ptr;
@@ -42,10 +32,6 @@ package body C_Binding.Linux.Udev.Devices is
      (C,
       Udev_Device_Get_Parent_With_Subsystem_Devtype,
       "udev_device_get_parent_with_subsystem_devtype");
-   --  On success, returns a pointer to the parent device.
-   --  No additional reference to this device is acquired,
-   --  but the child device owns a reference to such a parent device.
-   --  On failure, null is returned.
 
    function Udev_Device_Get_Devpath
      (Arg1 : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
@@ -80,10 +66,6 @@ package body C_Binding.Linux.Udev.Devices is
      (Device : Udev_Device_Ptr) return Int;
    pragma Import
      (C, Udev_Device_Get_Is_Initialized, "udev_device_get_is_initialized");
-   --  On success, returns either 1 or 0, depending on whether the passed
-   --  device has already been initialized by udev or not.
-   --  On failure, a negative error code is returned. Note that devices
-   --  for which no udev rules are defined are never reported initialized.
 
    function Udev_Device_Get_Devlinks_List_Entry
      (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
@@ -91,8 +73,6 @@ package body C_Binding.Linux.Udev.Devices is
      (C,
       Udev_Device_Get_Devlinks_List_Entry,
       "udev_device_get_devlinks_list_entry");
-   --  On success, returns a pointer to the first entry of the retrieved list.
-   --  If that list is empty, or if an error occurred, null is returned.
 
    function Udev_Device_Get_Properties_List_Entry
      (Device : Udev_Device_Ptr) return Udev_List_Entry_Ptr;
@@ -122,8 +102,6 @@ package body C_Binding.Linux.Udev.Devices is
      ) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import
      (C, Udev_Device_Get_Property_Value, "udev_device_get_property_value");
-   --  On success, returns a pointer to a constant string of the requested
-   --  value. On error, null is returned.
 
    function Udev_Device_Get_Driver
      (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
@@ -132,11 +110,8 @@ package body C_Binding.Linux.Udev.Devices is
    function Udev_Device_Get_Devnum
      (
       Device : Udev_Device_Ptr
-     ) return Unsigned_Long;  --  Returnerar typen dev_t
+     ) return Unsigned_Long;
    pragma Import (C, Udev_Device_Get_Devnum, "udev_device_get_devnum");
-   --  On success, returns the device type of the passed device.
-   --  On failure, a device type with minor and major number
-   --  set to 0 is returned.
 
    function Udev_Device_Get_Action
      (Device : Udev_Device_Ptr) return Interfaces.C.Strings.Chars_Ptr;
@@ -145,10 +120,6 @@ package body C_Binding.Linux.Udev.Devices is
    function Udev_Device_Get_Seqnum
      (Device : Udev_Device_Ptr) return Interfaces.Integer_64;
    pragma Import (C, Udev_Device_Get_Seqnum, "udev_device_get_seqnum");
-   --  This is only valid if the device was received through a monitor.
-   --  Devices read from sys do not have a sequence number.
-   --  Returns kernel event sequence number,
-   --  or 0 if there is no sequence number available.
 
    function Udev_Device_Get_Usec_Since_Initialized
      (Device : Udev_Device_Ptr) return Interfaces.Integer_64;
@@ -156,11 +127,6 @@ package body C_Binding.Linux.Udev.Devices is
      (C,
       Udev_Device_Get_Usec_Since_Initialized,
       "udev_device_get_usec_since_initialized");
-   --  Return the number of microseconds passed since udev set up
-   --  the device for the first time.
-   --  This is only implemented for devices with need to store properties
-   --  in the udev database. All other devices return 0 here.
-   --  Returns the number of microseconds since the device was first seen.
 
    function Udev_Device_Get_Sysattr_Value
      (
@@ -169,10 +135,6 @@ package body C_Binding.Linux.Udev.Devices is
      ) return Interfaces.C.Strings.Chars_Ptr;
    pragma Import
      (C, Udev_Device_Get_Sysattr_Value, "udev_device_get_sysattr_value");
-   --  The retrieved value is cached in the device. Repeated calls will
-   --  return the same value and not open the attribute again.
-   --  Returns content of a sys attribute file,
-   --  or null if there is no sys attribute value.
 
    function Udev_Device_Set_Sysattr_Value
      (Device  : Udev_Device_Ptr;
@@ -180,16 +142,11 @@ package body C_Binding.Linux.Udev.Devices is
       Value   : C_String) return Int;
    pragma Import
      (C, Udev_Device_Set_Sysattr_Value, "udev_device_set_sysattr_value");
-   --  On success, returns an integer greater than, or equal to, 0.
-   --  On failure, a negative error code is returned.
 
    function Udev_Device_Has_Tag
      (Device : Udev_Device_Ptr;
       Tag    : C_String) return Int;
    pragma Import (C, Udev_Device_Has_Tag, "udev_device_has_tag");
-   --  On success, returns 1 or 0, depending on whether the device has
-   --  the given tag or not.
-   --  On failure, a negative error code is returned.
 
    procedure Acquire_Reference
      (Original  : Device;

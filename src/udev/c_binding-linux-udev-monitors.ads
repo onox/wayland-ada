@@ -38,7 +38,7 @@ package C_Binding.Linux.Udev.Monitors is
    function Set_Receive_Buffer_Size
      (
       Monitor : Monitors.Monitor;
-      Size    : Integer  --  size in bytes
+      Size    : Integer
      ) return Success_Flag;
 
    function Filter_Add_Match_Tag

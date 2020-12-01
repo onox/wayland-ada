@@ -15,8 +15,7 @@ package C_Binding.Linux.Files with Preelaborate is
      );
 
    type File is new File_Base;
-   --with Default_Initial_Condition => Is_Closed (File);
-   --  Represents a file on the hard disk.
+   --  with Default_Initial_Condition => Is_Closed (File);
 
    procedure Set_File_Descriptor
      (This  : in out File;
@@ -45,7 +44,7 @@ package C_Binding.Linux.Files with Preelaborate is
      (
       Read_Success,
       End_Of_File_Reached,
-      Read_Failure  --  Check errno
+      Read_Failure
      );
 
    type Read_Result (Kind_Id : Read_Result_Kind_Id) is record
@@ -86,11 +85,6 @@ private
    function Is_Closed (This : File) return Boolean is
      (This.My_File_Descriptor = -1);
 
-   --
-   --  The following Ada bindings to C functions are defined here to
-   --  be available in child packages:
-   --
-
    function C_Open
      (File_Name : C_String;
       Flags     : O_FLag;
@@ -98,13 +92,5 @@ private
      Import        => True,
      Convention    => C,
      External_Name => "open";
-   -- Establishes a connection between a file and a file descriptor.
-   -- The file descriptor handle (a non-negative number)
-   -- is returned upon success, otherwise -1.
-   --
-   -- Applications shall specify exactly one of the first three flags:
-   -- O_RDONLY, O_WRONLY and O_RDWR. And then any combination of O_APPEND,
-   -- O_CREAT, O_DSYNC, O_EXCL, O_NOCTTY, O_NONBLOCK, O_RSYNC,
-   -- O_SYNC, O_TRUNC.
 
 end C_Binding.Linux.Files;

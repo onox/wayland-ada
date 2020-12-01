@@ -2,15 +2,6 @@ with Interfaces.C.Strings;
 
 private with Ada.Finalization;
 
---  Udev is "abbreviation" of Userspace /dev and libudev is the name of a
---  Linux specific library written in C that gives access to Linux
---  device and hardware management. By using libudev an application
---  can find out about:
---
---   - Installed hardware
---   - When a USB device is inserted or removed
---   - When a network cable is inserted or removed
---
 package C_Binding.Linux.Udev is
    pragma Elaborate_Body;
 
@@ -38,7 +29,6 @@ private
       Error : String) return String_Result;
 
    type Udev_Context is null record;
-   --  Opaque object representing the udev library context.
 
    type Udev_Ptr is access Udev_Context;
 
@@ -47,12 +37,6 @@ private
    type Udev_List_Entry_Ptr is access Udev_List_Entry;
 
    type Udev_Device is null record;
-   --  This object is opaque and must not be accessed by the caller via
-   --  different means than functions provided by libudev.
-   --  Initially, the reference count of the device is 1.
-   --  You can acquire further references, and drop gained references via
-   --  udev_device_ref() and udev_device_unref(). Once the reference count
-   --  hits 0, the device object is destroyed and freed.
 
    type Udev_Device_Ptr is access Udev_Device;
 
@@ -69,7 +53,6 @@ private
    type Udev_Queue_Ptr is access Udev_Queue;
 
    type Udev_Hwdb is null record;
-   --  Opaque object representing the hardware database.
 
    type Udev_Hwdb_Ptr is access Udev_Hwdb;
 
@@ -78,10 +61,7 @@ private
       Arg2 : Interfaces.C.Strings.Chars_Ptr;
       Arg3 : Unsigned_Long) return Int;
    pragma Import (C, Udev_Util_Encode_String, "udev_util_encode_string");
-   --  Encode all potentially unsafe characters of a string to
-   --  the corresponding 2 char hex value prefixed by '\x'.
-   --
-   --  What to do with this C-function?
+   --  TODO What to do with this C-function?
 
    type Monitor_Base is new Ada.Finalization.Limited_Controlled with record
       My_Ptr : Udev_Monitor_Ptr;

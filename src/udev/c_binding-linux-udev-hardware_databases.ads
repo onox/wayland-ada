@@ -1,11 +1,5 @@
 with C_Binding.Linux.Udev.List_Entries;
 
---  Libudev hardware database interface.
---
---  The hardware database is a key-value store for associating modalias-like
---  keys to udev-properties-like values. It is used primarily by udev to add
---  the relevant properties to matching devices, but it can also be queried
---  directly.
 package C_Binding.Linux.Udev.Hardware_Databases is
    pragma Obsolescent;
 
@@ -15,8 +9,6 @@ package C_Binding.Linux.Udev.Hardware_Databases is
      (Original  : Database;
       Reference : out Database) with
      Pre => Hardware_Databases.Exists (Original);
-   --  Acquire a reference to an existing udev database object.
-   --  The reference count to Original goes up by 1.
 
    type Database is new Hwdb_Base with private;
 

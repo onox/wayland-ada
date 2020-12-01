@@ -73,13 +73,11 @@ package C_Binding.Linux.File_Status is
    function Size (This : Status) return Ada.Streams.Stream_Element_Count with
      Global => null,
      Pre    => Is_Valid (This);
-   -- The file size in bytes.
 
    function Block_Size (This : Status) return Status_Block_Size with
      Global => null,
      Pre    => Is_Valid (This);
 
-   -- Number of 512B blocks allocated
    function Block_Count (This : Status) return Status_Block_Count with
      Global => null,
      Pre    => Is_Valid (This);
@@ -92,7 +90,6 @@ package C_Binding.Linux.File_Status is
      Global => null,
      Pre    => Is_Valid (This);
 
-   -- Last status change time
    function Change_Time (This : Status) return Status_Time with
      Global => null,
      Pre    => Is_Valid (This);
@@ -108,38 +105,29 @@ private
      Convention => C_Pass_By_Copy;
 
    type File_Status_T is record
-      -- ID of device containing file
       Device_Id : aliased Status_Device_Id;
 
       Inode_Number    : aliased Status_Inode_Number;
       Hard_Link_Count : aliased Status_Hard_Link_Count;
 
-      -- Protection
       Mode : aliased Status_Mode;
 
       User_Id   : aliased Status_User_Id;
       Group_Id  : aliased Status_Group_Id;
       Padding_0 : aliased Interfaces.C.int;
 
-      -- Device ID (if special file)
       Special_Device_Id : aliased Status_Device_Id;
 
-      -- Total size, in bytes
       Size : aliased Status_Size;
 
-      -- Blocksize for file system I/O
       Block_Size : aliased Status_Block_Size;
 
-      -- Number of 512B blocks allocated
       Block_Count : aliased Status_Block_Count;
 
-      -- Time of last access
       Access_Time : aliased C_Time;
 
-      -- Time of last modification
       Modification_Time : aliased C_Time;
 
-      -- Time of last status change
       Change_Time : aliased C_Time;
       Padding_1   : Interfaces.C.long;
       Padding_2   : Interfaces.C.long;

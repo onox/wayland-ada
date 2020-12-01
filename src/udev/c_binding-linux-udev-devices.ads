@@ -1,7 +1,6 @@
 with C_Binding.Linux.Udev.Contexts;
 with C_Binding.Linux.Udev.List_Entries;
 
---  kernel sys devices
 package C_Binding.Linux.Udev.Devices is
 
    type Device;
@@ -20,16 +19,11 @@ package C_Binding.Linux.Udev.Devices is
      (Original  : Device;
       Reference : out Device) with
      Pre => Devices.Exists (Original);
-   --  Acquire a reference to an existing udev device object.
-   --  The reference count to Original goes up by 1.
 
    procedure Create_Device
      (Device  : out Devices.Device;
       Context : Contexts.Context;
       Syspath : String);
-   --  A Syspath is any subdirectory of /sys, with the restriction
-   --  that a subdirectory of /sys/devices (or a symlink to one) represents
-   --  a real device and as such must contain a uevent file.
 
    type Device is new Device_Base with private;
 
@@ -62,7 +56,6 @@ package C_Binding.Linux.Udev.Devices is
      (Device  : Devices.Device;
       Context : out Contexts.Context) with
      Pre => Device.Exists;
-   --  Get the Context the Device was created with.
 
    function Subsystem
      (Device : Devices.Device) return String_Result with
@@ -81,8 +74,6 @@ package C_Binding.Linux.Udev.Devices is
       Initialized,
       Not_Initialized,
       Unknown
-      --  Some error has occurred and therefore not possible to determine
-      --  initialization status.
      );
 
    function Is_Initialized
@@ -141,7 +132,6 @@ package C_Binding.Linux.Udev.Devices is
       Tag_is_Missing,
 
       Unknown
-      --  Some error occurred and the tag status is unknown.
      );
 
    function Has_Tag

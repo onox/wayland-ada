@@ -1,10 +1,6 @@
 with C_Binding.Linux.Udev.Contexts;
 with C_Binding.Linux.Udev.List_Entries;
 
---  The udev daemon processes events asynchronously. All events which do not
---  have interdependencies run in parallel. This exports the current state
---  of the event processing queue, and the current event sequence numbers
---  from the kernel and the udev daemon.
 package C_Binding.Linux.Udev.Queues is
    pragma Obsolescent;
 
@@ -14,8 +10,6 @@ package C_Binding.Linux.Udev.Queues is
      (Original  : Queue;
       Reference : out Queue) with
      Pre => Queues.Exists (Original);
-   --  Acquire a reference to an existing udev queue object.
-   --  The reference count to Original goes up by 1.
 
    type Queue is new Queue_Base with private;
 

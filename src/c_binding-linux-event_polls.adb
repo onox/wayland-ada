@@ -61,7 +61,6 @@ package body C_Binding.Linux.Event_Polls is
 
       Flag : Success_Flag;
    begin
-      --  add this clients descriptor to our event_poll watcher
       Event.Data.fd := File_Descriptor;
       Event.Events := EPOLLIN;
       Result

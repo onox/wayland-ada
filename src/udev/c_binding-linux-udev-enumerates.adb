@@ -5,14 +5,10 @@ package body C_Binding.Linux.Udev.Enumerates is
    function Udev_Enumerate_Ref
      (Enumerate : Udev_Enumerate_Ptr) return Udev_Enumerate_Ptr;
    pragma Import (C, Udev_Enumerate_Ref, "udev_enumerate_ref");
-   --  Acquire a udev enumerate object.
-   --  Returns the argument that it was passed, unmodified.
 
    function Udev_Enumerate_Unref
      (Arg1 : Udev_Enumerate_Ptr) return Udev_Enumerate_Ptr;
    pragma Import (C, Udev_Enumerate_Unref, "udev_enumerate_unref");
-   --  Release a udev enumerate object.
-   --  Always returns null.
 
    function Udev_Enumerate_Get_Udev
      (Enumerate : Udev_Enumerate_Ptr) return Udev_Ptr;
@@ -33,7 +29,6 @@ package body C_Binding.Linux.Udev.Enumerates is
      (C,
       Udev_Enumerate_Add_Nomatch_Subsystem,
       "udev_enumerate_add_nomatch_subsystem");
-   --  0 on success, otherwise a negative error value.
 
    function Udev_Enumerate_Add_Match_Sysattr
      (Enum    : Udev_Enumerate_Ptr;
@@ -90,27 +85,14 @@ package body C_Binding.Linux.Udev.Enumerates is
      (C,
       Udev_Enumerate_Add_Match_Is_Initialized,
       "udev_enumerate_add_match_is_initialized");
-   --  Match only devices which udev has set up already. This makes sure,
-   --  that the device node permissions and context are properly set and that
-   --  network devices are fully renamed.
-   --
-   --  Usually, devices which are found in the kernel but not already handled
-   --  by udev, have still pending events. Services should subscribe to monitor
-   --  events and wait for these devices to become ready, instead of using
-   --  uninitialized devices.
-   --
-   --  For now, this will not affect devices which do not have a device node
-   --  and are not network interfaces.
 
    function Udev_Enumerate_Add_Syspath
      (
       Enum    : Udev_Enumerate_Ptr;
-      Syspath : C_String  --  path of a device
+      Syspath : C_String
      ) return Int;
    pragma Import
      (C, Udev_Enumerate_Add_Syspath, "udev_enumerate_add_syspath");
-   --  Add a device to the list of devices, to retrieve it back sorted
-   --  in dependency order.
 
    function Udev_Enumerate_Scan_Devices
      (Enumerate : Udev_Enumerate_Ptr) return Int;
@@ -126,9 +108,6 @@ package body C_Binding.Linux.Udev.Enumerates is
      (Enumerate : Udev_Enumerate_Ptr) return Udev_List_Entry_Ptr;
    pragma Import
      (C, Udev_Enumerate_Get_List_Entry, "udev_enumerate_get_list_entry");
-   --  On success, returns a pointer to the first entry in
-   --  the list of found devices. If the list is empty,
-   --  or on failure, null is returned.
 
    procedure Acquire_Reference
      (Original  : Enumerate;

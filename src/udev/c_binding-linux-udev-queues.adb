@@ -1,6 +1,3 @@
---with C_Binding.Linux.Udev.Contexts;
---with C_Binding.Linux.Udev.List_Entries;
-
 package body C_Binding.Linux.Udev.Queues is
 
    use type int;
@@ -34,7 +31,6 @@ package body C_Binding.Linux.Udev.Queues is
      (Queue : Udev_Queue_Ptr) return Int;
    pragma Import
      (C, Udev_Queue_Get_Queue_Is_Empty, "udev_queue_get_queue_is_empty");
-   --  Returns a flag indicating if udev is currently handling events.
 
    function Udev_Queue_Get_Seqnum_Is_Finished
      (Queue  : Udev_Queue_Ptr;
@@ -43,8 +39,6 @@ package body C_Binding.Linux.Udev.Queues is
      (C,
       Udev_Queue_Get_Seqnum_Is_Finished,
       "udev_queue_get_seqnum_is_finished");
-   --  Returns a flag indicating if the given sequence number
-   --  is currently active.
 
    function Udev_Queue_Get_Seqnum_Sequence_Is_Finished
      (Queue        : Udev_Queue_Ptr;
@@ -54,16 +48,12 @@ package body C_Binding.Linux.Udev.Queues is
      (C,
       Udev_Queue_Get_Seqnum_Sequence_Is_Finished,
       "udev_queue_get_seqnum_sequence_is_finished");
-   --  Returns a flag indicating if any of the sequence numbers
-   --  in the given range is currently active.
 
    function Udev_Queue_Get_Fd (Queue : Udev_Queue_Ptr) return Int;
    pragma Import (C, Udev_Queue_Get_Fd, "udev_queue_get_fd");
 
    function Udev_Queue_Flush (Queue : Udev_Queue_Ptr) return Int;
    pragma Import (C, Udev_Queue_Flush, "udev_queue_flush");
-   --  Returns the result of clearing the watch for queue changes.
-   --  On success, returns 0.
 
    function Udev_Queue_Get_Queued_List_Entry
      (Queue : Udev_Queue_Ptr) return Udev_List_Entry_Ptr;

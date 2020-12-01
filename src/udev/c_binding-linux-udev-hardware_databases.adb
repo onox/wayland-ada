@@ -9,16 +9,12 @@ package body C_Binding.Linux.Udev.Hardware_Databases is
    function Udev_Hwdb_Get_Properties_List_Entry
      (Hwdb     : Udev_Hwdb_Ptr;
       Modalias : C_String;
-      Flags    : Unsigned  --  Is unused
+      Flags    : Unsigned
      ) return Udev_List_Entry_Ptr;
    pragma Import
      (C,
       Udev_Hwdb_Get_Properties_List_Entry,
       "udev_hwdb_get_properties_list_entry");
-   --  Lookup a matching device in the hardware database. The lookup key
-   --  is a modalias string, whose formats are defined for the Linux kernel
-   --  modules. Examples are: pci:v00008086d00001C2D*, usb:v04F2pB221*.
-   --  The first entry of a list of retrieved properties is returned.
 
    procedure Acquire
      (Original  : Database;

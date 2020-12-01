@@ -3,7 +3,6 @@ with System;
 with Interfaces.C.Strings;
 private with Ada.Unchecked_Conversion;
 
---  Contains type definitions common to all Ada bindings to C libraries.
 package C_Binding with Preelaborate is
 
    subtype Void_Ptr is System.Address;
@@ -35,10 +34,10 @@ private
      and then C_String (C_String'Last) = Nul;
 
    function "-" (Text : C_String) return String;
-   -- Removes the last 'Nul' character and returns a normal String.
+   --  Removes the last 'Nul' character and returns a normal String
 
    function "+" (Text : String) return C_String;
-   -- Appends a 'Nul' character to a standard String and returns a C_String.
+   --  Appends a 'Nul' character to a standard String and returns a C_String
 
    subtype char is Interfaces.C.char;
    subtype unsigned_long is Interfaces.C.unsigned_long;
@@ -50,12 +49,7 @@ private
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
-   --     type Chars_Ref (E : not null access constant chars_ptr) is
-   --
-   --     function "+" (Text : String) return chars_ptr;
-   --     -- Appends a Character'Val (0) character to a standard String.
-   --
    function "-" (Chars : chars_ptr) return String;
-   -- Removes the last Character'Val (0) character and returns a String.
+   --  Removes the last Character'Val (0) character and returns a String
 
 end C_Binding;

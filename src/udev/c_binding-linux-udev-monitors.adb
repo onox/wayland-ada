@@ -5,12 +5,10 @@ package body C_Binding.Linux.Udev.Monitors is
    function Udev_Monitor_Ref
      (Monitor : Udev_Monitor_Ptr) return Udev_Monitor_Ptr;
    pragma Import (C, Udev_Monitor_Ref, "udev_monitor_ref");
-   --  Acquire a udev monitor object.
 
    function Udev_Monitor_Unref
      (Monitor : Udev_Monitor_Ptr) return Udev_Monitor_Ptr;
    pragma Import (C, Udev_Monitor_Unref, "udev_monitor_unref");
-   --  Release a udev monitor object.
 
    function Udev_Monitor_Get_Udev
      (Monitor : Udev_Monitor_Ptr) return Udev_Ptr;
@@ -24,16 +22,12 @@ package body C_Binding.Linux.Udev.Monitors is
    function Udev_Monitor_Set_Receive_Buffer_Size
      (
       Monitor : Udev_Monitor_Ptr;
-      Size    : Int  --  the size in bytes
+      Size    : Int
      ) return Int;
    pragma Import
      (C,
       Udev_Monitor_Set_Receive_Buffer_Size,
       "udev_monitor_set_receive_buffer_size");
-   --  Set the size of the kernel socket buffer. This call needs
-   --  the appropriate privileges to succeed.
-   --
-   --  Returns 0 on success, otherwise -1 on error.
 
    function Udev_Monitor_Get_Fd (Arg1 : Udev_Monitor_Ptr) return Int;
    pragma Import (C, Udev_Monitor_Get_Fd, "udev_monitor_get_fd");
@@ -59,30 +53,16 @@ package body C_Binding.Linux.Udev.Monitors is
      (C,
       Udev_Monitor_Filter_Add_Match_Tag,
       "udev_monitor_filter_add_match_tag");
-   --  This filter is efficiently executed inside the kernel, and libudev
-   --  subscribers will usually not be woken up for devices which do not match.
-   --
-   --  The filter must be installed before the monitor is
-   --  switched to listening mode.
-   --
-   --  Returns 0 on success, otherwise a negative error value.
 
    function Udev_Monitor_Filter_Update
      (Monitor : Udev_Monitor_Ptr) return Int;
    pragma Import
      (C, Udev_Monitor_Filter_Update, "udev_monitor_filter_update");
-   --  Update the installed socket filter. This is only needed,
-   --  if the filter was removed or changed.
-   --
-   --  Returns 0 on success, otherwise a negative error value.
 
    function Udev_Monitor_Filter_Remove
      (Monitor : Udev_Monitor_Ptr) return Int;
    pragma Import
      (C, Udev_Monitor_Filter_Remove, "udev_monitor_filter_remove");
-   --  Remove all filters from monitor.
-   --
-   --  Returns 0 on success, otherwise a negative error value.
 
    function Exists (Monitor : Monitors.Monitor) return Boolean is
      (Monitor.My_Ptr /= null);

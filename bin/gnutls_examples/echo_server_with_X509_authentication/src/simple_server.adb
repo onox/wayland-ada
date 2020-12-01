@@ -11,29 +11,6 @@ package body Simple_Server is
 
    System_Certificates_File : constant String
      := "/etc/ssl/certs/ca-certificates.crt";
-   --  A long list of all of your trusted CA's concatenated together
-   --
-   --  On Linux there is a command called "update-ca-certificates":
-   --  update-ca-certificates is a program that updates the directory
-   --  /etc/ssl/certs to hold SSL certificates and generates
-   --  ca-certificates.crt, a concatenated single-file list of certificates.
-   --
-   --  It reads the file /etc/ca-certificates.conf. Each line gives a pathname
-   --  of a CA certificate under /usr/share/ca-certificates that
-   --  should be trusted. Lines that begin with "#" are comment lines
-   --  and thus ignored. Lines that begin with "!" are deselected,
-   --  causing the deactivation of the CA certificate in question.
-   --  Certificates must have a .crt extension in order to be included by
-   --  update-ca-certificates.
-   --
-   --  Furthermore all certificates with a .crt extension found below
-   --  /usr/local/share/ca-certificates are also included
-   --  as implicitly trusted.
-
-   -- The following certificate is taken from:
-   --
-   --    http://fm4dd.com/openssl/certexamples.htm
-   --
 
    procedure Run is
 
@@ -91,7 +68,6 @@ package body Simple_Server is
          end if;
       end Set_X509_Trust_File;
 
-      --  Add instruction on how to generate crl.der.
       procedure Set_X509_Crl_File is
          Result : GnuTLS.X509.Set_CRL_File_Result
            := GnuTLS.X509.Set_CRL_File

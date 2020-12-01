@@ -40,7 +40,6 @@ package C_Binding.Linux.Udev.Enumerates is
      (Enum    : Enumerate;
       Context : out Contexts.Context) with
      Pre => Enum.Exists;
-   --  Get the Context the Device was created with.
 
    function Add_Nomatch_Subsystem
      (Enum      : Enumerate;
