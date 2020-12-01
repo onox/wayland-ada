@@ -967,19 +967,22 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
-         Put_Line (File, "   --  Begin core parts");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
-         Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
-         Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   function Display_Connect return Display_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
-         Put_Line (File, "");
-         Put_Line (File, "   --  End core parts");
+
+         if Protocol_Name = "client" then
+            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
+            Put_Line (File, "");
+            Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
+            Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
+            Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
+            Put_Line (File, "");
+            Put_Line (File, "   function Display_Connect return Display_Ptr;");
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
+         else
+            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
+            Put_Line (File, "   subtype Proxy_Ptr   is Wayland.API.Proxy_Ptr;");
+         end if;
+
          Put_Line (File, "");
 
          Create_Wl_Thin_Spec_File;

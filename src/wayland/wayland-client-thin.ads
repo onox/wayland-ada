@@ -11,8 +11,6 @@ private package Wayland.Client.Thin is
 
    subtype chars_ptr is Interfaces.C.Strings.chars_ptr;
 
-   --  Begin core parts
-
    subtype Interface_T is Wayland.API.Interface_T;
 
    subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;
@@ -22,8 +20,6 @@ private package Wayland.Client.Thin is
    function Display_Connect return Display_Ptr;
 
    procedure Display_Disconnect (This : in out Display_Ptr);
-
-   --  End core parts
 
    Display_Interface : aliased Interface_T with
       Import        => True,
