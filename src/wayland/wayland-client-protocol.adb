@@ -25,9 +25,7 @@ package body Wayland.Client.Protocol is
 
    package body Display_Events is
 
-      subtype Data_Type is Display'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Display'Class);
 
       procedure Internal_Error
         (Data      : Void_Ptr;
@@ -87,15 +85,13 @@ package body Wayland.Client.Protocol is
 
    package body Registry_Events is
 
-      subtype Data_Type is Registry'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Registry'Class);
 
       procedure Internal_Object_Added
         (Data        : Void_Ptr;
          Registry    : Thin.Registry_Ptr;
          Id          : Unsigned_32;
-         Interface_V : Protocol.Chars_Ptr;
+         Interface_V : chars_ptr;
          Version     : Unsigned_32)
       with Convention => C;
 
@@ -109,7 +105,7 @@ package body Wayland.Client.Protocol is
         (Data        : Void_Ptr;
          Registry    : Thin.Registry_Ptr;
          Id          : Unsigned_32;
-         Interface_V : Protocol.Chars_Ptr;
+         Interface_V : chars_ptr;
          Version     : Unsigned_32)
       is
          pragma Assert (Conversion.To_Pointer (Data).Proxy = Registry);
@@ -128,20 +124,20 @@ package body Wayland.Client.Protocol is
          Global_Object_Removed (Conversion.To_Pointer (Data).all, Id);
       end Internal_Object_Removed;
 
-      Listener : aliased Protocol.Registry_Listener_T :=
+      Registry_Listener : aliased Protocol.Registry_Listener_T :=
         (Global        => Internal_Object_Added'Unrestricted_Access,
          Global_Remove => Internal_Object_Removed'Unrestricted_Access);
       --  Note: It should be safe to use Unrestricted_Access here since
-      --  this generic can only be instantiated at library level.
+      --  this generic can only be instantiated at library level
 
       function Subscribe
-        (Object : aliased in out Protocol.Registry'Class) return Call_Result_Code
+        (Object : aliased in out Registry'Class) return Call_Result_Code
       is
          I : int;
       begin
          I := Thin.Registry_Add_Listener
            (Registry => Object.Proxy,
-            Listener => Listener'Access,
+            Listener => Registry_Listener'Access,
             Data     => Conversion.To_Address (Object'Access));
          return (if I = 0 then Success else Error);
       end Subscribe;
@@ -150,9 +146,7 @@ package body Wayland.Client.Protocol is
 
    package body Callback_Events is
 
-      subtype Data_Type is Callback'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Callback'Class);
 
       procedure Internal_Done
         (Data          : Void_Ptr;
@@ -189,9 +183,7 @@ package body Wayland.Client.Protocol is
 
    package body Shm_Events is
 
-      subtype Data_Type is Shm'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Shm'Class);
 
       procedure Internal_Format
         (Data   : Void_Ptr;
@@ -229,9 +221,7 @@ package body Wayland.Client.Protocol is
 
    package body Buffer_Events is
 
-      subtype Data_Type is Buffer'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Buffer'Class);
 
       procedure Internal_Release
         (Data   : Void_Ptr;
@@ -266,9 +256,7 @@ package body Wayland.Client.Protocol is
 
    package body Data_Offer_Events is
 
-      subtype Data_Type is Data_Offer'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Offer'Class);
 
       procedure Internal_Offer
         (Data       : Void_Ptr;
@@ -342,9 +330,7 @@ package body Wayland.Client.Protocol is
 
    package body Data_Source_Events is
 
-      subtype Data_Type is Data_Source'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Source'Class);
 
       procedure Internal_Target
         (Data        : Void_Ptr;
@@ -467,9 +453,7 @@ package body Wayland.Client.Protocol is
 
    package body Data_Device_Events is
 
-      subtype Data_Type is Data_Device'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Data_Device'Class);
 
       procedure Internal_Data_Offer
         (Data        : Void_Ptr;
@@ -600,9 +584,7 @@ package body Wayland.Client.Protocol is
 
    package body Surface_Events is
 
-      subtype Data_Type is Surface'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Surface'Class);
 
       procedure Internal_Enter
         (Data    : Void_Ptr;
@@ -660,9 +642,7 @@ package body Wayland.Client.Protocol is
 
    package body Seat_Events is
 
-      subtype Data_Type is Seat'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Seat'Class);
 
       procedure Internal_Seat_Capabilities
         (Data         : Void_Ptr;
@@ -673,7 +653,7 @@ package body Wayland.Client.Protocol is
       procedure Internal_Seat_Name
         (Data : Void_Ptr;
          Seat : Thin.Seat_Ptr;
-         Name : Interfaces.C.Strings.Chars_Ptr)
+         Name : Interfaces.C.Strings.chars_ptr)
       with Convention => C;
 
       procedure Internal_Seat_Capabilities
@@ -689,7 +669,7 @@ package body Wayland.Client.Protocol is
       procedure Internal_Seat_Name
         (Data : Void_Ptr;
          Seat : Thin.Seat_Ptr;
-         Name : Interfaces.C.Strings.Chars_Ptr)
+         Name : Interfaces.C.Strings.chars_ptr)
       is
          N : constant String := Interfaces.C.Strings.Value (Name);
 
@@ -718,9 +698,7 @@ package body Wayland.Client.Protocol is
 
    package body Pointer_Events is
 
-      subtype Data_Type is Pointer'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Pointer'Class);
 
       procedure Internal_Pointer_Enter
         (Data      : Void_Ptr;
@@ -920,9 +898,7 @@ package body Wayland.Client.Protocol is
 
    package body Keyboard_Events is
 
-      subtype Data_Type is Keyboard'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Keyboard'Class);
 
       procedure Internal_Keymap
         (Data     : Void_Ptr;
@@ -1080,9 +1056,7 @@ package body Wayland.Client.Protocol is
 
    package body Touch_Events is
 
-      subtype Data_Type is Touch'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Touch'Class);
 
       procedure Internal_Down
         (Data    : Void_Ptr;
@@ -1241,9 +1215,7 @@ package body Wayland.Client.Protocol is
 
    package body Output_Events is
 
-      subtype Data_Type is Output'Class;
-
-      package Conversion is new System.Address_To_Access_Conversions (Data_Type);
+      package Conversion is new System.Address_To_Access_Conversions (Output'Class);
 
       procedure Internal_Geometry
         (Data            : Void_Ptr;
@@ -1362,44 +1334,8 @@ package body Wayland.Client.Protocol is
 
    end Output_Events;
 
-   procedure Connect (Object : in out Display) is
-   begin
-      Object.Proxy := Thin.Display_Connect;
-
-      if Object.Proxy /= null
-        and then Wayland.API.Display_Get_File_Descriptor (Object.Proxy) = -1
-      then
-         raise Program_Error;
-      end if;
-   end Connect;
-
-   procedure Disconnect (Object : in out Display) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Display_Disconnect (Object.Proxy);
-      end if;
-   end Disconnect;
-
-   function Check_For_Events
-     (Object  : Display;
-      Timeout : Integer) return Check_For_Events_Status
-   is
-      I : constant Integer :=
-        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout
-          (Wayland.API.Display_Get_File_Descriptor (Object.Proxy), Timeout);
-   begin
-      case I is
-         when 1..Integer'Last   => return Events_Need_Processing;
-         when 0                 => return No_Events;
-         when Integer'First..-1 => return Error;
-      end case;
-   end Check_For_Events;
-
-   procedure Get_Registry (Object   : Display;
-                           Registry : in out Protocol.Registry'Class) is
-   begin
-      Registry.Proxy := Thin.Display_Get_Registry (Object.Proxy);
-   end Get_Registry;
+   function Get_Version (Object : Display) return Unsigned_32 is
+     (Thin.Display_Get_Version (Object.Proxy));
 
    procedure Destroy (Object : in out Registry) is
    begin
@@ -1412,84 +1348,16 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Registry) return Unsigned_32 is
      (Thin.Registry_Get_Version (Object.Proxy));
 
-   function Get_Version (Object : Display) return Unsigned_32 is
-     (Thin.Display_Get_Version (Object.Proxy));
-
-   function Dispatch (Object : Display) return Integer is
+   procedure Destroy (Object : in out Callback) is
    begin
-      return Integer (Wayland.API.Display_Dispatch (Object.Proxy));
-   end Dispatch;
-
-   function Dispatch_Pending (Object : Display) return Integer is
-   begin
-      return Wayland.API.Display_Dispatch_Pending (Object.Proxy);
-   end Dispatch_Pending;
-
-   function Prepare_Read (Object : Display) return Integer is
-   begin
-      return Wayland.API.Display_Prepare_Read (Object.Proxy);
-   end Prepare_Read;
-
-   function Read_Events (Object : Display) return Call_Result_Code is
-      I : constant Integer
-        := Wayland.API.Display_Read_Events (Object.Proxy);
-   begin
-      return (if I = 0 then Success else Error);
-   end Read_Events;
-
-   procedure Cancel_Read (Object : Display) is
-   begin
-      Wayland.API.Display_Cancel_Read (Object.Proxy);
-   end Cancel_Read;
-
-   procedure Dispatch (Object : Display) is
-      I : Integer;
-      pragma Unreferenced (I);
-   begin
-      I := Object.Dispatch;
-   end Dispatch;
-
-   function Roundtrip (Object : Display) return Integer is
-   begin
-      return Integer (Wayland.API.Display_Roundtrip (Object.Proxy));
-   end Roundtrip;
-
-   procedure Roundtrip (Object : Display) is
-      I : Integer;
-      pragma Unreferenced (I);
-   begin
-      I := Object.Roundtrip;
-   end Roundtrip;
-
-   procedure Bind (Object   : in out Compositor;
-                   Registry : Protocol.Registry'Class;
-                   Id       : Unsigned_32;
-                   Version  : Unsigned_32)
-   is
-      Proxy : constant Thin.Proxy_Ptr :=
-            Thin.Registry_Bind
-              (Registry    => Registry.Proxy,
-               Name        => Id,
-               Interface_V => Thin.Compositor_Interface'Access,
-               New_Id      => Version);
-
-   begin
-      if Proxy /= null then
-         Object.Proxy := Proxy.all'Access;
+      if Object.Proxy /= null then
+         Thin.Callback_Destroy (Object.Proxy);
+         Object.Proxy := null;
       end if;
-   end Bind;
+   end Destroy;
 
-   procedure Create_Surface (Object  : Compositor;
-                             Surface : in out Protocol.Surface'Class) is
-   begin
-      Surface.Proxy := Thin.Compositor_Create_Surface (Object.Proxy);
-   end Create_Surface;
-
-   procedure Create_Region (Object : Compositor;
-                            Region : in out Protocol.Region'Class) is
-   begin
-      Region.Proxy := Thin.Compositor_Create_Region (Object.Proxy);
-   end Create_Region;
+   function Get_Version (Object : Callback) return Unsigned_32 is
+     (Thin.Callback_Get_Version (Object.Proxy));
 
    procedure Destroy (Object : in out Compositor) is
    begin
@@ -1502,88 +1370,16 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Compositor) return Unsigned_32 is
      (Thin.Compositor_Get_Version (Object.Proxy));
 
-   procedure Destroy (Object : in out Seat) is
+   procedure Destroy (Object : in out Shm_Pool) is
    begin
       if Object.Proxy /= null then
-         Thin.Seat_Destroy (Object.Proxy);
+         Thin.Shm_Pool_Destroy (Object.Proxy);
          Object.Proxy := null;
       end if;
    end Destroy;
 
-   function Get_Version (Object : Seat) return Unsigned_32 is
-     (Thin.Seat_Get_Version (Object.Proxy));
-
-   procedure Bind (Object   : in out Seat;
-                   Registry : Protocol.Registry'Class;
-                   Id       : Unsigned_32;
-                   Version  : Unsigned_32)
-   is
-      Proxy : constant Thin.Proxy_Ptr :=
-        Thin.Registry_Bind (Registry    => Registry.Proxy,
-                               Name        => Id,
-                               Interface_V => Thin.Seat_Interface'Access,
-                               New_Id      => Version);
-
-   begin
-      if Proxy /= null then
-         Object.Proxy := Proxy.all'Access;
-      end if;
-   end Bind;
-
-   procedure Get_Pointer (Object  : Seat;
-                          Pointer : in out Protocol.Pointer'Class) is
-   begin
-      Pointer.Proxy := Thin.Seat_Get_Pointer (Object.Proxy);
-   end Get_Pointer;
-
-   procedure Get_Keyboard (Object   : Seat;
-                           Keyboard : in out Protocol.Keyboard'Class) is
-   begin
-      Keyboard.Proxy := Thin.Seat_Get_Keyboard (Object.Proxy);
-   end Get_Keyboard;
-
-   procedure Get_Touch (Object : Seat;
-                        Touch  : in out Protocol.Touch'Class) is
-   begin
-      Touch.Proxy := Thin.Seat_Get_Touch (Object.Proxy);
-   end Get_Touch;
-
-   procedure Release (Object : in out Seat) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Seat_Release (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Release;
-
-   procedure Bind (Object   : in out Shm;
-                   Registry : Protocol.Registry'Class;
-                   Id       : Unsigned_32;
-                   Version  : Unsigned_32)
-   is
-      Proxy : constant Thin.Proxy_Ptr :=
-        Thin.Registry_Bind (Registry    => Registry.Proxy,
-                               Name        => Id,
-                               Interface_V => Thin.Shm_Interface'Access,
-                               New_Id      => Version);
-
-   begin
-      if Proxy /= null then
-         Object.Proxy := Proxy.all'Access;
-      end if;
-   end Bind;
-
-   procedure Create_Pool
-     (Object          : Shm;
-      File_Descriptor : C_Binding.Linux.Files.File;
-      Size            : Positive;
-      Pool            : in out Protocol.Shm_Pool'Class) is
-   begin
-      Pool.Proxy := Thin.Shm_Create_Pool
-        (Object.Proxy,
-         C_Binding.Linux.Files.File_Descriptor (File_Descriptor),
-         Size);
-   end Create_Pool;
+   function Get_Version (Object : Shm_Pool) return Unsigned_32 is
+     (Thin.Shm_Pool_Get_Version (Object.Proxy));
 
    procedure Destroy (Object : in out Shm) is
    begin
@@ -1595,35 +1391,6 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Shm) return Unsigned_32 is
      (Thin.Shm_Get_Version (Object.Proxy));
-
-   procedure Create_Buffer (Object   : Shm_Pool;
-                            Offset   : Natural;
-                            Width    : Natural;
-                            Height   : Natural;
-                            Stride   : Natural;
-                            Format   : Shm_Format;
-                            Buffer : in out Protocol.Buffer'Class) is
-   begin
-      Buffer.Proxy := Thin.Shm_Pool_Create_Buffer
-        (Object.Proxy, Offset, Width, Height, Stride, Format);
-   end Create_Buffer;
-
-   procedure Resize (Object : Shm_Pool;
-                     Size   : Positive) is
-   begin
-      Thin.Shm_Pool_Resize (Object.Proxy, Size);
-   end Resize;
-
-   procedure Destroy (Object : in out Shm_Pool) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Shm_Pool_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Shm_Pool) return Unsigned_32 is
-     (Thin.Shm_Pool_Get_Version (Object.Proxy));
 
    procedure Destroy (Object : in out Buffer) is
    begin
@@ -1647,104 +1414,46 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Data_Offer) return Unsigned_32 is
      (Thin.Data_Offer_Get_Version (Object.Proxy));
 
-   procedure Do_Accept (Object    : Data_Offer;
-                        Serial    : Unsigned_32;
-                        Mime_Type : String) is
+   procedure Destroy (Object : in out Data_Source) is
    begin
-      Wayland.API.Proxy_Marshal
-        (Wayland.API.Proxy (Object.Proxy.all),
-         Constants.Data_Offer_Accept,
-         Serial,
-         +Mime_Type);
-   end Do_Accept;
+      if Object.Proxy /= null then
+         Thin.Data_Source_Destroy (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Destroy;
 
-   procedure Do_Not_Accept (Object : Data_Offer;
-                            Serial : Unsigned_32) is
+   function Get_Version (Object : Data_Source) return Unsigned_32 is
+     (Thin.Data_Source_Get_Version (Object.Proxy));
+
+   procedure Destroy (Object : in out Data_Device) is
    begin
-      Thin.Data_Offer_Accept (Object.Proxy, Serial, Interfaces.C.Strings.Null_Ptr);
-   end Do_Not_Accept;
+      if Object.Proxy /= null then
+         Thin.Data_Device_Destroy (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Destroy;
 
-   procedure Receive (Object          : Data_Offer;
-                      Mime_Type       : String;
-                      File_Descriptor : Integer) is
+   function Get_Version (Object : Data_Device) return Unsigned_32 is
+     (Thin.Data_Device_Get_Version (Object.Proxy));
+
+   procedure Release (Object : in out Data_Device) is
    begin
-      Thin.Data_Offer_Receive
-        (Object.Proxy, +Mime_Type, File_Descriptor);
-   end Receive;
+      if Object.Proxy /= null then
+         Thin.Data_Device_Release (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Release;
 
-   procedure Finish (Object : Data_Offer) is
+   procedure Destroy (Object : in out Data_Device_Manager) is
    begin
-      Thin.Data_Offer_Finish (Object.Proxy);
-   end Finish;
+      if Object.Proxy /= null then
+         Thin.Data_Device_Manager_Destroy (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Destroy;
 
-   procedure Set_Actions (Object           : Data_Offer;
-                          Dnd_Actions      : Unsigned_32;
-                          Preferred_Action : Unsigned_32) is
-   begin
-      Thin.Data_Offer_Set_Actions
-        (Object.Proxy, Dnd_Actions, Preferred_Action);
-   end Set_Actions;
-
-   procedure Attach (Object : Protocol.Surface;
-                     Buffer : Protocol.Buffer'Class;
-                     X, Y   : Integer) is
-   begin
-      Thin.Surface_Attach (Object.Proxy, Buffer.Proxy, X, Y);
-   end Attach;
-
-   procedure Damage (Object : Surface;
-                     X, Y   : Integer;
-                     Width  : Natural;
-                     Height : Natural) is
-   begin
-      Thin.Surface_Damage (Object.Proxy, X, Y, Width, Height);
-   end Damage;
-
-   function Frame (Object : Surface) return Callback'Class is
-   begin
-      return Result : Callback do
-         Result.Proxy := Thin.Surface_Frame (Object.Proxy);
-      end return;
-   end Frame;
-
-   procedure Set_Opaque_Region (Object : Surface;
-                                Region : Protocol.Region'Class) is
-   begin
-      Thin.Surface_Set_Opaque_Region (Object.Proxy, Region.Proxy);
-   end Set_Opaque_Region;
-
-   procedure Set_Input_Region (Object : Surface;
-                               Region : Protocol.Region'Class) is
-   begin
-      Thin.Surface_Set_Input_Region (Object.Proxy, Region.Proxy);
-
-   end Set_Input_Region;
-
-   procedure Commit (Object : Surface) is
-   begin
-      Thin.Surface_Commit (Object.Proxy);
-   end Commit;
-
-   procedure Set_Buffer_Transform (Object    : Surface;
-                                   Transform : Output_Transform) is
-   begin
-      Thin.Surface_Set_Buffer_Transform (Object.Proxy, Transform);
-   end Set_Buffer_Transform;
-
-   procedure Set_Buffer_Scale (Object : Surface;
-                               Scale  : Positive) is
-   begin
-      Thin.Surface_Set_Buffer_Scale (Object.Proxy, Scale);
-   end Set_Buffer_Scale;
-
-   procedure Damage_Buffer (Object : Surface;
-                            X, Y   : Integer;
-                            Width  : Natural;
-                            Height : Natural) is
-   begin
-      Thin.Surface_Damage_Buffer
-        (Object.Proxy, X, Y, Width, Height);
-   end Damage_Buffer;
+   function Get_Version (Object : Data_Device_Manager) return Unsigned_32 is
+     (Thin.Data_Device_Manager_Get_Version (Object.Proxy));
 
    procedure Destroy (Object : in out Surface) is
    begin
@@ -1757,23 +1466,24 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Surface) return Unsigned_32 is
      (Thin.Surface_Get_Version (Object.Proxy));
 
-   function Sync (Object : Display) return Callback'Class is
-   begin
-      return Callback : Protocol.Callback do
-         Callback.Proxy := Thin.Display_Sync (Object.Proxy);
-      end return;
-   end Sync;
-
-   procedure Destroy (Object : in out Callback) is
+   procedure Destroy (Object : in out Seat) is
    begin
       if Object.Proxy /= null then
-         Thin.Callback_Destroy (Object.Proxy);
+         Thin.Seat_Destroy (Object.Proxy);
          Object.Proxy := null;
       end if;
    end Destroy;
 
-   function Get_Version (Object : Callback) return Unsigned_32 is
-     (Thin.Callback_Get_Version (Object.Proxy));
+   function Get_Version (Object : Seat) return Unsigned_32 is
+     (Thin.Seat_Get_Version (Object.Proxy));
+
+   procedure Release (Object : in out Seat) is
+   begin
+      if Object.Proxy /= null then
+         Thin.Seat_Release (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Release;
 
    procedure Destroy (Object : in out Pointer) is
    begin
@@ -1785,19 +1495,6 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Pointer) return Unsigned_32 is
      (Thin.Pointer_Get_Version (Object.Proxy));
-
-   procedure Set_Cursor (Object    : Pointer;
-                         Serial    : Unsigned_32;
-                         Surface   : Protocol.Surface'Class;
-                         Hotspot_X : Integer;
-                         Hotspot_Y : Integer) is
-   begin
-      Thin.Pointer_Set_Cursor (Object.Proxy,
-                                  Serial,
-                                  Surface.Proxy,
-                                  Hotspot_X,
-                                  Hotspot_Y);
-   end Set_Cursor;
 
    procedure Release (Object : in out Pointer) is
    begin
@@ -1875,6 +1572,346 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Region) return Unsigned_32 is
      (Thin.Region_Get_Version (Object.Proxy));
 
+   procedure Destroy (Object : in out Subcompositor) is
+   begin
+      if Object.Proxy /= null then
+         Thin.Subcompositor_Destroy (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Destroy;
+
+   function Get_Version (Object : Subcompositor) return Unsigned_32 is
+     (Thin.Subcompositor_Get_Version (Object.Proxy));
+
+   procedure Destroy (Object : in out Subsurface) is
+   begin
+      if Object.Proxy /= null then
+         Thin.Subsurface_Destroy (Object.Proxy);
+         Object.Proxy := null;
+      end if;
+   end Destroy;
+
+   function Get_Version (Object : Subsurface) return Unsigned_32 is
+     (Thin.Subsurface_Get_Version (Object.Proxy));
+
+   procedure Connect (Object : in out Display) is
+   begin
+      Object.Proxy := Thin.Display_Connect;
+
+      if Object.Proxy /= null
+        and then Wayland.API.Display_Get_File_Descriptor (Object.Proxy) = -1
+      then
+         raise Program_Error;
+      end if;
+   end Connect;
+
+   procedure Disconnect (Object : in out Display) is
+   begin
+      if Object.Proxy /= null then
+         Thin.Display_Disconnect (Object.Proxy);
+      end if;
+   end Disconnect;
+
+   function Check_For_Events
+     (Object  : Display;
+      Timeout : Integer) return Check_For_Events_Status
+   is
+      I : constant Integer :=
+        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout
+          (Wayland.API.Display_Get_File_Descriptor (Object.Proxy), Timeout);
+   begin
+      case I is
+         when 1..Integer'Last   => return Events_Need_Processing;
+         when 0                 => return No_Events;
+         when Integer'First..-1 => return Error;
+      end case;
+   end Check_For_Events;
+
+   procedure Get_Registry (Object   : Display;
+                           Registry : in out Protocol.Registry'Class) is
+   begin
+      Registry.Proxy := Thin.Display_Get_Registry (Object.Proxy);
+   end Get_Registry;
+
+   function Dispatch (Object : Display) return Integer is
+   begin
+      return Integer (Wayland.API.Display_Dispatch (Object.Proxy));
+   end Dispatch;
+
+   procedure Dispatch (Object : Display) is
+      I : Integer;
+      pragma Unreferenced (I);
+   begin
+      I := Object.Dispatch;
+   end Dispatch;
+
+   function Dispatch_Pending (Object : Display) return Integer is
+   begin
+      return Wayland.API.Display_Dispatch_Pending (Object.Proxy);
+   end Dispatch_Pending;
+
+   function Prepare_Read (Object : Display) return Integer is
+   begin
+      return Wayland.API.Display_Prepare_Read (Object.Proxy);
+   end Prepare_Read;
+
+   procedure Cancel_Read (Object : Display) is
+   begin
+      Wayland.API.Display_Cancel_Read (Object.Proxy);
+   end Cancel_Read;
+
+   function Read_Events (Object : Display) return Call_Result_Code is
+      I : constant Integer
+        := Wayland.API.Display_Read_Events (Object.Proxy);
+   begin
+      return (if I = 0 then Success else Error);
+   end Read_Events;
+
+   function Roundtrip (Object : Display) return Integer is
+   begin
+      return Integer (Wayland.API.Display_Roundtrip (Object.Proxy));
+   end Roundtrip;
+
+   procedure Roundtrip (Object : Display) is
+      I : Integer;
+      pragma Unreferenced (I);
+   begin
+      I := Object.Roundtrip;
+   end Roundtrip;
+
+   procedure Bind (Object   : in out Compositor;
+                   Registry : Protocol.Registry'Class;
+                   Id       : Unsigned_32;
+                   Version  : Unsigned_32)
+   is
+      Proxy : constant Thin.Proxy_Ptr :=
+        Thin.Registry_Bind
+          (Registry    => Registry.Proxy,
+           Name        => Id,
+           Interface_V => Thin.Compositor_Interface'Access,
+           New_Id      => Version);
+
+   begin
+      if Proxy /= null then
+         Object.Proxy := Proxy.all'Access;
+      end if;
+   end Bind;
+
+   procedure Create_Surface (Object  : Compositor;
+                             Surface : in out Protocol.Surface'Class) is
+   begin
+      Surface.Proxy := Thin.Compositor_Create_Surface (Object.Proxy);
+   end Create_Surface;
+
+   procedure Create_Region (Object : Compositor;
+                            Region : in out Protocol.Region'Class) is
+   begin
+      Region.Proxy := Thin.Compositor_Create_Region (Object.Proxy);
+   end Create_Region;
+
+   procedure Bind (Object   : in out Seat;
+                   Registry : Protocol.Registry'Class;
+                   Id       : Unsigned_32;
+                   Version  : Unsigned_32)
+   is
+      Proxy : constant Thin.Proxy_Ptr :=
+        Thin.Registry_Bind
+          (Registry    => Registry.Proxy,
+           Name        => Id,
+           Interface_V => Thin.Seat_Interface'Access,
+           New_Id      => Version);
+
+   begin
+      if Proxy /= null then
+         Object.Proxy := Proxy.all'Access;
+      end if;
+   end Bind;
+
+   procedure Get_Pointer (Object  : Seat;
+                          Pointer : in out Protocol.Pointer'Class) is
+   begin
+      Pointer.Proxy := Thin.Seat_Get_Pointer (Object.Proxy);
+   end Get_Pointer;
+
+   procedure Get_Keyboard (Object   : Seat;
+                           Keyboard : in out Protocol.Keyboard'Class) is
+   begin
+      Keyboard.Proxy := Thin.Seat_Get_Keyboard (Object.Proxy);
+   end Get_Keyboard;
+
+   procedure Get_Touch (Object : Seat;
+                        Touch  : in out Protocol.Touch'Class) is
+   begin
+      Touch.Proxy := Thin.Seat_Get_Touch (Object.Proxy);
+   end Get_Touch;
+
+   procedure Bind (Object   : in out Shm;
+                   Registry : Protocol.Registry'Class;
+                   Id       : Unsigned_32;
+                   Version  : Unsigned_32)
+   is
+      Proxy : constant Thin.Proxy_Ptr :=
+        Thin.Registry_Bind
+          (Registry    => Registry.Proxy,
+           Name        => Id,
+           Interface_V => Thin.Shm_Interface'Access,
+           New_Id      => Version);
+
+   begin
+      if Proxy /= null then
+         Object.Proxy := Proxy.all'Access;
+      end if;
+   end Bind;
+
+   procedure Create_Pool
+     (Object          : Shm;
+      File_Descriptor : C_Binding.Linux.Files.File;
+      Size            : Positive;
+      Pool            : in out Protocol.Shm_Pool'Class) is
+   begin
+      Pool.Proxy := Thin.Shm_Create_Pool
+        (Object.Proxy,
+         C_Binding.Linux.Files.File_Descriptor (File_Descriptor),
+         Size);
+   end Create_Pool;
+
+   procedure Create_Buffer (Object : Shm_Pool;
+                            Offset : Natural;
+                            Width  : Natural;
+                            Height : Natural;
+                            Stride : Natural;
+                            Format : Shm_Format;
+                            Buffer : in out Protocol.Buffer'Class) is
+   begin
+      Buffer.Proxy := Thin.Shm_Pool_Create_Buffer
+        (Object.Proxy, Offset, Width, Height, Stride, Format);
+   end Create_Buffer;
+
+   procedure Resize (Object : Shm_Pool;
+                     Size   : Positive) is
+   begin
+      Thin.Shm_Pool_Resize (Object.Proxy, Size);
+   end Resize;
+
+   procedure Do_Accept (Object    : Data_Offer;
+                        Serial    : Unsigned_32;
+                        Mime_Type : String) is
+   begin
+      Wayland.API.Proxy_Marshal
+        (Wayland.API.Proxy (Object.Proxy.all),
+         Constants.Data_Offer_Accept,
+         Serial,
+         +Mime_Type);
+   end Do_Accept;
+
+   procedure Do_Not_Accept (Object : Data_Offer;
+                            Serial : Unsigned_32) is
+   begin
+      Thin.Data_Offer_Accept (Object.Proxy, Serial, Interfaces.C.Strings.Null_Ptr);
+   end Do_Not_Accept;
+
+   procedure Receive (Object          : Data_Offer;
+                      Mime_Type       : String;
+                      File_Descriptor : Integer) is
+   begin
+      Thin.Data_Offer_Receive
+        (Object.Proxy, +Mime_Type, File_Descriptor);
+   end Receive;
+
+   procedure Finish (Object : Data_Offer) is
+   begin
+      Thin.Data_Offer_Finish (Object.Proxy);
+   end Finish;
+
+   procedure Set_Actions (Object           : Data_Offer;
+                          Dnd_Actions      : Unsigned_32;
+                          Preferred_Action : Unsigned_32) is
+   begin
+      Thin.Data_Offer_Set_Actions
+        (Object.Proxy, Dnd_Actions, Preferred_Action);
+   end Set_Actions;
+
+   procedure Attach (Object : Surface;
+                     Buffer : Protocol.Buffer'Class;
+                     X, Y   : Integer) is
+   begin
+      Thin.Surface_Attach (Object.Proxy, Buffer.Proxy, X, Y);
+   end Attach;
+
+   procedure Damage (Object : Surface;
+                     X, Y   : Integer;
+                     Width  : Natural;
+                     Height : Natural) is
+   begin
+      Thin.Surface_Damage (Object.Proxy, X, Y, Width, Height);
+   end Damage;
+
+   function Frame (Object : Surface) return Callback'Class is
+   begin
+      return Result : Callback do
+         Result.Proxy := Thin.Surface_Frame (Object.Proxy);
+      end return;
+   end Frame;
+
+   procedure Set_Opaque_Region (Object : Surface;
+                                Region : Protocol.Region'Class) is
+   begin
+      Thin.Surface_Set_Opaque_Region (Object.Proxy, Region.Proxy);
+   end Set_Opaque_Region;
+
+   procedure Set_Input_Region (Object : Surface;
+                               Region : Protocol.Region'Class) is
+   begin
+      Thin.Surface_Set_Input_Region (Object.Proxy, Region.Proxy);
+
+   end Set_Input_Region;
+
+   procedure Commit (Object : Surface) is
+   begin
+      Thin.Surface_Commit (Object.Proxy);
+   end Commit;
+
+   procedure Set_Buffer_Transform (Object    : Surface;
+                                   Transform : Output_Transform) is
+   begin
+      Thin.Surface_Set_Buffer_Transform (Object.Proxy, Transform);
+   end Set_Buffer_Transform;
+
+   procedure Set_Buffer_Scale (Object : Surface;
+                               Scale  : Positive) is
+   begin
+      Thin.Surface_Set_Buffer_Scale (Object.Proxy, Scale);
+   end Set_Buffer_Scale;
+
+   procedure Damage_Buffer (Object : Surface;
+                            X, Y   : Integer;
+                            Width  : Natural;
+                            Height : Natural) is
+   begin
+      Thin.Surface_Damage_Buffer
+        (Object.Proxy, X, Y, Width, Height);
+   end Damage_Buffer;
+
+   function Sync (Object : Display) return Callback'Class is
+   begin
+      return Callback : Protocol.Callback do
+         Callback.Proxy := Thin.Display_Sync (Object.Proxy);
+      end return;
+   end Sync;
+
+   procedure Set_Cursor (Object    : Pointer;
+                         Serial    : Unsigned_32;
+                         Surface   : Protocol.Surface'Class;
+                         Hotspot_X : Integer;
+                         Hotspot_Y : Integer) is
+   begin
+      Thin.Pointer_Set_Cursor (Object.Proxy,
+                                  Serial,
+                                  Surface.Proxy,
+                                  Hotspot_X,
+                                  Hotspot_Y);
+   end Set_Cursor;
+
    procedure Add (Object : Region;
                   X, Y   : Integer;
                   Width  : Natural;
@@ -1891,17 +1928,6 @@ package body Wayland.Client.Protocol is
       Thin.Region_Subtract (Object.Proxy, X, Y, Width, Height);
    end Subtract;
 
-   procedure Destroy (Object : in out Subcompositor) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Subcompositor_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Subcompositor) return Unsigned_32 is
-     (Thin.Subcompositor_Get_Version (Object.Proxy));
-
    procedure Get_Subsurface
      (Object     : Protocol.Subcompositor;
       Surface    : Protocol.Surface'Class;
@@ -1914,17 +1940,6 @@ package body Wayland.Client.Protocol is
            Surface.Proxy,
            Parent.Proxy);
    end Get_Subsurface;
-
-   procedure Destroy (Object : in out Subsurface) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Subsurface_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Subsurface) return Unsigned_32 is
-     (Thin.Subsurface_Get_Version (Object.Proxy));
 
    procedure Set_Position (Object : Protocol.Subsurface;
                            X, Y   : Integer) is
@@ -1954,17 +1969,6 @@ package body Wayland.Client.Protocol is
       Thin.Subsurface_Set_Desync (Object.Proxy);
    end Set_Desync;
 
-   procedure Destroy (Object : in out Data_Source) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Data_Source_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Data_Source) return Unsigned_32 is
-     (Thin.Data_Source_Get_Version (Object.Proxy));
-
    procedure Offer (Object    : Data_Source;
                     Mime_Type : String) is
    begin
@@ -1979,17 +1983,6 @@ package body Wayland.Client.Protocol is
    begin
       Thin.Data_Source_Set_Actions (Object.Proxy, Dnd_Actions);
    end Set_Actions;
-
-   procedure Destroy (Object : in out Data_Device) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Data_Device_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Data_Device) return Unsigned_32 is
-     (Thin.Data_Device_Get_Version (Object.Proxy));
 
    procedure Start_Drag (Object : Data_Device;
                          Source : Data_Source'class;
@@ -2010,25 +2003,6 @@ package body Wayland.Client.Protocol is
    begin
       Thin.Data_Device_Set_Selection (Object.Proxy, Source.Proxy, Serial);
    end Set_Selection;
-
-   procedure Release (Object : in out Data_Device) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Data_Device_Release (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Release;
-
-   procedure Destroy (Object : in out Data_Device_Manager) is
-   begin
-      if Object.Proxy /= null then
-         Thin.Data_Device_Manager_Destroy (Object.Proxy);
-         Object.Proxy := null;
-      end if;
-   end Destroy;
-
-   function Get_Version (Object : Data_Device_Manager) return Unsigned_32 is
-     (Thin.Data_Device_Manager_Get_Version (Object.Proxy));
 
    procedure Create_Data_Source (Object : Data_Device_Manager;
                                  Source : in out Data_Source'Class) is
