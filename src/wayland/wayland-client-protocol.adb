@@ -1337,6 +1337,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Display) return Unsigned_32 is
      (Thin.Display_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Display) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Registry) is
    begin
       if Object.Proxy /= null then
@@ -1347,6 +1350,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Registry) return Unsigned_32 is
      (Thin.Registry_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Registry) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Destroy (Object : in out Callback) is
    begin
@@ -1359,6 +1365,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Callback) return Unsigned_32 is
      (Thin.Callback_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Callback) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Compositor) is
    begin
       if Object.Proxy /= null then
@@ -1369,6 +1378,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Compositor) return Unsigned_32 is
      (Thin.Compositor_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Compositor) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Destroy (Object : in out Shm_Pool) is
    begin
@@ -1381,6 +1393,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Shm_Pool) return Unsigned_32 is
      (Thin.Shm_Pool_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Shm_Pool) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Shm) is
    begin
       if Object.Proxy /= null then
@@ -1391,6 +1406,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Shm) return Unsigned_32 is
      (Thin.Shm_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Shm) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Destroy (Object : in out Buffer) is
    begin
@@ -1403,6 +1421,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Buffer) return Unsigned_32 is
      (Thin.Buffer_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Buffer) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Data_Offer) is
    begin
       if Object.Proxy /= null then
@@ -1413,6 +1434,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Data_Offer) return Unsigned_32 is
      (Thin.Data_Offer_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Data_Offer) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Destroy (Object : in out Data_Source) is
    begin
@@ -1425,6 +1449,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Data_Source) return Unsigned_32 is
      (Thin.Data_Source_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Data_Source) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Data_Device) is
    begin
       if Object.Proxy /= null then
@@ -1435,6 +1462,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Data_Device) return Unsigned_32 is
      (Thin.Data_Device_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Data_Device) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Release (Object : in out Data_Device) is
    begin
@@ -1455,6 +1485,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Data_Device_Manager) return Unsigned_32 is
      (Thin.Data_Device_Manager_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Data_Device_Manager) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Surface) is
    begin
       if Object.Proxy /= null then
@@ -1466,6 +1499,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Surface) return Unsigned_32 is
      (Thin.Surface_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Surface) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Seat) is
    begin
       if Object.Proxy /= null then
@@ -1476,6 +1512,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Seat) return Unsigned_32 is
      (Thin.Seat_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Seat) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Release (Object : in out Seat) is
    begin
@@ -1496,6 +1535,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Pointer) return Unsigned_32 is
      (Thin.Pointer_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Pointer) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Release (Object : in out Pointer) is
    begin
       if Object.Proxy /= null then
@@ -1514,6 +1556,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Keyboard) return Unsigned_32 is
      (Thin.Keyboard_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Keyboard) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Release (Object : in out Keyboard) is
    begin
@@ -1534,6 +1579,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Touch) return Unsigned_32 is
      (Thin.Touch_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Touch) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Release (Object : in out Touch) is
    begin
       if Object.Proxy /= null then
@@ -1552,6 +1600,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Output) return Unsigned_32 is
      (Thin.Output_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Output) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Release (Object : in out Output) is
    begin
@@ -1572,6 +1623,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Region) return Unsigned_32 is
      (Thin.Region_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Region) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Subcompositor) is
    begin
       if Object.Proxy /= null then
@@ -1583,6 +1637,9 @@ package body Wayland.Client.Protocol is
    function Get_Version (Object : Subcompositor) return Unsigned_32 is
      (Thin.Subcompositor_Get_Version (Object.Proxy));
 
+   function Has_Proxy (Object : Subcompositor) return Boolean is
+     (Object.Proxy /= null);
+
    procedure Destroy (Object : in out Subsurface) is
    begin
       if Object.Proxy /= null then
@@ -1593,6 +1650,9 @@ package body Wayland.Client.Protocol is
 
    function Get_Version (Object : Subsurface) return Unsigned_32 is
      (Thin.Subsurface_Get_Version (Object.Proxy));
+
+   function Has_Proxy (Object : Subsurface) return Boolean is
+     (Object.Proxy /= null);
 
    procedure Connect (Object : in out Display) is
    begin

@@ -65,11 +65,11 @@ package Wayland.Client.Protocol is
    Subcompositor_Interface : constant Interface_Type;
    Subsurface_Interface : constant Interface_Type;
 
-   function Has_Proxy (Object : Display) return Boolean
-     with Global => null;
-
    function Get_Version (Object : Display) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Display) return Boolean
+     with Global => null;
 
    function Is_Connected (Object : Display) return Boolean renames Has_Proxy;
 
@@ -132,9 +132,6 @@ package Wayland.Client.Protocol is
    function Sync (Object : Display) return Callback'Class
      with Pre => Object.Is_Connected;
 
-   function Has_Proxy (Object : Registry) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Registry)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
@@ -142,7 +139,7 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Registry) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Callback) return Boolean
+   function Has_Proxy (Object : Registry) return Boolean
      with Global => null;
 
    procedure Destroy (Object : in out Callback)
@@ -152,7 +149,7 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Callback) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Compositor) return Boolean
+   function Has_Proxy (Object : Callback) return Boolean
      with Global => null;
 
    procedure Destroy (Object : in out Compositor)
@@ -161,6 +158,9 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Compositor) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Compositor) return Boolean
+     with Global => null;
 
    procedure Bind (Object   : in out Compositor;
                    Registry : Protocol.Registry'Class;
@@ -176,15 +176,15 @@ package Wayland.Client.Protocol is
                             Region : in out Protocol.Region'Class)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Shm_Pool) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Shm_Pool)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Shm_Pool) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Shm_Pool) return Boolean
+     with Global => null;
 
    procedure Create_Buffer (Object : Shm_Pool;
                             Offset : Natural;
@@ -199,15 +199,15 @@ package Wayland.Client.Protocol is
                      Size   : Positive)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Shm) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Shm)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Shm) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Shm) return Boolean
+     with Global => null;
 
    procedure Bind (Object   : in out Shm;
                    Registry : Protocol.Registry'Class;
@@ -220,9 +220,6 @@ package Wayland.Client.Protocol is
                           Size            : Positive;
                           Pool            : in out Shm_Pool'Class);
 
-   function Has_Proxy (Object : Buffer) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Buffer)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
@@ -230,7 +227,7 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Buffer) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Data_Offer) return Boolean
+   function Has_Proxy (Object : Buffer) return Boolean
      with Global => null;
 
    procedure Destroy (Object : in out Data_Offer)
@@ -239,6 +236,9 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Data_Offer) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Data_Offer) return Boolean
+     with Global => null;
 
    procedure Do_Accept (Object    : Data_Offer;
                         Serial    : Unsigned_32;
@@ -262,15 +262,15 @@ package Wayland.Client.Protocol is
                           Preferred_Action : Unsigned_32)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Data_Source) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Data_Source)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Data_Source) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Data_Source) return Boolean
+     with Global => null;
 
    procedure Offer (Object    : Data_Source;
                     Mime_Type : String)
@@ -280,15 +280,15 @@ package Wayland.Client.Protocol is
                           Dnd_Actions : Unsigned_32)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Data_Device) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Data_Device)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Data_Device) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Data_Device) return Boolean
+     with Global => null;
 
    procedure Release (Object : in out Data_Device)
      with Pre  => Object.Has_Proxy,
@@ -306,15 +306,15 @@ package Wayland.Client.Protocol is
                             Serial : Unsigned_32)
      with Pre => Object.Has_Proxy and Source.Has_Proxy;
 
-   function Has_Proxy (Object : Data_Device_Manager) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Data_Device_Manager)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Data_Device_Manager) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Data_Device_Manager) return Boolean
+     with Global => null;
 
    procedure Create_Data_Source (Object : Data_Device_Manager;
                                  Source : in out Data_Source'Class)
@@ -325,15 +325,15 @@ package Wayland.Client.Protocol is
                               Device : in out Data_Device'Class)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Surface) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Surface)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Surface) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Surface) return Boolean
+     with Global => null;
 
    procedure Attach (Object : Surface;
                      Buffer : Protocol.Buffer'Class;
@@ -374,15 +374,15 @@ package Wayland.Client.Protocol is
                             Height : Natural)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Seat) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Seat)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Seat) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Seat) return Boolean
+     with Global => null;
 
    procedure Release (Object : in out Seat)
      with Pre  => Object.Has_Proxy,
@@ -406,15 +406,15 @@ package Wayland.Client.Protocol is
                         Touch  : in out Protocol.Touch'Class)
      with Pre => Object.Has_Proxy and not Touch.Has_Proxy;
 
-   function Has_Proxy (Object : Pointer) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Pointer)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
 
    function Get_Version (Object : Pointer) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Pointer) return Boolean
+     with Global => null;
 
    procedure Release (Object : in out Pointer)
      with Pre  => Object.Has_Proxy,
@@ -427,9 +427,6 @@ package Wayland.Client.Protocol is
                          Hotspot_Y : Integer)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Keyboard) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Keyboard)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
@@ -437,12 +434,12 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Keyboard) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
+   function Has_Proxy (Object : Keyboard) return Boolean
+     with Global => null;
+
    procedure Release (Object : in out Keyboard)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
-
-   function Has_Proxy (Object : Touch) return Boolean
-     with Global => null;
 
    procedure Destroy (Object : in out Touch)
      with Pre  => Object.Has_Proxy,
@@ -451,12 +448,12 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Touch) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
+   function Has_Proxy (Object : Touch) return Boolean
+     with Global => null;
+
    procedure Release (Object : in out Touch)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
-
-   function Has_Proxy (Object : Output) return Boolean
-     with Global => null;
 
    procedure Destroy (Object : in out Output)
      with Pre  => Object.Has_Proxy,
@@ -465,12 +462,12 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Output) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
+   function Has_Proxy (Object : Output) return Boolean
+     with Global => null;
+
    procedure Release (Object : in out Output)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
-
-   function Has_Proxy (Object : Region) return Boolean
-     with Global => null;
 
    procedure Destroy (Object : in out Region)
      with Pre  => Object.Has_Proxy,
@@ -478,6 +475,9 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Region) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Region) return Boolean
+     with Global => null;
 
    procedure Add (Object : Region;
                   X, Y   : Integer;
@@ -491,9 +491,6 @@ package Wayland.Client.Protocol is
                        Height : Natural)
      with Pre => Object.Has_Proxy;
 
-   function Has_Proxy (Object : Subcompositor) return Boolean
-     with Global => null;
-
    procedure Destroy (Object : in out Subcompositor)
      with Pre  => Object.Has_Proxy,
           Post => not Object.Has_Proxy;
@@ -501,14 +498,14 @@ package Wayland.Client.Protocol is
    function Get_Version (Object : Subcompositor) return Unsigned_32
      with Pre => Object.Has_Proxy;
 
+   function Has_Proxy (Object : Subcompositor) return Boolean
+     with Global => null;
+
    procedure Get_Subsurface (Object     : Subcompositor;
                              Surface    : Protocol.Surface'Class;
                              Parent     : Protocol.Surface'Class;
                              Subsurface : in out Protocol.Subsurface'Class)
      with Pre => Object.Has_Proxy and Surface.Has_Proxy and Parent.Has_Proxy;
-
-   function Has_Proxy (Object : Subsurface) return Boolean
-     with Global => null;
 
    procedure Destroy (Object : in out Subsurface)
      with Pre  => Object.Has_Proxy,
@@ -516,6 +513,9 @@ package Wayland.Client.Protocol is
 
    function Get_Version (Object : Subsurface) return Unsigned_32
      with Pre => Object.Has_Proxy;
+
+   function Has_Proxy (Object : Subsurface) return Boolean
+     with Global => null;
 
    procedure Set_Position (Object : Subsurface; X, Y : Integer)
      with Pre => Object.Has_Proxy;
@@ -920,141 +920,81 @@ private
       Proxy : Thin.Display_Ptr;
    end record;
 
-   function Has_Proxy (Object : Display) return Boolean is
-     (Object.Proxy /= null);
-
    type Registry is tagged limited record
       Proxy : Thin.Registry_Ptr;
    end record;
-
-   function Has_Proxy (Object : Registry) return Boolean is
-     (Object.Proxy /= null);
 
    type Callback is tagged limited record
       Proxy : Thin.Callback_Ptr;
    end record;
 
-   function Has_Proxy (Object : Callback) return Boolean is
-     (Object.Proxy /= null);
-
    type Compositor is tagged limited record
       Proxy : Thin.Compositor_Ptr;
    end record;
-
-   function Has_Proxy (Object : Compositor) return Boolean is
-     (Object.Proxy /= null);
 
    type Shm_Pool is tagged limited record
       Proxy : Thin.Shm_Pool_Ptr;
    end record;
 
-   function Has_Proxy (Object : Shm_Pool) return Boolean is
-     (Object.Proxy /= null);
-
    type Shm is tagged limited record
       Proxy : Thin.Shm_Ptr;
    end record;
-
-   function Has_Proxy (Object : Shm) return Boolean is
-     (Object.Proxy /= null);
 
    type Buffer is tagged limited record
       Proxy : Thin.Buffer_Ptr;
    end record;
 
-   function Has_Proxy (Object : Buffer) return Boolean is
-     (Object.Proxy /= null);
-
    type Data_Offer is tagged limited record
       Proxy : Thin.Data_Offer_Ptr;
    end record;
-
-   function Has_Proxy (Object : Data_Offer) return Boolean is
-     (Object.Proxy /= null);
 
    type Data_Source is tagged limited record
       Proxy : Thin.Data_Source_Ptr;
    end record;
 
-   function Has_Proxy (Object : Data_Source) return Boolean is
-     (Object.Proxy /= null);
-
    type Data_Device is tagged limited record
       Proxy : Thin.Data_Device_Ptr;
    end record;
-
-   function Has_Proxy (Object : Data_Device) return Boolean is
-     (Object.Proxy /= null);
 
    type Data_Device_Manager is tagged limited record
       Proxy : Thin.Data_Device_Manager_Ptr;
    end record;
 
-   function Has_Proxy (Object : Data_Device_Manager) return Boolean is
-     (Object.Proxy /= null);
-
    type Surface is tagged limited record
       Proxy : Thin.Surface_Ptr;
    end record;
-
-   function Has_Proxy (Object : Surface) return Boolean is
-     (Object.Proxy /= null);
 
    type Seat is tagged limited record
       Proxy : Thin.Seat_Ptr;
    end record;
 
-   function Has_Proxy (Object : Seat) return Boolean is
-     (Object.Proxy /= null);
-
    type Pointer is tagged limited record
       Proxy : Thin.Pointer_Ptr;
    end record;
-
-   function Has_Proxy (Object : Pointer) return Boolean is
-     (Object.Proxy /= null);
 
    type Keyboard is tagged limited record
       Proxy : Thin.Keyboard_Ptr;
    end record;
 
-   function Has_Proxy (Object : Keyboard) return Boolean is
-     (Object.Proxy /= null);
-
    type Touch is tagged limited record
       Proxy : Thin.Touch_Ptr;
    end record;
-
-   function Has_Proxy (Object : Touch) return Boolean is
-     (Object.Proxy /= null);
 
    type Output is tagged limited record
       Proxy : Thin.Output_Ptr;
    end record;
 
-   function Has_Proxy (Object : Output) return Boolean is
-     (Object.Proxy /= null);
-
    type Region is tagged limited record
       Proxy : Thin.Region_Ptr;
    end record;
-
-   function Has_Proxy (Object : Region) return Boolean is
-     (Object.Proxy /= null);
 
    type Subcompositor is tagged limited record
       Proxy : Thin.Subcompositor_Ptr;
    end record;
 
-   function Has_Proxy (Object : Subcompositor) return Boolean is
-     (Object.Proxy /= null);
-
    type Subsurface is tagged limited record
       Proxy : Thin.Subsurface_Ptr;
    end record;
-
-   function Has_Proxy (Object : Subsurface) return Boolean is
-     (Object.Proxy /= null);
 
    type Interface_Type is tagged limited record
       My_Interface : not null Thin.Interface_Ptr;

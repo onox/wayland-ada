@@ -1241,10 +1241,6 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
-            Put_Line (File, "     with Global => null;");
-            Put_Line (File, "");
-
             if Name /= "Display" then
                Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
                Put_Line (File, "     with Pre  => Object.Has_Proxy,");
@@ -1254,6 +1250,9 @@ procedure XML_Parser is
 
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
+            Put_Line (File, "     with Global => null;");
             Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
@@ -2188,9 +2187,6 @@ procedure XML_Parser is
             Put_Line (File, "      Proxy : Thin." & Name & "_Ptr;");
             Put_Line (File, "   end record;");
             New_Line (File);
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
-            Put_Line (File, "     (Object.Proxy /= null);");
-            New_Line (File);
          end Handle_Interface;
       begin
          Iterate_Over_Interfaces (Handle_Interface'Access);
@@ -2623,6 +2619,9 @@ procedure XML_Parser is
 
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
             Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
+            Put_Line (File, "");
+            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
+            Put_Line (File, "     (Object.Proxy /= null);");
             Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
