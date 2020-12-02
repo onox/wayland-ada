@@ -35,7 +35,7 @@ with Wayland.Client.Protocol;
 --
 -- When compiled go to the .../bin directory
 -- and execute the executable from there.
-package body Client_Examples.Hdante_Hello_World is
+package body Hdante_Hello_World is
 
    package Wayland_Client renames Wayland.Client.Protocol;
 
@@ -523,4 +523,4 @@ package body Client_Examples.Hdante_Hello_World is
       end loop;
    end Run;
 
-end Client_Examples.Hdante_Hello_World;
+end Hdante_Hello_World;

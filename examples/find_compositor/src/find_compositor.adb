@@ -14,11 +14,15 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
+with Ada.Text_IO;
+
 with Wayland.Client.Protocol;
 
-package body Client_Examples.Find_Compositor is
+package body Find_Compositor is
 
    use all type Wayland.Client.Protocol.Call_Result_Code;
+
+   procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
 
    type Data_Type is limited record
       Compositor : aliased Wayland.Client.Protocol.Compositor;
@@ -94,4 +98,4 @@ package body Client_Examples.Find_Compositor is
       Put_Line ("Disconnected from display");
    end Run;
 
-end Client_Examples.Find_Compositor;
+end Find_Compositor;

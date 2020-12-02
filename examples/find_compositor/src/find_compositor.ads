@@ -14,7 +14,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-procedure Client_Examples.Hdante_Hello_World.Main is
-begin
-   Run;
-end Client_Examples.Hdante_Hello_World.Main;
+package Find_Compositor is
+
+   procedure Run;
+
+end Find_Compositor;
