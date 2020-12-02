@@ -1,5 +1,3 @@
-with "aida.gpr";
-
 project Ubuntu_Posix is
 
    for Languages use ("ada");
