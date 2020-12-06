@@ -897,7 +897,6 @@ procedure XML_Parser is
       procedure Generate_Code_For_Enum_Constants;
       procedure Generate_Private_Code_For_Enum_Constants;
       procedure Generate_Manually_Edited_Partial_Type_Declarations;
-      procedure Generate_Code_For_The_Private_Part;
       procedure Generate_Use_Type_Declarions;
       procedure Generate_Manually_Edited_Code_For_Type_Definitions;
       procedure Generate_Private_Code_For_The_Interface_Constants;
@@ -931,7 +930,6 @@ procedure XML_Parser is
             Put_Line (File, "private");
             New_Line (File);
 
-            Generate_Code_For_The_Private_Part;
             Generate_Use_Type_Declarions;
             Generate_Manually_Edited_Code_For_Type_Definitions;
             Generate_Private_Code_For_The_Interface_Constants;
@@ -1044,17 +1042,10 @@ procedure XML_Parser is
       begin
          Iterate_Over_Interfaces (Handle_Interface'Access);
          New_Line (File);
-
-         Put_Line (File, "   pragma Linker_Options (""-lwayland-client"");");
-         Put_Line (File, "   --  Added this linker option here to avoid adding it");
-         Put_Line (File, "   --  to each gpr file that with's this Wayland Ada binding.");
-         New_Line (File);
       end Generate_Code_For_Type_Declarations;
 
       procedure Generate_Code_For_The_Interface_Type is
       begin
-         Put_Line (File, "   type Call_Result_Code is (Success, Error);");
-         New_Line (File);
          Put_Line (File, "   type Interface_Type is tagged limited private;");
          Put_Line (File, "   --  This type name ends with _Type because 'interface'");
          Put_Line (File, "   --  is a reserved keyword in the Ada programming language.");
@@ -1850,16 +1841,6 @@ procedure XML_Parser is
          Iterate_Over_Interfaces (Handle_Interface_Events'Access);
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
-      procedure Generate_Code_For_The_Private_Part is
-      begin
-         Put_Line (File, "   subtype char_array is Interfaces.C.char_array;");
-         New_Line (File);
-         Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
-         New_Line (File);
-         Put_Line (File, "   function Value (C : chars_ptr) return String renames Interfaces.C.Strings.Value;");
-         New_Line (File);
-      end Generate_Code_For_The_Private_Part;
-
       procedure Create_Wl_Thin_Spec_File is
 
          procedure Generate_Code_For_Interface_Constants is
@@ -2280,7 +2261,7 @@ procedure XML_Parser is
             Put_Line (File, "with C_Binding.Linux;");
             New_Line (File);
             Put_Line (File, "with Wayland.API;");
-            Put_Line (File, "with Wayland.Client.Constants;");
+            Put_Line (File, "with Wayland." & Package_Name & ".Constants;");
             New_Line (File);
             Put_Line (File, "package body Wayland." & Package_Name & ".Protocol is");
             New_Line (File);
@@ -2676,19 +2657,13 @@ procedure XML_Parser is
             end if;
          end Handle_Interface;
       begin
-         Put_Line (File, "   subtype int is Interfaces.C.int;");
+         Put_Line (File, "   subtype int       is Interfaces.C.int;");
+         Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   use type int;");
+         Put_Line (File, "   use all type chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   use type Thin.Proxy_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Registry_Global_Subprogram_Ptr is Thin.Registry_Global_Subprogram_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Registry_Global_Remove_Subprogram_Ptr is Thin.Registry_Global_Remove_Subprogram_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Registry_Listener_T is Thin.Registry_Listener_T;");
-         Put_Line (File, "");
-         Put_Line (File, "   subtype Registry_Listener_Ptr is Thin.Registry_Listener_Ptr;");
          Put_Line (File, "");
          Put_Line (File, "   package body Display_Events is");
          Put_Line (File, "");
@@ -2791,7 +2766,7 @@ procedure XML_Parser is
          Put_Line (File, "         Global_Object_Removed (Conversion.To_Pointer (Data).all, Id);");
          Put_Line (File, "      end Internal_Object_Removed;");
          Put_Line (File, "");
-         Put_Line (File, "      Registry_Listener : aliased Protocol.Registry_Listener_T :=");
+         Put_Line (File, "      Registry_Listener : aliased Thin.Registry_Listener_T :=");
          Put_Line (File, "        (Global        => Internal_Object_Added'Unrestricted_Access,");
          Put_Line (File, "         Global_Remove => Internal_Object_Removed'Unrestricted_Access);");
          Put_Line (File, "      --  Note: It should be safe to use Unrestricted_Access here since");
