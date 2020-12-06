@@ -33,17 +33,32 @@ private package Wayland.API is
 
    type Display_Ptr is new Proxy_Ptr;
 
-   type Interface_T is limited record
-      Name         : Interfaces.C.Strings.chars_ptr;
-      Version      : Interfaces.C.int;
-      Method_Count : Interfaces.C.int;
-      Methods      : Void_Ptr;  --  Can be improved upon
-      Event_Count  : Interfaces.C.int;
-      Events       : Void_Ptr;  --  Can be improved upon
+   type Interface_T;
+
+   type Interface_Ptr is access all Interface_T;
+
+   type Message is limited record
+      Name      : Interfaces.C.Strings.char_array_access;
+      Signature : Interfaces.C.Strings.char_array_access;
+      Types     : access Interface_Ptr;
    end record
      with Convention => C_Pass_By_Copy;
 
-   type Interface_Ptr is access all Interface_T;
+   type Message_Array is array (Natural range <>) of aliased Message
+     with Convention => C;
+
+   type Message_Array_Ptr is access all Message_Array
+     with Size => Standard'Address_Size;
+
+   type Interface_T is limited record
+      Name         : Interfaces.C.Strings.char_array_access;
+      Version      : Interfaces.C.int;
+      Method_Count : Interfaces.C.int;
+      Methods      : Message_Array_Ptr;
+      Event_Count  : Interfaces.C.int;
+      Events       : Message_Array_Ptr;
+   end record
+     with Convention => C_Pass_By_Copy;
 
    -----------------------------------------------------------------------------
 
@@ -247,7 +262,7 @@ private package Wayland.API is
       Subject    : Interface_Ptr;
       New_ID_1   : Unsigned_32;
       Name       : Unsigned_32;
-      Iface_Name : Interfaces.C.Strings.chars_ptr;
+      Iface_Name : Interfaces.C.Strings.char_array_access;
       New_ID_2   : Unsigned_32;
       Version    : Unsigned_32) return Proxy_Ptr
    with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor_versioned";
