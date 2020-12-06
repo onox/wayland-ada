@@ -1,5 +1,6 @@
-with "../../tools/wayland_client.gpr";
-with "../../tools/ubuntu_posix.gpr";
+with "../../tools/wayland_client";
+with "../../tools/ubuntu_posix";
+with "../../tools/config";
 
 project Hdante_Hello_World is
 
@@ -16,10 +17,12 @@ project Hdante_Hello_World is
 
    package Builder is
       for Executable ("hdante_hello_world-main.adb") use "hdante_hello_world";
+
+      for Switches (others) use Config.Builder'Switches (others);
    end Builder;
 
-   package Compiler is
-      for Local_Configuration_Pragmas use "hdante.adc";
-   end Compiler;
+   package Compiler renames Config.Compiler;
+   package Binder renames Config.Binder;
+   package Linker renames Config.Linker;
 
 end Hdante_Hello_World;

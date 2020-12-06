@@ -1,4 +1,5 @@
-with "../../tools/wayland_client.gpr";
+with "../../tools/wayland_client";
+with "../../tools/config";
 
 project Find_Compositor is
 
@@ -15,6 +16,12 @@ project Find_Compositor is
 
    package Builder is
       for Executable ("find_compositor-main.adb") use "find_compositor";
+
+      for Switches (others) use Config.Builder'Switches (others);
    end Builder;
+
+   package Binder renames Config.Binder;
+   package Compiler renames Config.Compiler;
+   package Linker renames Config.Linker;
 
 end Find_Compositor;
