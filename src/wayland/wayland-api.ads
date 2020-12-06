@@ -323,10 +323,9 @@ private package Wayland.API is
 
    function Display_Get_File_Descriptor (Object : Display_Ptr) return Integer
      with Import, Convention => C, External_Name => "wl_display_get_fd";
-   --  TODO Pre => Object /= null
 
---   function Display_Get_Error (Object : Display_Ptr) return int
---     with Import, Convention => C, External_Name => "wl_display_get_error";
+   function Display_Get_Error (Object : Display_Ptr) return Integer
+     with Import, Convention => C, External_Name => "wl_display_get_error";
 
 --   function Display_Get_Protocol_Error
 --     (Arg1 : System.Address;
@@ -337,8 +336,8 @@ private package Wayland.API is
 --   procedure Log_Set_Handler_Client (Arg1 : Wayland_Util_H.WL_Log_Func_T)
 --     with Import, Convention => C, External_Name => "wl_log_set_handler_client";
 
---   function Display_Flush (Object : Display_Ptr) return int
---     with Import, Convention => C, External_Name => "wl_display_flush";
+   function Display_Flush (Object : Display_Ptr) return Integer
+     with Import, Convention => C, External_Name => "wl_display_flush";
 
    -----------------------------------------------------------------------------
    --                           Default Event Queue                           --
