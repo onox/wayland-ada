@@ -1161,7 +1161,8 @@ procedure XML_Parser is
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
                      Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
                   end loop;
-                  Put_Line (File, "   end record;");
+                  Put_Line (File, "   end record");
+                  Put_Line (File, "     with Convention => C_Pass_By_Copy;");
                else
                   Put_Line (File, "   type " & Enum_Type_Name & " is");
                   Put (File, "     (");
