@@ -19,15 +19,16 @@ with System;
 package Wayland is
    pragma Pure;
 
+   pragma Linker_Options ("-lwayland-client");
+   --  Added this linker option here to avoid adding it
+   --  to each gpr file that with's this Wayland Ada binding.
+
    Nul : constant Character := Character'Val (0);
 
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
 
    type Fixed is new Integer;
-
-   type C_String is new String
-     with Dynamic_Predicate => C_String'Length > 0 and then C_String (C_String'Last) = Nul;
 
    subtype Void_Ptr is System.Address;
 
@@ -39,9 +40,6 @@ package Wayland is
      with Convention => C_Pass_By_Copy;
    --   TODO: Remove the trailing _T from the name of this type
 
-private
-
-   function "+" (Text : String) return C_String is (C_String (Text & Nul));
-   --  Appends a 'Nul' character to a standard String and returns a C_String
+   type Call_Result_Code is (Success, Error);
 
 end Wayland;
