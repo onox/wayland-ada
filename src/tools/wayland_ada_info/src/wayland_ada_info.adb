@@ -149,7 +149,7 @@ package body Wayland_Ada_Info is
       end if;
 
       Put_Line (L1.HT & "keyboard repeat rate:" & Data.Keyboard_Rate'Image);
-      Put_Line (L1.HT & "keyboard repeat rate:" & Data.Keyboard_Delay'Image);
+      Put_Line (L1.HT & "keyboard repeat delay:" & Data.Keyboard_Delay'Image);
    end Image;
 
    procedure Image (Data : Output_Data) is
