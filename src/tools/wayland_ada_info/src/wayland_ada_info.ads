@@ -14,8 +14,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-package Find_Compositor is
+package Wayland_Ada_Info is
 
    procedure Run;
 
-end Find_Compositor;
+end Wayland_Ada_Info;

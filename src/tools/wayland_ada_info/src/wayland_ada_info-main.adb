@@ -14,7 +14,7 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-procedure Find_Compositor.Main is
+procedure Wayland_Ada_Info.Main is
 begin
    Run;
-end Find_Compositor.Main;
+end Wayland_Ada_Info.Main;

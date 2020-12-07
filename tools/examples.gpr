@@ -3,6 +3,6 @@ aggregate project Examples is
    for Create_Missing_Dirs use "True";
 
    for Project_Files use
-     ("../examples/find_compositor/find_compositor.gpr",
+     ("../src/tools/wayland_ada_info/wayland_ada_info.gpr",
       "../examples/hdante_hello_world/hdante_hello_world.gpr");
 end Examples;

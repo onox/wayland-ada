@@ -23,7 +23,7 @@ with Ada.Text_IO;
 with Wayland.Client.Enums;
 with Wayland.Client.Protocol;
 
-package body Find_Compositor is
+package body Wayland_Ada_Info is
 
    procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
    procedure Put (Value : String) renames Ada.Text_IO.Put;
@@ -430,4 +430,4 @@ package body Find_Compositor is
          end if;
    end Run;
 
-end Find_Compositor;
+end Wayland_Ada_Info;
