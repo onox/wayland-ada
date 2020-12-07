@@ -14,88 +14,420 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
+with Ada.Containers.Vectors;
+with Ada.Characters.Latin_1;
+with Ada.Exceptions;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Wayland.Client.Enums;
 with Wayland.Client.Protocol;
 
 package body Find_Compositor is
 
-   use all type Wayland.Client.Protocol.Call_Result_Code;
-
    procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
+   procedure Put (Value : String) renames Ada.Text_IO.Put;
 
-   type Data_Type is limited record
-      Compositor : aliased Wayland.Client.Protocol.Compositor;
+   package L1 renames Ada.Characters.Latin_1;
+   package SU renames Ada.Strings.Unbounded;
+
+   function "+" (Value : SU.Unbounded_String) return String renames SU.To_String;
+   function "+" (Value : String) return SU.Unbounded_String renames SU.To_Unbounded_String;
+
+   Wayland_Error : exception;
+
+   use Wayland;
+   use type SU.Unbounded_String;
+
+   use all type Wayland.Client.Protocol.Keyboard;
+   use all type Wayland.Client.Protocol.Seat;
+   use all type Wayland.Client.Protocol.Output;
+   use type Wayland.Client.Enums.Shm_Format;
+
+   Compositor : Wayland.Client.Protocol.Compositor;
+   Shm        : Wayland.Client.Protocol.Shm;
+   Display    : Wayland.Client.Protocol.Display;
+   Registry   : Wayland.Client.Protocol.Registry;
+
+   type Interface_Data is record
+      Name    : SU.Unbounded_String;
+      Id      : Unsigned_32;
+      Version : Unsigned_32;
    end record;
 
-   Data : Data_Type;
+   type Seat_Data is limited record
+      Keyboard : Wayland.Client.Protocol.Keyboard;
+      Seat     : Wayland.Client.Protocol.Seat;
+
+      Name         : SU.Unbounded_String;
+      Capabilities : Wayland.Client.Enums.Seat_Capability := (others => False);
+
+      Keyboard_Rate  : Integer := Integer'First;
+      Keyboard_Delay : Integer := Integer'First;
+   end record;
+
+   type Output_Data is limited record
+      Output : Wayland.Client.Protocol.Output;
+
+      --  Geometry
+      X, Y            : Integer;
+      Physical_Width  : Integer;
+      Physical_Height : Integer;
+      Subpixel        : Wayland.Client.Enums.Output_Subpixel;
+      Make            : SU.Unbounded_String;
+      Model           : SU.Unbounded_String;
+      Transform       : Wayland.Client.Enums.Output_Transform;
+
+      --  Mode
+      Flags   : Wayland.Client.Enums.Output_Mode;
+      Width   : Integer;
+      Height  : Integer;
+      Refresh : Integer;
+
+      --  Scale
+      Factor  : Integer;
+   end record;
+
+   package Interface_Vectors is new Ada.Containers.Vectors
+     (Positive, Interface_Data);
+
+   package Format_Vectors is new Ada.Containers.Vectors
+     (Positive, Wayland.Client.Enums.Shm_Format);
+
+   Interfaces : Interface_Vectors.Vector;
+   Formats    : Format_Vectors.Vector;
+
+   --  Arbitrary maximum of 4 seats
+   Seats : array (1 .. 4) of Seat_Data;
+   Seat_First_Index : Natural := Seats'First;
+   Seat_Last_Index  : Natural := Seats'First - 1;
+
+   --  Arbitrary maximum of 12 outputs
+   Outputs : array (1 .. 12) of Output_Data;
+   Output_First_Index : Natural := Outputs'First;
+   Output_Last_Index  : Natural := Outputs'First - 1;
+
+   procedure Image (Data : Interface_Data) is
+   begin
+      Put_Line
+        ("interface: '" & (+Data.Name) & "', " &
+         "version:" & Data.Version'Image & ", " &
+         "name:" & Data.Id'Image);
+   end Image;
+
+   procedure Image (Data : Seat_Data) is
+   begin
+      if not Data.Seat.Has_Proxy then
+         return;
+      end if;
+
+      Put_Line (L1.HT & "name: " & (+Data.Name));
+
+      if Data.Capabilities.Pointer or
+         Data.Capabilities.Keyboard or
+         Data.Capabilities.Touch
+      then
+         Put (L1.HT & "capabilities:");
+
+         if Data.Capabilities.Pointer then
+            Put (" pointer");
+         end if;
+
+         if Data.Capabilities.Keyboard then
+            Put (" keyboard");
+         end if;
+
+         if Data.Capabilities.Touch then
+            Put (" touch");
+         end if;
+
+         Put_Line ("");
+      end if;
+
+      if not Data.Keyboard.Has_Proxy then
+         return;
+      end if;
+
+      Put_Line (L1.HT & "keyboard repeat rate:" & Data.Keyboard_Rate'Image);
+      Put_Line (L1.HT & "keyboard repeat rate:" & Data.Keyboard_Delay'Image);
+   end Image;
+
+   procedure Image (Data : Output_Data) is
+   begin
+      if not Data.Output.Has_Proxy then
+         return;
+      end if;
+
+      Put_Line (L1.HT &
+        "x:" & Data.X'Image & ", " &
+        "y:" & Data.Y'Image & ", " &
+        "scale:" & Data.Factor'Image);
+      Put_Line (L1.HT & "physical size:" &
+        Data.Physical_Width'Image & " x" & Data.Physical_Height'Image & " mm");
+
+      Put_Line (L1.HT & "make: '" & (+Data.Make) & "', model: '" & (+Data.Model) & "'");
+      Put_Line (L1.HT &
+        "subpixel_orientation: " & Data.Subpixel'Image & ", " &
+        "output_transform: " & Data.Transform'Image);
+
+      Put_Line (L1.HT & "mode:");
+      Put_Line (L1.HT & L1.HT & "size:" &
+        Data.Width'Image & " x" & Data.Height'Image & " px, " &
+        "refresh:" & Data.Refresh'Image & " mHz");
+
+      if Data.Flags.Current or Data.Flags.Preferred then
+         Put (L1.HT & L1.HT & "flags:");
+
+         if Data.Flags.Current then
+            Put (" current");
+         end if;
+
+         if Data.Flags.Preferred then
+            Put (" preferred");
+         end if;
+
+         Put_Line ("");
+      end if;
+   end Image;
+
+   procedure Shm_Format
+     (Shm    : in out Wayland.Client.Protocol.Shm'Class;
+      Format : Wayland.Client.Enums.Shm_Format) is
+   begin
+      Formats.Append (Format);
+   end Shm_Format;
+
+   procedure Keyboard_Repeat_Info
+     (Keyboard : in out Wayland.Client.Protocol.Keyboard'Class;
+      Rate     : Integer;
+      Delay_V  : Integer) is
+   begin
+      for E of Seats loop
+         if E.Keyboard = Keyboard then
+            E.Keyboard_Rate  := Rate;
+            E.Keyboard_Delay := Delay_V;
+         end if;
+      end loop;
+   end Keyboard_Repeat_Info;
+
+   package Keyboard_Events is new Wayland.Client.Protocol.Keyboard_Events
+     (Repeat_Info => Keyboard_Repeat_Info);
+
+   procedure Seat_Capabilities
+     (Seat         : in out Wayland.Client.Protocol.Seat'Class;
+      Capabilities : Wayland.Client.Enums.Seat_Capability) is
+   begin
+      for E of Seats loop
+         if E.Seat = Seat then
+            E.Capabilities := Capabilities;
+
+            if Capabilities.Keyboard then
+               Seat.Get_Keyboard (E.Keyboard);
+
+               if not E.Keyboard.Has_Proxy then
+                  raise Wayland_Error with "No keyboard";
+               end if;
+
+               if Keyboard_Events.Subscribe (E.Keyboard) = Error then
+                  E.Keyboard.Destroy;
+                  raise Wayland_Error with "Failed to subscribe to keyboard events";
+               end if;
+            end if;
+         end if;
+      end loop;
+   end Seat_Capabilities;
+
+   procedure Seat_Name
+     (Seat : in out Wayland.Client.Protocol.Seat'Class;
+      Name : String) is
+   begin
+      for E of Seats loop
+         if E.Seat = Seat then
+            E.Name := +Name;
+         end if;
+      end loop;
+   end Seat_Name;
+
+   procedure Output_Geometry
+     (Output          : in out Wayland.Client.Protocol.Output'Class;
+      X, Y            : Integer;
+      Physical_Width  : Integer;
+      Physical_Height : Integer;
+      Subpixel        : Wayland.Client.Enums.Output_Subpixel;
+      Make            : String;
+      Model           : String;
+      Transform       : Wayland.Client.Enums.Output_Transform) is
+   begin
+      for E of Outputs loop
+         if E.Output = Output then
+            E.X := X;
+            E.Y := Y;
+            E.Physical_Width := Physical_Width;
+            E.Physical_Height := Physical_Height;
+            E.Subpixel := Subpixel;
+            E.Make := +Make;
+            E.Model := +Model;
+            E.Transform := Transform;
+         end if;
+      end loop;
+   end Output_Geometry;
+
+   procedure Output_Mode
+     (Output  : in out Wayland.Client.Protocol.Output'Class;
+      Flags   : Wayland.Client.Enums.Output_Mode;
+      Width   : Integer;
+      Height  : Integer;
+      Refresh : Integer) is
+   begin
+      for E of Outputs loop
+         if E.Output = Output then
+            E.Flags := Flags;
+            E.Width := Width;
+            E.Height := Height;
+            E.Refresh := Refresh;
+         end if;
+      end loop;
+   end Output_Mode;
+
+   procedure Output_Scale
+     (Output : in out Wayland.Client.Protocol.Output'Class;
+      Factor : Integer) is
+   begin
+      for E of Outputs loop
+         if E.Output = Output then
+            E.Factor := Factor;
+         end if;
+      end loop;
+   end Output_Scale;
+
+   package Shm_Events is new Wayland.Client.Protocol.Shm_Events
+     (Format => Shm_Format);
+
+   package Seat_Events is new Wayland.Client.Protocol.Seat_Events
+     (Seat_Capabilities => Seat_Capabilities,
+      Seat_Name         => Seat_Name);
+
+   package Output_Events is new Wayland.Client.Protocol.Output_Events
+     (Geometry => Output_Geometry,
+      Mode     => Output_Mode,
+      Scale    => Output_Scale);
 
    procedure Global_Registry_Handler
      (Registry   : in out Wayland.Client.Protocol.Registry'Class;
-      Id         : Wayland.Unsigned_32;
+      Id         : Unsigned_32;
       Name       : String;
-      Version    : Wayland.Unsigned_32) is
+      Version    : Unsigned_32) is
    begin
-      Put_Line ("Got a registry event for " & Name & " version" & Version'Image & " id" & Id'Image);
+      Interfaces.Append ((Name => +Name, Id => Id, Version => Version));
 
-      if Name = "wl_compositor" then
-         Data.Compositor.Bind (Registry, Id, Version);
+      if Name = Wayland.Client.Protocol.Compositor_Interface.Name then
+         Compositor.Bind (Registry, Id, Unsigned_32'Min (Version, 4));
+      elsif Name = Wayland.Client.Protocol.Shm_Interface.Name then
+         Shm.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Shm.Has_Proxy then
+            raise Wayland_Error with "No shm";
+         end if;
+
+         if Shm_Events.Subscribe (Shm) = Error then
+            Shm.Destroy;
+            raise Wayland_Error with "Failed to subscribe to shm events";
+         end if;
+      elsif Name = Wayland.Client.Protocol.Seat_Interface.Name then
+         declare
+            Seat : Wayland.Client.Protocol.Seat renames Seats (Seat_Last_Index + 1).Seat;
+         begin
+            Seat.Bind (Registry, Id, Unsigned_32'Min (Version, 6));
+
+            if not Seat.Has_Proxy then
+               raise Wayland_Error with "No seat";
+            end if;
+
+            if Seat_Events.Subscribe (Seat) = Error then
+               Seat.Destroy;
+               raise Wayland_Error with "Failed to subscribe to seat events";
+            end if;
+
+            Seat_Last_Index := Seat_Last_Index + 1;
+         end;
+      elsif Name = Wayland.Client.Protocol.Output_Interface.Name then
+         declare
+            Output : Wayland.Client.Protocol.Output renames Outputs (Output_Last_Index + 1).Output;
+         begin
+            Output.Bind (Registry, Id, Unsigned_32'Min (Version, 3));
+
+            if not Output.Has_Proxy then
+               raise Wayland_Error with "No output";
+            end if;
+
+            if Output_Events.Subscribe (Output) = Error then
+               Output.Destroy;
+               raise Wayland_Error with "Failed to subscribe to output events";
+            end if;
+
+            Output_Last_Index := Output_Last_Index + 1;
+         end;
       end if;
    end Global_Registry_Handler;
 
-   procedure Global_Registry_Remover
-     (Registry : in out Wayland.Client.Protocol.Registry'Class;
-      Id       : Wayland.Unsigned_32) is
-   begin
-      Put_Line ("Got a registry losing event for" & Id'Image);
-   end Global_Registry_Remover;
-
    package Registry_Events is new Wayland.Client.Protocol.Registry_Events
-     (Global_Object_Added   => Global_Registry_Handler,
-      Global_Object_Removed => Global_Registry_Remover);
-
-   Display  : Wayland.Client.Protocol.Display;
-   Registry : Wayland.Client.Protocol.Registry;
-
-   Call_Result : Wayland.Client.Protocol.Call_Result_Code;
+     (Global_Object_Added => Global_Registry_Handler);
 
    procedure Run is
    begin
       Display.Connect;
+
       if not Display.Is_Connected then
-         Put_Line ("Can't connect to display");
-         return;
+         raise Wayland_Error with "Not connected to display";
       end if;
-      Put_Line ("Connected to display");
 
       Display.Get_Registry (Registry);
+
       if not Registry.Has_Proxy then
-         Put_Line ("Can't get global registry object");
-         return;
+         raise Wayland_Error with "No global registry";
       end if;
 
-      Call_Result := Registry_Events.Subscribe (Registry);
-      case Call_Result is
-         when Success =>
-            Put_Line ("Successfully subscribed to registry events");
-         when Error =>
-            Put_Line ("Failed to subscribe to registry events");
-            Display.Disconnect;
-            return;
-      end case;
+      if Registry_Events.Subscribe (Registry) = Error then
+         Registry.Destroy;
+         raise Wayland_Error with "Failed to subscribe to registry events";
+      end if;
 
-      Display.Dispatch;
+      Display.Roundtrip;
+      Display.Roundtrip;
       Display.Roundtrip;
 
-      if Data.Compositor.Has_Proxy then
-         Put_Line ("Found compositor");
-      else
-         Put_Line ("Can't find compositor");
-      end if;
+      for E of Interfaces loop
+         Image (E);
+
+         if E.Name = Wayland.Client.Protocol.Shm_Interface.Name then
+            if not Formats.Is_Empty then
+               Put (L1.HT & "formats:");
+               for Format of Formats loop
+                  Put (" " & Format'Image);
+               end loop;
+               Put_Line ("");
+            end if;
+         elsif E.Name = Wayland.Client.Protocol.Seat_Interface.Name then
+            Image (Seats (Seat_First_Index));
+
+            pragma Assert (Seat_First_Index <= Seat_Last_Index);
+            Seat_First_Index := Seat_First_Index + 1;
+         elsif E.Name = Wayland.Client.Protocol.Output_Interface.Name then
+            Image (Outputs (Output_First_Index));
+
+            pragma Assert (Output_First_Index <= Output_Last_Index);
+            Output_First_Index := Output_First_Index + 1;
+         end if;
+      end loop;
 
       Registry.Destroy;
       Display.Disconnect;
-      Put_Line ("Disconnected from display");
+   exception
+      when E : others =>
+         Put_Line ("Error: " & Ada.Exceptions.Exception_Message (E));
+         if Display.Is_Connected then
+            Display.Disconnect;
+         end if;
    end Run;
 
 end Find_Compositor;
