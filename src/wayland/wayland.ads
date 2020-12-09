@@ -14,7 +14,9 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-with System;
+private with Interfaces.C;
+
+private with System;
 
 package Wayland is
    pragma Pure;
@@ -28,20 +30,22 @@ package Wayland is
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
 
+   type Unsigned_32_Array is array (Positive range <>) of Unsigned_32
+     with Convention => C;
+
    type Fixed is delta 2.0 ** (-8) range -(2.0 ** 23) .. +(2.0 ** 23 - 1.0)
      with Small => 2.0 ** (-8),
           Size  => Integer'Size;
 
+private
+
    subtype Void_Ptr is System.Address;
 
-   type Wayland_Array_T is record
-      Size  : Unsigned_32;
-      Alloc : Unsigned_32;
+   type Wayland_Array is record
+      Size  : Interfaces.C.size_t;
+      Alloc : Interfaces.C.size_t;
       Data  : Void_Ptr;
    end record
-     with Convention => C_Pass_By_Copy;
-   --   TODO: Remove the trailing _T from the name of this type
-
-   type Call_Result_Code is (Success, Error);
+     with Convention => C;
 
 end Wayland;
