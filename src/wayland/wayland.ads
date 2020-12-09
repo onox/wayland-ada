@@ -28,7 +28,9 @@ package Wayland is
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
 
-   type Fixed is new Integer;
+   type Fixed is delta 2.0 ** (-8) range -(2.0 ** 23) .. +(2.0 ** 23 - 1.0)
+     with Small => 2.0 ** (-8),
+          Size  => Integer'Size;
 
    subtype Void_Ptr is System.Address;
 
