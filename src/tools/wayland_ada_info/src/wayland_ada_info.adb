@@ -20,8 +20,8 @@ with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with Wayland.Client.Enums;
-with Wayland.Client.Protocol;
+with Wayland.Enums.Client;
+with Wayland.Protocols.Client;
 
 package body Wayland_Ada_Info is
 
@@ -39,15 +39,15 @@ package body Wayland_Ada_Info is
    use Wayland;
    use type SU.Unbounded_String;
 
-   use all type Wayland.Client.Protocol.Keyboard;
-   use all type Wayland.Client.Protocol.Seat;
-   use all type Wayland.Client.Protocol.Output;
-   use type Wayland.Client.Enums.Shm_Format;
+   use all type Wayland.Protocols.Client.Keyboard;
+   use all type Wayland.Protocols.Client.Seat;
+   use all type Wayland.Protocols.Client.Output;
+   use type Wayland.Enums.Client.Shm_Format;
 
-   Compositor : Wayland.Client.Protocol.Compositor;
-   Shm        : Wayland.Client.Protocol.Shm;
-   Display    : Wayland.Client.Protocol.Display;
-   Registry   : Wayland.Client.Protocol.Registry;
+   Compositor : Wayland.Protocols.Client.Compositor;
+   Shm        : Wayland.Protocols.Client.Shm;
+   Display    : Wayland.Protocols.Client.Display;
+   Registry   : Wayland.Protocols.Client.Registry;
 
    type Interface_Data is record
       Name    : SU.Unbounded_String;
@@ -56,43 +56,43 @@ package body Wayland_Ada_Info is
    end record;
 
    type Seat_Data is limited record
-      Keyboard : Wayland.Client.Protocol.Keyboard;
-      Seat     : Wayland.Client.Protocol.Seat;
+      Keyboard : Wayland.Protocols.Client.Keyboard;
+      Seat     : Wayland.Protocols.Client.Seat;
 
       Name         : SU.Unbounded_String;
-      Capabilities : Wayland.Client.Enums.Seat_Capability := (others => False);
+      Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
 
       Keyboard_Rate  : Integer := Integer'First;
       Keyboard_Delay : Integer := Integer'First;
    end record;
 
    type Output_Data is limited record
-      Output : Wayland.Client.Protocol.Output;
+      Output : Wayland.Protocols.Client.Output;
 
       --  Geometry
       X, Y            : Integer;
-      Physical_Width  : Integer;
-      Physical_Height : Integer;
-      Subpixel        : Wayland.Client.Enums.Output_Subpixel;
+      Physical_Width  : Natural;
+      Physical_Height : Natural;
+      Subpixel        : Wayland.Enums.Client.Output_Subpixel;
       Make            : SU.Unbounded_String;
       Model           : SU.Unbounded_String;
-      Transform       : Wayland.Client.Enums.Output_Transform;
+      Transform       : Wayland.Enums.Client.Output_Transform;
 
       --  Mode
-      Flags   : Wayland.Client.Enums.Output_Mode;
-      Width   : Integer;
-      Height  : Integer;
-      Refresh : Integer;
+      Flags   : Wayland.Enums.Client.Output_Mode;
+      Width   : Natural;
+      Height  : Natural;
+      Refresh : Positive;
 
       --  Scale
-      Factor  : Integer;
+      Factor  : Positive := 1;
    end record;
 
    package Interface_Vectors is new Ada.Containers.Vectors
      (Positive, Interface_Data);
 
    package Format_Vectors is new Ada.Containers.Vectors
-     (Positive, Wayland.Client.Enums.Shm_Format);
+     (Positive, Wayland.Enums.Client.Shm_Format);
 
    Interfaces : Interface_Vectors.Vector;
    Formats    : Format_Vectors.Vector;
@@ -191,14 +191,14 @@ package body Wayland_Ada_Info is
    end Image;
 
    procedure Shm_Format
-     (Shm    : in out Wayland.Client.Protocol.Shm'Class;
-      Format : Wayland.Client.Enums.Shm_Format) is
+     (Shm    : in out Wayland.Protocols.Client.Shm'Class;
+      Format : Wayland.Enums.Client.Shm_Format) is
    begin
       Formats.Append (Format);
    end Shm_Format;
 
    procedure Keyboard_Repeat_Info
-     (Keyboard : in out Wayland.Client.Protocol.Keyboard'Class;
+     (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
       Rate     : Integer;
       Delay_V  : Integer) is
    begin
@@ -210,12 +210,12 @@ package body Wayland_Ada_Info is
       end loop;
    end Keyboard_Repeat_Info;
 
-   package Keyboard_Events is new Wayland.Client.Protocol.Keyboard_Events
+   package Keyboard_Events is new Wayland.Protocols.Client.Keyboard_Events
      (Repeat_Info => Keyboard_Repeat_Info);
 
    procedure Seat_Capabilities
-     (Seat         : in out Wayland.Client.Protocol.Seat'Class;
-      Capabilities : Wayland.Client.Enums.Seat_Capability) is
+     (Seat         : in out Wayland.Protocols.Client.Seat'Class;
+      Capabilities : Wayland.Enums.Client.Seat_Capability) is
    begin
       for E of Seats loop
          if E.Seat = Seat then
@@ -238,7 +238,7 @@ package body Wayland_Ada_Info is
    end Seat_Capabilities;
 
    procedure Seat_Name
-     (Seat : in out Wayland.Client.Protocol.Seat'Class;
+     (Seat : in out Wayland.Protocols.Client.Seat'Class;
       Name : String) is
    begin
       for E of Seats loop
@@ -249,14 +249,14 @@ package body Wayland_Ada_Info is
    end Seat_Name;
 
    procedure Output_Geometry
-     (Output          : in out Wayland.Client.Protocol.Output'Class;
+     (Output          : in out Wayland.Protocols.Client.Output'Class;
       X, Y            : Integer;
       Physical_Width  : Integer;
       Physical_Height : Integer;
-      Subpixel        : Wayland.Client.Enums.Output_Subpixel;
+      Subpixel        : Wayland.Enums.Client.Output_Subpixel;
       Make            : String;
       Model           : String;
-      Transform       : Wayland.Client.Enums.Output_Transform) is
+      Transform       : Wayland.Enums.Client.Output_Transform) is
    begin
       for E of Outputs loop
          if E.Output = Output then
@@ -273,8 +273,8 @@ package body Wayland_Ada_Info is
    end Output_Geometry;
 
    procedure Output_Mode
-     (Output  : in out Wayland.Client.Protocol.Output'Class;
-      Flags   : Wayland.Client.Enums.Output_Mode;
+     (Output  : in out Wayland.Protocols.Client.Output'Class;
+      Flags   : Wayland.Enums.Client.Output_Mode;
       Width   : Integer;
       Height  : Integer;
       Refresh : Integer) is
@@ -290,7 +290,7 @@ package body Wayland_Ada_Info is
    end Output_Mode;
 
    procedure Output_Scale
-     (Output : in out Wayland.Client.Protocol.Output'Class;
+     (Output : in out Wayland.Protocols.Client.Output'Class;
       Factor : Integer) is
    begin
       for E of Outputs loop
@@ -300,29 +300,29 @@ package body Wayland_Ada_Info is
       end loop;
    end Output_Scale;
 
-   package Shm_Events is new Wayland.Client.Protocol.Shm_Events
+   package Shm_Events is new Wayland.Protocols.Client.Shm_Events
      (Format => Shm_Format);
 
-   package Seat_Events is new Wayland.Client.Protocol.Seat_Events
+   package Seat_Events is new Wayland.Protocols.Client.Seat_Events
      (Seat_Capabilities => Seat_Capabilities,
       Seat_Name         => Seat_Name);
 
-   package Output_Events is new Wayland.Client.Protocol.Output_Events
+   package Output_Events is new Wayland.Protocols.Client.Output_Events
      (Geometry => Output_Geometry,
       Mode     => Output_Mode,
       Scale    => Output_Scale);
 
    procedure Global_Registry_Handler
-     (Registry   : in out Wayland.Client.Protocol.Registry'Class;
+     (Registry   : in out Wayland.Protocols.Client.Registry'Class;
       Id         : Unsigned_32;
       Name       : String;
       Version    : Unsigned_32) is
    begin
       Interfaces.Append ((Name => +Name, Id => Id, Version => Version));
 
-      if Name = Wayland.Client.Protocol.Compositor_Interface.Name then
+      if Name = Wayland.Protocols.Client.Compositor_Interface.Name then
          Compositor.Bind (Registry, Id, Unsigned_32'Min (Version, 4));
-      elsif Name = Wayland.Client.Protocol.Shm_Interface.Name then
+      elsif Name = Wayland.Protocols.Client.Shm_Interface.Name then
          Shm.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
 
          if not Shm.Has_Proxy then
@@ -333,9 +333,9 @@ package body Wayland_Ada_Info is
             Shm.Destroy;
             raise Wayland_Error with "Failed to subscribe to shm events";
          end if;
-      elsif Name = Wayland.Client.Protocol.Seat_Interface.Name then
+      elsif Name = Wayland.Protocols.Client.Seat_Interface.Name then
          declare
-            Seat : Wayland.Client.Protocol.Seat renames Seats (Seat_Last_Index + 1).Seat;
+            Seat : Wayland.Protocols.Client.Seat renames Seats (Seat_Last_Index + 1).Seat;
          begin
             Seat.Bind (Registry, Id, Unsigned_32'Min (Version, 6));
 
@@ -350,9 +350,9 @@ package body Wayland_Ada_Info is
 
             Seat_Last_Index := Seat_Last_Index + 1;
          end;
-      elsif Name = Wayland.Client.Protocol.Output_Interface.Name then
+      elsif Name = Wayland.Protocols.Client.Output_Interface.Name then
          declare
-            Output : Wayland.Client.Protocol.Output renames Outputs (Output_Last_Index + 1).Output;
+            Output : Wayland.Protocols.Client.Output renames Outputs (Output_Last_Index + 1).Output;
          begin
             Output.Bind (Registry, Id, Unsigned_32'Min (Version, 3));
 
@@ -370,7 +370,7 @@ package body Wayland_Ada_Info is
       end if;
    end Global_Registry_Handler;
 
-   package Registry_Events is new Wayland.Client.Protocol.Registry_Events
+   package Registry_Events is new Wayland.Protocols.Client.Registry_Events
      (Global_Object_Added => Global_Registry_Handler);
 
    procedure Run is
@@ -399,7 +399,7 @@ package body Wayland_Ada_Info is
       for E of Interfaces loop
          Image (E);
 
-         if E.Name = Wayland.Client.Protocol.Shm_Interface.Name then
+         if E.Name = Wayland.Protocols.Client.Shm_Interface.Name then
             if not Formats.Is_Empty then
                Put (L1.HT & "formats:");
                for Format of Formats loop
@@ -407,12 +407,12 @@ package body Wayland_Ada_Info is
                end loop;
                Put_Line ("");
             end if;
-         elsif E.Name = Wayland.Client.Protocol.Seat_Interface.Name then
+         elsif E.Name = Wayland.Protocols.Client.Seat_Interface.Name then
             Image (Seats (Seat_First_Index));
 
             pragma Assert (Seat_First_Index <= Seat_Last_Index);
             Seat_First_Index := Seat_First_Index + 1;
-         elsif E.Name = Wayland.Client.Protocol.Output_Interface.Name then
+         elsif E.Name = Wayland.Protocols.Client.Output_Interface.Name then
             Image (Outputs (Output_First_Index));
 
             pragma Assert (Output_First_Index <= Output_Last_Index);
