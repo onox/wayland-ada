@@ -130,11 +130,7 @@ package body Hdante_Hello_World is
          Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
 
       if not Memory_Map.Has_Mapping then
-         declare
-            Close_Result : constant Linux.Success_Flag := Linux.Files.Close (Image);
-         begin
-            null;
-         end;
+         Linux.Files.Close (Image);
          raise Wayland_Error with "Failed to memory map image";
       end if;
 
@@ -152,11 +148,7 @@ package body Hdante_Hello_World is
          Wayland.Enums.Client.Xrgb_8888,
          Buffer);
 
-      declare
-         Dont_Care : constant Integer := Linux.Memory_Maps.Unmap_Memory (Memory_Map);
-      begin
-         null;
-      end;
+      Memory_Map.Unmap_Memory;
       Pool.Destroy;
 
       if not Buffer.Has_Proxy then
