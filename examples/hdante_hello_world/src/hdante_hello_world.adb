@@ -16,6 +16,7 @@
 
 with System;
 
+with Ada.Exceptions;
 with Ada.Real_Time;
 with Ada.Text_IO;
 
@@ -23,7 +24,9 @@ with C_Binding.Linux.Files;
 with C_Binding.Linux.File_Status;
 with C_Binding.Linux.Memory_Maps;
 
-with Wayland.Client.Protocol;
+with Wayland.Protocols.Client;
+with Wayland.Protocols.Xdg_Shell;
+with Wayland.Enums.Client;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -32,12 +35,7 @@ with Wayland.Client.Protocol;
 -- Original code that was translated from C to Ada:
 -- https://github.com/hdante/hello_wayland
 -- https://hdante.wordpress.com/2014/07/08/the-hello-wayland-tutorial/
---
--- When compiled go to the .../bin directory
--- and execute the executable from there.
 package body Hdante_Hello_World is
-
-   package Wayland_Client renames Wayland.Client.Protocol;
 
    procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
 
@@ -48,365 +46,80 @@ package body Hdante_Hello_World is
 
    package Linux renames C_Binding.Linux;
 
+   Wayland_Error : exception;
+
    use all type Linux.Files.File_Mode;
    use all type Linux.Files.File_Permission;
-   use all type Linux.Files.File;
    use all type Linux.File_Status.Status;
    use all type Linux.Memory_Maps.Memory_Map;
    use all type Linux.Memory_Maps.Memory_Protection;
 
-   use all type Wayland_Client.Check_For_Events_Status;
-   use all type Wayland_Client.Call_Result_Code;
+   use all type Wayland.Call_Result_Code;
 
-   use all type Ada.Real_Time.Time;
-   use all type Ada.Real_Time.Time_Span;
-
-   Done : Boolean := false;
+   Done : Boolean := False;
 
    type Data_Type is limited record
-      Compositor : aliased Wayland_Client.Compositor;
-      Pointer    : aliased Wayland_Client.Pointer;
-      Seat       : aliased Wayland_Client.Seat;
-      Shell      : aliased Wayland_Client.Shell;
-      Shm        : aliased Wayland_Client.Shm;
+      Compositor : Wayland.Protocols.Client.Compositor;
+      Keyboard   : Wayland.Protocols.Client.Keyboard;
+      Pointer    : Wayland.Protocols.Client.Pointer;
+      Seat       : Wayland.Protocols.Client.Seat;
+      Shm        : Wayland.Protocols.Client.Shm;
+      Surface    : Wayland.Protocols.Client.Surface;
+
+      XDG_Shell    : Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base;
+      XDG_Surface  : Wayland.Protocols.Xdg_Shell.Xdg_Surface;
+      XDG_Toplevel : Wayland.Protocols.Xdg_Shell.Xdg_Toplevel;
+
+      Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
    end record;
 
-   type Data_Ptr is access all Data_Type;
+   Data : Data_Type;
 
-   Data : aliased Data_Type;
+   Buffer : Wayland.Protocols.Client.Buffer;
 
-   function Min (L, R : Unsigned_32) return Unsigned_32 renames
-     Unsigned_32'Min;
-
-   Exists_Mouse    : Boolean := False;
-   Exists_Keyboard : Boolean := False;
-
-   procedure Seat_Capabilities
-     (Data         : not null Data_Ptr;
-      Seat         : Wayland_Client.Seat;
-      Capabilities : Unsigned_32) is
+   procedure Buffer_Release (Buffer : in out Wayland.Protocols.Client.Buffer'Class) is
    begin
-      if (Capabilities and Wayland_Client.Seat_Capability_Pointer) > 0 then
-         Put_Line ("Display has a pointer");
-         Exists_Mouse := True;
-      end if;
+      Buffer.Destroy;
+      Put_Line ("Destroyed buffer");
+   end Buffer_Release;
 
-      if (Capabilities and Wayland_Client.Seat_Capability_Keyboard) > 0 then
-         Put_Line ("Display has a keyboard");
-         Exists_Keyboard := True;
-      end if;
+   package Buffer_Events is new Wayland.Protocols.Client.Buffer_Events
+     (Release => Buffer_Release);
 
-      if (Capabilities and Wayland_Client.Seat_Capability_Touch) > 0 then
-         Put_Line ("Display has a touch screen");
-      end if;
-   end Seat_Capabilities;
-
-   procedure Seat_Name
-     (Data : not null Data_Ptr;
-      Seat : Wayland_Client.Seat;
-      Name : String) is
-   begin
-      null;
-   end Seat_Name;
-
-   package Seat_Events is new Wayland_Client.Seat_Events
-     (Data_Type         => Data_Type,
-      Data_Ptr          => Data_Ptr,
-      Seat_Capabilities => Seat_Capabilities,
-      Seat_Name         => Seat_Name);
-
-   procedure Global_Registry_Handler (Data     : not null Data_Ptr;
-                                      Registry : Wayland_Client.Registry;
-                                      Id       : Unsigned_32;
-                                      Name     : String;
-                                      Version  : Unsigned_32)
-   is
-      Call_Result : Wayland_Client.Call_Result_Code;
-   begin
-      if Name = Wayland_Client.Compositor_Interface.Name then
-         Data.Compositor.Get_Proxy (Registry,
-                               Id,
-                               Min (Version, 4));
-         Put_Line ("Got compositor proxy");
-      elsif Name = Wayland_Client.Shm_Interface.Name then
-         Data.Shm.Get_Proxy (Registry,
-                        Id,
-                        Min (Version, 1));
-         Put_Line ("Got shm proxy");
-      elsif Name = Wayland_Client.Shell_Interface.Name then
-         Data.Shell.Get_Proxy (Registry,
-                          Id,
-                          Min (Version, 1));
-         Put_Line ("Got shell proxy");
-      elsif Name = Wayland_Client.Seat_Interface.Name then
-         Data.Seat.Get_Proxy (Registry,
-                         Id,
-                         Min (Version, 2));
-
-         Call_Result := Seat_Events.Subscribe (Data.Seat, Data);
-
-         case Call_Result is
-            when Success => Put_Line ("Successfully subscribed to seat events");
-            when Error   => Put_Line ("Failed to subscribe to seat events");
-         end case;
-      end if;
-   end Global_Registry_Handler;
-
-   procedure Global_Registry_Remover (Data     : not null Data_Ptr;
-                                      Registry : Wayland_Client.Registry;
-                                      Id       : Unsigned_32) is
-   begin
-      Put_Line ("Got a registry losing event for" & Id'Image);
-   end Global_Registry_Remover;
-
-   package Registry_Events is new Wayland_Client.Registry_Events
-     (Data_Type             => Data_Type,
-      Data_Ptr              => Data_Ptr,
-      Global_Object_Added   => Global_Registry_Handler,
-      Global_Object_Removed => Global_Registry_Remover);
-
-   procedure Shell_Surface_Ping
-     (Data    : not null Data_Ptr;
-      Surface : Wayland_Client.Shell_Surface;
-      Serial  : Unsigned_32) is
-   begin
-      Surface.Pong (Serial);
-   end Shell_Surface_Ping;
-
-   procedure Shell_Surface_Configure
-     (Data    : not null Data_Ptr;
-      Surface : Wayland_Client.Shell_Surface;
-      Edges   : Unsigned_32;
-      Width   : Integer;
-      Height  : Integer) is
-   begin
-      null;
-   end Shell_Surface_Configure;
-
-   procedure Shell_Surface_Popup_Done
-     (Data    : not null Data_Ptr;
-      Surface : Wayland_Client.Shell_Surface) is
-   begin
-      null;
-   end Shell_Surface_Popup_Done;
-
-   package Shell_Surface_Events is new Wayland_Client.Shell_Surface_Events
-     (Data_Type                => Data_Type,
-      Data_Ptr                 => Data_Ptr,
-      Shell_Surface_Ping       => Shell_Surface_Ping,
-      Shell_Surface_Configure  => Shell_Surface_Configure,
-      Shell_Surface_Popup_Done => Shell_Surface_Popup_Done);
-
-   procedure Mouse_Enter
-     (Data      : not null Data_Ptr;
-      Pointer   : Wayland_Client.Pointer;
-      Serial    : Unsigned_32;
-      Surface   : Wayland_Client.Surface;
-      Surface_X : Fixed;
-      Surface_Y : Fixed) is
-   begin
-      Put_Line ("Pointer enter");
-   end Mouse_Enter;
-
-   procedure Pointer_Leave
-     (Data    : not null Data_Ptr;
-      Pointer : Wayland_Client.Pointer;
-      Serial  : Unsigned_32;
-      Surface : Wayland_Client.Surface) is
-   begin
-      Put_Line ("Pointer leave");
-   end Pointer_Leave;
-
-   procedure Pointer_Motion
-     (Data      : not null Data_Ptr;
-      Pointer   : Wayland_Client.Pointer;
-      Time      : Unsigned_32;
-      Surface_X : Fixed;
-      Surface_Y : Fixed) is
-   begin
-      Put_Line ("Pointer motion");
-   end Pointer_Motion;
-
-   procedure Pointer_Button
-     (Data    : not null Data_Ptr;
-      Pointer : Wayland_Client.Pointer;
-      Serial  : Unsigned_32;
-      Time    : Unsigned_32;
-      Button  : Unsigned_32;
-      State   : Unsigned_32) is
-   begin
-      Put_Line ("Pointer button");
-      Done := True;
-   end Pointer_Button;
-
-   procedure Pointer_Axis
-     (Data    : not null Data_Ptr;
-      Pointer : Wayland_Client.Pointer;
-      Time    : Unsigned_32;
-      Axis    : Unsigned_32;
-      Value   : Fixed) is
-   begin
-      Put_Line ("Pointer axis");
-   end Pointer_Axis;
-
-   procedure Pointer_Frame (Data    : not null Data_Ptr;
-                            Pointer : Wayland_Client.Pointer) is
-   begin
-      Put_Line ("Pointer frame");
-   end Pointer_Frame;
-
-   procedure Pointer_Axis_Source
-     (Data        : not null Data_Ptr;
-      Pointer     : Wayland_Client.Pointer;
-      Axis_Source : Unsigned_32) is
-   begin
-      Put_Line ("Pointer axis source");
-   end Pointer_Axis_Source;
-
-   procedure Pointer_Axis_Stop
-     (Data    : not null Data_Ptr;
-      Pointer : Wayland_Client.Pointer;
-      Time    : Unsigned_32;
-      Axis    : Unsigned_32) is
-   begin
-      Put_Line ("Pointer axis stop");
-   end Pointer_Axis_Stop;
-
-   procedure Pointer_Axis_Discrete
-     (Data     : not null Data_Ptr;
-      Pointer  : Wayland_Client.Pointer;
-      Axis     : Unsigned_32;
-      Discrete : Integer) is
-   begin
-      Put_Line ("Pointer axis discrete");
-   end Pointer_Axis_Discrete;
-
-   package Mouse_Events is new Wayland_Client.Pointer_Events
-     (Data_Type             => Data_Type,
-      Data_Ptr              => Data_Ptr,
-      Pointer_Enter         => Mouse_Enter,
-      Pointer_Leave         => Pointer_Leave,
-      Pointer_Motion        => Pointer_Motion,
-      Pointer_Button        => Pointer_Button,
-      Pointer_Axis          => Pointer_Axis,
-      Pointer_Frame         => Pointer_Frame,
-      Pointer_Axis_Source   => Pointer_Axis_Source,
-      Pointer_Axis_Stop     => Pointer_Axis_Stop,
-      Pointer_Axis_Discrete => Pointer_Axis_Discrete);
-
-   Display    : Wayland_Client.Display;
-   Registry   : Wayland_Client.Registry;
-
-   WIDTH : constant := 320;
-   HEIGHT : constant := 200;
+   Width  : constant := 320;
+   Height : constant := 200;
    --     CURSOR_WIDTH : constant := 100;
    --     CURSOR_HEIGHT : constant := 59;
    --     CURSOR_HOT_SPOT_X : constant := 10;
    --     CURSOR_HOT_SPOT_Y : constant := 35;
 
-   Buffer        : Wayland_Client.Buffer;
-   Pool          : Wayland_Client.Shm_Pool;
-   Surface       : Wayland_Client.Surface;
-   Shell_Surface : Wayland_Client.Shell_Surface;
-   Image         : Linux.Files.File;
-   File_Status   : Linux.File_Status.Status;
+   File_Name : constant String := "./examples/hdante_hello_world/hello_world_image.bin";
 
-   File_Name : String := "hello_world_image.bin";
+   procedure Draw_Frame is
+      Pool   : Wayland.Protocols.Client.Shm_Pool;
 
-   Memory_Map : Linux.Memory_Maps.Memory_Map;
-
-   Events_Status : Wayland_Client.Check_For_Events_Status;
-
-   Status_Code : Integer;
-
-   Timestamp : Ada.Real_Time.Time := Clock;
-
-   Call_Result : Wayland_Client.Call_Result_Code;
-
-   procedure Run is
+      Image       : Linux.Files.File;
+      File_Status : Linux.File_Status.Status;
+      Memory_Map  : Linux.Memory_Maps.Memory_Map;
    begin
-      Display.Connect;
-      if not Display.Is_Connected then
-         Put_Line ("Can't connect to display");
-         return;
-      end if;
-      Put_Line ("Connected to display");
-
-      Display.Get_Registry (Registry);
-      if not Registry.Has_Proxy then
-         Put_Line ("Can't get global registry object");
-         return;
-      end if;
-
-      Call_Result := Registry_Events.Subscribe (Registry, Data'Access);
-      case Call_Result is
-         when Success => null;
-         when Error   =>
-            Put_Line ("Failed to subscribe to registry events");
-            Display.Disconnect;
-            return;
-      end case;
-
-      Display.Dispatch;
-      Display.Roundtrip;
-      Registry.Destroy;
-
-      if not Data.Compositor.Has_Proxy then
-         Put_Line ("Error: no compositor");
-         Display.Disconnect;
-         return;
-      end if;
-
-      if not Data.Shm.Has_Proxy then
-         Put_Line ("Error: no shm");
-         Display.Disconnect;
-         return;
-      end if;
-
-      if not Data.Shell.Has_Proxy then
-         Put_Line ("Error: no shell");
-         Display.Disconnect;
-         return;
-      end if;
-
-      if Exists_Mouse then
-         Put_Line ("Start mouse subscription");
-         Data.Seat.Get_Pointer (Data.Pointer);
-         Call_Result := Mouse_Events.Subscribe (Data.Pointer, Data'Access);
-
-         case Call_Result is
-            when Success =>
-               Put_Line ("Successfully subscribed to mouse events");
-            when Error   =>
-               Put_Line ("Failed to subscribe to mouse events");
-               Display.Disconnect;
-               return;
-         end case;
-      end if;
-
       Linux.Files.Open
         (Image,
          File_Name,
          Mode        => Read_Write,
-         Permissions => (
-                         Owner_Read  => True,
-                         Group_Read  => True,
-                         Others_Read => True,
-                         others      => False
-                        ));
+         Permissions =>
+           (Owner_Read  => True,
+            Group_Read  => True,
+            Others_Read => True,
+            others      => False));
 
       if Linux.Files.Is_Closed (Image) then
-         Put_Line ("Error opening surface image");
-         Display.Disconnect;
-         return;
+         raise Wayland_Error with "Failed to open surface image";
       end if;
 
       Get_File_Status (Image, File_Status);
 
       if not Is_Valid (File_Status) then
-         Put_Line ("File does not exist?");
-         Display.Disconnect;
-         return;
+         raise Wayland_Error with "File does not exist";
       end if;
 
       Get_Map_Memory
@@ -416,84 +129,449 @@ package body Hdante_Hello_World is
          Page_Can_Be_Read,
          Linux.Memory_Maps.MAP_SHARED, 0, Memory_Map);
 
-      if Memory_Map.Has_Mapping then
-         Data.Shm.Create_Pool (Image,
-                          Integer (Size (File_Status)),
-                          Pool);
-      else
-         Put_Line ("Failed to map file");
-         Display.Disconnect;
-         return;
+      if not Memory_Map.Has_Mapping then
+         declare
+            Close_Result : constant Linux.Success_Flag := Linux.Files.Close (Image);
+         begin
+            null;
+         end;
+         raise Wayland_Error with "Failed to memory map image";
       end if;
+
+      Data.Shm.Create_Pool (Image, Integer (Size (File_Status)), Pool);
 
       if not Pool.Has_Proxy then
-         Put_Line ("Failed to create pool");
-         Display.Disconnect;
-         return;
+         raise Wayland_Error with "No shm pool";
       end if;
 
-      Data.Compositor.Get_Surface_Proxy (Surface);
+      Pool.Create_Buffer
+        (0,
+         Width,
+         Height,
+         Width * 4,
+         Wayland.Enums.Client.Xrgb_8888,
+         Buffer);
 
-      if not Surface.Has_Proxy then
-         Put_Line ("Failed to create surface");
-         Display.Disconnect;
-         return;
-      end if;
-
-      Wayland_Client.Get_Shell_Surface (Data.Shell, Surface, Shell_Surface);
-
-      if not Shell_Surface.Has_Proxy then
-         Surface.Destroy;
-         Put_Line ("Failed to create shell surface");
-         return;
-      end if;
-
-      Call_Result := Shell_Surface_Events.Subscribe (Shell_Surface,
-                                                     Data'Access);
-
-      case Call_Result is
-         when Success =>
-            Put_Line ("Successfully subscribed to shell surface events");
-         when Error   =>
-            Put_Line ("Failed to subscribe to shell surface events");
-            Display.Disconnect;
-            return;
-      end case;
-
-      Shell_Surface.Set_Toplevel;
-
-      Pool.Create_Buffer (0,
-                          Integer (Width),
-                          Integer (Height),
-                          Integer (Width)*4,
-                          Wayland_Client.Shm_Format_Argb_8888,
-                          Buffer);
+      declare
+         Dont_Care : constant Integer := Linux.Memory_Maps.Unmap_Memory (Memory_Map);
+      begin
+         null;
+      end;
+      Pool.Destroy;
 
       if not Buffer.Has_Proxy then
-         Put_Line ("Failed to create buffer");
-         Display.Disconnect;
-         return;
+         raise Wayland_Error with "No buffer";
       end if;
 
-      Surface.Attach (Buffer, 0, 0);
-      Surface.Commit;
+      if Buffer_Events.Subscribe (Buffer) = Error then
+         raise Wayland_Error with "Failed to subscribe to buffer events";
+      end if;
+   end Draw_Frame;
+
+   procedure Seat_Capabilities
+     (Seat         : in out Wayland.Protocols.Client.Seat'Class;
+      Capabilities : Wayland.Enums.Client.Seat_Capability) is
+   begin
+      Data.Capabilities := Capabilities;
+
+      Put_Line ("Seat capabilities:");
+      if Capabilities.Pointer then
+         Put_Line (" pointer");
+      end if;
+
+      if Capabilities.Keyboard then
+         Put_Line (" keyboard");
+      end if;
+
+      if Capabilities.Touch then
+         Put_Line (" touch");
+      end if;
+   end Seat_Capabilities;
+
+   procedure Seat_Name
+     (Seat : in out Wayland.Protocols.Client.Seat'Class;
+      Name : String) is
+   begin
+      Put_Line ("Seat name: " & Name);
+   end Seat_Name;
+
+   package Seat_Events is new Wayland.Protocols.Client.Seat_Events
+     (Seat_Capabilities => Seat_Capabilities,
+      Seat_Name         => Seat_Name);
+
+   procedure Base_Ping
+     (Xdg_Wm_Base : in out Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base'Class;
+      Serial      : Unsigned_32) is
+   begin
+      Put_Line ("xdg_wm_base ping");
+      Xdg_Wm_Base.Pong (Serial);
+   end Base_Ping;
+
+   package Base_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base_Events
+     (Ping => Base_Ping);
+
+   procedure Global_Registry_Handler
+     (Registry : in out Wayland.Protocols.Client.Registry'Class;
+      Id       : Unsigned_32;
+      Name     : String;
+      Version  : Unsigned_32) is
+   begin
+      if Name = Wayland.Protocols.Client.Compositor_Interface.Name then
+         Data.Compositor.Bind (Registry, Id, Unsigned_32'Min (Version, 4));
+
+         if not Data.Compositor.Has_Proxy then
+            raise Wayland_Error with "No compositor";
+         end if;
+         Put_Line ("Got compositor proxy");
+      elsif Name = Wayland.Protocols.Client.Shm_Interface.Name then
+         Data.Shm.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.Shm.Has_Proxy then
+            raise Wayland_Error with "No shm";
+         end if;
+         Put_Line ("Got shm proxy");
+      elsif Name = Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base_Interface.Name then
+         Data.XDG_Shell.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.XDG_Shell.Has_Proxy then
+            raise Wayland_Error with "No xdg_wm_base";
+         end if;
+         Put_Line ("Got xdg_wm_base proxy");
+
+         if Base_Events.Subscribe (Data.XDG_Shell) = Error then
+            raise Wayland_Error with "Failed to subscribe to xdg_wm_base events";
+         end if;
+      elsif Name = Wayland.Protocols.Client.Seat_Interface.Name then
+         Data.Seat.Bind (Registry, Id, Unsigned_32'Min (Version, 6));
+
+         if not Data.Seat.Has_Proxy then
+            raise Wayland_Error with "No seat";
+         end if;
+         Put_Line ("Got seat proxy");
+
+         if Seat_Events.Subscribe (Data.Seat) = Error then
+            raise Wayland_Error with "Failed to subscribe to seat events";
+         end if;
+      end if;
+   end Global_Registry_Handler;
+
+   procedure Global_Registry_Remover
+     (Registry : in out Wayland.Protocols.Client.Registry'Class;
+      Id       : Unsigned_32) is
+   begin
+      Put_Line ("Got a registry losing event for" & Id'Image);
+   end Global_Registry_Remover;
+
+   package Registry_Events is new Wayland.Protocols.Client.Registry_Events
+     (Global_Object_Added   => Global_Registry_Handler,
+      Global_Object_Removed => Global_Registry_Remover);
+
+   procedure XDG_Surface_Configure
+     (Xdg_Surface : in out Wayland.Protocols.Xdg_Shell.Xdg_Surface'Class;
+      Serial      : Unsigned_32) is
+   begin
+      Put_Line ("Configure xdg_surface");
+      Xdg_Surface.Ack_Configure (Serial);
+
+      Draw_Frame;
+      Data.Surface.Attach (Buffer, 0, 0);  --  FIXME if Done then should use null to detach
+      Data.Surface.Commit;
+   end XDG_Surface_Configure;
+
+   procedure XDG_Toplevel_Configure
+     (Xdg_Toplevel : in out Wayland.Protocols.Xdg_Shell.Xdg_Toplevel'Class;
+      Width        : Natural;
+      Height       : Natural;
+      States       : Wayland.Unsigned_32_Array) is
+   begin
+      Put_Line ("Configure xdg_toplevel" & Width'Image & Height'Image);
+
+      if States'Length > 0 then
+         Put_Line ("Has" & Integer'Image (States'Length) & " states:");
+         for S of States loop
+            Put_Line (S'Image);
+         end loop;
+      end if;
+   end XDG_Toplevel_Configure;
+
+   procedure XDG_Toplevel_Close
+     (Xdg_Toplevel : in out Wayland.Protocols.Xdg_Shell.Xdg_Toplevel'Class) is
+   begin
+      Put_Line ("Close xdg_toplevel");
+      Done := True;
+   end XDG_Toplevel_Close;
+
+   package XDG_Surface_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Surface_Events
+     (Configure => XDG_Surface_Configure);
+
+   package XDG_Toplevel_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Toplevel_Events
+     (Configure => XDG_Toplevel_Configure,
+      Close     => XDG_Toplevel_Close);
+
+   procedure Pointer_Enter
+     (Pointer   : in out Wayland.Protocols.Client.Pointer'Class;
+      Serial    : Unsigned_32;
+      Surface   : Wayland.Protocols.Client.Surface;
+      Surface_X : Fixed;
+      Surface_Y : Fixed) is
+   begin
+      Put_Line ("Pointer enter: " & Surface_X'Image & Surface_Y'Image);
+   end Pointer_Enter;
+
+   procedure Pointer_Leave
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class;
+      Serial  : Unsigned_32;
+      Surface : Wayland.Protocols.Client.Surface) is
+   begin
+      Put_Line ("Pointer leave");
+   end Pointer_Leave;
+
+   procedure Pointer_Motion
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class;
+      Time      : Unsigned_32;
+      Surface_X : Fixed;
+      Surface_Y : Fixed) is
+   begin
+      Put_Line ("Pointer motion:" & Time'Image & Surface_X'Image & Surface_Y'Image);
+   end Pointer_Motion;
+
+   procedure Pointer_Button
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class;
+      Serial  : Unsigned_32;
+      Time    : Unsigned_32;
+      Button  : Unsigned_32;
+      State   : Wayland.Enums.Client.Pointer_Button_State) is
+   begin
+      Put_Line ("Pointer button: " & Time'Image & " " & Button'Image & " " & State'Image);
+   end Pointer_Button;
+
+   procedure Pointer_Axis
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class;
+      Time    : Unsigned_32;
+      Axis    : Wayland.Enums.Client.Pointer_Axis;
+      Value   : Fixed) is
+   begin
+      Put_Line ("Pointer axis: " & Time'Image & Axis'Image & Value'Image);
+   end Pointer_Axis;
+
+   procedure Pointer_Frame
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class) is
+   begin
+      Put_Line ("Pointer frame");
+   end Pointer_Frame;
+
+   procedure Pointer_Axis_Source
+     (Pointer     : in out Wayland.Protocols.Client.Pointer'Class;
+      Axis_Source : Wayland.Enums.Client.Pointer_Axis_Source) is
+   begin
+      Put_Line ("Pointer axis source:" & Axis_Source'Image);
+   end Pointer_Axis_Source;
+
+   procedure Pointer_Axis_Stop
+     (Pointer : in out Wayland.Protocols.Client.Pointer'Class;
+      Time    : Unsigned_32;
+      Axis    : Wayland.Enums.Client.Pointer_Axis) is
+   begin
+      Put_Line ("Pointer axis stop:" & Time'Image & Axis'Image);
+   end Pointer_Axis_Stop;
+
+   procedure Pointer_Axis_Discrete
+     (Pointer  : in out Wayland.Protocols.Client.Pointer'Class;
+      Axis     : Wayland.Enums.Client.Pointer_Axis;
+      Discrete : Integer) is
+   begin
+      Put_Line ("Pointer axis discrete:" & Axis'Image & Discrete'Image);
+   end Pointer_Axis_Discrete;
+
+   package Pointer_Events is new Wayland.Protocols.Client.Pointer_Events
+     (Pointer_Enter           => Pointer_Enter,
+      Pointer_Leave           => Pointer_Leave,
+      Pointer_Motion          => Pointer_Motion,
+      Pointer_Button          => Pointer_Button,
+      Pointer_Scroll          => Pointer_Axis,
+      Pointer_Frame           => Pointer_Frame,
+      Pointer_Scroll_Source   => Pointer_Axis_Source,
+      Pointer_Scroll_Stop     => Pointer_Axis_Stop,
+      Pointer_Scroll_Discrete => Pointer_Axis_Discrete);
+
+   procedure Keyboard_Keymap
+     (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
+      Format   : Wayland.Enums.Client.Keyboard_Keymap_Format;
+      Fd       : Integer;
+      Size     : Unsigned_32) is
+   begin
+      Put_Line ("Keyboard keymap: " & Format'Image & Size'Image);
+   end Keyboard_Keymap;
+
+   procedure Keyboard_Enter
+     (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
+      Serial   : Unsigned_32;
+      Surface  : Wayland.Protocols.Client.Surface;
+      Keys     : Wayland.Unsigned_32_Array) is
+   begin
+      Put_Line ("Keyboard focus gained");
+
+      if Keys'Length > 0 then
+         Put_Line ("Pressed" & Integer'Image (Keys'Length) & " keys:");
+         for K of Keys loop
+            Put_Line (K'Image);
+         end loop;
+      end if;
+   end Keyboard_Enter;
+
+   procedure Keyboard_Leave
+     (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
+      Serial   : Unsigned_32;
+      Surface  : Wayland.Protocols.Client.Surface) is
+   begin
+      Put_Line ("Keyboard focus lost");
+   end Keyboard_Leave;
+
+   procedure Keyboard_Key
+     (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
+      Serial   : Unsigned_32;
+      Time     : Unsigned_32;
+      Key      : Unsigned_32;
+      State    : Wayland.Enums.Client.Keyboard_Key_State) is
+   begin
+      Put_Line ("Keyboard key" & Key'Image & " " & State'Image & " at" & Time'Image);
+   end Keyboard_Key;
+
+   procedure Keyboard_Modifiers
+     (Keyboard       : in out Wayland.Protocols.Client.Keyboard'Class;
+      Serial         : Unsigned_32;
+      Mods_Depressed : Unsigned_32;
+      Mods_Latched   : Unsigned_32;
+      Mods_Locked    : Unsigned_32;
+      Group          : Unsigned_32) is
+   begin
+      Put_Line ("Keyboard mods:" & Mods_Depressed'Image & " " & Mods_Latched'Image & " " & Mods_Locked'Image & " " & Group'Image);
+   end Keyboard_Modifiers;
+
+   package Keyboard_Events is new Wayland.Protocols.Client.Keyboard_Events
+     (Keymap      => Keyboard_Keymap,
+      Enter       => Keyboard_Enter,
+      Leave       => Keyboard_Leave,
+      Key         => Keyboard_Key,
+      Modifiers   => Keyboard_Modifiers);
+
+   --  TODO Add Surface_Events and Output_Events
+
+   Display  : Wayland.Protocols.Client.Display;
+   Registry : Wayland.Protocols.Client.Registry;
+
+   procedure Run is
+      use all type Wayland.Protocols.Client.Check_For_Events_Status;
+
+      use all type Ada.Real_Time.Time;
+      use all type Ada.Real_Time.Time_Span;
+
+      Events_Status : Wayland.Protocols.Client.Check_For_Events_Status;
+      Timestamp     : Ada.Real_Time.Time := Clock;
+   begin
+      Display.Connect;
+      if not Display.Is_Connected then
+         raise Wayland_Error with "No connection to Wayland compositor";
+      end if;
+      Put_Line ("Connected to Wayland compositor");
+
+      Display.Get_Registry (Registry);
+
+      if not Registry.Has_Proxy then
+         raise Wayland_Error with "No registry";
+      end if;
+
+      if Registry_Events.Subscribe (Registry) = Error then
+         raise Wayland_Error with "Failed to subscribe to registry events";
+      end if;
 
       Display.Dispatch;
+      Display.Roundtrip;
 
+      if Data.Capabilities.Pointer then
+         Data.Seat.Get_Pointer (Data.Pointer);
+
+         if not Data.Pointer.Has_Proxy then
+            raise Wayland_Error with "No pointer";
+         end if;
+
+         if Pointer_Events.Subscribe (Data.Pointer) = Error then
+            raise Wayland_Error with "Failed to subscribe to pointer events";
+         end if;
+      end if;
+
+      if Data.Capabilities.Keyboard then
+         Data.Seat.Get_Keyboard (Data.Keyboard);
+
+         if not Data.Keyboard.Has_Proxy then
+            raise Wayland_Error with "No keyboard";
+         end if;
+
+         if Keyboard_Events.Subscribe (Data.Keyboard) = Error then
+            raise Wayland_Error with "Failed to subscribe to keyboard events";
+         end if;
+      end if;
+
+      Data.Compositor.Create_Surface (Data.Surface);
+
+      if not Data.Surface.Has_Proxy then
+         raise Wayland_Error with "Failed to create wl_surface";
+      end if;
+      Put_Line ("Created wl_surface");
+
+      Put_Line ("Getting xdg_surface via xdg_wm_base + wl_surface...");
+      Data.XDG_Shell.Get_Surface (Data.Surface, Data.XDG_Surface);
+
+      if not Data.XDG_Surface.Has_Proxy then
+         raise Wayland_Error with "Failed to create xdg_surface";
+      end if;
+      Put_Line ("Got xdg_surface");
+
+      if XDG_Surface_Events.Subscribe (Data.XDG_Surface) = Error then
+         raise Wayland_Error with "Failed to subscribe to xdg_surface events";
+      end if;
+      Put_Line ("Successfully subscribed to xdg_surface events");
+
+      Data.XDG_Surface.Get_Toplevel (Data.XDG_Toplevel);
+
+      if not Data.XDG_Toplevel.Has_Proxy then
+         raise Wayland_Error with "Failed to create xdg_toplevel";
+      end if;
+      Put_Line ("Got xdg_toplevel");
+
+      if XDG_Toplevel_Events.Subscribe (Data.XDG_Toplevel) = Error then
+         raise Wayland_Error with "Failed to subscribe to xdg_toplevel events";
+      end if;
+      Put_Line ("Successfully subscribed to xdg_toplevel events");
+
+      Data.XDG_Toplevel.Set_Title ("Wayland with Ada");
+      Data.XDG_Toplevel.Set_App_Id ("wayland.ada");
+
+      Data.Surface.Commit;
+
+      Put_Line ("Error: " & Integer'Image (Display.Error));
+
+      --  Event dispatching method 1
+      if True then
+         while not Done and then Display.Dispatch /= -1 loop
+            null;
+         end loop;
+      end if;
+
+      --  Event dispatching method 2
       while not Done loop
          while Display.Prepare_Read /= 0 loop
-            Status_Code := Display.Dispatch_Pending;
-            if Status_Code = -1 then
-               Put_Line ("Failed dispatch pending");
+            if Display.Dispatch_Pending = -1 then
+               raise Wayland_Error with "failed dispatching pending events";
             end if;
          end loop;
+         Display.Flush;
 
          declare
-            Interval : Ada.Real_Time.Time_Span
-              := Ada.Real_Time.To_Time_Span (1.0);
+            Events_Interval : constant Ada.Real_Time.Time_Span := Seconds (1);
 
             Timeout : constant Integer
-              := Integer (To_Duration ((Timestamp + Interval) - Clock) * 1_000);
+              := Integer (To_Duration ((Timestamp + Events_Interval) - Clock) * 1_000);
             --  The timeout to check for events in millisends
          begin
             Events_Status := Display.Check_For_Events (if Timeout > 0 then Timeout else 0);
@@ -501,26 +579,30 @@ package body Hdante_Hello_World is
 
          case Events_Status is
             when Events_Need_Processing =>
-               Call_Result := Display.Read_Events;
-               if Call_Result = Error then
-                  Put_Line ("Failed read events");
+               if Display.Read_Events = Error then
+                  raise Wayland_Error with "failed reading events";
                end if;
 
-               Status_Code := Display.Dispatch_Pending;
-               if Status_Code = -1 then
-                  Put_Line ("Failed dispatch pending 2");
+               if Display.Dispatch_Pending = -1 then
+                  raise Wayland_Error with "failed dispatching pending events";
                end if;
-
             when No_Events =>
                Put_Line ("loop");
                Display.Cancel_Read;
                Timestamp := Clock;
             when Error =>
-               Put_Line ("Error checking for events");
-               Done := True;
                Display.Cancel_Read;
+               raise Wayland_Error with "failed checking for events";
          end case;
       end loop;
+
+      Display.Disconnect;
+   exception
+      when E : others =>
+         Put_Line ("Error: " & Ada.Exceptions.Exception_Message (E));
+         if Display.Is_Connected then
+            Display.Disconnect;
+         end if;
    end Run;
 
 end Hdante_Hello_World;
