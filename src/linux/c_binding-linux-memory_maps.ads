@@ -17,6 +17,9 @@
 with C_Binding.Linux.Files;
 
 package C_Binding.Linux.Memory_Maps is
+   pragma Preelaborate;
+
+   use type Ada.Streams.Stream_Element_Offset;
 
    type Memory_Map is tagged limited private;
 
@@ -25,7 +28,7 @@ package C_Binding.Linux.Memory_Maps is
 
    function Mapping (This : Memory_Map) return Void_Ptr
      with Global => null,
-          Pre    => Has_Mapping (This);
+          Pre    => This.Has_Mapping;
 
    type Error_Code is new Integer;
 
@@ -42,9 +45,8 @@ package C_Binding.Linux.Memory_Maps is
    function Memory_Unmap
      (Address : Void_Ptr;
       Length  : Ada.Streams.Stream_Element_Count) return Error_Code
-   with Global => null;
-
-   MAP_FAILED : constant Void_Ptr;
+   with Global => null,
+        Pre    => Length > 0;
 
    MAP_SHARED : constant := 16#01#;
 
@@ -61,7 +63,7 @@ package C_Binding.Linux.Memory_Maps is
       Offset     : Ada.Streams.Stream_Element_Count;
       This       : in out Memory_Map)
    with Global => null,
-        Pre    => not Has_Mapping (This);
+        Pre    => not This.Has_Mapping and Length > 0;
 
 private
 
@@ -85,22 +87,18 @@ private
      := (Page_Can_Be_Read             => PROT_READ,
          Page_Can_Be_Read_And_Written => PROT_READ and PROT_WRITE);
 
-   function Conv is new Ada.Unchecked_Conversion
-     (Source => long, Target => Void_Ptr);
-
-   MAP_FAILED_VALUE : constant long     := -1;
-   MAP_FAILED       : constant Void_Ptr := Conv (MAP_FAILED_VALUE);
+   MAP_FAILED_VALUE : constant long := -1;
 
    type Memory_Map is tagged limited record
-      My_Mapping : Void_Ptr := MAP_FAILED;
-      My_Length  : Size_Type;
+      Mapping : Void_Ptr  := System.Null_Address;
+      Length  : Size_Type := 0;
    end record;
 
    function Has_Mapping (This : Memory_Map) return Boolean is
-     (This.My_Mapping /= MAP_FAILED);
+     (This.Mapping /= System.Null_Address);
 
    function Mapping (This : Memory_Map) return Void_Ptr is
-     (This.My_Mapping);
+     (This.Mapping);
 
    function C_Mmap
      (Addr   : Void_Ptr;

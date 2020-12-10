@@ -23,24 +23,39 @@ package body C_Binding.Linux.Memory_Maps is
       Protection : Memory_Protection;
       Flags      : Integer;
       Offset     : Ada.Streams.Stream_Element_Count;
-      This       : in out Memory_Map) is
+      This       : in out Memory_Map)
+   is
+      Result : Void_Ptr;
+
+      function Convert is new Ada.Unchecked_Conversion
+        (Source => long, Target => Void_Ptr);
+
+      MAP_FAILED : Void_Ptr := Convert (MAP_FAILED_VALUE);
    begin
-      This.My_Mapping
+      Result
         := C_Mmap (Address,
                    Size_Type (Length),
                    Memory_Protection_To_Prot_Flag (Protection),
                    Interfaces.C.int (Flags),
                    File.My_File_Descriptor,
                    Interfaces.C.long (Offset));
-      This.My_Length := Size_Type (Length);
+      if Result /= MAP_FAILED then
+         pragma Assert (Result /= System.Null_Address);
+         This.Mapping := Result;
+         This.Length  := Size_Type (Length);
+      else
+         This.Mapping := System.Null_Address;
+         This.Length  := 0;
+      end if;
    end Get_Map_Memory;
 
    function Unmap_Memory (This : in out Memory_Map) return Error_Code is
       Result : Interfaces.C.int;
    begin
-      Result := C_Munmap (This.My_Mapping, This.My_Length);
+      Result := C_Munmap (This.Mapping, This.Length);
       if Result = 0 then
-         This.My_Mapping := MAP_FAILED;
+         This.Mapping := System.Null_Address;
+         This.Length  := 0;
       end if;
       return Error_Code (Result);
    end Unmap_Memory;
