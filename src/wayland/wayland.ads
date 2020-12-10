@@ -23,9 +23,7 @@ package Wayland is
 
    pragma Linker_Options ("-lwayland-client");
    --  Added this linker option here to avoid adding it
-   --  to each gpr file that with's this Wayland Ada binding.
-
-   Nul : constant Character := Character'Val (0);
+   --  to each gpr file that with's this Wayland Ada binding
 
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
@@ -36,6 +34,8 @@ package Wayland is
    type Fixed is delta 2.0 ** (-8) range -(2.0 ** 23) .. +(2.0 ** 23 - 1.0)
      with Small => 2.0 ** (-8),
           Size  => Integer'Size;
+
+   type Call_Result_Code is (Success, Error);
 
 private
 

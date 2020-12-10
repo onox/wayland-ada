@@ -14,8 +14,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-with System;
-
 with Interfaces.C.Strings;
 
 --  This package was generated with:
@@ -154,6 +152,15 @@ private package Wayland.API is
       Arg_1  : Void_Ptr;
       Arg_2  : Integer;
       Arg_3  : Integer)
+   with Import, Convention => C, External_Name => "wl_proxy_marshal";
+
+   procedure Proxy_Marshal
+     (Object : in out Proxy;
+      Opcode : Unsigned_32;
+      Arg_1  : Void_Ptr;
+      Arg_2  : Unsigned_32;
+      Arg_3  : Integer;
+      Arg_4  : Integer)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    procedure Proxy_Marshal
