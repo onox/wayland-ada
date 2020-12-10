@@ -19,22 +19,19 @@ with System;
 with Interfaces.C.Strings;
 private with Ada.Unchecked_Conversion;
 
-package C_Binding with Preelaborate is
+package C_Binding is
+   pragma Preelaborate;
 
    subtype Void_Ptr is System.Address;
 
-   type Success_Flag is
-     (
-      Success,
-      Failure
-     );
+   type Success_Flag is (Success, Failure);
 
    subtype Max_String_Length is Natural range 0 .. 10_000;
 
    type String_Result
      (Is_Success : Boolean := False;
-      Length     : Max_String_Length := 1)
-   is record
+      Length     : Max_String_Length := 1) is
+   record
       case Is_Success is
          when True  => Value : String (1 .. Length);
          when False => Error : String (1 .. Length);

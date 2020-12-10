@@ -79,15 +79,15 @@ package body C_Binding.Linux.Files is
 
    function Close (This : in out File) return Success_Flag is
       Result : Interfaces.C.int;
-      Flag : Success_Flag;
    begin
       Result := C_Close (Interfaces.C.int (This.My_File_Descriptor));
-      if Result = -1 then
-         Flag := Failure;
-      else
-         Flag := Success;
-      end if;
-      return Flag;
+      return (if Result /= -1 then Success else Failure);
+   end Close;
+
+   procedure Close (This : in out File) is
+      Result : constant Success_Flag := Close (This);
+   begin
+      pragma Assert (Result = Success);
    end Close;
 
    procedure Write

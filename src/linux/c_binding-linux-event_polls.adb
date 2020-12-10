@@ -79,6 +79,7 @@ package body C_Binding.Linux.Event_Polls is
    begin
       Event.Data.fd := File_Descriptor;
       Event.Events := EPOLLIN;
+
       Result
         := C_Epoll_Control
           (This.My_File_Descriptor,
@@ -86,12 +87,7 @@ package body C_Binding.Linux.Event_Polls is
            File_Descriptor,
            Event'Access);
 
-      if Result = -1 then
-         Flag := Failure;
-      else
-         Flag := Success;
-      end if;
-      return Flag;
+      return (if Result /= -1 then Success else Failure);
    end Add;
 
    function Add
@@ -142,11 +138,9 @@ package body C_Binding.Linux.Event_Polls is
    end Delete;
 
    function Delete
-     (
-      This   : in out Event_Poll_Watcher;
+     (This   : in out Event_Poll_Watcher;
       List   : Event_List;
-      Index  : Epoll_Event_Index
-     ) return Success_Flag is
+      Index  : Epoll_Event_Index) return Success_Flag is
    begin
       return Delete (This, List.My_Events (Index).Data.fd);
    end Delete;
@@ -213,11 +207,9 @@ package body C_Binding.Linux.Event_Polls is
    end Is_Event_Origin;
 
    function Read_Socket
-     (
-      This   : Event_List;
+     (This   : Event_List;
       Index  : Epoll_Event_Index;
-      Buffer : access Ada.Streams.Stream_Element_Array
-     ) return Read_Socket_Result
+      Buffer : access Ada.Streams.Stream_Element_Array) return Read_Socket_Result
    is
       Count : Ada.Streams.Stream_Element_Offset := 0;
       N : Interfaces.C.int;

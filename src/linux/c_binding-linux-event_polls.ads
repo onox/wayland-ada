@@ -17,17 +17,16 @@
 with C_Binding.Linux.Sockets.TCP_Server;
 
 package C_Binding.Linux.Event_Polls is
+   pragma Preelaborate;
 
    MAX_EPOLL_EVENTS : constant := 64;
 
    subtype Epoll_Event_Index is Positive range 1 .. MAX_EPOLL_EVENTS;
 
    type Check_For_Events_Result_Id is
-     (
-      Error_Occurred,
+     (Error_Occurred,
       Timed_Out,
-      Event_Registered
-     );
+      Event_Registered);
 
    type Check_For_Events_Result (Id : Check_For_Events_Result_Id) is record
       case Id is
@@ -63,13 +62,11 @@ package C_Binding.Linux.Event_Polls is
      (This  : Event_List;
       Index : Epoll_Event_Index;
       Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
-      return Boolean;
+    return Boolean;
 
    type Read_Socket_Result_Id is
-     (
-      Read_Failure,
-      Read_Success
-     );
+     (Read_Failure,
+      Read_Success);
 
    type Read_Socket_Result (Id : Read_Socket_Result_Id) is record
       case Id is
@@ -80,11 +77,10 @@ package C_Binding.Linux.Event_Polls is
    end record;
 
    function Read_Socket
-     (
-      This   : Event_List;
+     (This   : Event_List;
       Index  : Epoll_Event_Index;
-      Buffer : access Ada.Streams.Stream_Element_Array
-     ) return Read_Socket_Result;
+      Buffer : access Ada.Streams.Stream_Element_Array)
+   return Read_Socket_Result;
 
    type Event_Poll_Watcher is limited private;
 
@@ -93,35 +89,36 @@ package C_Binding.Linux.Event_Polls is
    function Add
      (This     : in out Event_Poll_Watcher;
       Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
-      return Success_Flag;
+    return Success_Flag;
 
    function Add
      (This   : in out Event_Poll_Watcher;
       Socket : C_Binding.Linux.Sockets.General_Socket)
-      return Success_Flag;
+    return Success_Flag;
 
    function Delete
      (This     : in out Event_Poll_Watcher;
       Listener : C_Binding.Linux.Sockets.TCP_Server.Listener)
-      return Success_Flag;
+    return Success_Flag;
 
    function Delete
-     (
-      This   : in out Event_Poll_Watcher;
+     (This   : in out Event_Poll_Watcher;
       List   : Event_List;
-      Index  : Epoll_Event_Index
-     ) return Success_Flag;
+      Index  : Epoll_Event_Index)
+   return Success_Flag;
 
    function Check_For_Events
      (This    : Event_Poll_Watcher;
       List    : in out Event_List;
-      Timeout : Integer) return Check_For_Events_Result;
+      Timeout : Integer)
+   return Check_For_Events_Result;
 
 private
 
    EPOLL_CTL_ADD : constant := 1;
    EPOLL_CTL_DEL : constant := 2;
    EPOLL_CTL_MOD : constant := 3;
+
    EPOLLIN        : constant := 1;
    EPOLLPRI       : constant Interfaces.C.unsigned := 2;
    EPOLLOUT       : constant Interfaces.C.unsigned := 4;
@@ -149,15 +146,14 @@ private
          when others =>
             u64 : aliased Interfaces.Unsigned_64;
       end case;
-   end record;
-   pragma Convention (C_Pass_By_Copy, Epoll_Data);
-   pragma Unchecked_Union (Epoll_Data);
+   end record
+     with Convention => C_Pass_By_Copy, Unchecked_Union;
 
    type Epoll_Event is record
       Events : aliased Interfaces.C.unsigned;
       Data   : aliased Epoll_Data;
-   end record;
-   pragma Convention (C_Pass_By_Copy, Epoll_Event);
+   end record
+     with Convention => C_Pass_By_Copy;
 
    type Epoll_Event_Array is array (Epoll_Event_Index) of aliased Epoll_Event;
 
@@ -170,28 +166,22 @@ private
    end record;
 
    function C_Epoll_Create1
-     (Flags : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_create1";
+     (Flags : Interfaces.C.int) return Interfaces.C.int
+   with Import, Convention => C, External_Name => "epoll_create1";
 
    function C_Epoll_Control
      (Epoll_Fd        : Interfaces.C.int;
       Operation       : Interfaces.C.int;
       File_Descriptor : Interfaces.C.int;
-      Event           : access Epoll_Event) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_ctl";
+      Event           : access Epoll_Event) return Interfaces.C.int
+   with Import, Convention => C, External_Name => "epoll_ctl";
 
    function C_Epoll_Wait
      (Epoll_Fd   : Interfaces.C. int;
       Events     : access Epoll_Event_Array;
       Max_Events : Interfaces.C.int;
-      Timeout    : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "epoll_wait";
+      Timeout    : Interfaces.C.int) return Interfaces.C.int
+   with Import, Convention => C, External_Name => "epoll_wait";
 
    function Is_Epoll_Error
      (Event_Flags : Interfaces.C.unsigned) return Boolean;

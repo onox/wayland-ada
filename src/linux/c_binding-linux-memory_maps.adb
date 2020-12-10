@@ -35,21 +35,27 @@ package body C_Binding.Linux.Memory_Maps is
       This.My_Length := Size_Type (Length);
    end Get_Map_Memory;
 
-   function Unmap_Memory (This : in out Memory_Map) return Integer is
-      R : Interfaces.C.int;
+   function Unmap_Memory (This : in out Memory_Map) return Error_Code is
+      Result : Interfaces.C.int;
    begin
-      R := C_Munmap (This.My_Mapping, This.My_Length);
-      if R = 0 then
+      Result := C_Munmap (This.My_Mapping, This.My_Length);
+      if Result = 0 then
          This.My_Mapping := MAP_FAILED;
       end if;
-      return Integer (R);
+      return Error_Code (Result);
+   end Unmap_Memory;
+
+   procedure Unmap_Memory (This : in out Memory_Map) is
+      Result : constant Error_Code := This.Unmap_Memory;
+   begin
+      pragma Assert (Result = 0);
    end Unmap_Memory;
 
    function Memory_Unmap
      (Address : Void_Ptr;
-      Length  : Ada.Streams.Stream_Element_Count) return Integer is
+      Length  : Ada.Streams.Stream_Element_Count) return Error_Code is
    begin
-      return Integer (C_Munmap (Address, Size_Type (Length)));
+      return Error_Code (C_Munmap (Address, Size_Type (Length)));
    end Memory_Unmap;
 
 end C_Binding.Linux.Memory_Maps;

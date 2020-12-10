@@ -20,7 +20,8 @@ private with Ada.Unchecked_Conversion;
 
 --  This package was originally named Posix but is nowadays Linux to avoid
 --  name clash with the Ada binding to Posix named Florist.
-package C_Binding.Linux with Preelaborate is
+package C_Binding.Linux is
+   pragma Preelaborate;
 
    subtype Success_Flag is C_Binding.Success_Flag;
 
@@ -83,13 +84,13 @@ private
      Convention => C_Pass_By_Copy;
 
    type Poll_File_Descriptor_Array is
-     array (Positive range <>) of Poll_File_Descriptor with
-     Convention => C;
+     array (Positive range <>) of Poll_File_Descriptor
+   with Convention => C;
 
    function Poll
      (File_Descriptors : Poll_File_Descriptor_Array;
       Timeout          : Integer) return Integer;
-   --  TODO: Make this function call available in public package
+   --  TODO Make this function call available in public package
 
    POLLIN  : constant := 16#001#;
    POLLPRI : constant := 16#002#;
@@ -169,26 +170,20 @@ private
      (File_Descriptor : in out Interfaces.C.int);
 
    function C_Close
-     (File_Descriptor : Interfaces.C.int) return Interfaces.C.int with
-     Import        => True,
-     Convention    => C,
-     External_Name => "close";
+     (File_Descriptor : Interfaces.C.int) return Interfaces.C.int
+   with Import, Convention => C, External_Name => "close";
 
    function C_Write
      (File_Descriptor : Interfaces.C.int;
       Buffer          : Ada.Streams.Stream_Element_Array;
-      Count           : Size_Type) return SSize_Type with
-     Import        => True,
-     Convention    => C,
-     External_Name => "write";
+      Count           : Size_Type) return SSize_Type
+   with Import, Convention => C, External_Name => "write";
 
    function C_Read
      (File_Descriptor : Interfaces.C.int;
       Buffer          : in out Ada.Streams.Stream_Element_Array;
-      Count           : Size_Type) return SSize_Type with
-     Import        => True,
-     Convention    => C,
-     External_Name => "read";
+      Count           : Size_Type) return SSize_Type
+   with Import, Convention => C, External_Name => "read";
 
    STDIN_FILENO  : constant := 0;
    STDOUT_FILENO : constant := 1;
@@ -197,22 +192,19 @@ private
    function C_Write
      (File_Descriptor : Integer;
       Buffer          : String;
-      Count           : Size_Type) return SSize_Type with
-     Import        => True,
-     Convention    => C,
-     External_Name => "write";
+      Count           : Size_Type) return SSize_Type
+   with Import, Convention => C, External_Name => "write";
 
-   function C_Poll (File_Descriptors        : Poll_File_Descriptor_Array;
-                    File_Descriptors_Length : unsigned_long;
-                    Timeout                 : Integer) return Integer with
-     Import        => True,
-     Convention    => C,
-     External_Name => "poll";
+   function C_Poll
+     (File_Descriptors        : Poll_File_Descriptor_Array;
+      File_Descriptors_Length : unsigned_long;
+      Timeout                 : Integer) return Integer
+   with Import, Convention => C, External_Name => "poll";
 
    function Poll
      (File_Descriptors : Poll_File_Descriptor_Array;
-      Timeout          : Integer) return Integer is
-      (C_Poll (File_Descriptors, File_Descriptors'Length, Timeout));
+      Timeout          : Integer) return Integer
+   is (C_Poll (File_Descriptors, File_Descriptors'Length, Timeout));
 
    type File_Base is limited record
       My_File_Descriptor : Interfaces.C.int := -1;
