@@ -195,7 +195,7 @@ package Wayland_XML is
      (This    : in out Entry_Tag;
       Value   :        String) with
       Global => null,
-      Pre    => not Exists_Summary (This),
+--      Pre    => not Exists_Summary (This),
       Post   => Exists_Summary (This) and Summary (This) = Value;
 
    function Summary (This : Entry_Tag) return String with

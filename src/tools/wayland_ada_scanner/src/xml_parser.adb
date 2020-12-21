@@ -313,8 +313,6 @@ procedure XML_Parser is
          IO.Close (File);
       end Allocate_Space_For_Wayland_XML_Contents;
 
-      pragma Unmodified (File_Contents);
-
       Root_Node : Aida.Deepend.XML_DOM_Parser.Node_Ptr;
 
       procedure Parse_Contents is
@@ -330,8 +328,6 @@ procedure XML_Parser is
             Identify_Protocol_Children;
          end if;
       end Parse_Contents;
-
-      pragma Unmodified (Root_Node);
 
       procedure Identify_Protocol_Tag is
       begin
@@ -822,8 +818,6 @@ procedure XML_Parser is
       Check_Wayland_XML_File_Exists;
    end Read_Wayland_XML_File;
 
-   pragma Unmodified (Protocol_Tag);
-
    procedure Generate_Code_For_Numeric_Constants (File : Ada.Text_IO.File_Type) is
       procedure Handle_Interface
         (Interface_Tag : aliased Wayland_XML.Interface_Tag)
@@ -980,8 +974,6 @@ procedure XML_Parser is
 
          Ada.Text_IO.Close (File);
       end Create_File;
-
-      pragma Unmodified (File);
 
       procedure Generate_Code_For_Type_Declarations is
          procedure Handle_Interface
@@ -1168,7 +1160,7 @@ procedure XML_Parser is
                      end loop;
 
                      Put_Line (File, "      " & Aligned_Name &
-                       " at 0 range " & Trim(Bit'Image) & " .. " & Trim (Bit'Image) & ";");
+                       " at 0 range " & Trim (Bit'Image) & " .. " & Trim (Bit'Image) & ";");
                   end;
                end Generate_Code_For_Entry_Component;
 
@@ -2727,8 +2719,6 @@ procedure XML_Parser is
          Ada.Text_IO.Close (File);
       end Create_File;
 
-      pragma Unmodified (File);
-
       procedure Create_Wl_Thin_Body_File is
 
          procedure Generate_Code_For_Protocol_Tag_Children is
@@ -2909,7 +2899,7 @@ procedure XML_Parser is
                            end;
                         else
                            if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 1 then
-                              Max_Name_Length := Natural'Max(11, Name'Length);
+                              Max_Name_Length := Natural'Max (11, Name'Length);
                               Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
                               Put_Line (File, "   function " & Subprogram_Name);
@@ -3743,8 +3733,8 @@ procedure XML_Parser is
          Put_Line (File, "         Capabilities : Seat_Capability)");
          Put_Line (File, "      with Convention => C;");
          Put_Line (File, "");
-			Put_Line (File, "      procedure Internal_Seat_Name");
-			Put_Line (File, "        (Data : Void_Ptr;");
+         Put_Line (File, "      procedure Internal_Seat_Name");
+         Put_Line (File, "        (Data : Void_Ptr;");
          Put_Line (File, "         Seat : Thin.Seat_Ptr;");
          Put_Line (File, "         Name : Interfaces.C.Strings.chars_ptr)");
          Put_Line (File, "      with Convention => C;");

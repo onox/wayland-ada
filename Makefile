@@ -8,17 +8,18 @@ GPRCLEAN = gprclean -q
 all: generate
 
 build:
-	$(GPRBUILD) -P src/tools/xml_parser/xml_parser.gpr -cargs $(CFLAGS)
+	$(GPRBUILD) -P src/tools/wayland_ada_scanner/scanner.gpr -cargs $(CFLAGS)
 
 examples: generate
 	$(GPRBUILD) -P tools/examples.gpr -cargs $(CFLAGS)
 
 generate: build
-	./bin/xml_parser /usr/share/wayland/wayland.xml
+	./bin/wayland-ada-scanner /usr/share/wayland/wayland.xml
 
 clean:
-	$(GPRCLEAN) -r -P src/tools/xml_parser/xml_parser.gpr
+	$(GPRCLEAN) -r -P src/tools/wayland_ada_scanner/scanner.gpr
 	$(GPRCLEAN) -P tools/examples.gpr
 	rm -rf bin build
-	rm src/wayland/wayland-client*.ads
-	rm src/wayland/wayland-client*.adb
+	rm src/wayland/wayland-protocols-*.ads
+	rm src/wayland/wayland-protocols-*.adb
+	rm src/wayland/wayland-enums-*.ads
