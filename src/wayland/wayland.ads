@@ -37,6 +37,13 @@ package Wayland is
 
    type Call_Result_Code is (Success, Error);
 
+   type Optional_Result (Is_Success : Boolean := False) is record
+      case Is_Success is
+         when True  => Count : Natural;
+         when False => null;
+      end case;
+   end record;
+
 private
 
    subtype Void_Ptr is System.Address;

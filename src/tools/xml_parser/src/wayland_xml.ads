@@ -367,24 +367,24 @@ package Wayland_XML is
    function Exists_Name (This : Event_Tag) return Boolean with
       Global => null;
 
-   procedure Set_Since_Attribute
+   procedure Set_Since
      (This  : in out Event_Tag;
       Value :        Version_Number) with
      Global => null,
-     Pre    => not Exists_Since_Attribute (This),
+     Pre    => not Exists_Since (This),
      Post   =>
-       Exists_Since_Attribute (This) and Since_Attribute (This) = Value;
+       Exists_Since (This) and Since (This) = Value;
 
-   function Since_Attribute (This : Event_Tag) return Version_Number with
+   function Since (This : Event_Tag) return Version_Number with
       Global => null,
-      Pre    => Exists_Since_Attribute (This);
+      Pre    => Exists_Since (This);
 
-   function Since_Attribute_As_Pos32
+   function Since_As_Pos32
      (This : Event_Tag) return Positive with
       Global => null,
-      Pre    => Exists_Since_Attribute (This);
+      Pre    => Exists_Since (This);
 
-   function Exists_Since_Attribute (This : Event_Tag) return Boolean with
+   function Exists_Since (This : Event_Tag) return Boolean with
       Global => null;
 
    type Event_Tag_Ptr is access all Event_Tag;
@@ -852,15 +852,15 @@ private
      (This : Event_Tag) return Boolean is
      (This.My_Name.Exists);
 
-   function Since_Attribute
+   function Since
      (This : Event_Tag) return Version_Number is
      (This.My_Since_Attribute.Value);
 
-   function Since_Attribute_As_Pos32
+   function Since_As_Pos32
      (This : Event_Tag) return Positive is
      (Positive (This.My_Since_Attribute.Value));
 
-   function Exists_Since_Attribute
+   function Exists_Since
      (This : Event_Tag) return Boolean is
      (This.My_Since_Attribute.Exists);
 

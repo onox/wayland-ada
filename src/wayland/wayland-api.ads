@@ -27,13 +27,16 @@ private package Wayland.API is
 
    type Proxy is limited private;
 
-   type Proxy_Ptr is access all Proxy;
+   type Proxy_Ptr is access all Proxy
+     with Convention => C;
 
    type Display_Ptr is new Proxy_Ptr;
 
    type Interface_T;
 
-   type Interface_Ptr is access all Interface_T;
+   type Interface_Ptr is access constant Interface_T;
+
+   type Interface_Ptr_Array is array (Positive range <>) of aliased Interface_Ptr;
 
    type Message is limited record
       Name      : Interfaces.C.Strings.char_array_access;
@@ -45,7 +48,7 @@ private package Wayland.API is
    type Message_Array is array (Natural range <>) of aliased Message
      with Convention => C;
 
-   type Message_Array_Ptr is access all Message_Array
+   type Message_Array_Ptr is access constant Message_Array
      with Size => Standard'Address_Size;
 
    type Interface_T is limited record
@@ -128,20 +131,20 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr)
+      Arg_1  : Proxy_Ptr)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
       Arg_2  : Unsigned_32)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
       Arg_2  : Unsigned_32;
       Arg_3  : Unsigned_32)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
@@ -149,7 +152,7 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
       Arg_2  : Integer;
       Arg_3  : Integer)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
@@ -157,18 +160,10 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
       Arg_2  : Unsigned_32;
       Arg_3  : Integer;
       Arg_4  : Integer)
-   with Import, Convention => C, External_Name => "wl_proxy_marshal";
-
-   procedure Proxy_Marshal
-     (Object : in out Proxy;
-      Opcode : Unsigned_32;
-      Arg_1  : Unsigned_32;
-      Arg_2  : Unsigned_32;
-      Arg_3  : Void_Ptr)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    procedure Proxy_Marshal
@@ -183,7 +178,7 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
       Arg_2  : Integer;
       Arg_3  : Integer;
       Arg_4  : Unsigned_32)
@@ -192,9 +187,9 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
-      Arg_2  : Void_Ptr;
-      Arg_3  : Void_Ptr;
+      Arg_1  : Proxy_Ptr;
+      Arg_2  : Proxy_Ptr;
+      Arg_3  : Proxy_Ptr;
       Arg_4  : Unsigned_32)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
@@ -202,20 +197,9 @@ private package Wayland.API is
      (Object : in out Proxy;
       Opcode : Unsigned_32;
       Arg_1  : Unsigned_32;
-      Arg_2  : Void_Ptr;
+      Arg_2  : Proxy_Ptr;
       Arg_3  : Integer;
       Arg_4  : Integer)
-   with Import, Convention => C, External_Name => "wl_proxy_marshal";
-
-   procedure Proxy_Marshal
-     (Object : in out Proxy;
-      Opcode : Unsigned_32;
-      Arg_1  : Void_Ptr;
-      Arg_2  : Unsigned_32;
-      Arg_3  : Void_Ptr;
-      Arg_4  : Integer;
-      Arg_5  : Integer;
-      Arg_6  : Unsigned_32)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    function Proxy_Marshal_Constructor
@@ -242,7 +226,7 @@ private package Wayland.API is
       Opcode  : Unsigned_32;
       Subject : Interface_Ptr;
       New_ID  : Unsigned_32;
-      Offset  : Void_Ptr) return Proxy_Ptr
+      Offset  : Proxy_Ptr) return Proxy_Ptr
    with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor";
 
    function Proxy_Marshal_Constructor
@@ -259,8 +243,8 @@ private package Wayland.API is
       Opcode  : Unsigned_32;
       Subject : Interface_Ptr;
       New_ID  : Unsigned_32;
-      Arg_1   : Void_Ptr;
-      Arg_2   : Void_Ptr) return Proxy_Ptr
+      Arg_1   : Proxy_Ptr;
+      Arg_2   : Proxy_Ptr) return Proxy_Ptr
    with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor";
 
    function Proxy_Marshal_Constructor_Versioned
@@ -346,8 +330,8 @@ private package Wayland.API is
    function Display_Get_File_Descriptor (Object : Display_Ptr) return Integer
      with Import, Convention => C, External_Name => "wl_display_get_fd";
 
-   function Display_Get_Error (Object : Display_Ptr) return Integer
-     with Import, Convention => C, External_Name => "wl_display_get_error";
+--   function Display_Get_Error (Object : Display_Ptr) return Integer
+--     with Import, Convention => C, External_Name => "wl_display_get_error";
 
 --   function Display_Get_Protocol_Error
 --     (Arg1 : System.Address;

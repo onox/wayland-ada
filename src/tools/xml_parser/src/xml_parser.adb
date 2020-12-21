@@ -16,6 +16,7 @@
 
 with Ada.Command_Line;
 with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Containers.Vectors;
 with Ada.Directories;
 with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
@@ -60,6 +61,11 @@ procedure XML_Parser is
    package SF renames Ada.Strings.Fixed;
    package SU renames Ada.Strings.Unbounded;
 
+   package Unbounded_String_Vectors is new Ada.Containers.Vectors
+     (Index_Type   => Positive,
+      Element_Type => SU.Unbounded_String,
+      "="          => SU."=");
+
    function Trim (Value : String) return String is (SF.Trim (Value, Ada.Strings.Both));
 
    procedure Put
@@ -80,8 +86,8 @@ procedure XML_Parser is
    XML_Exception : exception;
 
    procedure Read_Wayland_XML_File (File_Name : String; Enable_Comments : Boolean);
-   procedure Create_Wayland_Spec_File (File_Name : String; Enable_Comments : Boolean);
-   procedure Create_Wayland_Body_File (File_Name : String);
+   procedure Create_Wayland_Spec_File (Enable_Comments : Boolean);
+   procedure Create_Wayland_Body_File;
 
    Protocol_Tag : Wayland_XML.Protocol_Tag_Ptr;
 
@@ -275,9 +281,9 @@ procedure XML_Parser is
 
       procedure Check_Wayland_XML_File_Exists;
       procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String);
-      procedure Parse_Contents (File_Name : String);
+      procedure Parse_Contents;
       procedure Identify_Protocol_Tag;
-      procedure Identify_Protocol_Children (File_Name : String);
+      procedure Identify_Protocol_Children;
 
       procedure Check_Wayland_XML_File_Exists is
       begin
@@ -286,7 +292,7 @@ procedure XML_Parser is
          end if;
 
          Allocate_Space_For_Wayland_XML_Contents (File_Name);
-         Parse_Contents (File_Name);
+         Parse_Contents;
       end Check_Wayland_XML_File_Exists;
 
       File_Contents : Aida.Deepend.String_Ptr;
@@ -311,7 +317,7 @@ procedure XML_Parser is
 
       Root_Node : Aida.Deepend.XML_DOM_Parser.Node_Ptr;
 
-      procedure Parse_Contents (File_Name : String) is
+      procedure Parse_Contents is
          Call_Result : Aida.Call_Result;
       begin
          Aida.Deepend.XML_DOM_Parser.Parse
@@ -321,7 +327,7 @@ procedure XML_Parser is
             raise XML_Exception with Call_Result.Message;
          else
             Identify_Protocol_Tag;
-            Identify_Protocol_Children (File_Name);
+            Identify_Protocol_Children;
          end if;
       end Parse_Contents;
 
@@ -344,7 +350,7 @@ procedure XML_Parser is
          Set_Name (Protocol_Tag.all, Value (Attributes (Root_Node.Tag) (1).all));
       end Identify_Protocol_Tag;
 
-      procedure Identify_Protocol_Children (File_Name : String) is
+      procedure Identify_Protocol_Children is
          function Identify_Copyright
            (Node : not null Aida.Deepend.XML_DOM_Parser.Node_Ptr)
            return not null Wayland_XML.Copyright_Ptr
@@ -425,7 +431,8 @@ procedure XML_Parser is
                      elsif Value (A.all) = "false" then
                         Set_Allow_Null (Arg_Tag.all, False);
                      else
-                        raise XML_Exception;
+                        raise XML_Exception with
+                          "Attribute 'allow-null' must be 'true' or 'false'";
                      end if;
                   elsif Name (A.all) = "enum" then
                      Set_Enum (Arg_Tag.all, Value (A.all));
@@ -519,7 +526,7 @@ procedure XML_Parser is
                         if Has_Failed then
                            raise XML_Exception;
                         else
-                           Set_Since_Attribute
+                           Set_Since
                              (Event_Tag.all, Wayland_XML.Version_Number (V));
                         end if;
                      end;
@@ -807,8 +814,8 @@ procedure XML_Parser is
       begin
          Iterate (Root_Node.Tag);
 
-         Create_Wayland_Spec_File (File_Name, Enable_Comments);
-         Create_Wayland_Body_File (File_Name);
+         Create_Wayland_Spec_File (Enable_Comments);
+         Create_Wayland_Body_File;
       end Identify_Protocol_Children;
 
    begin
@@ -818,7 +825,6 @@ procedure XML_Parser is
    pragma Unmodified (Protocol_Tag);
 
    procedure Generate_Code_For_Numeric_Constants (File : Ada.Text_IO.File_Type) is
-
       procedure Handle_Interface
         (Interface_Tag : aliased Wayland_XML.Interface_Tag)
       is
@@ -833,7 +839,10 @@ procedure XML_Parser is
                    (Wayland_XML.Name (Interface_Tag) & "_" &
                       Wayland_XML.Name (Request_Tag));
             begin
-               Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (I) & ";");
+               if I = 0 then
+                  New_Line (File);
+               end if;
+               Put_Line (File, "      " & Name & " : constant := " & Aida.To_String (I) & ";");
 
                I := I + 1;
             end Generate_Code;
@@ -841,63 +850,28 @@ procedure XML_Parser is
             Iterate_Over_Requests (Interface_Tag, Generate_Code'Access);
          end Generate_Code_For_Opcodes;
 
-         procedure Generate_Code_For_Event_Since_Version is
-            procedure Generate_Code (Event_Tag : aliased Wayland_XML.Event_Tag) is
-               Name : constant String
-                 := Xml_Parser_Utils.Adaify_Name
-                   (Wayland_XML.Name (Interface_Tag) & "_" &
-                      Wayland_XML.Name (Event_Tag) & "_SINCE_VERSION");
-            begin
-               if Exists_Since_Attribute (Event_Tag) then
-                  Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (Since_Attribute_As_Pos32 (Event_Tag)) & ";");
-               else
-                  Put_Line (File, "   " & Name & " : constant := 1;");
-               end if;
-            end Generate_Code;
-         begin
-            Iterate_Over_Events (Interface_Tag, Generate_Code'Access);
-         end Generate_Code_For_Event_Since_Version;
-
-         procedure Generate_Code_For_Opcodes_Since_Version is
-            procedure Generate_Code (Request_Tag : aliased Wayland_XML.Request_Tag) is
-               Name : constant String
-                 := Xml_Parser_Utils.Adaify_Name
-                   (Wayland_XML.Name (Interface_Tag) & "_" &
-                      Wayland_XML.Name (Request_Tag) & "_SINCE_VERSION");
-            begin
-               if Exists_Since (Request_Tag) then
-                  Put_Line (File, "   " & Name & " : constant := " & Aida.To_String (Since_As_Pos32 (Request_Tag)) & ";");
-               else
-                  Put_Line (File, "   " & Name & " : constant := 1;");
-               end if;
-            end Generate_Code;
-         begin
-            Iterate_Over_Requests (Interface_Tag, Generate_Code'Access);
-         end Generate_Code_For_Opcodes_Since_Version;
-
       begin
          Generate_Code_For_Opcodes;
-         Generate_Code_For_Event_Since_Version;
-         Generate_Code_For_Opcodes_Since_Version;
-         New_Line (File);
+         --  Note: See git history for *_Since_Version constants
       end Handle_Interface;
-
    begin
       Iterate_Over_Interfaces (Handle_Interface'Access);
    end Generate_Code_For_Numeric_Constants;
 
-   procedure Create_Wayland_Spec_File (File_Name : String; Enable_Comments : Boolean) is
+   All_Types : Unbounded_String_Vectors.Vector;
+
+   procedure Create_Wayland_Spec_File (Enable_Comments : Boolean) is
       File : Ada.Text_IO.File_Type;
 
-      procedure Create_Wl_Thin_Spec_File;
+      procedure Create_Wl_Thin_Spec_File (Protocol_Name : String);
 
       procedure Generate_Code_For_Type_Declarations;
-      procedure Generate_Code_For_The_Interface_Type;
+      procedure Generate_Code_For_External_Proxies;
       procedure Generate_Code_For_The_Interface_Constants;
       procedure Generate_Code_For_Enum_Constants;
       procedure Generate_Private_Code_For_Enum_Constants;
       procedure Generate_Manually_Edited_Partial_Type_Declarations;
-      procedure Generate_Use_Type_Declarions;
+      procedure Generate_Use_Type_Declarions (Package_Name : String);
       procedure Generate_Manually_Edited_Code_For_Type_Definitions;
       procedure Generate_Private_Code_For_The_Interface_Constants;
 
@@ -907,34 +881,48 @@ procedure XML_Parser is
       begin
          if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-protocol.ads");
+              (File, Ada.Text_IO.Out_File,
+               Out_Folder & "wayland-protocols-" & Protocol_Name & ".ads");
 
-            Put_Line (File, "private with Interfaces.C.Strings;");
-            Put_Line (File, "private with Wayland." & Package_Name & ".Thin;");
+            Put_Line (File, "private with Wayland.Protocols.Thin_" & Package_Name & ";");
             New_Line (File);
-            Put_Line (File, "with Wayland." & Package_Name & ".Enums;");
+            Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
             New_Line (File);
             Put_Line (File, "with C_Binding.Linux.Files;");
             New_Line (File);
-            Put_Line (File, "package Wayland." & Package_Name & ".Protocol is");
+            Put_Line (File, "package Wayland.Protocols." & Package_Name & " is");
             Put_Line (File, "   pragma Preelaborate;");
             New_Line (File);
-            Put_Line (File, "   use Wayland." & Package_Name & ".Enums;");
+            Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
             New_Line (File);
 
             Generate_Code_For_Type_Declarations;
-            Generate_Code_For_The_Interface_Type;
+            Generate_Code_For_External_Proxies;
             Generate_Code_For_The_Interface_Constants;
+
+            Put_Line (File, "   function Bind");
+            Put_Line (File, "     (Object  : Registry;");
+            Put_Line (File, "      Iface   : Interface_Type;");
+            Put_Line (File, "      Id      : Unsigned_32;");
+            Put_Line (File, "      Version : Unsigned_32) return Secret_Proxy;");
+            Put_Line (File, "");
+
             Generate_Manually_Edited_Partial_Type_Declarations;
 
             Put_Line (File, "private");
             New_Line (File);
 
-            Generate_Use_Type_Declarions;
+            Generate_Use_Type_Declarions (Package_Name);
             Generate_Manually_Edited_Code_For_Type_Definitions;
+
+            Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            New_Line (File);
+
             Generate_Private_Code_For_The_Interface_Constants;
 
-            Put_Line (File, "end Wayland." & Package_Name & ".Protocol;");
+            Put_Line (File, "end Wayland.Protocols." & Package_Name & ";");
 
             Ada.Text_IO.Close (File);
          end if;
@@ -942,20 +930,10 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & ".ads");
+           (File, Ada.Text_IO.Out_File,
+            Out_Folder & "wayland-enums-" & Protocol_Name & ".ads");
 
-         Put_Line (File, "package Wayland." & Package_Name & " is");
-         Put_Line (File, "   pragma Pure;");
-         Put_Line (File, "end Wayland." & Package_Name & ";");
-
-         Ada.Text_IO.Close (File);
-
-         -----------------------------------------------------------------------
-
-         Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-enums.ads");
-
-         Put_Line (File, "package Wayland." & Package_Name & ".Enums is");
+         Put_Line (File, "package Wayland.Enums." & Package_Name & " is");
          Put_Line (File, "   pragma Preelaborate;");
 
          Generate_Code_For_Enum_Constants;
@@ -966,64 +944,39 @@ procedure XML_Parser is
 
          Generate_Private_Code_For_Enum_Constants;
 
-         Put_Line (File, "end Wayland." & Package_Name & ".Enums;");
+         Put_Line (File, "end Wayland.Enums." & Package_Name & ";");
 
          Ada.Text_IO.Close (File);
 
-         -----------------------------------------------------------------------
-
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-constants.ads");
-
-         Put_Line (File, "private package Wayland." & Package_Name & ".Constants is");
-         Put_Line (File, "   pragma Pure;");
-         New_Line (File);
-
-         Generate_Code_For_Numeric_Constants (File);
-
-         Put_Line (File, "end Wayland." & Package_Name & ".Constants;");
-
-         Ada.Text_IO.Close (File);
-
-         -----------------------------------------------------------------------
-
-         Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-thin.ads");
+           (File, Ada.Text_IO.Out_File,
+            Out_Folder & "wayland-protocols-thin_" & Protocol_Name & ".ads");
 
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
          Put_Line (File, "with Wayland.API;");
-         Put_Line (File, "with Wayland." & Package_Name & ".Enums;");
+         Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
+         if Protocol_Name /= "client" then
+            Put_Line (File, "with Wayland.Protocols.Thin_Client;");
+         end if;
          Put_Line (File, "");
-         Put_Line (File, "--  Mostly auto generated from " & File_Name);
-         Put_Line (File, "private package Wayland." & Package_Name & ".Thin is");
+         Put_Line (File, "private package Wayland.Protocols.Thin_" & Package_Name & " is");
          Put_Line (File, "   pragma Preelaborate;");
          Put_Line (File, "");
-         Put_Line (File, "   use Wayland." & Package_Name & ".Enums;");
+         Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
          Put_Line (File, "");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
 
-         if Protocol_Name = "client" then
-            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
-            Put_Line (File, "");
-            Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
-            Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
-            Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   function Display_Connect return Display_Ptr;");
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
-         else
-            Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
-            Put_Line (File, "   subtype Proxy_Ptr   is Wayland.API.Proxy_Ptr;");
-         end if;
-
+         Put_Line (File, "   subtype Interface_T is Wayland.API.Interface_T;");
+         Put_Line (File, "");
+         Put_Line (File, "   subtype Proxy_Ptr     is Wayland.API.Proxy_Ptr;");
+         Put_Line (File, "   subtype Interface_Ptr is Wayland.API.Interface_Ptr;");
          Put_Line (File, "");
 
-         Create_Wl_Thin_Spec_File;
+         Create_Wl_Thin_Spec_File (Protocol_Name);
 
-         Put_Line (File, "end Wayland." & Package_Name & ".Thin;");
+         Put_Line (File, "end Wayland.Protocols.Thin_" & Package_Name & ";");
 
          Ada.Text_IO.Close (File);
       end Create_File;
@@ -1044,16 +997,13 @@ procedure XML_Parser is
          New_Line (File);
       end Generate_Code_For_Type_Declarations;
 
-      procedure Generate_Code_For_The_Interface_Type is
+      procedure Generate_Code_For_External_Proxies is
       begin
-         Put_Line (File, "   type Interface_Type is tagged limited private;");
-         Put_Line (File, "   --  This type name ends with _Type because 'interface'");
-         Put_Line (File, "   --  is a reserved keyword in the Ada programming language.");
-         New_Line (File);
-         Put_Line (File, "   function Name (I : Interface_Type) return String");
-         Put_Line (File, "     with Global => null;");
-         New_Line (File);
-      end Generate_Code_For_The_Interface_Type;
+         Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
+         Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
+         Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
+         Put_Line (File, "");
+      end Generate_Code_For_External_Proxies;
 
       procedure Generate_Code_For_The_Interface_Constants is
          procedure Handle_Interface
@@ -1287,11 +1237,23 @@ procedure XML_Parser is
             Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
             Put_Line (File, "     with Global => null;");
             Put_Line (File, "");
+            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+            Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
                Put_Line (File, "   procedure Release (Object : in out " & Name & ")");
                Put_Line (File, "     with Pre  => Object.Has_Proxy,");
                Put_Line (File, "          Post => not Object.Has_Proxy;");
+               Put_Line (File, "");
+            end if;
+
+            if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+               Put_Line (File, "   procedure Bind");
+               Put_Line (File, "     (Object   : in out " & Name & ";");
+               Put_Line (File, "      Registry : Client.Registry'Class;");
+               Put_Line (File, "      Id       : Unsigned_32;");
+               Put_Line (File, "      Version  : Unsigned_32)");
+               Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
                Put_Line (File, "");
             end if;
 
@@ -1309,26 +1271,39 @@ procedure XML_Parser is
                Put_Line (File, "      Timeout : Integer) return Check_For_Events_Status;");
                Put_Line (File, "   --  The timeout is given in milliseconds");
                Put_Line (File, "");
-               Put_Line (File, "   function Dispatch (Object : Display) return Integer");
+               Put_Line (File, "   function Flush (Object : Display) return Optional_Result");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Send all buffered requests to the Wayland compositor");
+               Put_Line (File, "   --");
+               Put_Line (File, "   --  Returns the number of bytes sent if successful.");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Flush (Object : Display)");
+               Put_Line (File, "     with Pre => Object.Is_Connected;");
+               Put_Line (File, "   --  Send all buffered requests to the Wayland compositor");
+               Put_Line (File, "   --");
+               Put_Line (File, "   --  Raises Program_Error if flushing failed.");
+               Put_Line (File, "");
+               Put_Line (File, "   function Dispatch (Object : Display) return Optional_Result");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
                Put_Line (File, "   --  Process incoming events");
                Put_Line (File, "");
                Put_Line (File, "   procedure Dispatch (Object : Display)");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
-               Put_Line (File, "   --  Process incoming events. Ignores error code. TODO To be removed?");
+               Put_Line (File, "   --  Process incoming events");
+               Put_Line (File, "   --");
+               Put_Line (File, "   --  Raises Program_Error if dispatching failed.");
                Put_Line (File, "");
-               Put_Line (File, "   function Dispatch_Pending (Object : Display) return Integer");
+               Put_Line (File, "   function Dispatch_Pending (Object : Display) return Optional_Result");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
-               Put_Line (File, "   --  Dispatch default queue events without reading from");
-               Put_Line (File, "   --  the display file descriptor");
+               Put_Line (File, "   --  Dispatch events on the default queue without reading from");
+               Put_Line (File, "   --  the display's file descriptor");
                Put_Line (File, "   --");
-               Put_Line (File, "   --  This function dispatches events on the main event queue.");
-               Put_Line (File, "   --  It does not attempt to read the display fd and simply returns zero");
-               Put_Line (File, "   --  if the main queue is empty, i.e., it doesn't block.");
+               Put_Line (File, "   --  It does not attempt to read the display's file descriptor and simply");
+               Put_Line (File, "   --  returns zero if the main queue is empty, i.e., it does not block.");
                Put_Line (File, "   --");
-               Put_Line (File, "   --  Returns the number of dispatched events or -1 on failure");
+               Put_Line (File, "   --  Returns the number of dispatched events if successful.");
                Put_Line (File, "");
-               Put_Line (File, "   function Prepare_Read (Object : Display) return Integer");
+               Put_Line (File, "   function Prepare_Read (Object : Display) return Call_Result_Code");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
                Put_Line (File, "   --  Prepare to read events from the display's file descriptor");
                Put_Line (File, "");
@@ -1351,44 +1326,32 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   procedure Get_Registry");
                Put_Line (File, "     (Object   : Display;");
-               Put_Line (File, "      Registry : in out Protocol.Registry'Class)");
+               Put_Line (File, "      Registry : in out Client.Registry'Class)");
                Put_Line (File, "   with Pre => Object.Is_Connected and not Registry.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   function Sync (Object : Display) return Callback'Class");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
                Put_Line (File, "");
             elsif Name = "Compositor" then
-               Put_Line (File, "   procedure Bind (Object   : in out Compositor;");
-               Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-               Put_Line (File, "                   Id       : Unsigned_32;");
-               Put_Line (File, "                   Version  : Unsigned_32)");
-               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
-               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Surface (Object  : Compositor;");
-               Put_Line (File, "                             Surface : in out Protocol.Surface'Class)");
+               Put_Line (File, "                             Surface : in out Client.Surface'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Create_Region (Object : Compositor;");
-               Put_Line (File, "                            Region : in out Protocol.Region'Class)");
+               Put_Line (File, "                            Region : in out Client.Region'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Seat" then
-               Put_Line (File, "   procedure Bind (Object   : in out Seat;");
-               Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-               Put_Line (File, "                   Id       : Unsigned_32;");
-               Put_Line (File, "                   Version  : Unsigned_32)");
-               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
-               Put_Line (File, "");
                Put_Line (File, "   procedure Get_Pointer (Object  : Seat;");
-               Put_Line (File, "                          Pointer : in out Protocol.Pointer'Class)");
+               Put_Line (File, "                          Pointer : in out Client.Pointer'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and not Pointer.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Get_Keyboard (Object   : Seat;");
-               Put_Line (File, "                           Keyboard : in out Protocol.Keyboard'Class)");
+               Put_Line (File, "                           Keyboard : in out Client.Keyboard'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and not Keyboard.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Get_Touch (Object : Seat;");
-               Put_Line (File, "                        Touch  : in out Protocol.Touch'Class)");
+               Put_Line (File, "                        Touch  : in out Client.Touch'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and not Touch.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Shm_Pool" then
@@ -1398,7 +1361,7 @@ procedure XML_Parser is
                Put_Line (File, "                            Height : Natural;");
                Put_Line (File, "                            Stride : Natural;");
                Put_Line (File, "                            Format : Shm_Format;");
-               Put_Line (File, "                            Buffer : in out Protocol.Buffer'Class)");
+               Put_Line (File, "                            Buffer : in out Client.Buffer'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Resize (Object : Shm_Pool;");
@@ -1406,12 +1369,6 @@ procedure XML_Parser is
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Shm" then
-               Put_Line (File, "   procedure Bind (Object   : in out Shm;");
-               Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-               Put_Line (File, "                   Id       : Unsigned_32;");
-               Put_Line (File, "                   Version  : Unsigned_32)");
-               Put_Line (File, "     with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
-               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Pool (Object          : Shm;");
                Put_Line (File, "                          File_Descriptor : C_Binding.Linux.Files.File;");
                Put_Line (File, "                          Size            : Positive;");
@@ -1468,13 +1425,13 @@ procedure XML_Parser is
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Get_Data_Device (Object : Data_Device_Manager;");
-               Put_Line (File, "                              Seat   : Protocol.Seat'Class;");
+               Put_Line (File, "                              Seat   : Client.Seat'Class;");
                Put_Line (File, "                              Device : in out Data_Device'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Surface" then
                Put_Line (File, "   procedure Attach (Object : Surface;");
-               Put_Line (File, "                     Buffer : Protocol.Buffer'Class;");
+               Put_Line (File, "                     Buffer : Client.Buffer'Class;");
                Put_Line (File, "                     X, Y   : Integer)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and Buffer.Has_Proxy;");
                Put_Line (File, "");
@@ -1488,11 +1445,11 @@ procedure XML_Parser is
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Opaque_Region (Object : Surface;");
-               Put_Line (File, "                                Region : Protocol.Region'Class)");
+               Put_Line (File, "                                Region : Client.Region'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Input_Region (Object : Surface;");
-               Put_Line (File, "                               Region : Protocol.Region'Class)");
+               Put_Line (File, "                               Region : Client.Region'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Commit (Object : Surface)");
@@ -1515,7 +1472,7 @@ procedure XML_Parser is
             elsif Name = "Pointer" then
                Put_Line (File, "   procedure Set_Cursor (Object    : Pointer;");
                Put_Line (File, "                         Serial    : Unsigned_32;");
-               Put_Line (File, "                         Surface   : Protocol.Surface'Class;");
+               Put_Line (File, "                         Surface   : Client.Surface'Class;");
                Put_Line (File, "                         Hotspot_X : Integer;");
                Put_Line (File, "                         Hotspot_Y : Integer)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
@@ -1535,9 +1492,9 @@ procedure XML_Parser is
                Put_Line (File, "");
             elsif Name = "Subcompositor" then
                Put_Line (File, "   procedure Get_Subsurface (Object     : Subcompositor;");
-               Put_Line (File, "                             Surface    : Protocol.Surface'Class;");
-               Put_Line (File, "                             Parent     : Protocol.Surface'Class;");
-               Put_Line (File, "                             Subsurface : in out Protocol.Subsurface'Class)");
+               Put_Line (File, "                             Surface    : Client.Surface'Class;");
+               Put_Line (File, "                             Parent     : Client.Surface'Class;");
+               Put_Line (File, "                             Subsurface : in out Client.Subsurface'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and Surface.Has_Proxy and Parent.Has_Proxy;");
                Put_Line (File, "");
             elsif Name = "Subsurface" then
@@ -1573,265 +1530,263 @@ procedure XML_Parser is
 
             if Name = "Display" then
                Put_Line (File, "      with procedure Error");
-               Put_Line (File, "        (Display   : in out Protocol.Display'Class;");
-               Put_Line (File, "         Object_Id : Void_Ptr;");
+               Put_Line (File, "        (Display   : in out Client.Display'Class;");
                Put_Line (File, "         Code      : Unsigned_32;");
-               Put_Line (File, "         Message   : String);");
-               Put_Line (File, "      --  TODO Should really Object_Id really be exposed here? This part");
-               Put_Line (File, "      --  of the API can potentially be improved upon.");
+               Put_Line (File, "         Message   : String) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Delete_Id");
-               Put_Line (File, "        (Display : in out Protocol.Display'Class;");
-               Put_Line (File, "         Id      : Unsigned_32);");
+               Put_Line (File, "        (Display : in out Client.Display'Class;");
+               Put_Line (File, "         Id      : Unsigned_32) is null;");
             elsif Name = "Registry" then
                Put_Line (File, "      with procedure Global_Object_Added");
-               Put_Line (File, "        (Registry : in out Protocol.Registry'Class;");
+               Put_Line (File, "        (Registry : in out Client.Registry'Class;");
                Put_Line (File, "         Id       : Unsigned_32;");
                Put_Line (File, "         Name     : String;");
                Put_Line (File, "         Version  : Unsigned_32);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Global_Object_Removed");
-               Put_Line (File, "        (Registry : in out Protocol.Registry'Class;");
-               Put_Line (File, "         Id       : Unsigned_32);");
+               Put_Line (File, "        (Registry : in out Client.Registry'Class;");
+               Put_Line (File, "         Id       : Unsigned_32) is null;");
             elsif Name = "Callback" then
                Put_Line (File, "      with procedure Done");
-               Put_Line (File, "        (Callback      : in out Protocol.Callback'Class;");
+               Put_Line (File, "        (Callback      : in out Client.Callback'Class;");
                Put_Line (File, "         Callback_Data : Unsigned_32);");
             elsif Name = "Shm" then
                Put_Line (File, "      with procedure Format");
-               Put_Line (File, "        (Shm    : in out Protocol.Shm'Class;");
+               Put_Line (File, "        (Shm    : in out Client.Shm'Class;");
                Put_Line (File, "         Format : Shm_Format);");
             elsif Name = "Buffer" then
                Put_Line (File, "      with procedure Release");
-               Put_Line (File, "        (Buffer : in out Protocol.Buffer'Class);");
+               Put_Line (File, "        (Buffer : in out Client.Buffer'Class);");
             elsif Name = "Data_Offer" then
                Put_Line (File, "      with procedure Offer");
-               Put_Line (File, "        (Data_Offer : in out Protocol.Data_Offer'Class;");
-               Put_Line (File, "         Mime_Type  : String);");
+               Put_Line (File, "        (Data_Offer : in out Client.Data_Offer'Class;");
+               Put_Line (File, "         Mime_Type  : String) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Source_Actions");
-               Put_Line (File, "        (Data_Offer     : in out Protocol.Data_Offer'Class;");
-               Put_Line (File, "         Source_Actions : Unsigned_32);");
+               Put_Line (File, "        (Data_Offer     : in out Client.Data_Offer'Class;");
+               Put_Line (File, "         Source_Actions : Unsigned_32) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Action");
-               Put_Line (File, "        (Data_Offer : in out Protocol.Data_Offer'Class;");
-               Put_Line (File, "         Dnd_Action : Unsigned_32);");
+               Put_Line (File, "        (Data_Offer : in out Client.Data_Offer'Class;");
+               Put_Line (File, "         Dnd_Action : Unsigned_32) is null;");
             elsif Name = "Data_Source" then
                Put_Line (File, "      with procedure Target");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class;");
-               Put_Line (File, "         Mime_Type   : String);");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
+               Put_Line (File, "         Mime_Type   : String) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Send");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class;");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
                Put_Line (File, "         Mime_Type   : String;");
-               Put_Line (File, "         Fd          : Integer);");
+               Put_Line (File, "         Fd          : Integer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Cancelled");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class);");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class) is null;");
                Put_Line (File, "");
-               Put_Line (File, "      with procedure Dnd_Drop_Performed");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class);");
+               Put_Line (File, "      with procedure Performed");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class) is null;");
                Put_Line (File, "");
-               Put_Line (File, "      with procedure Dnd_Finished");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class);");
+               Put_Line (File, "      with procedure Finished");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Action");
-               Put_Line (File, "        (Data_Source : in out Protocol.Data_Source'Class;");
-               Put_Line (File, "         Dnd_Action  : Unsigned_32);");
+               Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
+               Put_Line (File, "         Dnd_Action  : Unsigned_32) is null;");
             elsif Name = "Data_Device" then
                Put_Line (File, "      with procedure Data_Offer");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class;");
-               Put_Line (File, "         Id          : Unsigned_32);");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
+               Put_Line (File, "         Id          : Unsigned_32) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Enter");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class;");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
                Put_Line (File, "         Serial      : Unsigned_32;");
-               Put_Line (File, "         Surface     : Protocol.Surface;");
+               Put_Line (File, "         Surface     : Client.Surface;");
                Put_Line (File, "         X, Y        : Fixed;");
-               Put_Line (File, "         Id          : Protocol.Data_Offer);");
+               Put_Line (File, "         Id          : Client.Data_Offer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Leave");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class);");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Motion");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class;");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
                Put_Line (File, "         Time        : Unsigned_32;");
-               Put_Line (File, "         X, Y        : Fixed);");
+               Put_Line (File, "         X, Y        : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Drop");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class);");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Selection");
-               Put_Line (File, "        (Data_Device : in out Protocol.Data_Device'Class;");
-               Put_Line (File, "         Id          : Protocol.Data_Offer);");
+               Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
+               Put_Line (File, "         Id          : Client.Data_Offer) is null;");
             elsif Name = "Surface" then
                Put_Line (File, "      with procedure Enter");
-               Put_Line (File, "        (Surface : in out Protocol.Surface'Class;");
-               Put_Line (File, "         Output  : Protocol.Output);");
+               Put_Line (File, "        (Surface : in out Client.Surface'Class;");
+               Put_Line (File, "         Output  : Client.Output) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Leave");
-               Put_Line (File, "        (Surface : in out Protocol.Surface'Class;");
-               Put_Line (File, "         Output  : Protocol.Output);");
+               Put_Line (File, "        (Surface : in out Client.Surface'Class;");
+               Put_Line (File, "         Output  : Client.Output) is null;");
             elsif Name = "Seat" then
                Put_Line (File, "      with procedure Seat_Capabilities");
-               Put_Line (File, "        (Seat         : in out Protocol.Seat'Class;");
-               Put_Line (File, "         Capabilities : Seat_Capability);");
+               Put_Line (File, "        (Seat         : in out Client.Seat'Class;");
+               Put_Line (File, "         Capabilities : Seat_Capability) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Seat_Name");
-               Put_Line (File, "        (Seat : in out Protocol.Seat'Class;");
-               Put_Line (File, "         Name : String);");
+               Put_Line (File, "        (Seat : in out Client.Seat'Class;");
+               Put_Line (File, "         Name : String) is null;");
             elsif Name = "Pointer" then
                Put_Line (File, "      with procedure Pointer_Enter");
-               Put_Line (File, "        (Pointer   : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer   : in out Client.Pointer'Class;");
                Put_Line (File, "         Serial    : Unsigned_32;");
-               Put_Line (File, "         Surface   : Protocol.Surface;");
+               Put_Line (File, "         Surface   : Client.Surface;");
                Put_Line (File, "         Surface_X : Fixed;");
-               Put_Line (File, "         Surface_Y : Fixed);");
+               Put_Line (File, "         Surface_Y : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Leave");
-               Put_Line (File, "        (Pointer : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer : in out Client.Pointer'Class;");
                Put_Line (File, "         Serial  : Unsigned_32;");
-               Put_Line (File, "         Surface : Protocol.Surface);");
+               Put_Line (File, "         Surface : Client.Surface) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Motion");
-               Put_Line (File, "        (Pointer   : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer   : in out Client.Pointer'Class;");
                Put_Line (File, "         Time      : Unsigned_32;");
                Put_Line (File, "         Surface_X : Fixed;");
-               Put_Line (File, "         Surface_Y : Fixed);");
+               Put_Line (File, "         Surface_Y : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Button");
-               Put_Line (File, "        (Pointer : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer : in out Client.Pointer'Class;");
                Put_Line (File, "         Serial  : Unsigned_32;");
                Put_Line (File, "         Time    : Unsigned_32;");
                Put_Line (File, "         Button  : Unsigned_32;");
-               Put_Line (File, "         State   : Pointer_Button_State);");
+               Put_Line (File, "         State   : Pointer_Button_State) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Scroll");
-               Put_Line (File, "        (Pointer : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer : in out Client.Pointer'Class;");
                Put_Line (File, "         Time    : Unsigned_32;");
                Put_Line (File, "         Axis    : Pointer_Axis;");
-               Put_Line (File, "         Value   : Fixed);");
+               Put_Line (File, "         Value   : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Frame");
-               Put_Line (File, "        (Pointer : in out Protocol.Pointer'Class);");
+               Put_Line (File, "        (Pointer : in out Client.Pointer'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Scroll_Source");
-               Put_Line (File, "        (Pointer     : in out Protocol.Pointer'Class;");
-               Put_Line (File, "         Axis_Source : Pointer_Axis_Source);");
+               Put_Line (File, "        (Pointer     : in out Client.Pointer'Class;");
+               Put_Line (File, "         Axis_Source : Pointer_Axis_Source) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Scroll_Stop");
-               Put_Line (File, "        (Pointer : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer : in out Client.Pointer'Class;");
                Put_Line (File, "         Time    : Unsigned_32;");
-               Put_Line (File, "         Axis    : Pointer_Axis);");
+               Put_Line (File, "         Axis    : Pointer_Axis) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Pointer_Scroll_Discrete");
-               Put_Line (File, "        (Pointer  : in out Protocol.Pointer'Class;");
+               Put_Line (File, "        (Pointer  : in out Client.Pointer'Class;");
                Put_Line (File, "         Axis     : Pointer_Axis;");
-               Put_Line (File, "         Discrete : Integer);");
+               Put_Line (File, "         Discrete : Integer) is null;");
             elsif Name = "Keyboard" then
                Put_Line (File, "      with procedure Keymap");
-               Put_Line (File, "        (Keyboard : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Format   : Keyboard_Keymap_Format;");
                Put_Line (File, "         Fd       : Integer;");
-               Put_Line (File, "         Size     : Unsigned_32);");
+               Put_Line (File, "         Size     : Unsigned_32) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Enter");
-               Put_Line (File, "        (Keyboard : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Serial   : Unsigned_32;");
-               Put_Line (File, "         Surface  : Protocol.Surface;");
-               Put_Line (File, "         Keys     : Wayland_Array_T);");
+               Put_Line (File, "         Surface  : Client.Surface;");
+               Put_Line (File, "         Keys     : Unsigned_32_Array) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Leave");
-               Put_Line (File, "        (Keyboard : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Serial   : Unsigned_32;");
-               Put_Line (File, "         Surface  : Protocol.Surface);");
+               Put_Line (File, "         Surface  : Client.Surface) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Key");
-               Put_Line (File, "        (Keyboard : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Serial   : Unsigned_32;");
                Put_Line (File, "         Time     : Unsigned_32;");
                Put_Line (File, "         Key      : Unsigned_32;");
-               Put_Line (File, "         State    : Keyboard_Key_State);");
+               Put_Line (File, "         State    : Keyboard_Key_State) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Modifiers");
-               Put_Line (File, "        (Keyboard       : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard       : in out Client.Keyboard'Class;");
                Put_Line (File, "         Serial         : Unsigned_32;");
                Put_Line (File, "         Mods_Depressed : Unsigned_32;");
                Put_Line (File, "         Mods_Latched   : Unsigned_32;");
                Put_Line (File, "         Mods_Locked    : Unsigned_32;");
-               Put_Line (File, "         Group          : Unsigned_32);");
+               Put_Line (File, "         Group          : Unsigned_32) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Repeat_Info");
-               Put_Line (File, "        (Keyboard : in out Protocol.Keyboard'Class;");
+               Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Rate     : Integer;");
-               Put_Line (File, "         Delay_V  : Integer);");
+               Put_Line (File, "         Delay_V  : Integer) is null;");
             elsif Name = "Touch" then
                Put_Line (File, "      with procedure Down");
-               Put_Line (File, "        (Touch   : in out Protocol.Touch'Class;");
+               Put_Line (File, "        (Touch   : in out Client.Touch'Class;");
                Put_Line (File, "         Serial  : Unsigned_32;");
                Put_Line (File, "         Time    : Unsigned_32;");
-               Put_Line (File, "         Surface : Protocol.Surface;");
+               Put_Line (File, "         Surface : Client.Surface;");
                Put_Line (File, "         Id      : Integer;");
-               Put_Line (File, "         X, Y    : Fixed);");
+               Put_Line (File, "         X, Y    : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Up");
-               Put_Line (File, "        (Touch  : in out Protocol.Touch'Class;");
+               Put_Line (File, "        (Touch  : in out Client.Touch'Class;");
                Put_Line (File, "         Serial : Unsigned_32;");
                Put_Line (File, "         Time   : Unsigned_32;");
-               Put_Line (File, "         Id     : Integer);");
+               Put_Line (File, "         Id     : Integer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Motion");
-               Put_Line (File, "        (Touch : in out Protocol.Touch'Class;");
+               Put_Line (File, "        (Touch : in out Client.Touch'Class;");
                Put_Line (File, "         Time  : Unsigned_32;");
                Put_Line (File, "         Id    : Integer;");
-               Put_Line (File, "         X, Y  : Fixed);");
+               Put_Line (File, "         X, Y  : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Frame");
-               Put_Line (File, "        (Touch : in out Protocol.Touch'Class);");
+               Put_Line (File, "        (Touch : in out Client.Touch'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Cancel");
-               Put_Line (File, "        (Touch : in out Protocol.Touch'Class);");
+               Put_Line (File, "        (Touch : in out Client.Touch'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Shape");
-               Put_Line (File, "        (Touch : in out Protocol.Touch'Class;");
+               Put_Line (File, "        (Touch : in out Client.Touch'Class;");
                Put_Line (File, "         Id    : Integer;");
                Put_Line (File, "         Major : Fixed;");
-               Put_Line (File, "         Minor : Fixed);");
+               Put_Line (File, "         Minor : Fixed) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Orientation");
-               Put_Line (File, "        (Touch       : in out Protocol.Touch'Class;");
+               Put_Line (File, "        (Touch       : in out Client.Touch'Class;");
                Put_Line (File, "         Id          : Integer;");
-               Put_Line (File, "         Orientation : Fixed);");
+               Put_Line (File, "         Orientation : Fixed) is null;");
             elsif Name = "Output" then
                Put_Line (File, "      with procedure Geometry");
-               Put_Line (File, "        (Output          : in out Protocol.Output'Class;");
+               Put_Line (File, "        (Output          : in out Client.Output'Class;");
                Put_Line (File, "         X, Y            : Integer;");
                Put_Line (File, "         Physical_Width  : Integer;");
                Put_Line (File, "         Physical_Height : Integer;");
                Put_Line (File, "         Subpixel        : Output_Subpixel;");
                Put_Line (File, "         Make            : String;");
                Put_Line (File, "         Model           : String;");
-               Put_Line (File, "         Transform       : Output_Transform);");
+               Put_Line (File, "         Transform       : Output_Transform) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Mode");
-               Put_Line (File, "        (Output  : in out Protocol.Output'Class;");
+               Put_Line (File, "        (Output  : in out Client.Output'Class;");
                Put_Line (File, "         Flags   : Output_Mode;");
                Put_Line (File, "         Width   : Integer;");
                Put_Line (File, "         Height  : Integer;");
-               Put_Line (File, "         Refresh : Integer);");
+               Put_Line (File, "         Refresh : Integer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Done");
-               Put_Line (File, "        (Output : in out Protocol.Output'Class);");
+               Put_Line (File, "        (Output : in out Client.Output'Class) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Scale");
-               Put_Line (File, "        (Output : in out Protocol.Output'Class;");
-               Put_Line (File, "         Factor : Integer);");
+               Put_Line (File, "        (Output : in out Client.Output'Class;");
+               Put_Line (File, "         Factor : Integer) is null;");
             end if;
 
             Put_Line (File, "   package " & Name & "_Events is");
             Put_Line (File, "");
             Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code;");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
             Put_Line (File, "");
@@ -1841,7 +1796,7 @@ procedure XML_Parser is
          Iterate_Over_Interfaces (Handle_Interface_Events'Access);
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
-      procedure Create_Wl_Thin_Spec_File is
+      procedure Create_Wl_Thin_Spec_File (Protocol_Name : String) is
 
          procedure Generate_Code_For_Interface_Constants is
             procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
@@ -1849,15 +1804,432 @@ procedure XML_Parser is
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
-               Put_Line (File, "   " & Name & " : aliased Interface_T with");
-               Put_Line (File, "      Import        => True,");
-               Put_Line (File, "      Convention    => C,");
-               Put_Line (File, "      External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
-               New_Line (File);
+               if Protocol_Name = "client" then
+                  Put_Line (File, "   " & Name & " : aliased constant Interface_T");
+                  Put_Line (File, "     with Import, Convention => C, External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
+                  New_Line (File);
+               else
+                  Put_Line (File, "   " & Name & " : aliased constant Interface_T;");
+               end if;
             end Handle_Interface;
          begin
             Iterate_Over_Interfaces (Handle_Interface'Access);
          end Generate_Code_For_Interface_Constants;
+
+         procedure Generate_Private_Code_For_Interface_Constants is
+            type Partial_Match (Is_Match : Boolean) is record
+               case Is_Match is
+                  when True  => null;
+                  when False => Index : Positive;
+               end case;
+            end record;
+
+            type Match (Is_Match : Boolean) is record
+               case Is_Match is
+                  when False => null;
+                  when True  => Index : Positive;
+               end case;
+            end record;
+
+            function Contains_At_Index
+              (Index : Positive;
+               Vector, Sub_Vector : Unbounded_String_Vectors.Vector) return Partial_Match
+            is
+               use type SU.Unbounded_String;
+            begin
+               for Sub_Index in Sub_Vector.First_Index .. Sub_Vector.Last_Index loop
+                  declare
+                     Vector_Index : constant Positive := Index + (Sub_Index - Sub_Vector.First_Index);
+                  begin
+                     if Vector_Index > Vector.Last_Index or else Sub_Vector (Sub_Index) /= Vector (Vector_Index) then
+                        return (Is_Match => False, Index => Sub_Index);
+                     end if;
+                  end;
+               end loop;
+               return (Is_Match => True);
+            end Contains_At_Index;
+
+            procedure Append_To_Vector
+              (Vector     : in out Unbounded_String_Vectors.Vector;
+               Sub_Vector : Unbounded_String_Vectors.Vector)
+            is
+               Search_Index : Unbounded_String_Vectors.Extended_Index := Vector.First_Index;
+               Index        : Unbounded_String_Vectors.Extended_Index;
+            begin
+               loop
+                  Index := Vector.Find_Index (Sub_Vector.First_Element, Search_Index);
+                  if Index = Unbounded_String_Vectors.No_Index then
+                     Vector.Append (Sub_Vector);
+                     exit;
+                  else
+                     declare
+                        Result : constant Partial_Match := Contains_At_Index (Index, Vector, Sub_Vector);
+                     begin
+                        case Result.Is_Match is
+                           when False =>
+                              if Result.Index - Sub_Vector.First_Index + Index - 1 = Vector.Last_Index then
+                                 --  Append remaining items of Sub_Vector to Vector
+                                 declare
+                                    Remaining_Vector : Unbounded_String_Vectors.Vector := Sub_Vector;
+                                 begin
+                                    Remaining_Vector.Delete_First (Count => Ada.Containers.Count_Type (Result.Index - Sub_Vector.First_Index));
+                                    Vector.Append (Remaining_Vector);
+                                 end;
+                                 exit;
+                              end if;
+                           when True =>
+                              exit;
+                        end case;
+                     end;
+                  end if;
+                  if Index >= Vector.Last_Index then
+                     Vector.Append (Sub_Vector);
+                     exit;
+                  end if;
+                  Search_Index := Index + 1;
+               end loop;
+            end Append_To_Vector;
+
+            function Find_Match
+              (Vector     : Unbounded_String_Vectors.Vector;
+               Sub_Vector : Unbounded_String_Vectors.Vector) return Match
+            is
+               Search_Index : Unbounded_String_Vectors.Extended_Index := Vector.First_Index;
+               Index        : Unbounded_String_Vectors.Extended_Index;
+            begin
+               loop
+                  Index := Vector.Find_Index (Sub_Vector.First_Element, Search_Index);
+                  if Index = Unbounded_String_Vectors.No_Index then
+                     return (Is_Match => False);
+                  else
+                     declare
+                        Result : constant Partial_Match := Contains_At_Index (Index, Vector, Sub_Vector);
+                     begin
+                        case Result.Is_Match is
+                           when False =>
+                              if Result.Index - Sub_Vector.First_Index + Index - 1 = Vector.Last_Index then
+                                 return (Is_Match => False);
+                              end if;
+                           when True =>
+                              return (Is_Match => True, Index => Index);
+                        end case;
+                     end;
+                  end if;
+                  if Index >= Vector.Last_Index then
+                     return (Is_Match => False);
+                  end if;
+                  Search_Index := Index + 1;
+               end loop;
+            end Find_Match;
+
+            function Get_Types
+              (Request_Tag : aliased Wayland_XML.Request_Tag) return Unbounded_String_Vectors.Vector
+            is
+               Result : Unbounded_String_Vectors.Vector;
+            begin
+               for Child of Children (Request_Tag) loop
+                  if Child.Kind_Id = Child_Arg then
+                     case Type_Attribute (Child.Arg_Tag.all) is
+                        when Type_New_Id | Type_Object =>
+                           if not Wayland_XML.Exists_Interface_Attribute (Child.Arg_Tag.all) then
+                              raise XML_Exception with
+                                "Argument of type 'object' or 'new_id' has no attribute 'interface'";
+                           end if;
+                           Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
+                        when others =>
+                           Result.Append (+"");
+                     end case;
+                  end if;
+               end loop;
+
+               return Result;
+            end Get_Types;
+
+            function Get_Types
+              (Event_Tag : aliased Wayland_XML.Event_Tag) return Unbounded_String_Vectors.Vector
+            is
+               Result : Unbounded_String_Vectors.Vector;
+            begin
+               for Child of Children (Event_Tag) loop
+                  if Child.Kind_Id = Child_Arg then
+                     case Type_Attribute (Child.Arg_Tag.all) is
+                        when Type_New_Id | Type_Object =>
+                           if not Wayland_XML.Exists_Interface_Attribute (Child.Arg_Tag.all) then
+                              raise XML_Exception with
+                                "Argument of type 'object' or 'new_id' has no attribute 'interface'";
+                           end if;
+                           Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
+                        when others =>
+                           Result.Append (+"");
+                     end case;
+                  end if;
+               end loop;
+
+               return Result;
+            end Get_Types;
+
+            procedure Append_Argument
+              (Signature : in out SU.Unbounded_String;
+               Argument  : Wayland_XML.Arg_Tag) is
+            begin
+               if Wayland_XML.Exists_Allow_Null (Argument)
+                 and then Wayland_XML.Allow_Null (Argument)
+               then
+                  SU.Append (Signature, "?");
+               end if;
+               case Type_Attribute (Argument) is
+                  when Type_Integer =>
+                     SU.Append (Signature, "i");
+                  when Type_Unsigned_Integer =>
+                     SU.Append (Signature, "u");
+                  when Type_String =>
+                     SU.Append (Signature, "s");
+                  when Type_FD =>
+                     SU.Append (Signature, "h");
+                  when Type_New_Id =>
+                     SU.Append (Signature, "n");
+                  when Type_Object =>
+                     SU.Append (Signature, "o");
+                  when Type_Fixed =>
+                     SU.Append (Signature, "f");
+                  when Type_Array =>
+                     SU.Append (Signature, "a");
+               end case;
+            end Append_Argument;
+
+            function Signature_To_String (Signature : SU.Unbounded_String) return String is
+              (if SU.Length (Signature) > 0 then """" & (+Signature) & """" else "Nul");
+
+            procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
+               Wayland_Interface_Name : constant String := Wayland_XML.Name (Interface_Tag);
+
+               Interface_Name : constant String :=
+                 Xml_Parser_Utils.Adaify_Name (Wayland_Interface_Name);
+
+               Request_Count : Natural := 0;
+               Event_Count   : Natural := 0;
+
+               procedure Handle_Request_Name (Request_Tag : aliased Wayland_XML.Request_Tag) is
+                  Wayland_Name : constant String := Wayland_XML.Name (Request_Tag);
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name (Wayland_Name);
+               begin
+                  Put_Line (File, "   " & Interface_Name & "_" & Name & "_Name : aliased char_array := " &
+                    """" & Wayland_Name & """ & Nul;");
+               end Handle_Request_Name;
+
+               procedure Handle_Request_Type (Request_Tag : aliased Wayland_XML.Request_Tag) is
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Request_Tag));
+                  Signature : SU.Unbounded_String;
+
+                  Types : Unbounded_String_Vectors.Vector := Get_Types (Request_Tag);
+               begin
+                  if Wayland_XML.Exists_Since (Request_Tag) then
+                     SU.Append (Signature, Aida.To_String
+                       (Positive (Wayland_XML.Since (Request_Tag))));
+                  end if;
+
+                  for Child of Children (Request_Tag) loop
+                     if Child.Kind_Id = Child_Arg then
+                        Append_Argument (Signature, Child.Arg_Tag.all);
+                     end if;
+                  end loop;
+
+                  if Types.Length = 0 then
+                     Types.Append (+"");
+                  end if;
+
+                  --  Append Types to All_Types if Types is not a subset of All_Types
+                  Append_To_Vector (All_Types, Types);
+
+                  Put_Line (File, "   " & Interface_Name & "_" & Name & "_Type : aliased char_array := " &
+                    Signature_To_String (Signature) & " & Nul;");
+               end Handle_Request_Type;
+
+               procedure Handle_Event_Name (Event_Tag : aliased Wayland_XML.Event_Tag) is
+                  Wayland_Name : constant String := Wayland_XML.Name (Event_Tag);
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name (Wayland_Name);
+               begin
+                  Put_Line (File, "   " & Interface_Name & "_" & Name & "_Name : aliased char_array := " &
+                    """" & Wayland_Name & """ & Nul;");
+               end Handle_Event_Name;
+
+               procedure Handle_Event_Type (Event_Tag : aliased Wayland_XML.Event_Tag) is
+                  Name : constant String := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Event_Tag));
+                  Signature : SU.Unbounded_String;
+
+                  Types : Unbounded_String_Vectors.Vector := Get_Types (Event_Tag);
+               begin
+                  if Wayland_XML.Exists_Since (Event_Tag) then
+                     SU.Append (Signature, Aida.To_String
+                       (Positive (Wayland_XML.Since (Event_Tag))));
+                  end if;
+
+                  for Child of Children (Event_Tag) loop
+                     if Child.Kind_Id = Child_Arg then
+                        Append_Argument (Signature, Child.Arg_Tag.all);
+                     end if;
+                  end loop;
+
+                  if Types.Length = 0 then
+                     Types.Append (+"");
+                  end if;
+
+                  --  Append Types to All_Types if Types is not a subset of All_Types
+                  Append_To_Vector (All_Types, Types);
+
+                  Put_Line (File, "   " & Interface_Name & "_" & Name & "_Type : aliased char_array := " & Signature_To_String (Signature) & " & Nul;");
+               end Handle_Event_Type;
+            begin
+               for Child of Children (Interface_Tag) loop
+                  if Child.Kind_Id = Child_Request then
+                     Request_Count := Request_Count + 1;
+                  end if;
+               end loop;
+
+               for Child of Children (Interface_Tag) loop
+                  if Child.Kind_Id = Child_Event then
+                     Event_Count := Event_Count + 1;
+                  end if;
+               end loop;
+
+               if Request_Count > 0 then
+                  Put_Line (File, "");
+                  Iterate_Over_Requests (Interface_Tag, Handle_Request_Name'Access);
+                  Put_Line (File, "");
+                  Iterate_Over_Requests (Interface_Tag, Handle_Request_Type'Access);
+               end if;
+
+               if Event_Count > 0 then
+                  Put_Line (File, "");
+                  Iterate_Over_Events (Interface_Tag, Handle_Event_Name'Access);
+                  Put_Line (File, "");
+                  Iterate_Over_Events (Interface_Tag, Handle_Event_Type'Access);
+               end if;
+            end Handle_Interface;
+
+            procedure Handle_Interface_2 (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
+               Version : constant String :=
+                 (if Wayland_XML.Exists_Version (Interface_Tag) then
+                    Aida.To_String (Positive (Wayland_XML.Version (Interface_Tag)))
+                  else
+                    "1");
+
+               Wayland_Interface_Name : constant String := Wayland_XML.Name (Interface_Tag);
+
+               Interface_Name : constant String :=
+                 Xml_Parser_Utils.Adaify_Name (Wayland_Interface_Name);
+
+               Name : constant String
+                 := Xml_Parser_Utils.Adaify_Name
+                   (Wayland_Interface_Name & "_Interface");
+
+               Request_Count : Natural := 0;
+               Event_Count   : Natural := 0;
+
+               Request_Index : Positive := 1;
+               Event_Index   : Positive := 1;
+
+               procedure Handle_Request_Tuple (Request_Tag : aliased Wayland_XML.Request_Tag) is
+                  Prefix : constant String :=
+                    (if Request_Count = 1 then "(1 => " elsif Request_Index = 1 then "(" else " ");
+                  Suffix : constant String :=
+                    (if Request_Index = Request_Count then ");" else ",");
+
+                  Name : constant String :=
+                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Request_Tag));
+
+                  Name_String : constant String := Interface_Name & "_" & Name & "_Name";
+                  Type_String : constant String := Interface_Name & "_" & Name & "_Type";
+
+                  Types : Unbounded_String_Vectors.Vector := Get_Types (Request_Tag);
+               begin
+                  if Types.Length = 0 then
+                     Types.Append (+"");
+                  end if;
+
+                  declare
+                     Index_Match : constant Match := Find_Match (All_Types, Types);
+                     pragma Assert (Index_Match.Is_Match);
+                  begin
+                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access, " & Type_String & "'Access, Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
+                  end;
+                  Request_Index := Request_Index + 1;
+               end Handle_Request_Tuple;
+
+               procedure Handle_Event_Tuple (Event_Tag : aliased Wayland_XML.Event_Tag) is
+                  Prefix : constant String :=
+                    (if Event_Count = 1 then "(1 => " elsif Event_Index = 1 then "(" else " ");
+                  Suffix : constant String :=
+                    (if Event_Index = Event_Count then ");" else ",");
+
+                  Name : constant String :=
+                    Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Event_Tag));
+
+                  Name_String : constant String := Interface_Name & "_" & Name & "_Name";
+                  Type_String : constant String := Interface_Name & "_" & Name & "_Type";
+
+                  Types : Unbounded_String_Vectors.Vector := Get_Types (Event_Tag);
+               begin
+                  if Types.Length = 0 then
+                     Types.Append (+"");
+                  end if;
+
+                  declare
+                     Index_Match : constant Match := Find_Match (All_Types, Types);
+                     pragma Assert (Index_Match.Is_Match);
+                  begin
+                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access, " & Type_String & "'Access, Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
+                  end;
+                  Event_Index := Event_Index + 1;
+               end Handle_Event_Tuple;
+            begin
+               for Child of Children (Interface_Tag) loop
+                  if Child.Kind_Id = Child_Request then
+                     Request_Count := Request_Count + 1;
+                  end if;
+               end loop;
+
+               for Child of Children (Interface_Tag) loop
+                  if Child.Kind_Id = Child_Event then
+                     Event_Count := Event_Count + 1;
+                  end if;
+               end loop;
+
+               if Request_Count > 0 then
+                  Put_Line (File, "");
+                  Put_Line (File, "   " & Interface_Name & "_Requests : aliased constant Wayland.API.Message_Array :=");
+                  Iterate_Over_Requests (Interface_Tag, Handle_Request_Tuple'Access);
+               end if;
+
+               if Event_Count > 0 then
+                  Put_Line (File, "");
+                  Put_Line (File, "   " & Interface_Name & "_Events : aliased constant Wayland.API.Message_Array :=");
+                  Iterate_Over_Events (Interface_Tag, Handle_Event_Tuple'Access);
+               end if;
+
+               Put_Line (File, "");
+               Put_Line (File, "   " & Interface_Name & "_Name : aliased char_array := """ & Wayland_Interface_Name &  """ & Nul;");
+               Put_Line (File, "");
+
+               Put_Line (File, "   " & Name & " : aliased constant Interface_T :=");
+               Put_Line (File, "     (Name         => " & Interface_Name & "_Name'Access,");
+               Put_Line (File, "      Version      => " & Version & ",");
+               Put_Line (File, "      Method_Count => " & Aida.To_String (Request_Count) & ",");
+               Put_Line (File, "      Methods      => " & (if Request_Count > 0 then Interface_Name & "_Requests'Access," else "null,"));
+               Put_Line (File, "      Event_Count  => " & Aida.To_String (Event_Count) & ",");
+               Put_Line (File, "      Events       => " & (if Event_Count > 0 then Interface_Name & "_Events'Access);" else "null);"));
+            end Handle_Interface_2;
+         begin
+            Put_Line (File, "   use Interfaces.C;");
+            Put_Line (File, "");
+            Put_Line (File, "   Nul : char renames Interfaces.C.nul;");
+            Iterate_Over_Interfaces (Handle_Interface'Access);
+
+            Put_Line (File, "");
+            Put_Line (File, "   Interface_Pointers : Wayland.API.Interface_Ptr_Array (1 .." & All_Types.Length'Image & ");");
+
+            Iterate_Over_Interfaces (Handle_Interface_2'Access);
+         end Generate_Private_Code_For_Interface_Constants;
 
          procedure Generate_Code_For_Interface_Ptrs is
             procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
@@ -2181,12 +2553,36 @@ procedure XML_Parser is
          end Generate_Code_For_Each_Interface;
 
       begin
+         if Protocol_Name = "client" then
+            Put_Line (File, "   subtype Display_Ptr   is Wayland.API.Display_Ptr;");
+            Put_Line (File, "");
+            Put_Line (File, "   function Display_Connect return Display_Ptr;");
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
+         else
+            Put_Line (File, "   use Wayland.Protocols.Thin_Client;");
+         end if;
+         Put_Line (File, "");
          Generate_Code_For_Interface_Constants;
+         if Protocol_Name /= "client" then
+            New_Line (File);
+            Put_Line (File, "   function Initialize return Boolean;");
+            New_Line (File);
+         end if;
+
          Generate_Code_For_Interface_Ptrs;
          Generate_Code_For_Each_Interface;
+
+         if Protocol_Name /= "client" then
+            Put_Line (File, "private");
+            New_Line (File);
+
+            Generate_Private_Code_For_Interface_Constants;
+            New_Line (File);
+         end if;
       end Create_Wl_Thin_Spec_File;
 
-      procedure Generate_Use_Type_Declarions is
+      procedure Generate_Use_Type_Declarions (Package_Name : String) is
          procedure Handle_Interface (Interface_Tag : aliased Wayland_XML.Interface_Tag) is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
@@ -2194,6 +2590,9 @@ procedure XML_Parser is
             Put_Line (File, "   use type Thin." & Name & "_Ptr;");
          end Handle_Interface;
       begin
+         Put_Line (File, "   package Thin renames Wayland.Protocols.Thin_" & Package_Name & ";");
+         New_Line (File);
+
          Iterate_Over_Interfaces (Handle_Interface'Access);
 
          New_Line (File);
@@ -2224,14 +2623,6 @@ procedure XML_Parser is
             New_Line (File);
          end Handle_Interface;
       begin
-         Put_Line (File, "   type Interface_Type is tagged limited record");
-         Put_Line (File, "      My_Interface : not null Thin.Interface_Ptr;");
-         Put_Line (File, "   end record;");
-         New_Line (File);
-         Put_Line (File, "   function Name (I : Interface_Type) return String is");
-         Put_Line (File, "     (Value (I.My_Interface.Name));");
-         New_Line (File);
-
          Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Private_Code_For_The_Interface_Constants;
 
@@ -2239,7 +2630,7 @@ procedure XML_Parser is
       Create_File;
    end Create_Wayland_Spec_File;
 
-   procedure Create_Wayland_Body_File (File_Name : String) is
+   procedure Create_Wayland_Body_File is
       File : Ada.Text_IO.File_Type;
 
       procedure Create_Wl_Thin_Body_File;
@@ -2252,23 +2643,21 @@ procedure XML_Parser is
       begin
          if Protocol_Name = "client" then
             Ada.Text_IO.Create
-              (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-protocol.adb");
+              (File, Ada.Text_IO.Out_File,
+               Out_Folder & "wayland-protocols-" & Protocol_Name & ".adb");
 
             Put_Line (File, "with System.Address_To_Access_Conversions;");
             New_Line (File);
-            Put_Line (File, "with Interfaces.C;");
+            Put_Line (File, "with Interfaces.C.Strings;");
             New_Line (File);
             Put_Line (File, "with C_Binding.Linux;");
             New_Line (File);
-            Put_Line (File, "with Wayland.API;");
-            Put_Line (File, "with Wayland." & Package_Name & ".Constants;");
-            New_Line (File);
-            Put_Line (File, "package body Wayland." & Package_Name & ".Protocol is");
+            Put_Line (File, "package body Wayland.Protocols." & Package_Name & " is");
             New_Line (File);
 
             Generate_Manually_Edited_Code;
 
-            Put_Line (File, "end Wayland." & Package_Name & ".Protocol;");
+            Put_Line (File, "end Wayland.Protocols." & Package_Name & ";");
 
             Ada.Text_IO.Close (File);
          end if;
@@ -2276,37 +2665,64 @@ procedure XML_Parser is
          -----------------------------------------------------------------------
 
          Ada.Text_IO.Create
-           (File, Ada.Text_IO.Out_File, Out_Folder & "wayland-" & Protocol_Name & "-thin.adb");
+           (File, Ada.Text_IO.Out_File,
+            Out_Folder & "wayland-protocols-thin_" & Protocol_Name & ".adb");
 
          Put_Line (File, "with Ada.Unchecked_Conversion;");
          Put_Line (File, "");
-         Put_Line (File, "with Wayland." & Package_Name & ".Constants;");
+         Put_Line (File, "package body Wayland.Protocols.Thin_" & Package_Name & " is");
          Put_Line (File, "");
-         Put_Line (File, "use Wayland." & Package_Name & ".Constants;");
-         Put_Line (File, "");
-         Put_Line (File, "--  Mostly auto generated from " & File_Name);
-         Put_Line (File, "package body Wayland." & Package_Name & ".Thin is");
+
+         if Protocol_Name /= "client" then
+            Put_Line (File, "   function Initialize return Boolean is");
+            Put_Line (File, "   begin");
+
+            Put_Line (File, "      Interface_Pointers :=");
+            for Index in All_Types.First_Index .. All_Types.Last_Index loop
+               declare
+                  Value : constant String := +All_Types (Index);
+
+                  Prefix : constant String := (if Index = All_Types.First_Index then "(" else " ");
+                  Suffix : constant String := (if Index = All_Types.Last_Index then ");" else ",");
+               begin
+                  Put_Line (File, "        " & Prefix & (if Value'Length > 0 then Xml_Parser_Utils.Adaify_Name (Value) & "_Interface'Access" else "null") & Suffix);
+               end;
+            end loop;
+
+            Put_Line (File, "      return True;");
+            Put_Line (File, "   end Initialize;");
+            Put_Line (File, "");
+         end if;
+
+         Put (File, "   package Constants is");
+
+         Generate_Code_For_Numeric_Constants (File);
+
+         Put_Line (File, "   end Constants;");
          Put_Line (File, "");
          Put_Line (File, "   use type Proxy_Ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   function Display_Connect return Display_Ptr is");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      return Wayland.API.Display_Connect (Interfaces.C.Strings.Null_Ptr);");
-         Put_Line (File, "   end Display_Connect;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr) is");
-         Put_Line (File, "      use type Wayland.API.Display_Ptr;");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if This /= null then");
-         Put_Line (File, "         Wayland.API.Display_Disconnect (This);");
-         Put_Line (File, "         This := null;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Display_Disconnect;");
+
+         if Protocol_Name = "client" then
+            Put_Line (File, "");
+            Put_Line (File, "   function Display_Connect return Display_Ptr is");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      return Wayland.API.Display_Connect (Interfaces.C.Strings.Null_Ptr);");
+            Put_Line (File, "   end Display_Connect;");
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr) is");
+            Put_Line (File, "      use type Wayland.API.Display_Ptr;");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      if This /= null then");
+            Put_Line (File, "         Wayland.API.Display_Disconnect (This);");
+            Put_Line (File, "         This := null;");
+            Put_Line (File, "      end if;");
+            Put_Line (File, "   end Display_Disconnect;");
+         end if;
 
          Create_Wl_Thin_Body_File;
 
          Put_Line (File, "");
-         Put_Line (File, "end Wayland." & Package_Name & ".Thin;");
+         Put_Line (File, "end Wayland.Protocols.Thin_" & Package_Name & ";");
 
          Ada.Text_IO.Close (File);
       end Create_File;
@@ -2403,7 +2819,7 @@ procedure XML_Parser is
                               if Type_Attribute (Child.Arg_Tag.all) /= Type_Object then
                                  Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))));
                               else
-                                 Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))) & ".all'Address");
+                                 Put (File, Spaces * " " & "Proxy_Ptr (" & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))) & ")");
                               end if;
                            end if;
                         end loop;
@@ -2644,6 +3060,9 @@ procedure XML_Parser is
             Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
             Put_Line (File, "     (Object.Proxy /= null);");
             Put_Line (File, "");
+            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
+            Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+            Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
                Put_Line (File, "   procedure Release (Object : in out " & Name & ") is");
@@ -2655,15 +3074,48 @@ procedure XML_Parser is
                Put_Line (File, "   end Release;");
                Put_Line (File, "");
             end if;
+
+            if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+               Put_Line (File, "   procedure Bind");
+               Put_Line (File, "     (Object   : in out " & Name & ";");
+               Put_Line (File, "      Registry : Client.Registry'Class;");
+               Put_Line (File, "      Id       : Unsigned_32;");
+               Put_Line (File, "      Version  : Unsigned_32)");
+               Put_Line (File, "   is");
+               Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
+               Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      if Proxy /= null then");
+               Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
+               Put_Line (File, "      end if;");
+               Put_Line (File, "   end Bind;");
+               Put_Line (File, "");
+            end if;
          end Handle_Interface;
       begin
-         Put_Line (File, "   subtype int       is Interfaces.C.int;");
+         Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   use type int;");
          Put_Line (File, "   use all type chars_ptr;");
          Put_Line (File, "");
          Put_Line (File, "   use type Thin.Proxy_Ptr;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Bind");
+         Put_Line (File, "     (Object  : Registry;");
+         Put_Line (File, "      Iface   : Interface_Type;");
+         Put_Line (File, "      Id      : Unsigned_32;");
+         Put_Line (File, "      Version : Unsigned_32) return Secret_Proxy");
+         Put_Line (File, "   is");
+         Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
+         Put_Line (File, "        Thin.Registry_Bind");
+         Put_Line (File, "          (Registry    => Object.Proxy,");
+         Put_Line (File, "           Name        => Id,");
+         Put_Line (File, "           Interface_V => Iface.My_Interface,");
+         Put_Line (File, "           New_Id      => Version);");
+         Put_Line (File, "   begin");
+         Put_Line (File, "      return Secret_Proxy (Proxy);");
+         Put_Line (File, "   end Bind;");
          Put_Line (File, "");
          Put_Line (File, "   package body Display_Events is");
          Put_Line (File, "");
@@ -2694,7 +3146,7 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "         M : constant String := Interfaces.C.Strings.Value (Message);");
          Put_Line (File, "      begin");
-         Put_Line (File, "         Error (Conversion.To_Pointer (Data).all, Object_Id, Code, M);");
+         Put_Line (File, "         Error (Conversion.To_Pointer (Data).all, Code, M);");
          Put_Line (File, "      end Internal_Error;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Delete_Id");
@@ -2992,12 +3444,12 @@ procedure XML_Parser is
          Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr)");
          Put_Line (File, "      with Convention => C;");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Internal_Dnd_Drop_Performed");
+         Put_Line (File, "      procedure Internal_Performed");
          Put_Line (File, "        (Data        : Void_Ptr;");
          Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr)");
          Put_Line (File, "      with Convention => C;");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Internal_Dnd_Finished");
+         Put_Line (File, "      procedure Internal_Finished");
          Put_Line (File, "        (Data        : Void_Ptr;");
          Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr)");
          Put_Line (File, "      with Convention => C;");
@@ -3042,23 +3494,23 @@ procedure XML_Parser is
          Put_Line (File, "         Cancelled (Conversion.To_Pointer (Data).all);");
          Put_Line (File, "      end Internal_Cancelled;");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Internal_Dnd_Drop_Performed");
+         Put_Line (File, "      procedure Internal_Performed");
          Put_Line (File, "        (Data        : Void_Ptr;");
          Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr)");
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);");
          Put_Line (File, "      begin");
-         Put_Line (File, "         Dnd_Drop_Performed (Conversion.To_Pointer (Data).all);");
-         Put_Line (File, "      end Internal_Dnd_Drop_Performed;");
+         Put_Line (File, "         Performed (Conversion.To_Pointer (Data).all);");
+         Put_Line (File, "      end Internal_Performed;");
          Put_Line (File, "");
-         Put_Line (File, "      procedure Internal_Dnd_Finished");
+         Put_Line (File, "      procedure Internal_Finished");
          Put_Line (File, "        (Data        : Void_Ptr;");
          Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr)");
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);");
          Put_Line (File, "      begin");
-         Put_Line (File, "         Dnd_Drop_Performed (Conversion.To_Pointer (Data).all);");
-         Put_Line (File, "      end Internal_Dnd_Finished;");
+         Put_Line (File, "         Finished (Conversion.To_Pointer (Data).all);");
+         Put_Line (File, "      end Internal_Finished;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Action");
          Put_Line (File, "        (Data        : Void_Ptr;");
@@ -3074,9 +3526,8 @@ procedure XML_Parser is
          Put_Line (File, "        := (Target             => Internal_Target'Unrestricted_Access,");
          Put_Line (File, "            Send               => Internal_Send'Unrestricted_Access,");
          Put_Line (File, "            Cancelled          => Internal_Cancelled'Unrestricted_Access,");
-         Put_Line (File, "            Dnd_Drop_Performed =>");
-         Put_Line (File, "              Internal_Dnd_Drop_Performed'Unrestricted_Access,");
-         Put_Line (File, "            Dnd_Finished       => Internal_Dnd_Finished'Unrestricted_Access,");
+         Put_Line (File, "            Dnd_Drop_Performed => Internal_Performed'Unrestricted_Access,");
+         Put_Line (File, "            Dnd_Finished       => Internal_Finished'Unrestricted_Access,");
          Put_Line (File, "            Action             => Internal_Action'Unrestricted_Access);");
          Put_Line (File, "");
          Put_Line (File, "      function Subscribe");
@@ -3155,8 +3606,8 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface     := (Proxy => Surface);");
-         Put_Line (File, "         Offer : constant Protocol.Data_Offer := (Proxy => Id);");
+         Put_Line (File, "         S : constant Client.Surface     := (Proxy => Surface);");
+         Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Enter (Conversion.To_Pointer (Data).all, Serial, S, X, Y, Offer);");
          Put_Line (File, "      end Internal_Enter;");
@@ -3197,7 +3648,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
          Put_Line (File, "");
-         Put_Line (File, "         Offer : constant Protocol.Data_Offer := (Proxy => Id);");
+         Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Selection (Conversion.To_Pointer (Data).all, Offer);");
          Put_Line (File, "      end Internal_Selection;");
@@ -3247,7 +3698,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Surface);");
          Put_Line (File, "");
-         Put_Line (File, "         O : constant Protocol.Output := (Proxy => Output);");
+         Put_Line (File, "         O : constant Client.Output := (Proxy => Output);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Enter (Conversion.To_Pointer (Data).all, O);");
          Put_Line (File, "      end Internal_Enter;");
@@ -3259,7 +3710,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Surface);");
          Put_Line (File, "");
-         Put_Line (File, "         O : constant Protocol.Output := (Proxy => Output);");
+         Put_Line (File, "         O : constant Client.Output := (Proxy => Output);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Leave (Conversion.To_Pointer (Data).all, O);");
          Put_Line (File, "      end Internal_Leave;");
@@ -3418,7 +3869,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface := (Proxy => Surface);");
+         Put_Line (File, "         S : constant Client.Surface := (Proxy => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Pointer_Enter (Conversion.To_Pointer (Data).all, Serial, S, Surface_X, Surface_Y);");
          Put_Line (File, "      end Internal_Pointer_Enter;");
@@ -3431,7 +3882,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface := (Proxy => Surface);");
+         Put_Line (File, "         S : constant Client.Surface := (Proxy => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Pointer_Leave (Conversion.To_Pointer (Data).all, Serial, S);");
          Put_Line (File, "      end Internal_Pointer_Leave;");
@@ -3555,7 +4006,7 @@ procedure XML_Parser is
          Put_Line (File, "         Keyboard : Thin.Keyboard_Ptr;");
          Put_Line (File, "         Serial   : Unsigned_32;");
          Put_Line (File, "         Surface  : Thin.Surface_Ptr;");
-         Put_Line (File, "         Keys     : Wayland_Array_T)");
+         Put_Line (File, "         Keys     : Wayland_Array)");
          Put_Line (File, "      with Convention => C;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Leave");
@@ -3608,13 +4059,18 @@ procedure XML_Parser is
          Put_Line (File, "         Keyboard : Thin.Keyboard_Ptr;");
          Put_Line (File, "         Serial   : Unsigned_32;");
          Put_Line (File, "         Surface  : Thin.Surface_Ptr;");
-         Put_Line (File, "         Keys     : Wayland_Array_T)");
+         Put_Line (File, "         Keys     : Wayland_Array)");
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface  := (Proxy => Surface);");
+         Put_Line (File, "         S : constant Client.Surface  := (Proxy => Surface);");
+         Put_Line (File, "");
+         Put_Line (File, "         Key_Size : constant := Unsigned_32'Size / System.Storage_Unit;");
+         Put_Line (File, "");
+         Put_Line (File, "         Pressed_Keys : Unsigned_32_Array (1 .. Natural (Keys.Size) / Key_Size)");
+         Put_Line (File, "           with Address => Keys.Data;");
          Put_Line (File, "      begin");
-         Put_Line (File, "         Enter (Conversion.To_Pointer (Data).all, Serial, S, Keys);");
+         Put_Line (File, "         Enter (Conversion.To_Pointer (Data).all, Serial, S, Pressed_Keys);");
          Put_Line (File, "      end Internal_Enter;");
          Put_Line (File, "");
          Put_Line (File, "      procedure Internal_Leave");
@@ -3625,7 +4081,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface  := (Proxy => Surface);");
+         Put_Line (File, "         S : constant Client.Surface  := (Proxy => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Leave (Conversion.To_Pointer (Data).all, Serial, S);");
          Put_Line (File, "      end Internal_Leave;");
@@ -3762,7 +4218,7 @@ procedure XML_Parser is
          Put_Line (File, "      is");
          Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Touch);");
          Put_Line (File, "");
-         Put_Line (File, "         S : constant Protocol.Surface := (Proxy => Surface);");
+         Put_Line (File, "         S : constant Client.Surface := (Proxy => Surface);");
          Put_Line (File, "      begin");
          Put_Line (File, "         Down (Conversion.To_Pointer (Data).all, Serial, Time, S, Id, X, Y);");
          Put_Line (File, "      end Internal_Down;");
@@ -4006,38 +4462,69 @@ procedure XML_Parser is
          Put_Line (File, "          (Wayland.API.Display_Get_File_Descriptor (Object.Proxy), Timeout);");
          Put_Line (File, "   begin");
          Put_Line (File, "      case I is");
-         Put_Line (File, "         when 1..Integer'Last   => return Events_Need_Processing;");
-         Put_Line (File, "         when 0                 => return No_Events;");
-         Put_Line (File, "         when Integer'First..-1 => return Error;");
+         Put_Line (File, "         when 1 .. Integer'Last   => return Events_Need_Processing;");
+         Put_Line (File, "         when 0                   => return No_Events;");
+         Put_Line (File, "         when Integer'First .. -1 => return Error;");
          Put_Line (File, "      end case;");
          Put_Line (File, "   end Check_For_Events;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Get_Registry (Object   : Display;");
-         Put_Line (File, "                           Registry : in out Protocol.Registry'Class) is");
+         Put_Line (File, "                           Registry : in out Client.Registry'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Registry.Proxy := Thin.Display_Get_Registry (Object.Proxy);");
          Put_Line (File, "   end Get_Registry;");
          Put_Line (File, "");
-         Put_Line (File, "   function Dispatch (Object : Display) return Integer is");
+         Put_Line (File, "   function Flush (Object : Display) return Optional_Result is");
+         Put_Line (File, "      Result : constant Integer := Wayland.API.Display_Flush (Object.Proxy);");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return Integer (Wayland.API.Display_Dispatch (Object.Proxy));");
+         Put_Line (File, "      if Result /= -1 then");
+         Put_Line (File, "         return (Is_Success => True, Count => Result);");
+         Put_Line (File, "      else");
+         Put_Line (File, "         return (Is_Success => False);");
+         Put_Line (File, "      end if;");
+         Put_Line (File, "   end Flush;");
+         Put_Line (File, "");
+         Put_Line (File, "   procedure Flush (Object : Display) is");
+         Put_Line (File, "      Result : constant Optional_Result := Object.Flush;");
+         Put_Line (File, "   begin");
+         Put_Line (File, "      --  FIXME If not Result.Is_Success and errno = EAGAIN then poll on FD and try again");
+         Put_Line (File, "      if not Result.Is_Success then");
+         Put_Line (File, "         raise Program_Error;");
+         Put_Line (File, "      end if;");
+         Put_Line (File, "   end Flush;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Dispatch (Object : Display) return Optional_Result is");
+         Put_Line (File, "      Result : constant Integer := Wayland.API.Display_Dispatch (Object.Proxy);");
+         Put_Line (File, "   begin");
+         Put_Line (File, "      if Result /= -1 then");
+         Put_Line (File, "         return (Is_Success => True, Count => Result);");
+         Put_Line (File, "      else");
+         Put_Line (File, "         return (Is_Success => False);");
+         Put_Line (File, "      end if;");
          Put_Line (File, "   end Dispatch;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Dispatch (Object : Display) is");
-         Put_Line (File, "      I : Integer;");
-         Put_Line (File, "      pragma Unreferenced (I);");
+         Put_Line (File, "      Result : constant Optional_Result := Object.Dispatch;");
          Put_Line (File, "   begin");
-         Put_Line (File, "      I := Object.Dispatch;");
+         Put_Line (File, "      if not Result.Is_Success then");
+         Put_Line (File, "         raise Program_Error;");
+         Put_Line (File, "      end if;");
          Put_Line (File, "   end Dispatch;");
          Put_Line (File, "");
-         Put_Line (File, "   function Dispatch_Pending (Object : Display) return Integer is");
+         Put_Line (File, "   function Dispatch_Pending (Object : Display) return Optional_Result is");
+         Put_Line (File, "      Result : constant Integer := Wayland.API.Display_Dispatch_Pending (Object.Proxy);");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return Wayland.API.Display_Dispatch_Pending (Object.Proxy);");
+         Put_Line (File, "      if Result /= -1 then");
+         Put_Line (File, "         return (Is_Success => True, Count => Result);");
+         Put_Line (File, "      else");
+         Put_Line (File, "         return (Is_Success => False);");
+         Put_Line (File, "      end if;");
          Put_Line (File, "   end Dispatch_Pending;");
          Put_Line (File, "");
-         Put_Line (File, "   function Prepare_Read (Object : Display) return Integer is");
+         Put_Line (File, "   function Prepare_Read (Object : Display) return Call_Result_Code is");
+         Put_Line (File, "      Result : constant Integer := Wayland.API.Display_Prepare_Read (Object.Proxy);");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return Wayland.API.Display_Prepare_Read (Object.Proxy);");
+         Put_Line (File, "      return (if Result = 0 then Success else Error);");
          Put_Line (File, "   end Prepare_Read;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Cancel_Read (Object : Display) is");
@@ -4046,113 +4533,59 @@ procedure XML_Parser is
          Put_Line (File, "   end Cancel_Read;");
          Put_Line (File, "");
          Put_Line (File, "   function Read_Events (Object : Display) return Call_Result_Code is");
-         Put_Line (File, "      I : constant Integer");
+         Put_Line (File, "      Result : constant Integer");
          Put_Line (File, "        := Wayland.API.Display_Read_Events (Object.Proxy);");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return (if I = 0 then Success else Error);");
+         Put_Line (File, "      return (if Result = 0 then Success else Error);");
          Put_Line (File, "   end Read_Events;");
          Put_Line (File, "");
          Put_Line (File, "   function Roundtrip (Object : Display) return Integer is");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return Integer (Wayland.API.Display_Roundtrip (Object.Proxy));");
+         Put_Line (File, "      return Wayland.API.Display_Roundtrip (Object.Proxy);");
          Put_Line (File, "   end Roundtrip;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Roundtrip (Object : Display) is");
          Put_Line (File, "      I : Integer;");
-         Put_Line (File, "      pragma Unreferenced (I);");
          Put_Line (File, "   begin");
          Put_Line (File, "      I := Object.Roundtrip;");
+         Put_Line (File, "      pragma Assert (I /= -1);");
          Put_Line (File, "   end Roundtrip;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Object   : in out Compositor;");
-         Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-         Put_Line (File, "                   Id       : Unsigned_32;");
-         Put_Line (File, "                   Version  : Unsigned_32)");
-         Put_Line (File, "   is");
-         Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-         Put_Line (File, "        Thin.Registry_Bind");
-         Put_Line (File, "          (Registry    => Registry.Proxy,");
-         Put_Line (File, "           Name        => Id,");
-         Put_Line (File, "           Interface_V => Thin.Compositor_Interface'Access,");
-         Put_Line (File, "           New_Id      => Version);");
-         Put_Line (File, "");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if Proxy /= null then");
-         Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Bind;");
-         Put_Line (File, "");
          Put_Line (File, "   procedure Create_Surface (Object  : Compositor;");
-         Put_Line (File, "                             Surface : in out Protocol.Surface'Class) is");
+         Put_Line (File, "                             Surface : in out Client.Surface'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Surface.Proxy := Thin.Compositor_Create_Surface (Object.Proxy);");
          Put_Line (File, "   end Create_Surface;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Create_Region (Object : Compositor;");
-         Put_Line (File, "                            Region : in out Protocol.Region'Class) is");
+         Put_Line (File, "                            Region : in out Client.Region'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Region.Proxy := Thin.Compositor_Create_Region (Object.Proxy);");
          Put_Line (File, "   end Create_Region;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Object   : in out Seat;");
-         Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-         Put_Line (File, "                   Id       : Unsigned_32;");
-         Put_Line (File, "                   Version  : Unsigned_32)");
-         Put_Line (File, "   is");
-         Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-         Put_Line (File, "        Thin.Registry_Bind");
-         Put_Line (File, "          (Registry    => Registry.Proxy,");
-         Put_Line (File, "           Name        => Id,");
-         Put_Line (File, "           Interface_V => Thin.Seat_Interface'Access,");
-         Put_Line (File, "           New_Id      => Version);");
-         Put_Line (File, "");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if Proxy /= null then");
-         Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Bind;");
-         Put_Line (File, "");
          Put_Line (File, "   procedure Get_Pointer (Object  : Seat;");
-         Put_Line (File, "                          Pointer : in out Protocol.Pointer'Class) is");
+         Put_Line (File, "                          Pointer : in out Client.Pointer'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Pointer.Proxy := Thin.Seat_Get_Pointer (Object.Proxy);");
          Put_Line (File, "   end Get_Pointer;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Get_Keyboard (Object   : Seat;");
-         Put_Line (File, "                           Keyboard : in out Protocol.Keyboard'Class) is");
+         Put_Line (File, "                           Keyboard : in out Client.Keyboard'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Keyboard.Proxy := Thin.Seat_Get_Keyboard (Object.Proxy);");
          Put_Line (File, "   end Get_Keyboard;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Get_Touch (Object : Seat;");
-         Put_Line (File, "                        Touch  : in out Protocol.Touch'Class) is");
+         Put_Line (File, "                        Touch  : in out Client.Touch'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Touch.Proxy := Thin.Seat_Get_Touch (Object.Proxy);");
          Put_Line (File, "   end Get_Touch;");
-         Put_Line (File, "");
-         Put_Line (File, "   procedure Bind (Object   : in out Shm;");
-         Put_Line (File, "                   Registry : Protocol.Registry'Class;");
-         Put_Line (File, "                   Id       : Unsigned_32;");
-         Put_Line (File, "                   Version  : Unsigned_32)");
-         Put_Line (File, "   is");
-         Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-         Put_Line (File, "        Thin.Registry_Bind");
-         Put_Line (File, "          (Registry    => Registry.Proxy,");
-         Put_Line (File, "           Name        => Id,");
-         Put_Line (File, "           Interface_V => Thin.Shm_Interface'Access,");
-         Put_Line (File, "           New_Id      => Version);");
-         Put_Line (File, "");
-         Put_Line (File, "   begin");
-         Put_Line (File, "      if Proxy /= null then");
-         Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-         Put_Line (File, "      end if;");
-         Put_Line (File, "   end Bind;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Create_Pool");
          Put_Line (File, "     (Object          : Shm;");
          Put_Line (File, "      File_Descriptor : C_Binding.Linux.Files.File;");
          Put_Line (File, "      Size            : Positive;");
-         Put_Line (File, "      Pool            : in out Protocol.Shm_Pool'Class) is");
+         Put_Line (File, "      Pool            : in out Client.Shm_Pool'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Pool.Proxy := Thin.Shm_Create_Pool");
          Put_Line (File, "        (Object.Proxy,");
@@ -4166,7 +4599,7 @@ procedure XML_Parser is
          Put_Line (File, "                            Height : Natural;");
          Put_Line (File, "                            Stride : Natural;");
          Put_Line (File, "                            Format : Shm_Format;");
-         Put_Line (File, "                            Buffer : in out Protocol.Buffer'Class) is");
+         Put_Line (File, "                            Buffer : in out Client.Buffer'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Buffer.Proxy := Thin.Shm_Pool_Create_Buffer");
          Put_Line (File, "        (Object.Proxy, Offset, Width, Height, Stride, Format);");
@@ -4218,7 +4651,7 @@ procedure XML_Parser is
          Put_Line (File, "   end Set_Actions;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Attach (Object : Surface;");
-         Put_Line (File, "                     Buffer : Protocol.Buffer'Class;");
+         Put_Line (File, "                     Buffer : Client.Buffer'Class;");
          Put_Line (File, "                     X, Y   : Integer) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Thin.Surface_Attach (Object.Proxy, Buffer.Proxy, X, Y);");
@@ -4240,13 +4673,13 @@ procedure XML_Parser is
          Put_Line (File, "   end Frame;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Set_Opaque_Region (Object : Surface;");
-         Put_Line (File, "                                Region : Protocol.Region'Class) is");
+         Put_Line (File, "                                Region : Client.Region'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Thin.Surface_Set_Opaque_Region (Object.Proxy, Region.Proxy);");
          Put_Line (File, "   end Set_Opaque_Region;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Set_Input_Region (Object : Surface;");
-         Put_Line (File, "                               Region : Protocol.Region'Class) is");
+         Put_Line (File, "                               Region : Client.Region'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Thin.Surface_Set_Input_Region (Object.Proxy, Region.Proxy);");
          Put_Line (File, "");
@@ -4280,14 +4713,14 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "   function Sync (Object : Display) return Callback'Class is");
          Put_Line (File, "   begin");
-         Put_Line (File, "      return Callback : Protocol.Callback do");
+         Put_Line (File, "      return Callback : Client.Callback do");
          Put_Line (File, "         Callback.Proxy := Thin.Display_Sync (Object.Proxy);");
          Put_Line (File, "      end return;");
          Put_Line (File, "   end Sync;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Set_Cursor (Object    : Pointer;");
          Put_Line (File, "                         Serial    : Unsigned_32;");
-         Put_Line (File, "                         Surface   : Protocol.Surface'Class;");
+         Put_Line (File, "                         Surface   : Client.Surface'Class;");
          Put_Line (File, "                         Hotspot_X : Integer;");
          Put_Line (File, "                         Hotspot_Y : Integer) is");
          Put_Line (File, "   begin");
@@ -4315,10 +4748,10 @@ procedure XML_Parser is
          Put_Line (File, "   end Subtract;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Get_Subsurface");
-         Put_Line (File, "     (Object     : Protocol.Subcompositor;");
-         Put_Line (File, "      Surface    : Protocol.Surface'Class;");
-         Put_Line (File, "      Parent     : Protocol.Surface'Class;");
-         Put_Line (File, "      Subsurface : in out Protocol.Subsurface'Class) is");
+         Put_Line (File, "     (Object     : Subcompositor;");
+         Put_Line (File, "      Surface    : Client.Surface'Class;");
+         Put_Line (File, "      Parent     : Client.Surface'Class;");
+         Put_Line (File, "      Subsurface : in out Client.Subsurface'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Subsurface.Proxy :=");
          Put_Line (File, "        Thin.Subcompositor_Get_Subsurface");
@@ -4327,7 +4760,7 @@ procedure XML_Parser is
          Put_Line (File, "           Parent.Proxy);");
          Put_Line (File, "   end Get_Subsurface;");
          Put_Line (File, "");
-         Put_Line (File, "   procedure Set_Position (Object : Protocol.Subsurface;");
+         Put_Line (File, "   procedure Set_Position (Object : Subsurface;");
          Put_Line (File, "                           X, Y   : Integer) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Thin.Subsurface_Set_Position (Object.Proxy, X, Y);");
@@ -4356,12 +4789,12 @@ procedure XML_Parser is
          Put_Line (File, "   end Set_Desync;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Offer (Object    : Data_Source;");
-         Put_Line (File, "                    Mime_Type : String) is");
+         Put_Line (File, "                    Mime_Type : String)");
+         Put_Line (File, "   is");
+         Put_Line (File, "      MT : Interfaces.C.Strings.chars_ptr := Interfaces.C.Strings.New_String (Mime_Type);");
          Put_Line (File, "   begin");
-         Put_Line (File, "      Wayland.API.Proxy_Marshal");
-         Put_Line (File, "        (Wayland.API.Proxy (Object.Proxy.all),");
-         Put_Line (File, "         Constants.Data_Source_Offer,");
-         Put_Line (File, "         +Mime_Type);");
+         Put_Line (File, "      Thin.Data_Source_Offer (Object.Proxy, MT);");
+         Put_Line (File, "      Interfaces.C.Strings.Free (MT);");
          Put_Line (File, "   end Offer;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Set_Actions (Object      : Data_Source;");
@@ -4398,7 +4831,7 @@ procedure XML_Parser is
          Put_Line (File, "   end Create_Data_Source;");
          Put_Line (File, "");
          Put_Line (File, "   procedure Get_Data_Device (Object : Data_Device_Manager;");
-         Put_Line (File, "                              Seat   : Protocol.Seat'Class;");
+         Put_Line (File, "                              Seat   : Client.Seat'Class;");
          Put_Line (File, "                              Device : in out Data_Device'Class) is");
          Put_Line (File, "   begin");
          Put_Line (File, "      Device.Proxy := Thin.Data_Device_Manager_Get_Data_Device");

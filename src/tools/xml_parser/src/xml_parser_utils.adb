@@ -170,7 +170,7 @@ package body Xml_Parser_Utils is
          when Type_Fixed =>
             Set_Unbounded_String (N, "Fixed");
          when Type_Array =>
-            Set_Unbounded_String (N, "Wayland_Array_T");
+            Set_Unbounded_String (N, "Wayland_Array");
       end case;
       return To_String (N);
    end Arg_Type_As_String;

@@ -200,13 +200,13 @@ package body Wayland_XML is
                        Value  => new String'(Value));
    end Set_Name;
 
-   procedure Set_Since_Attribute (This  : in out Event_Tag;
-                                  Value : Version_Number)
+   procedure Set_Since (This  : in out Event_Tag;
+                        Value : Version_Number)
    is
    begin
       This.My_Since_Attribute := (Exists => True,
                                   Value  => Value);
-   end Set_Since_Attribute;
+   end Set_Since;
 
    procedure Append_Child (This  : in out Event_Tag;
                            Item  : not null Wayland_XML.Description_Tag_Ptr)

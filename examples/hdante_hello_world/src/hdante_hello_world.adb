@@ -541,19 +541,17 @@ package body Hdante_Hello_World is
 
       Data.Surface.Commit;
 
-      Put_Line ("Error: " & Integer'Image (Display.Error));
-
       --  Event dispatching method 1
       if True then
-         while not Done and then Display.Dispatch /= -1 loop
+         while not Done and then Display.Dispatch.Is_Success loop
             null;
          end loop;
       end if;
 
       --  Event dispatching method 2
       while not Done loop
-         while Display.Prepare_Read /= 0 loop
-            if Display.Dispatch_Pending = -1 then
+         while Display.Prepare_Read = Error loop
+            if not Display.Dispatch_Pending.Is_Success then
                raise Wayland_Error with "failed dispatching pending events";
             end if;
          end loop;
@@ -575,7 +573,7 @@ package body Hdante_Hello_World is
                   raise Wayland_Error with "failed reading events";
                end if;
 
-               if Display.Dispatch_Pending = -1 then
+               if not Display.Dispatch_Pending.Is_Success then
                   raise Wayland_Error with "failed dispatching pending events";
                end if;
             when No_Events =>
