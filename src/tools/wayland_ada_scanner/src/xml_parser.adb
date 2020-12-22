@@ -2459,11 +2459,11 @@ procedure XML_Parser is
                end if;
 
                Put_Line (File, "");
-               Put_Line (File, "   " & Interface_Name & "_Name : aliased char_array := """ & Wayland_Interface_Name &  """ & Nul;");
+               Put_Line (File, "   " & Interface_Name & "_Interface_Name : aliased char_array := """ & Wayland_Interface_Name &  """ & Nul;");
                Put_Line (File, "");
 
                Put_Line (File, "   " & Name & " : aliased constant Interface_T :=");
-               Put_Line (File, "     (Name         => " & Interface_Name & "_Name'Access,");
+               Put_Line (File, "     (Name         => " & Interface_Name & "_Interface_Name'Access,");
                Put_Line (File, "      Version      => " & Version & ",");
                Put_Line (File, "      Method_Count => " & Aida.To_String (Request_Count) & ",");
                Put_Line (File, "      Methods      => " & (if Request_Count > 0 then Interface_Name & "_Requests'Access," else "null,"));
@@ -2683,7 +2683,11 @@ procedure XML_Parser is
                        := Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name (Interface_Tag) & "_Ptr");
 
-                     procedure Generate_Pretty_Function_Code (Subprogram_Kind : String; Max_Name_Length : in out Natural) is
+                     procedure Generate_Pretty_Function_Code
+                       (Subprogram_Kind : String;
+                        Max_Name_Length : in out Natural;
+                        Have_Last       : Boolean := True)
+                     is
                         V : Wayland_XML.Request_Child_Vectors.Vector;
                         Dont_Care : String_Maps.Map;
 
@@ -2701,7 +2705,7 @@ procedure XML_Parser is
                                  Interface_Tag,
                                  Child.Arg_Tag.all,
                                  Max_Name_Length,
-                                 Child = Children (Request_Tag).Last_Element,
+                                 Have_Last and Child = V.Last_Element,
                                  Dont_Care);
                            end if;
                         end loop;
@@ -2742,7 +2746,7 @@ procedure XML_Parser is
                                  --  TODO Use parameter list in Generate_Pretty_Function_Code
                                  function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                               begin
-                                 Generate_Pretty_Function_Code ("function", Max_Name_Length);
+                                 Generate_Pretty_Function_Code ("function", Max_Name_Length, False);
                                  Put_Line (File, "      " & Align ("Interface_V") & " : Interface_Ptr;");
                                  Put_Line (File, "      " & Align ("New_Id") & " : Unsigned_32) return Proxy_Ptr;");
                               end;
