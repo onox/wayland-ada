@@ -374,30 +374,26 @@ procedure XML_Parser is
          is
             Description_Tag : constant not null Wayland_XML.Description_Tag_Ptr
               := new Wayland_XML.Description_Tag;
+
+            Text : SU.Unbounded_String;
          begin
-            if Attributes (Node.Tag).Length = 1 then
-               if Name (Attributes (Node.Tag) (1).all) = "summary" then
-                  Set_Summary
-                    (Description_Tag.all,
-                     Value (Attributes (Node.Tag) (1).all));
-               else
-                  raise XML_Exception;
-               end if;
+            if Attributes (Node.Tag).Length = 1 and then
+              Name (Attributes (Node.Tag) (1).all) = "summary"
+            then
+               Set_Summary (Description_Tag.all, Value (Attributes (Node.Tag) (1).all));
             else
-               raise XML_Exception;
+               raise XML_Exception with "Expected tag 'description' to have 1 attribute 'summary'";
             end if;
 
-            if Child_Nodes (Node.Tag).Length = 1 then
-               if Child_Nodes (Node.Tag) (1).Id = Node_Kind_Text then
-                  Set_Text
-                    (Description_Tag.all,
-                     Trim (Child_Nodes (Node.Tag) (1).Text.all));
-               else
-                  raise XML_Exception;
+            for Child of Child_Nodes (Node.Tag) loop
+               if Child.Id = Node_Kind_Text then
+                  SU.Append (Text, Trim (Child.Text.all));
+               elsif Child.Id /= Node_Kind_Comment then
+                  raise XML_Exception with
+                    "Tag 'description' has unexpected child " & Child.Id'Image;
                end if;
-            elsif Child_Nodes (Node.Tag).Length > 1 then
-               raise XML_Exception;
-            end if;
+            end loop;
+            Set_Text (Description_Tag.all, +Text);
 
             return Description_Tag;
          end Identify_Description;
@@ -800,10 +796,10 @@ procedure XML_Parser is
                      Append_Child
                        (Protocol_Tag.all, Identify_Copyright (Child));
                   else
-                     raise XML_Exception;
+                     raise XML_Exception with "Unexpected tag " & Name (Child.Tag);
                   end if;
-               else
-                  raise XML_Exception;
+               elsif Child.Id /= Node_Kind_Comment then
+                  raise XML_Exception with "Unexpected kind " & Child.Id'Image;
                end if;
             end loop;
          end Iterate;
@@ -5346,13 +5342,12 @@ procedure XML_Parser is
             Put_Line (File, "      Device.Proxy := Thin.Data_Device_Manager_Get_Data_Device");
             Put_Line (File, "        (Object.Proxy, Seat.Proxy);");
             Put_Line (File, "   end Get_Data_Device;");
-            Put_Line (File, "");
          elsif Protocol_Name = "xdg_shell" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Shell'Access);
             Put_Line (File, "");
             Iterate_Over_Interfaces (Handle_Interface_Xdg_Shell'Access);
-            Put_Line (File, "");
          end if;
+         Put_Line (File, "");
       end Generate_Manually_Edited_Code;
    begin
       Create_File;
