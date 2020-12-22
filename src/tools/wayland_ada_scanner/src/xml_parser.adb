@@ -2037,6 +2037,74 @@ procedure XML_Parser is
             Put_Line (File, "   end " & Name & "_Events;");
             Put_Line (File, "");
          end Handle_Interface_Events_Xdg_Shell;
+
+         procedure Handle_Interface_Subprograms_Presentation_Time
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
+            Put_Line (File, "     with Pre  => Object.Has_Proxy,");
+            Put_Line (File, "          Post => not Object.Has_Proxy;");
+
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
+            Put_Line (File, "     with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
+            Put_Line (File, "     with Global => null;");
+            Put_Line (File, "");
+            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+
+            if Name = "Wp_Presentation" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Feedback");
+               Put_Line (File, "     (Object   : Wp_Presentation;");
+               Put_Line (File, "      Surface  : Protocols.Client.Surface'Class;");
+               Put_Line (File, "      Callback : in out Wp_Presentation_Feedback'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
+            end if;
+         end Handle_Interface_Subprograms_Presentation_Time;
+
+         procedure Handle_Interface_Events_Presentation_Time
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   generic");
+
+            if Name = "Wp_Presentation" then
+               Put_Line (File, "      with procedure Clock");
+               Put_Line (File, "        (Presentation : in out Wp_Presentation'Class;");
+               Put_Line (File, "         Id           : Unsigned_32);");
+            elsif Name = "Wp_Presentation_Feedback" then
+               Put_Line (File, "      with procedure Synchronized_Output");
+               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class;");
+               Put_Line (File, "         Output                : Protocols.Client.Output'Class);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Presented");
+               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class;");
+               Put_Line (File, "         Timestamp             : Duration;");
+               Put_Line (File, "         Refresh               : Duration;");
+               Put_Line (File, "         Counter               : Long_Integer;");
+               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Discarded");
+               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class);");
+            end if;
+
+            Put_Line (File, "   package " & Name & "_Events is");
+            Put_Line (File, "");
+            Put_Line (File, "      function Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_Events;");
+         end Handle_Interface_Events_Presentation_Time;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2044,6 +2112,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "xdg_shell" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Xdg_Shell'Access);
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Shell'Access);
+         elsif Protocol_Name = "presentation_time" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprograms_Presentation_Time'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -4913,6 +4984,160 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
          end Handle_Interface_Events_Xdg_Shell;
+
+         procedure Handle_Interface_Presentation_Time
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      if Object.Proxy /= null then");
+            Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
+            Put_Line (File, "         Object.Proxy := null;");
+            Put_Line (File, "      end if;");
+            Put_Line (File, "   end Destroy;");
+
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
+            Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
+            Put_Line (File, "");
+            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
+            Put_Line (File, "     (Object.Proxy /= null);");
+            Put_Line (File, "");
+            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
+            Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+
+            if Name = "Wp_Presentation" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Feedback");
+               Put_Line (File, "     (Object   : Wp_Presentation;");
+               Put_Line (File, "      Surface  : Protocols.Client.Surface'Class;");
+               Put_Line (File, "      Callback : in out Wp_Presentation_Feedback'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Callback.Proxy := Thin.Wp_Presentation_Feedback (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "   end Feedback;");
+            end if;
+         end Handle_Interface_Presentation_Time;
+
+         procedure Handle_Interface_Events_Presentation_Time
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+
+            function Align (Value : String) return String is (SF.Head (Value, Natural'Max (8, Name'Length), ' '));
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   package body " & Name & "_Events is");
+            Put_Line (File, "");
+            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
+            Put_Line (File, "");
+
+            if Name = "Wp_Presentation" then
+               Put_Line (File, "      procedure Internal_Clock_Id");
+               Put_Line (File, "        (Data            : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation : Thin.Wp_Presentation_Ptr;");
+               Put_Line (File, "         Clk_Id          : Unsigned_32)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Clock_Id");
+               Put_Line (File, "        (Data            : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation : Thin.Wp_Presentation_Ptr;");
+               Put_Line (File, "         Clk_Id          : Unsigned_32)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Clock (Conversion.To_Pointer (Data).all, Clk_Id);");
+               Put_Line (File, "      end Internal_Clock_Id;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Clock_Id => Internal_Clock_Id'Unrestricted_Access);");
+               Put_Line (File, "");
+            elsif Name = "Wp_Presentation_Feedback" then
+               Put_Line (File, "      procedure Internal_Sync_Output");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Output                   : Protocols.Thin_Client.Output_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Presented");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Tv_Sec_Hi                : Unsigned_32;");
+               Put_Line (File, "         Tv_Sec_Lo                : Unsigned_32;");
+               Put_Line (File, "         Tv_Nsec                  : Unsigned_32;");
+               Put_Line (File, "         Refresh                  : Unsigned_32;");
+               Put_Line (File, "         Seq_Hi                   : Unsigned_32;");
+               Put_Line (File, "         Seq_Lo                   : Unsigned_32;");
+               Put_Line (File, "         Flags                    : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Discarded");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Sync_Output");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Output                   : Protocols.Thin_Client.Output_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         O : constant Protocols.Client.Output := (Proxy => Output);");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Synchronized_Output (Conversion.To_Pointer (Data).all, O);");
+               Put_Line (File, "      end Internal_Sync_Output;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Presented");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Tv_Sec_Hi                : Unsigned_32;");
+               Put_Line (File, "         Tv_Sec_Lo                : Unsigned_32;");
+               Put_Line (File, "         Tv_Nsec                  : Unsigned_32;");
+               Put_Line (File, "         Refresh                  : Unsigned_32;");
+               Put_Line (File, "         Seq_Hi                   : Unsigned_32;");
+               Put_Line (File, "         Seq_Lo                   : Unsigned_32;");
+               Put_Line (File, "         Flags                    : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Presented (Conversion.To_Pointer (Data).all, Duration (0), Duration (Refresh), 0, Flags);  --  FIXME Implement timestamp and counter");
+               Put_Line (File, "      end Internal_Presented;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Discarded");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Discarded (Conversion.To_Pointer (Data).all);");
+               Put_Line (File, "      end Internal_Discarded;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Sync_Output => Internal_Sync_Output'Unrestricted_Access,");
+               Put_Line (File, "         Presented   => Internal_Presented'Unrestricted_Access,");
+               Put_Line (File, "         Discarded   => Internal_Discarded'Unrestricted_Access);");
+               Put_Line (File, "");
+            end if;
+
+            Put_Line (File, "      function Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      is");
+            Put_Line (File, "         I : int;");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
+            Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
+            Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
+            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
+            Put_Line (File, "         return (if I = 0 then Success else Error);");
+            Put_Line (File, "      end Subscribe;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_Events;");
+         end Handle_Interface_Events_Presentation_Time;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5350,6 +5575,9 @@ procedure XML_Parser is
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Shell'Access);
             Put_Line (File, "");
             Iterate_Over_Interfaces (Handle_Interface_Xdg_Shell'Access);
+         elsif Protocol_Name = "presentation_time" then
+            Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Presentation_Time'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
