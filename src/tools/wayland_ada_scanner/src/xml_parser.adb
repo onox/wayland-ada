@@ -889,7 +889,6 @@ procedure XML_Parser is
          Put_Line (File, "   pragma Preelaborate;");
          New_Line (File);
          Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
-         New_Line (File);
 
          Generate_Code_For_Type_Declarations;
          if Protocol_Name = "client" then
@@ -898,16 +897,17 @@ procedure XML_Parser is
          Generate_Code_For_The_Interface_Constants;
 
          if Protocol_Name = "client" then
+            Put_Line (File, "");
             Put_Line (File, "   function Bind");
             Put_Line (File, "     (Object  : Registry;");
             Put_Line (File, "      Iface   : Interface_Type;");
             Put_Line (File, "      Id      : Unsigned_32;");
             Put_Line (File, "      Version : Unsigned_32) return Secret_Proxy;");
-            Put_Line (File, "");
          end if;
 
          Generate_Manually_Edited_Partial_Type_Declarations (Protocol_Name);
 
+         New_Line (File);
          Put_Line (File, "private");
          New_Line (File);
 
@@ -915,14 +915,15 @@ procedure XML_Parser is
          Generate_Manually_Edited_Code_For_Type_Definitions;
 
          if Protocol_Name = "client" then
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
-            Put_Line (File, "");
          end if;
 
          Generate_Private_Code_For_The_Interface_Constants;
 
+         Put_Line (File, "");
          Put_Line (File, "end Wayland.Protocols." & Package_Name & ";");
 
          Ada.Text_IO.Close (File);
@@ -991,16 +992,16 @@ procedure XML_Parser is
             Put_Line (File, "   type " & Name & " is tagged limited private;");
          end Handle_Interface;
       begin
-         Iterate_Over_Interfaces (Handle_Interface'Access);
          New_Line (File);
+         Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Code_For_Type_Declarations;
 
       procedure Generate_Code_For_External_Proxies is
       begin
+         Put_Line (File, "");
          Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
          Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
          Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
-         Put_Line (File, "");
       end Generate_Code_For_External_Proxies;
 
       procedure Generate_Code_For_The_Interface_Constants is
@@ -1014,8 +1015,8 @@ procedure XML_Parser is
             Put_Line (File, "   " & Name & " : constant Interface_Type;");
          end Handle_Interface;
       begin
-         Iterate_Over_Interfaces (Handle_Interface'Access);
          New_Line (File);
+         Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Code_For_The_Interface_Constants;
 
       function Get_Name (Entry_Tag : Wayland_XML.Entry_Tag) return String is
@@ -1225,12 +1226,13 @@ procedure XML_Parser is
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             if Name /= "Display" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
                Put_Line (File, "     with Pre  => Object.Has_Proxy,");
                Put_Line (File, "          Post => not Object.Has_Proxy;");
-               Put_Line (File, "");
             end if;
 
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
@@ -1238,26 +1240,26 @@ procedure XML_Parser is
             Put_Line (File, "     with Global => null;");
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
-            Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Release (Object : in out " & Name & ")");
                Put_Line (File, "     with Pre  => Object.Has_Proxy,");
                Put_Line (File, "          Post => not Object.Has_Proxy;");
-               Put_Line (File, "");
             end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
                Put_Line (File, "      Registry : Client.Registry'Class;");
                Put_Line (File, "      Id       : Unsigned_32;");
                Put_Line (File, "      Version  : Unsigned_32)");
                Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
-               Put_Line (File, "");
             end if;
 
             if Name = "Display" then
+               Put_Line (File, "");
                Put_Line (File, "   function Is_Connected (Object : Display) return Boolean renames Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Connect (Object : in out Display)");
@@ -1331,8 +1333,8 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   function Sync (Object : Display) return Callback'Class");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
-               Put_Line (File, "");
             elsif Name = "Compositor" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Surface (Object  : Compositor;");
                Put_Line (File, "                             Surface : in out Client.Surface'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
@@ -1340,8 +1342,8 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Create_Region (Object : Compositor;");
                Put_Line (File, "                            Region : in out Client.Region'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Seat" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Get_Pointer (Object  : Seat;");
                Put_Line (File, "                          Pointer : in out Client.Pointer'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and not Pointer.Has_Proxy;");
@@ -1353,8 +1355,8 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Get_Touch (Object : Seat;");
                Put_Line (File, "                        Touch  : in out Client.Touch'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and not Touch.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Shm_Pool" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Buffer (Object : Shm_Pool;");
                Put_Line (File, "                            Offset : Natural;");
                Put_Line (File, "                            Width  : Natural;");
@@ -1367,14 +1369,14 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Resize (Object : Shm_Pool;");
                Put_Line (File, "                     Size   : Positive)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Shm" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Pool (Object          : Shm;");
                Put_Line (File, "                          File_Descriptor : C_Binding.Linux.Files.File;");
                Put_Line (File, "                          Size            : Positive;");
                Put_Line (File, "                          Pool            : in out Shm_Pool'Class);");
-               Put_Line (File, "");
             elsif Name = "Data_Offer" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Do_Accept (Object    : Data_Offer;");
                Put_Line (File, "                        Serial    : Unsigned_32;");
                Put_Line (File, "                        Mime_Type : String)");
@@ -1396,8 +1398,8 @@ procedure XML_Parser is
                Put_Line (File, "                          Dnd_Actions      : Unsigned_32;");
                Put_Line (File, "                          Preferred_Action : Unsigned_32)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Data_Source" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Offer (Object    : Data_Source;");
                Put_Line (File, "                    Mime_Type : String)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
@@ -1405,8 +1407,8 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Set_Actions (Object      : Data_Source;");
                Put_Line (File, "                          Dnd_Actions : Unsigned_32)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Data_Device" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Start_Drag (Object : Data_Device;");
                Put_Line (File, "                         Source : Data_Source'Class;");
                Put_Line (File, "                         Origin : Surface'Class;");
@@ -1418,8 +1420,8 @@ procedure XML_Parser is
                Put_Line (File, "                            Source : Data_Source'Class;");
                Put_Line (File, "                            Serial : Unsigned_32)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and Source.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Data_Device_Manager" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Create_Data_Source (Object : Data_Device_Manager;");
                Put_Line (File, "                                 Source : in out Data_Source'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
@@ -1428,8 +1430,8 @@ procedure XML_Parser is
                Put_Line (File, "                              Seat   : Client.Seat'Class;");
                Put_Line (File, "                              Device : in out Data_Device'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Surface" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Attach (Object : Surface;");
                Put_Line (File, "                     Buffer : Client.Buffer'Class;");
                Put_Line (File, "                     X, Y   : Integer)");
@@ -1468,16 +1470,16 @@ procedure XML_Parser is
                Put_Line (File, "                            Width  : Natural;");
                Put_Line (File, "                            Height : Natural)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Pointer" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Cursor (Object    : Pointer;");
                Put_Line (File, "                         Serial    : Unsigned_32;");
                Put_Line (File, "                         Surface   : Client.Surface'Class;");
                Put_Line (File, "                         Hotspot_X : Integer;");
                Put_Line (File, "                         Hotspot_Y : Integer)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Region" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Add (Object : Region;");
                Put_Line (File, "                  X, Y   : Integer;");
                Put_Line (File, "                  Width  : Natural;");
@@ -1489,15 +1491,15 @@ procedure XML_Parser is
                Put_Line (File, "                       Width  : Natural;");
                Put_Line (File, "                       Height : Natural)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Subcompositor" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Get_Subsurface (Object     : Subcompositor;");
                Put_Line (File, "                             Surface    : Client.Surface'Class;");
                Put_Line (File, "                             Parent     : Client.Surface'Class;");
                Put_Line (File, "                             Subsurface : in out Client.Subsurface'Class)");
                Put_Line (File, "     with Pre => Object.Has_Proxy and Surface.Has_Proxy and Parent.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Subsurface" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Position (Object : Subsurface; X, Y : Integer)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
@@ -1514,7 +1516,6 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Desync (Object : Subsurface)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             end if;
          end Handle_Interface_Subprograms_Client;
 
@@ -1528,6 +1529,7 @@ procedure XML_Parser is
                return;
             end if;
 
+            Put_Line (File, "");
             Put_Line (File, "   generic");
 
             if Name = "Display" then
@@ -1791,7 +1793,6 @@ procedure XML_Parser is
             Put_Line (File, "      with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
-            Put_Line (File, "");
          end Handle_Interface_Events_Client;
 
          procedure Handle_Interface_Subprograms_Xdg_Shell
@@ -1800,11 +1801,12 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
+            Put_Line (File, "");
             Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
             Put_Line (File, "     with Pre  => Object.Has_Proxy,");
             Put_Line (File, "          Post => not Object.Has_Proxy;");
-            Put_Line (File, "");
 
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
@@ -1812,19 +1814,19 @@ procedure XML_Parser is
             Put_Line (File, "     with Global => null;");
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
-            Put_Line (File, "");
 
             if Name in "Xdg_Wm_Base" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
                Put_Line (File, "      Registry : Client.Registry'Class;");
                Put_Line (File, "      Id       : Unsigned_32;");
                Put_Line (File, "      Version  : Unsigned_32)");
                Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
-               Put_Line (File, "");
             end if;
 
             if Name = "Xdg_Wm_Base" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Pong (Object : Xdg_Wm_Base; Serial : Unsigned_32)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
@@ -1838,8 +1840,8 @@ procedure XML_Parser is
                Put_Line (File, "      Window  : Protocols.Client.Surface'Class;");
                Put_Line (File, "      Surface : in out Xdg_Shell.Xdg_Surface'Class)");
                Put_Line (File, "   with Pre => Object.Has_Proxy and Window.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Xdg_Positioner" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Size");
                Put_Line (File, "     (Object : Xdg_Positioner;");
                Put_Line (File, "      Width  : Natural;");
@@ -1886,8 +1888,8 @@ procedure XML_Parser is
                Put_Line (File, "     (Object : Xdg_Positioner;");
                Put_Line (File, "      Serial : Unsigned_32)");
                Put_Line (File, "   with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Xdg_Surface" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Get_Toplevel");
                Put_Line (File, "     (Object   : Xdg_Surface;");
                Put_Line (File, "      Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class)");
@@ -1911,8 +1913,8 @@ procedure XML_Parser is
                Put_Line (File, "     (Object : Xdg_Surface;");
                Put_Line (File, "      Serial : Unsigned_32)");
                Put_Line (File, "   with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Xdg_Toplevel" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Parent");
                Put_Line (File, "     (Object : Xdg_Toplevel;");
                Put_Line (File, "      Parent : Xdg_Toplevel'Class)");
@@ -1967,8 +1969,8 @@ procedure XML_Parser is
                Put_Line (File, "      Enable : Boolean;");
                Put_Line (File, "      Output : Protocols.Client.Output'Class)");
                Put_Line (File, "   with Pre => Object.Has_Proxy;");
-               Put_Line (File, "");
             elsif Name = "Xdg_Popup" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Grab");
                Put_Line (File, "     (Object : Xdg_Popup;");
                Put_Line (File, "      Seat   : Protocols.Client.Seat'Class;");
@@ -1980,7 +1982,6 @@ procedure XML_Parser is
                Put_Line (File, "      Positioner : Xdg_Shell.Xdg_Positioner'Class;");
                Put_Line (File, "      Token      : Unsigned_32)");
                Put_Line (File, "   with Pre => Object.Has_Proxy and Positioner.Has_Proxy;");
-               Put_Line (File, "");
             end if;
          end Handle_Interface_Subprograms_Xdg_Shell;
 
@@ -1994,6 +1995,7 @@ procedure XML_Parser is
                return;
             end if;
 
+            Put_Line (File, "");
             Put_Line (File, "   generic");
 
             if Name = "Xdg_Wm_Base" then
@@ -2035,7 +2037,6 @@ procedure XML_Parser is
             Put_Line (File, "      with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
-            Put_Line (File, "");
          end Handle_Interface_Events_Xdg_Shell;
 
          procedure Handle_Interface_Subprograms_Presentation_Time
@@ -2917,11 +2918,8 @@ procedure XML_Parser is
          end Handle_Interface;
       begin
          Put_Line (File, "   package Thin renames Wayland.Protocols.Thin_" & Package_Name & ";");
-         New_Line (File);
-
+         Put_Line (File, "");
          Iterate_Over_Interfaces (Handle_Interface'Access);
-
-         New_Line (File);
       end Generate_Use_Type_Declarions;
 
       procedure Generate_Manually_Edited_Code_For_Type_Definitions is
@@ -2929,10 +2927,10 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
+            Put_Line (File, "");
             Put_Line (File, "   type " & Name & " is tagged limited record");
             Put_Line (File, "      Proxy : Thin." & Name & "_Ptr;");
             Put_Line (File, "   end record;");
-            New_Line (File);
          end Handle_Interface;
       begin
          Iterate_Over_Interfaces (Handle_Interface'Access);
@@ -2944,9 +2942,9 @@ procedure XML_Parser is
               := Xml_Parser_Utils.Adaify_Name
                 (Wayland_XML.Name (Interface_Tag) & "_Interface");
          begin
+            Put_Line (File, "");
             Put_Line (File, "   " & Name & " : constant Interface_Type :=");
             Put_Line (File, "     (My_Interface => Thin." & Name & "'Access);");
-            New_Line (File);
          end Handle_Interface;
       begin
          Iterate_Over_Interfaces (Handle_Interface'Access);
@@ -3374,6 +3372,7 @@ procedure XML_Parser is
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             if Name /= "Display" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
                Put_Line (File, "   begin");
                Put_Line (File, "      if Object.Proxy /= null then");
@@ -3381,9 +3380,9 @@ procedure XML_Parser is
                Put_Line (File, "         Object.Proxy := null;");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Destroy;");
-               Put_Line (File, "");
             end if;
 
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
             Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
             Put_Line (File, "");
@@ -3392,9 +3391,9 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
-            Put_Line (File, "");
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Release (Object : in out " & Name & ") is");
                Put_Line (File, "   begin");
                Put_Line (File, "      if Object.Proxy /= null then");
@@ -3402,10 +3401,10 @@ procedure XML_Parser is
                Put_Line (File, "         Object.Proxy := null;");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Release;");
-               Put_Line (File, "");
             end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
                Put_Line (File, "      Registry : Client.Registry'Class;");
@@ -3419,7 +3418,6 @@ procedure XML_Parser is
                Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Bind;");
-               Put_Line (File, "");
             end if;
          end Handle_Interface_Client;
 
@@ -4541,6 +4539,7 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
+            Put_Line (File, "");
             Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
             Put_Line (File, "   begin");
             Put_Line (File, "      if Object.Proxy /= null then");
@@ -4548,8 +4547,8 @@ procedure XML_Parser is
             Put_Line (File, "         Object.Proxy := null;");
             Put_Line (File, "      end if;");
             Put_Line (File, "   end Destroy;");
-            Put_Line (File, "");
 
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
             Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
             Put_Line (File, "");
@@ -4558,9 +4557,9 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
-            Put_Line (File, "");
 
             if Name in "Xdg_Wm_Base" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
                Put_Line (File, "      Registry : Client.Registry'Class;");
@@ -4574,10 +4573,10 @@ procedure XML_Parser is
                Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Bind;");
-               Put_Line (File, "");
             end if;
 
             if Name in "Xdg_Wm_Base" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Pong (Object : Xdg_Wm_Base; Serial : Unsigned_32) is");
                Put_Line (File, "   begin");
                Put_Line (File, "      Thin.Xdg_Wm_Base_Pong (Object.Proxy, Serial);");
@@ -4598,8 +4597,8 @@ procedure XML_Parser is
                Put_Line (File, "      Surface.Proxy := Thin.Xdg_Wm_Base_Get_Xdg_Surface");
                Put_Line (File, "        (Object.Proxy, Thin_Client.Surface_Ptr (Window.Get_Proxy));");
                Put_Line (File, "   end Get_Surface;");
-               Put_Line (File, "");
             elsif Name in "Xdg_Positioner" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Size");
                Put_Line (File, "     (Object : Xdg_Positioner;");
                Put_Line (File, "      Width  : Natural;");
@@ -4664,8 +4663,8 @@ procedure XML_Parser is
                Put_Line (File, "   begin");
                Put_Line (File, "      Thin.Xdg_Positioner_Set_Parent_Configure (Object.Proxy, Serial);");
                Put_Line (File, "   end Set_Parent_Configure;");
-               Put_Line (File, "");
             elsif Name in "Xdg_Surface" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Get_Toplevel");
                Put_Line (File, "     (Object   : Xdg_Surface;");
                Put_Line (File, "      Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class) is");
@@ -4697,8 +4696,8 @@ procedure XML_Parser is
                Put_Line (File, "   begin");
                Put_Line (File, "      Thin.Xdg_Surface_Ack_Configure (Object.Proxy, Serial);");
                Put_Line (File, "   end Ack_Configure;");
-               Put_Line (File, "");
             elsif Name in "Xdg_Toplevel" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Set_Parent");
                Put_Line (File, "     (Object : Xdg_Toplevel;");
                Put_Line (File, "      Parent : Xdg_Toplevel'Class) is");
@@ -4790,8 +4789,8 @@ procedure XML_Parser is
                Put_Line (File, "         Thin.Xdg_Toplevel_Unset_Fullscreen (Object.Proxy);");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Set_Fullscreen;");
-               Put_Line (File, "");
             elsif Name in "Xdg_Popup" then
+               Put_Line (File, "");
                Put_Line (File, "   procedure Grab");
                Put_Line (File, "     (Object : Xdg_Popup;");
                Put_Line (File, "      Seat   : Protocols.Client.Seat'Class;");
@@ -5166,9 +5165,9 @@ procedure XML_Parser is
             Put_Line (File, "   end Bind;");
 
             Iterate_Over_Interfaces (Handle_Interface_Events_Client'Access);
-            Put_Line (File, "");
             Iterate_Over_Interfaces (Handle_Interface_Client'Access);
 
+            Put_Line (File, "");
             Put_Line (File, "   procedure Connect (Object : in out Display) is");
             Put_Line (File, "   begin");
             Put_Line (File, "      Object.Proxy := Thin.Display_Connect;");
@@ -5573,7 +5572,6 @@ procedure XML_Parser is
             Put_Line (File, "   end Get_Data_Device;");
          elsif Protocol_Name = "xdg_shell" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Shell'Access);
-            Put_Line (File, "");
             Iterate_Over_Interfaces (Handle_Interface_Xdg_Shell'Access);
          elsif Protocol_Name = "presentation_time" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
