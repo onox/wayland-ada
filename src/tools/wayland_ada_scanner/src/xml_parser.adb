@@ -919,6 +919,8 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
          end if;
 
          Generate_Private_Code_For_The_Interface_Constants;
@@ -1002,6 +1004,8 @@ procedure XML_Parser is
          Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
          Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
          Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
+         Put_Line (File, "");
+         Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
       end Generate_Code_For_External_Proxies;
 
       procedure Generate_Code_For_The_Interface_Constants is
@@ -2059,6 +2063,16 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
 
+            if Name in "Wp_Presentation" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Bind");
+               Put_Line (File, "     (Object   : in out " & Name & ";");
+               Put_Line (File, "      Registry : Client.Registry'Class;");
+               Put_Line (File, "      Id       : Unsigned_32;");
+               Put_Line (File, "      Version  : Unsigned_32)");
+               Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+            end if;
+
             if Name = "Wp_Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Feedback");
@@ -2091,7 +2105,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class;");
                Put_Line (File, "         Timestamp             : Duration;");
                Put_Line (File, "         Refresh               : Duration;");
-               Put_Line (File, "         Counter               : Long_Integer;");
+               Put_Line (File, "         Counter               : Unsigned_64;");
                Put_Line (File, "         Flags                 : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Discarded");
@@ -2931,6 +2945,7 @@ procedure XML_Parser is
             Put_Line (File, "   type " & Name & " is tagged limited record");
             Put_Line (File, "      Proxy : Thin." & Name & "_Ptr;");
             Put_Line (File, "   end record;");
+            --  FIXME add Initialized : Boolean := Thin.Initialize; for Xdg_Wm_Base and Wp_Presentation
          end Handle_Interface;
       begin
          Iterate_Over_Interfaces (Handle_Interface'Access);
@@ -2976,6 +2991,10 @@ procedure XML_Parser is
 
          if Protocol_Name = "client" then
             Put_Line (File, "with C_Binding.Linux;");
+         elsif Protocol_Name = "presentation_time" then
+            Put_Line (File, "with Ada.Unchecked_Conversion;");
+            Put_Line (File, "");
+            Put_Line (File, "with Wayland.Protocols.Thin_Client;");
          else
             Put_Line (File, "with Wayland.Protocols.Thin_Client;");
          end if;
@@ -5009,6 +5028,23 @@ procedure XML_Parser is
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
 
+            if Name in "Wp_Presentation" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Bind");
+               Put_Line (File, "     (Object   : in out " & Name & ";");
+               Put_Line (File, "      Registry : Client.Registry'Class;");
+               Put_Line (File, "      Id       : Unsigned_32;");
+               Put_Line (File, "      Version  : Unsigned_32)");
+               Put_Line (File, "   is");
+               Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
+               Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      if Proxy /= null then");
+               Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
+               Put_Line (File, "      end if;");
+               Put_Line (File, "   end Bind;");
+            end if;
+
             if Name = "Wp_Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Feedback");
@@ -5086,7 +5122,7 @@ procedure XML_Parser is
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "");
-               Put_Line (File, "         O : constant Protocols.Client.Output := (Proxy => Output);");
+               Put_Line (File, "         O : constant Protocols.Client.Output := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Output));");
                Put_Line (File, "      begin");
                Put_Line (File, "         Synchronized_Output (Conversion.To_Pointer (Data).all, O);");
                Put_Line (File, "      end Internal_Sync_Output;");
@@ -5103,8 +5139,25 @@ procedure XML_Parser is
                Put_Line (File, "         Flags                    : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         type Unsigned_64_Group is record");
+               Put_Line (File, "            Low, High : Unsigned_32;");
+               Put_Line (File, "         end record;");
+               Put_Line (File, "");
+               Put_Line (File, "         for Unsigned_64_Group use record");
+               Put_Line (File, "            Low  at 0 range 0 .. 31;");
+               Put_Line (File, "            High at 0 range 32 .. 63;");
+               Put_Line (File, "         end record;");
+               Put_Line (File, "");
+               Put_Line (File, "         function Convert is new Ada.Unchecked_Conversion");
+               Put_Line (File, "           (Source => Unsigned_64_Group, Target => Unsigned_64);");
+               Put_Line (File, "");
+               Put_Line (File, "         Seconds   : constant Unsigned_64 := Convert ((Low => Tv_Sec_Lo, High => Tv_Sec_Hi));");
+               Put_Line (File, "         Counter   : constant Unsigned_64 := Convert ((Low => Seq_Lo, High => Seq_Hi));");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Seconds) + Duration (Tv_Nsec) / 1e9;");
                Put_Line (File, "      begin");
-               Put_Line (File, "         Presented (Conversion.To_Pointer (Data).all, Duration (0), Duration (Refresh), 0, Flags);  --  FIXME Implement timestamp and counter");
+               Put_Line (File, "         Presented (Conversion.To_Pointer (Data).all, Timestamp, Duration (Refresh) / 1e9, Counter, Flags);");
                Put_Line (File, "      end Internal_Presented;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Discarded");

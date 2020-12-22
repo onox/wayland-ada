@@ -28,6 +28,9 @@ package Wayland is
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
 
+   type Unsigned_64 is mod 2 ** (Unsigned_32'Size * 2)
+     with Size => Unsigned_32'Size * 2;
+
    type Unsigned_32_Array is array (Positive range <>) of Unsigned_32
      with Convention => C;
 
