@@ -2136,6 +2136,31 @@ procedure XML_Parser is
                Put_Line (File, "   with Pre => (Width = -1 and Height = -1) or (Width > 0 and Height > 0);");
             end if;
          end Handle_Interface_Subprograms_Viewporter;
+
+         procedure Handle_Interface_Subprogram_Idle_Inhibit
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Idle_Inhibit_Manager_V_1" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Idle_Inhibit_Manager_V_1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Create_Inhibitor");
+               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V_1;");
+               Put_Line (File, "      Surface   : Client.Surface'Class;");
+               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V_1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
+            elsif Name = "Idle_Inhibitor_V_1" then
+               null;
+            end if;
+         end Handle_Interface_Subprogram_Idle_Inhibit;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2148,6 +2173,8 @@ procedure XML_Parser is
             Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
          elsif Protocol_Name = "viewporter" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Viewporter'Access);
+         elsif Protocol_Name = "idle_inhibit_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprogram_Idle_Inhibit'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -5188,6 +5215,33 @@ procedure XML_Parser is
                Put_Line (File, "   end Set_Destination;");
             end if;
          end Handle_Interface_Viewporter;
+
+         procedure Handle_Interface_Idle_Inhibit
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Idle_Inhibit_Manager_V_1" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Idle_Inhibit_Manager_V_1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Create_Inhibitor");
+               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V_1;");
+               Put_Line (File, "      Surface   : Client.Surface'Class;");
+               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V_1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Inhibitor.Proxy := Thin.Idle_Inhibit_Manager_V_1_Create_Inhibitor (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "   end Create_Inhibitor;");
+            elsif Name = "Idle_Inhibitor_V_1" then
+               null;
+            end if;
+         end Handle_Interface_Idle_Inhibit;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5629,6 +5683,8 @@ procedure XML_Parser is
             Iterate_Over_Interfaces (Handle_Interface_Presentation_Time'Access);
          elsif Protocol_Name = "viewporter" then
             Iterate_Over_Interfaces (Handle_Interface_Viewporter'Access);
+         elsif Protocol_Name = "idle_inhibit_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Idle_Inhibit'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
