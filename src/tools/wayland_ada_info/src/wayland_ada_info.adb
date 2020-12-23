@@ -22,6 +22,7 @@ with Ada.Text_IO;
 
 with Wayland.Enums.Client;
 with Wayland.Protocols.Client;
+with Wayland.Protocols.Presentation_Time;
 
 package body Wayland_Ada_Info is
 
@@ -48,6 +49,8 @@ package body Wayland_Ada_Info is
    Shm        : Wayland.Protocols.Client.Shm;
    Display    : Wayland.Protocols.Client.Display;
    Registry   : Wayland.Protocols.Client.Registry;
+
+   Presentation : Wayland.Protocols.Presentation_Time.Wp_Presentation;
 
    type Interface_Data is record
       Name    : SU.Unbounded_String;
@@ -106,6 +109,8 @@ package body Wayland_Ada_Info is
    Outputs : array (1 .. 12) of Output_Data;
    Output_First_Index : Natural := Outputs'First;
    Output_Last_Index  : Natural := Outputs'First - 1;
+
+   Clock : Unsigned_32;
 
    procedure Image (Data : Interface_Data) is
    begin
@@ -300,6 +305,13 @@ package body Wayland_Ada_Info is
       end loop;
    end Output_Scale;
 
+   procedure Presentation_Clock
+     (Presentation : in out Wayland.Protocols.Presentation_Time.Wp_Presentation'Class;
+      Id           : Unsigned_32) is
+   begin
+      Clock := Id;
+   end Presentation_Clock;
+
    package Shm_Events is new Wayland.Protocols.Client.Shm_Events
      (Format => Shm_Format);
 
@@ -311,6 +323,9 @@ package body Wayland_Ada_Info is
      (Geometry => Output_Geometry,
       Mode     => Output_Mode,
       Scale    => Output_Scale);
+
+   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Wp_Presentation_Events
+     (Clock => Presentation_Clock);
 
    procedure Global_Registry_Handler
      (Registry   : in out Wayland.Protocols.Client.Registry'Class;
@@ -367,6 +382,17 @@ package body Wayland_Ada_Info is
 
             Output_Last_Index := Output_Last_Index + 1;
          end;
+      elsif Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+         Presentation.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Presentation.Has_Proxy then
+            raise Wayland_Error with "No presentation";
+         end if;
+
+         if Presentation_Events.Subscribe (Presentation) = Error then
+            Presentation.Destroy;
+            raise Wayland_Error with "Failed to subscribe to presentation events";
+         end if;
       end if;
    end Global_Registry_Handler;
 
@@ -417,6 +443,8 @@ package body Wayland_Ada_Info is
 
             pragma Assert (Output_First_Index <= Output_Last_Index);
             Output_First_Index := Output_First_Index + 1;
+         elsif E.Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+            Put_Line (L1.HT & "presentation clock id:" & Clock'Image);
          end if;
       end loop;
 
