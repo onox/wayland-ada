@@ -2101,6 +2101,41 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
          end Handle_Interface_Events_Presentation_Time;
+
+         procedure Handle_Interface_Subprograms_Viewporter
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Viewporter" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Viewporter" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Viewport");
+               Put_Line (File, "     (Object   : Viewporter;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Viewport : in out Viewporter.Viewport'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
+            elsif Name = "Viewport" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Source");
+               Put_Line (File, "     (Object              : Viewport;");
+               Put_Line (File, "      X, Y, Width, Height : Fixed)");
+               Put_Line (File, "   with Pre => (X = -1 and Y = -1 and Width = -1 and Height = -1)");
+               Put_Line (File, "                 or (Width > 0 and Height > 0 and X >= 0 and Y >= 0);");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Destination");
+               Put_Line (File, "     (Object        : Viewport;");
+               Put_Line (File, "      Width, Height : Fixed)");
+               Put_Line (File, "   with Pre => (Width = -1 and Height = -1) or (Width > 0 and Height > 0);");
+            end if;
+         end Handle_Interface_Subprograms_Viewporter;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2111,6 +2146,8 @@ procedure XML_Parser is
          elsif Protocol_Name = "presentation_time" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Presentation_Time'Access);
             Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
+         elsif Protocol_Name = "viewporter" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprograms_Viewporter'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -5111,6 +5148,46 @@ procedure XML_Parser is
 
             Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Presentation_Time;
+
+         procedure Handle_Interface_Viewporter
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Viewporter" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Viewporter" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Viewport");
+               Put_Line (File, "     (Object   : Viewporter;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Viewport : in out Viewporter.Viewport'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Viewport.Proxy := Thin.Viewporter_Get_Viewport (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "   end Feedback;");
+            elsif Name = "Viewport" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Source");
+               Put_Line (File, "     (Object              : Viewport;");
+               Put_Line (File, "      X, Y, Width, Height : Fixed) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Viewport_Set_Source (Object.Proxy, X, Y, Width, Height);");
+               Put_Line (File, "   end Set_Source;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Destination");
+               Put_Line (File, "     (Object        : Viewport;");
+               Put_Line (File, "      Width, Height : Fixed) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Viewport_Set_Destination (Object.Proxy, Width, Height);");
+               Put_Line (File, "   end Set_Destination;");
+            end if;
+         end Handle_Interface_Viewporter;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5550,6 +5627,8 @@ procedure XML_Parser is
          elsif Protocol_Name = "presentation_time" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Presentation_Time'Access);
             Iterate_Over_Interfaces (Handle_Interface_Presentation_Time'Access);
+         elsif Protocol_Name = "viewporter" then
+            Iterate_Over_Interfaces (Handle_Interface_Viewporter'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
