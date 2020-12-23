@@ -27,8 +27,15 @@ with C_Binding.Linux.Memory_Maps;
 with Wayland.Protocols.Client;
 with Wayland.Protocols.Xdg_Shell;
 with Wayland.Protocols.Presentation_Time;
+with Wayland.Protocols.Viewporter;
+with Wayland.Protocols.Idle_Inhibit_Unstable_V1;
+with Wayland.Protocols.Xdg_Decoration_Unstable_V1;
+
 with Wayland.Enums.Client;
 with Wayland.Enums.Presentation_Time;
+with Wayland.Enums.Viewporter;
+with Wayland.Enums.Idle_Inhibit_Unstable_V1;
+with Wayland.Enums.Xdg_Decoration_Unstable_V1;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -75,6 +82,9 @@ package body Hdante_Hello_World is
       Presentation : Wayland.Protocols.Presentation_Time.Presentation;
       Feedback     : Wayland.Protocols.Presentation_Time.Presentation_Feedback;
       Has_Feedback : Boolean := False;
+
+      Decorator  : Wayland.Protocols.Xdg_Decoration_Unstable_V1.Decoration_Manager_V1;
+      Decoration : Wayland.Protocols.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1;
 
       Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
    end record;
@@ -293,6 +303,12 @@ package body Hdante_Hello_World is
          if not Data.Presentation.Has_Proxy then
             raise Wayland_Error with "No presentation";
          end if;
+      elsif Name = Wayland.Protocols.Xdg_Decoration_Unstable_V1.Decoration_Manager_V1_Interface.Name then
+         Data.Decorator.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.Decorator.Has_Proxy then
+            raise Wayland_Error with "No xdg_decoration_manager";
+         end if;
       end if;
    end Global_Registry_Handler;
 
@@ -351,12 +367,22 @@ package body Hdante_Hello_World is
       Done := True;
    end XDG_Toplevel_Close;
 
+   procedure XDG_Toplevel_Decoration_Configure
+     (Decoration : in out Wayland.Protocols.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1'Class;
+      Mode       : Wayland.Enums.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1_Mode) is
+   begin
+      Put_Line ("xdg_toplevel_decoration: " & Mode'Image);
+   end XDG_Toplevel_Decoration_Configure;
+
    package XDG_Surface_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Surface_Events
      (Configure => XDG_Surface_Configure);
 
    package XDG_Toplevel_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Toplevel_Events
      (Configure => XDG_Toplevel_Configure,
       Close     => XDG_Toplevel_Close);
+
+   package XDG_Toplevel_Decoration_Events is new Wayland.Protocols.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1_Events
+     (Configure => XDG_Toplevel_Decoration_Configure);
 
    procedure Pointer_Enter
      (Pointer   : in out Wayland.Protocols.Client.Pointer'Class;
@@ -596,6 +622,24 @@ package body Hdante_Hello_World is
 
       Data.XDG_Toplevel.Set_Title ("Wayland with Ada");
       Data.XDG_Toplevel.Set_App_Id ("wayland.ada");
+
+      if Data.Decorator.Has_Proxy then
+         Data.Decorator.Get_Toplevel_Decoration (Data.XDG_Toplevel, Data.Decoration);
+
+         if not Data.Decoration.Has_Proxy then
+            raise Wayland_Error with "Failed to create xdg_toplevel_decoration";
+         end if;
+         Put_Line ("Got xdg_toplevel_decoration");
+
+         if XDG_Toplevel_Decoration_Events.Subscribe (Data.Decoration) = Error then
+            raise Wayland_Error with "Failed to subscribe to xdg_toplevel_decoration events";
+         end if;
+         Put_Line ("Successfully subscribed to xdg_toplevel_decoration events");
+
+         Data.Decoration.Set_Mode (Wayland.Enums.Xdg_Decoration_Unstable_V1.Server_Side);
+      else
+         Put_Line ("No xdg_decoration_manager");
+      end if;
 
       Data.Surface.Commit;
 
