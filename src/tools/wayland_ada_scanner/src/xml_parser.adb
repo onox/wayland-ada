@@ -3152,17 +3152,28 @@ procedure XML_Parser is
                        := Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name (Interface_Tag) & "_Ptr");
 
-                     procedure Generate_Arguments (Spaces : Natural; V : Wayland_XML.Request_Child_Vectors.Vector) is
+                     procedure Generate_Arguments (Spaces : Natural; Null_Id : Boolean) is
                         use SF;
 
                         function Get_Value (Child : Wayland_XML.Arg_Tag; Value : String) return String is
                           (if Exists_Enum (Child) then "Convert (" & Value & ")" else Value);
+
+                        First_Element : Boolean := True;
                      begin
-                        for Child of V loop
+                        for Child of Children (Request_Tag) loop
                            if Child.Kind_Id = Child_Arg then
-                              Put_Line (File, ",");
+                              if not First_Element then
+                                 Put_Line (File, ",");
+                              end if;
+                              First_Element := False;
                               if Type_Attribute (Child.Arg_Tag.all) /= Type_Object then
-                                 Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))));
+                                 if Type_Attribute (Child.Arg_Tag.all) = Type_New_Id then
+                                    if Null_Id then
+                                       Put (File, Spaces * " " & "0");
+                                    end if;
+                                 else
+                                    Put (File, Spaces * " " & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))));
+                                 end if;
                               else
                                  Put (File, Spaces * " " & "Proxy_Ptr (" & Get_Value (Child.Arg_Tag.all, Xml_Parser_Utils.Adaify_Variable_Name (Wayland_XML.Name (Child.Arg_Tag.all))) & ")");
                               end if;
@@ -3171,15 +3182,14 @@ procedure XML_Parser is
                      end Generate_Arguments;
 
                      procedure Generate_Code_Before_Arguments is
+                        Interface_Name : constant String :=
+                          Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface";
                      begin
                         Put_Line (File, "      P : constant Proxy_Ptr :=");
                         Put_Line (File, "        Wayland.API.Proxy_Marshal_Constructor");
                         Put_Line (File, "          (" & Name & ".all,");
                         Put_Line (File, "           " & Opcode & ",");
-                        Put_Line
-                          (File,
-                           "           " & Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface'Access,");
-                        Put (File, "           0");
+                        Put_Line (File, "           " & Interface_Name & "'Access,");
                      end Generate_Code_Before_Arguments;
 
                      procedure Generate_Code_After_Arguments is
@@ -3228,7 +3238,7 @@ procedure XML_Parser is
                                           Interface_Tag,
                                           Child.Arg_Tag.all,
                                           Max_Name_Length,
-                                          Child = Children (Request_Tag).Last_Element,
+                                          Child = V.Last_Element,
                                           Enum_Types);
                                     end if;
                                  end loop;
@@ -3249,7 +3259,7 @@ procedure XML_Parser is
                                  end if;
                               end if;
                               Generate_Code_Before_Arguments;
-                              Generate_Arguments (11, V);
+                              Generate_Arguments (11, True);
                               Generate_Code_After_Arguments;
                            end;
                         else
@@ -3286,10 +3296,9 @@ procedure XML_Parser is
                               Put_Line (File, "        (" & Name & ".all,");
                               Put_Line (File, "         " & Opcode & ",");
                               Put_Line (File, "         Interface_V,");
-                              Put (File, "         New_Id");
+                              Put_Line (File, "         New_Id,");
 
-                              Generate_Arguments (9, V);
-                              Put_Line (File, ",");
+                              Generate_Arguments (9, False);
 
                               Put_Line (File, "         Interface_V.Name,");
                               Put_Line (File, "         New_Id,");
@@ -3298,6 +3307,7 @@ procedure XML_Parser is
                            else
                               Put_Line (File, "   function " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") return Proxy_Ptr is");
                               Generate_Code_Before_Arguments;
+                              Put (File, "           0");
                               Generate_Code_After_Arguments;
                            end if;
                         end if;
@@ -3334,9 +3344,9 @@ procedure XML_Parser is
                            Put_Line (File, "   begin");
                            Put_Line (File, "      Wayland.API.Proxy_Marshal");
                            Put_Line (File, "        (" & Name & ".all,");
-                           Put (File, "         " & Opcode);
+                           Put_Line (File, "         " & Opcode & ",");
 
-                           Generate_Arguments (9, V);
+                           Generate_Arguments (9, False);
 
                            Put_Line (File, ");");
                            Put_Line (File, "   end " & Subprogram_Name & ";");

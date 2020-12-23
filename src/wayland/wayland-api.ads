@@ -225,6 +225,14 @@ private package Wayland.API is
      (Object  : in out Proxy;
       Opcode  : Unsigned_32;
       Subject : Interface_Ptr;
+      Offset  : Proxy_Ptr;
+      New_ID  : Unsigned_32) return Proxy_Ptr
+   with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor";
+
+   function Proxy_Marshal_Constructor
+     (Object  : in out Proxy;
+      Opcode  : Unsigned_32;
+      Subject : Interface_Ptr;
       New_ID  : Unsigned_32;
       Offset  : Proxy_Ptr) return Proxy_Ptr
    with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor";
