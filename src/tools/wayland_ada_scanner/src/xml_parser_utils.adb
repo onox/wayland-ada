@@ -43,7 +43,7 @@ package body Xml_Parser_Utils is
    procedure Remove_Prefix
      (Name : in out Ada.Strings.Unbounded.Unbounded_String) is
    begin
-      if Name = "Wl_" or Name = "Wp_" or Name = "Zwp_" then
+      if Name = "Wl_" or Name = "Wp_" or Name = "Zwp_" or Name = "Zxdg_" then
          Set_Unbounded_String (Name, "");
       end if;
    end Remove_Prefix;
