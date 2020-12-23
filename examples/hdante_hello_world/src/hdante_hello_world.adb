@@ -26,7 +26,9 @@ with C_Binding.Linux.Memory_Maps;
 
 with Wayland.Protocols.Client;
 with Wayland.Protocols.Xdg_Shell;
+with Wayland.Protocols.Presentation_Time;
 with Wayland.Enums.Client;
+with Wayland.Enums.Presentation_Time;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -69,6 +71,10 @@ package body Hdante_Hello_World is
       XDG_Shell    : Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base;
       XDG_Surface  : Wayland.Protocols.Xdg_Shell.Xdg_Surface;
       XDG_Toplevel : Wayland.Protocols.Xdg_Shell.Xdg_Toplevel;
+
+      Presentation : Wayland.Protocols.Presentation_Time.Wp_Presentation;
+      Feedback     : Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback;
+      Has_Feedback : Boolean := False;
 
       Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
    end record;
@@ -202,6 +208,43 @@ package body Hdante_Hello_World is
    package Base_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Wm_Base_Events
      (Ping => Base_Ping);
 
+   procedure Presentation_Synchronized_Output
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class;
+      Output                : Wayland.Protocols.Client.Output'Class) is
+   begin
+      Put_Line ("presentation output");
+   end Presentation_Synchronized_Output;
+
+   procedure Presentation_Presented
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class;
+      Timestamp             : Duration;
+      Refresh               : Duration;
+      Counter               : Wayland.Unsigned_64;
+      Flags                 : Wayland.Enums.Presentation_Time.Wp_Presentation_Feedback_Kind) is
+   begin
+      Put_Line ("presentation presented: ts:" & Timestamp'Image & " refresh:" & Refresh'Image & " counter:" & Counter'Image);
+      Put_Line ("  flags:");
+      Put_Line ("          vsync: " & Flags.Vsync'Image);
+      Put_Line ("       hw clock: " & Flags.Hw_Clock'Image);
+      Put_Line ("  hw completion: " & Flags.Hw_Completion'Image);
+      Put_Line ("      zero copy: " & Flags.Zero_Copy'Image);
+
+      Data.Has_Feedback := False;
+   end Presentation_Presented;
+
+   procedure Presentation_Discarded
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class) is
+   begin
+      Put_Line ("presentation discarded");
+
+      Data.Has_Feedback := False;
+   end Presentation_Discarded;
+
+   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback_Events
+     (Synchronized_Output => Presentation_Synchronized_Output,
+      Presented           => Presentation_Presented,
+      Discarded           => Presentation_Discarded);
+
    procedure Global_Registry_Handler
      (Registry : in out Wayland.Protocols.Client.Registry'Class;
       Id       : Unsigned_32;
@@ -244,6 +287,12 @@ package body Hdante_Hello_World is
          if Seat_Events.Subscribe (Data.Seat) = Error then
             raise Wayland_Error with "Failed to subscribe to seat events";
          end if;
+      elsif Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+         Data.Presentation.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.Presentation.Has_Proxy then
+            raise Wayland_Error with "No presentation";
+         end if;
       end if;
    end Global_Registry_Handler;
 
@@ -268,6 +317,15 @@ package body Hdante_Hello_World is
       Draw_Frame;
       Data.Surface.Attach (Buffer, 0, 0);  --  FIXME if Done then should use null to detach
       Data.Surface.Commit;
+
+      if not Data.Has_Feedback then
+         Data.Presentation.Feedback (Data.Surface, Data.Feedback);
+
+         if Presentation_Events.Subscribe (Data.Feedback) = Error then
+            raise Wayland_Error with "Failed to subscribe to presentation feedback events";
+         end if;
+         Data.Has_Feedback := True;
+      end if;
    end XDG_Surface_Configure;
 
    procedure XDG_Toplevel_Configure
