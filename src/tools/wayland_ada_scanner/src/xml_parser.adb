@@ -2063,7 +2063,7 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
 
-            if Name in "Wp_Presentation" then
+            if Name in "Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
@@ -2073,12 +2073,12 @@ procedure XML_Parser is
                Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
             end if;
 
-            if Name = "Wp_Presentation" then
+            if Name = "Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Feedback");
-               Put_Line (File, "     (Object   : Wp_Presentation;");
+               Put_Line (File, "     (Object   : Presentation;");
                Put_Line (File, "      Surface  : Protocols.Client.Surface'Class;");
-               Put_Line (File, "      Callback : in out Wp_Presentation_Feedback'Class)");
+               Put_Line (File, "      Feedback : in out Presentation_Feedback'Class)");
                Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
             end if;
          end Handle_Interface_Subprograms_Presentation_Time;
@@ -2092,24 +2092,24 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   generic");
 
-            if Name = "Wp_Presentation" then
+            if Name = "Presentation" then
                Put_Line (File, "      with procedure Clock");
-               Put_Line (File, "        (Presentation : in out Wp_Presentation'Class;");
+               Put_Line (File, "        (Presentation : in out Presentation_Time.Presentation'Class;");
                Put_Line (File, "         Id           : Unsigned_32);");
-            elsif Name = "Wp_Presentation_Feedback" then
+            elsif Name = "Presentation_Feedback" then
                Put_Line (File, "      with procedure Synchronized_Output");
-               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class;");
+               Put_Line (File, "        (Presentation_Feedback : in out Presentation_Time.Presentation_Feedback'Class;");
                Put_Line (File, "         Output                : Protocols.Client.Output'Class);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Presented");
-               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class;");
+               Put_Line (File, "        (Presentation_Feedback : in out Presentation_Time.Presentation_Feedback'Class;");
                Put_Line (File, "         Timestamp             : Duration;");
                Put_Line (File, "         Refresh               : Duration;");
                Put_Line (File, "         Counter               : Unsigned_64;");
-               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind);");
+               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Presentation_Feedback_Kind);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Discarded");
-               Put_Line (File, "        (Presentation_Feedback : in out Wp_Presentation_Feedback'Class);");
+               Put_Line (File, "        (Presentation_Feedback : in out Presentation_Time.Presentation_Feedback'Class);");
             end if;
 
             Put_Line (File, "   package " & Name & "_Events is");
@@ -5038,7 +5038,7 @@ procedure XML_Parser is
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
 
-            if Name in "Wp_Presentation" then
+            if Name in "Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Bind");
                Put_Line (File, "     (Object   : in out " & Name & ";");
@@ -5055,14 +5055,14 @@ procedure XML_Parser is
                Put_Line (File, "   end Bind;");
             end if;
 
-            if Name = "Wp_Presentation" then
+            if Name = "Presentation" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Feedback");
-               Put_Line (File, "     (Object   : Wp_Presentation;");
+               Put_Line (File, "     (Object   : Presentation;");
                Put_Line (File, "      Surface  : Protocols.Client.Surface'Class;");
-               Put_Line (File, "      Callback : in out Wp_Presentation_Feedback'Class) is");
+               Put_Line (File, "      Feedback : in out Presentation_Feedback'Class) is");
                Put_Line (File, "   begin");
-               Put_Line (File, "      Callback.Proxy := Thin.Wp_Presentation_Feedback (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "      Feedback.Proxy := Thin.Presentation_Feedback (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
                Put_Line (File, "   end Feedback;");
             end if;
          end Handle_Interface_Presentation_Time;
@@ -5081,17 +5081,17 @@ procedure XML_Parser is
             Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
             Put_Line (File, "");
 
-            if Name = "Wp_Presentation" then
+            if Name = "Presentation" then
                Put_Line (File, "      procedure Internal_Clock_Id");
-               Put_Line (File, "        (Data            : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation : Thin.Wp_Presentation_Ptr;");
-               Put_Line (File, "         Clk_Id          : Unsigned_32)");
+               Put_Line (File, "        (Data         : Void_Ptr;");
+               Put_Line (File, "         Presentation : Thin.Presentation_Ptr;");
+               Put_Line (File, "         Clk_Id       : Unsigned_32)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Clock_Id");
-               Put_Line (File, "        (Data            : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation : Thin.Wp_Presentation_Ptr;");
-               Put_Line (File, "         Clk_Id          : Unsigned_32)");
+               Put_Line (File, "        (Data         : Void_Ptr;");
+               Put_Line (File, "         Presentation : Thin.Presentation_Ptr;");
+               Put_Line (File, "         Clk_Id       : Unsigned_32)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "      begin");
@@ -5101,34 +5101,34 @@ procedure XML_Parser is
                Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
                Put_Line (File, "        (Clock_Id => Internal_Clock_Id'Unrestricted_Access);");
                Put_Line (File, "");
-            elsif Name = "Wp_Presentation_Feedback" then
+            elsif Name = "Presentation_Feedback" then
                Put_Line (File, "      procedure Internal_Sync_Output");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
-               Put_Line (File, "         Output                   : Protocols.Thin_Client.Output_Ptr)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Output                : Protocols.Thin_Client.Output_Ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Presented");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
-               Put_Line (File, "         Tv_Sec_Hi                : Unsigned_32;");
-               Put_Line (File, "         Tv_Sec_Lo                : Unsigned_32;");
-               Put_Line (File, "         Tv_Nsec                  : Unsigned_32;");
-               Put_Line (File, "         Refresh                  : Unsigned_32;");
-               Put_Line (File, "         Seq_Hi                   : Unsigned_32;");
-               Put_Line (File, "         Seq_Lo                   : Unsigned_32;");
-               Put_Line (File, "         Flags                    : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Tv_Sec_Hi             : Unsigned_32;");
+               Put_Line (File, "         Tv_Sec_Lo             : Unsigned_32;");
+               Put_Line (File, "         Tv_Nsec               : Unsigned_32;");
+               Put_Line (File, "         Refresh               : Unsigned_32;");
+               Put_Line (File, "         Seq_Hi                : Unsigned_32;");
+               Put_Line (File, "         Seq_Lo                : Unsigned_32;");
+               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Presentation_Feedback_Kind)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Discarded");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Sync_Output");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
-               Put_Line (File, "         Output                   : Protocols.Thin_Client.Output_Ptr)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Output                : Protocols.Thin_Client.Output_Ptr)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "");
@@ -5138,15 +5138,15 @@ procedure XML_Parser is
                Put_Line (File, "      end Internal_Sync_Output;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Presented");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr;");
-               Put_Line (File, "         Tv_Sec_Hi                : Unsigned_32;");
-               Put_Line (File, "         Tv_Sec_Lo                : Unsigned_32;");
-               Put_Line (File, "         Tv_Nsec                  : Unsigned_32;");
-               Put_Line (File, "         Refresh                  : Unsigned_32;");
-               Put_Line (File, "         Seq_Hi                   : Unsigned_32;");
-               Put_Line (File, "         Seq_Lo                   : Unsigned_32;");
-               Put_Line (File, "         Flags                    : Enums.Presentation_Time.Wp_Presentation_Feedback_Kind)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr;");
+               Put_Line (File, "         Tv_Sec_Hi             : Unsigned_32;");
+               Put_Line (File, "         Tv_Sec_Lo             : Unsigned_32;");
+               Put_Line (File, "         Tv_Nsec               : Unsigned_32;");
+               Put_Line (File, "         Refresh               : Unsigned_32;");
+               Put_Line (File, "         Seq_Hi                : Unsigned_32;");
+               Put_Line (File, "         Seq_Lo                : Unsigned_32;");
+               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Presentation_Feedback_Kind)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "");
@@ -5171,8 +5171,8 @@ procedure XML_Parser is
                Put_Line (File, "      end Internal_Presented;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Discarded");
-               Put_Line (File, "        (Data                     : Void_Ptr;");
-               Put_Line (File, "         Wp_Presentation_Feedback : Thin.Wp_Presentation_Feedback_Ptr)");
+               Put_Line (File, "        (Data                  : Void_Ptr;");
+               Put_Line (File, "         Presentation_Feedback : Thin.Presentation_Feedback_Ptr)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "      begin");

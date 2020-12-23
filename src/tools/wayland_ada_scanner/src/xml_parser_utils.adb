@@ -40,11 +40,11 @@ package body Xml_Parser_Utils is
 
    -- If input is "wl_hello" then output is "hello".
    -- This procedure strips away the first
-   -- three characters if they are "wl_".
+   -- three characters if they are "wl_" or "wp_".
    procedure Remove_Initial_Wl
      (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
    begin
-      if Length (New_Name) = 3 and then New_Name = "Wl_" then
+      if Length (New_Name) = 3 and then (New_Name = "Wl_" or New_Name = "Wp_") then
          Set_Unbounded_String (New_Name, "");
       end if;
    end Remove_Initial_Wl;

@@ -50,7 +50,7 @@ package body Wayland_Ada_Info is
    Display    : Wayland.Protocols.Client.Display;
    Registry   : Wayland.Protocols.Client.Registry;
 
-   Presentation : Wayland.Protocols.Presentation_Time.Wp_Presentation;
+   Presentation : Wayland.Protocols.Presentation_Time.Presentation;
 
    type Interface_Data is record
       Name    : SU.Unbounded_String;
@@ -306,7 +306,7 @@ package body Wayland_Ada_Info is
    end Output_Scale;
 
    procedure Presentation_Clock
-     (Presentation : in out Wayland.Protocols.Presentation_Time.Wp_Presentation'Class;
+     (Presentation : in out Wayland.Protocols.Presentation_Time.Presentation'Class;
       Id           : Unsigned_32) is
    begin
       Clock := Id;
@@ -324,7 +324,7 @@ package body Wayland_Ada_Info is
       Mode     => Output_Mode,
       Scale    => Output_Scale);
 
-   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Wp_Presentation_Events
+   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Presentation_Events
      (Clock => Presentation_Clock);
 
    procedure Global_Registry_Handler
@@ -382,7 +382,7 @@ package body Wayland_Ada_Info is
 
             Output_Last_Index := Output_Last_Index + 1;
          end;
-      elsif Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+      elsif Name = Wayland.Protocols.Presentation_Time.Presentation_Interface.Name then
          Presentation.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
 
          if not Presentation.Has_Proxy then
@@ -443,7 +443,7 @@ package body Wayland_Ada_Info is
 
             pragma Assert (Output_First_Index <= Output_Last_Index);
             Output_First_Index := Output_First_Index + 1;
-         elsif E.Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+         elsif E.Name = Wayland.Protocols.Presentation_Time.Presentation_Interface.Name then
             Put_Line (L1.HT & "presentation clock id:" & Clock'Image);
          end if;
       end loop;

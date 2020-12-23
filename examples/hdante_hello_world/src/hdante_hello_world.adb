@@ -72,8 +72,8 @@ package body Hdante_Hello_World is
       XDG_Surface  : Wayland.Protocols.Xdg_Shell.Xdg_Surface;
       XDG_Toplevel : Wayland.Protocols.Xdg_Shell.Xdg_Toplevel;
 
-      Presentation : Wayland.Protocols.Presentation_Time.Wp_Presentation;
-      Feedback     : Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback;
+      Presentation : Wayland.Protocols.Presentation_Time.Presentation;
+      Feedback     : Wayland.Protocols.Presentation_Time.Presentation_Feedback;
       Has_Feedback : Boolean := False;
 
       Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
@@ -209,18 +209,18 @@ package body Hdante_Hello_World is
      (Ping => Base_Ping);
 
    procedure Presentation_Synchronized_Output
-     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class;
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Presentation_Feedback'Class;
       Output                : Wayland.Protocols.Client.Output'Class) is
    begin
       Put_Line ("presentation output");
    end Presentation_Synchronized_Output;
 
    procedure Presentation_Presented
-     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class;
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Presentation_Feedback'Class;
       Timestamp             : Duration;
       Refresh               : Duration;
       Counter               : Wayland.Unsigned_64;
-      Flags                 : Wayland.Enums.Presentation_Time.Wp_Presentation_Feedback_Kind) is
+      Flags                 : Wayland.Enums.Presentation_Time.Presentation_Feedback_Kind) is
    begin
       Put_Line ("presentation presented: ts:" & Timestamp'Image & " refresh:" & Refresh'Image & " counter:" & Counter'Image);
       Put_Line ("  flags:");
@@ -233,14 +233,14 @@ package body Hdante_Hello_World is
    end Presentation_Presented;
 
    procedure Presentation_Discarded
-     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback'Class) is
+     (Presentation_Feedback : in out Wayland.Protocols.Presentation_Time.Presentation_Feedback'Class) is
    begin
       Put_Line ("presentation discarded");
 
       Data.Has_Feedback := False;
    end Presentation_Discarded;
 
-   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Wp_Presentation_Feedback_Events
+   package Presentation_Events is new Wayland.Protocols.Presentation_Time.Presentation_Feedback_Events
      (Synchronized_Output => Presentation_Synchronized_Output,
       Presented           => Presentation_Presented,
       Discarded           => Presentation_Discarded);
@@ -287,7 +287,7 @@ package body Hdante_Hello_World is
          if Seat_Events.Subscribe (Data.Seat) = Error then
             raise Wayland_Error with "Failed to subscribe to seat events";
          end if;
-      elsif Name = Wayland.Protocols.Presentation_Time.Wp_Presentation_Interface.Name then
+      elsif Name = Wayland.Protocols.Presentation_Time.Presentation_Interface.Name then
          Data.Presentation.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
 
          if not Data.Presentation.Has_Proxy then
