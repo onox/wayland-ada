@@ -178,6 +178,15 @@ private package Wayland.API is
    procedure Proxy_Marshal
      (Object : in out Proxy;
       Opcode : Unsigned_32;
+      Arg_1  : Fixed;
+      Arg_2  : Fixed;
+      Arg_3  : Fixed;
+      Arg_4  : Fixed)
+   with Import, Convention => C, External_Name => "wl_proxy_marshal";
+
+   procedure Proxy_Marshal
+     (Object : in out Proxy;
+      Opcode : Unsigned_32;
       Arg_1  : Proxy_Ptr;
       Arg_2  : Integer;
       Arg_3  : Integer;

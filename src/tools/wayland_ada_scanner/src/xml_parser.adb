@@ -856,7 +856,7 @@ procedure XML_Parser is
       procedure Create_Wl_Thin_Spec_File (Protocol_Name : String);
 
       procedure Generate_Code_For_Type_Declarations;
-      procedure Generate_Code_For_External_Proxies;
+      procedure Generate_Code_For_External_Proxies (Protocol_Name : String);
       procedure Generate_Code_For_The_Interface_Constants;
       procedure Generate_Code_For_Enum_Constants;
       procedure Generate_Private_Code_For_Enum_Constants;
@@ -894,9 +894,7 @@ procedure XML_Parser is
          Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
 
          Generate_Code_For_Type_Declarations;
-         if Protocol_Name = "client" then
-            Generate_Code_For_External_Proxies;
-         end if;
+         Generate_Code_For_External_Proxies (Protocol_Name);
          Generate_Code_For_The_Interface_Constants;
 
          if Protocol_Name = "client" then
@@ -924,6 +922,9 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
+         elsif Protocol_Name = "xdg_shell" then
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
          end if;
 
          Generate_Private_Code_For_The_Interface_Constants;
@@ -1007,14 +1008,19 @@ procedure XML_Parser is
          Iterate_Over_Interfaces (Handle_Interface'Access);
       end Generate_Code_For_Type_Declarations;
 
-      procedure Generate_Code_For_External_Proxies is
+      procedure Generate_Code_For_External_Proxies (Protocol_Name : String) is
       begin
-         Put_Line (File, "");
-         Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
-         Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
-         Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
-         Put_Line (File, "");
-         Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
+         if Protocol_Name = "client" then
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
+            Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
+            Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
+         elsif Protocol_Name = "xdg_shell" then
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy;");
+         end if;
       end Generate_Code_For_External_Proxies;
 
       procedure Generate_Code_For_The_Interface_Constants is
@@ -2137,8 +2143,8 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Destination");
                Put_Line (File, "     (Object        : Viewport;");
-               Put_Line (File, "      Width, Height : Fixed)");
-               Put_Line (File, "   with Pre => (Width = -1.0 and Height = -1.0) or (Width > 0.0 and Height > 0.0);");
+               Put_Line (File, "      Width, Height : Integer)");
+               Put_Line (File, "   with Pre => (Width = -1 and Height = -1) or (Width > 0 and Height > 0);");
             end if;
          end Handle_Interface_Subprograms_Viewporter;
 
@@ -5263,7 +5269,7 @@ procedure XML_Parser is
                Put_Line (File, "      Viewport : in out Protocols.Viewporter.Viewport'Class) is");
                Put_Line (File, "   begin");
                Put_Line (File, "      Viewport.Proxy := Thin.Viewporter_Get_Viewport (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
-               Put_Line (File, "   end Feedback;");
+               Put_Line (File, "   end Get_Viewport;");
             elsif Name = "Viewport" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Source");
@@ -5275,7 +5281,7 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Destination");
                Put_Line (File, "     (Object        : Viewport;");
-               Put_Line (File, "      Width, Height : Fixed) is");
+               Put_Line (File, "      Width, Height : Integer) is");
                Put_Line (File, "   begin");
                Put_Line (File, "      Thin.Viewport_Set_Destination (Object.Proxy, Width, Height);");
                Put_Line (File, "   end Set_Destination;");
@@ -5361,15 +5367,15 @@ procedure XML_Parser is
 
             if Name = "Toplevel_Decoration_V1" then
                Put_Line (File, "      procedure Internal_Configure");
-               Put_Line (File, "        (Data       : Void_Ptr;");
-               Put_Line (File, "         Decoration : Thin.Toplevel_Decoration_V1_Ptr;");
-               Put_Line (File, "         Mode       : Enums.Toplevel_Decoration_V1_Mode)");
+               Put_Line (File, "        (Data                   : Void_Ptr;");
+               Put_Line (File, "         Toplevel_Decoration_V1 : Thin.Toplevel_Decoration_V1_Ptr;");
+               Put_Line (File, "         Mode                   : Toplevel_Decoration_V1_Mode)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Configure");
-               Put_Line (File, "        (Data       : Void_Ptr;");
-               Put_Line (File, "         Decoration : Thin.Toplevel_Decoration_V1_Ptr;");
-               Put_Line (File, "         Mode       : Enums.Toplevel_Decoration_V1_Mode)");
+               Put_Line (File, "        (Data                   : Void_Ptr;");
+               Put_Line (File, "         Toplevel_Decoration_V1 : Thin.Toplevel_Decoration_V1_Ptr;");
+               Put_Line (File, "         Mode                   : Toplevel_Decoration_V1_Mode)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "      begin");
