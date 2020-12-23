@@ -1254,6 +1254,23 @@ procedure XML_Parser is
             Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
          end Generate_Spec_Bind_Subprogram;
 
+         procedure Generate_Prefix_Spec_Events is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   generic");
+         end Generate_Prefix_Spec_Events;
+
+         procedure Generate_Suffix_Spec_Events (Name : String) is
+         begin
+            Put_Line (File, "   package " & Name & "_Events is");
+            Put_Line (File, "");
+            Put_Line (File, "      function Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_Events;");
+         end Generate_Suffix_Spec_Events;
+
          procedure Handle_Interface_Subprograms_Client
            (Interface_Tag : aliased Wayland_XML.Interface_Tag)
          is
@@ -1548,8 +1565,7 @@ procedure XML_Parser is
                return;
             end if;
 
-            Put_Line (File, "");
-            Put_Line (File, "   generic");
+            Generate_Prefix_Spec_Events;
 
             if Name = "Display" then
                Put_Line (File, "      with procedure Error");
@@ -1805,13 +1821,7 @@ procedure XML_Parser is
                Put_Line (File, "         Factor : Integer) is null;");
             end if;
 
-            Put_Line (File, "   package " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      with Pre => Object.Has_Proxy;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Client;
 
          procedure Handle_Interface_Subprograms_Xdg_Shell
@@ -1997,8 +2007,7 @@ procedure XML_Parser is
                return;
             end if;
 
-            Put_Line (File, "");
-            Put_Line (File, "   generic");
+            Generate_Prefix_Spec_Events;
 
             if Name = "Xdg_Wm_Base" then
                Put_Line (File, "      with procedure Ping");
@@ -2032,13 +2041,7 @@ procedure XML_Parser is
                Put_Line (File, "         Token     : Unsigned_32) is null;");
             end if;
 
-            Put_Line (File, "   package " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      with Pre => Object.Has_Proxy;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Xdg_Shell;
 
          procedure Handle_Interface_Subprograms_Presentation_Time
@@ -2070,8 +2073,7 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   generic");
+            Generate_Prefix_Spec_Events;
 
             if Name = "Presentation" then
                Put_Line (File, "      with procedure Clock");
@@ -2093,13 +2095,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Presentation_Feedback : in out Presentation_Time.Presentation_Feedback'Class);");
             end if;
 
-            Put_Line (File, "   package " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      with Pre => Object.Has_Proxy;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Presentation_Time;
 
          procedure Handle_Interface_Subprograms_Viewporter
