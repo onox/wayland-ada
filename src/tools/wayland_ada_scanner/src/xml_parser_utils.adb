@@ -38,16 +38,15 @@ package body Xml_Parser_Utils is
 
    use type Ada.Containers.Count_Type;
 
-   -- If input is "wl_hello" then output is "hello".
-   -- This procedure strips away the first
-   -- three characters if they are "wl_" or "wp_".
-   procedure Remove_Initial_Wl
-     (New_Name : in out Ada.Strings.Unbounded.Unbounded_String) is
+   --  This procedure strips away the first few characters if they
+   --  are "wl_", "wp_", or "zwp_".
+   procedure Remove_Prefix
+     (Name : in out Ada.Strings.Unbounded.Unbounded_String) is
    begin
-      if Length (New_Name) = 3 and then (New_Name = "Wl_" or New_Name = "Wp_") then
-         Set_Unbounded_String (New_Name, "");
+      if Name = "Wl_" or Name = "Wp_" or Name = "Zwp_" then
+         Set_Unbounded_String (Name, "");
       end if;
-   end Remove_Initial_Wl;
+   end Remove_Prefix;
 
    function Adaify_Variable_Name (Old_Name : String) return String is
       Result : constant String := Adaify_Name (Old_Name);
@@ -81,7 +80,7 @@ package body Xml_Parser_Utils is
 
          if CP = '_' then
             Append (New_Name, "_");
-            Remove_Initial_Wl (New_Name);
+            Remove_Prefix (New_Name);
             Is_Previous_An_Undercase := True;
          else
             if Is_Digit (CP) then
@@ -91,7 +90,7 @@ package body Xml_Parser_Utils is
                   Append (New_Name, CP);
                else
                   Append (New_Name, "_");
-                  Remove_Initial_Wl (New_Name);
+                  Remove_Prefix (New_Name);
                   Append (New_Name, CP);
                end if;
 
@@ -103,7 +102,7 @@ package body Xml_Parser_Utils is
                      Is_Previous_Lowercase := False;
                   elsif Is_Previous_Lowercase then
                      Append (New_Name, "_");
-                     Remove_Initial_Wl (New_Name);
+                     Remove_Prefix (New_Name);
                      Append (New_Name, CP);
                      Is_Previous_Lowercase := False;
                   else
