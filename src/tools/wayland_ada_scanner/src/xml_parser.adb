@@ -1223,19 +1223,8 @@ procedure XML_Parser is
       end Generate_Private_Code_For_Enum_Constants;
 
       procedure Generate_Manually_Edited_Partial_Type_Declarations (Protocol_Name : String) is
-         procedure Handle_Interface_Subprograms_Client
-           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
-         is
-            Name : constant String
-              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         procedure Generate_Spec_Utility_Functions (Name : String) is
          begin
-            if Name /= "Display" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
-               Put_Line (File, "     with Pre  => Object.Has_Proxy,");
-               Put_Line (File, "          Post => not Object.Has_Proxy;");
-            end if;
-
             Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
@@ -1244,6 +1233,38 @@ procedure XML_Parser is
             Put_Line (File, "     with Global => null;");
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+         end Generate_Spec_Utility_Functions;
+
+         procedure Generate_Spec_Destroy_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
+            Put_Line (File, "     with Pre  => Object.Has_Proxy,");
+            Put_Line (File, "          Post => not Object.Has_Proxy;");
+         end Generate_Spec_Destroy_Subprogram;
+
+         procedure Generate_Spec_Bind_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Bind");
+            Put_Line (File, "     (Object   : in out " & Name & ";");
+            Put_Line (File, "      Registry : Client.Registry'Class;");
+            Put_Line (File, "      Id       : Unsigned_32;");
+            Put_Line (File, "      Version  : Unsigned_32)");
+            Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+         end Generate_Spec_Bind_Subprogram;
+
+         procedure Handle_Interface_Subprograms_Client
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name /= "Display" then
+               Generate_Spec_Destroy_Subprogram (Name);
+            end if;
+
+            Generate_Spec_Utility_Functions (Name);
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
                Put_Line (File, "");
@@ -1253,13 +1274,7 @@ procedure XML_Parser is
             end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+               Generate_Spec_Bind_Subprogram (Name);
             end if;
 
             if Name = "Display" then
@@ -1805,28 +1820,11 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
-            Put_Line (File, "     with Pre  => Object.Has_Proxy,");
-            Put_Line (File, "          Post => not Object.Has_Proxy;");
-
-            Put_Line (File, "");
-            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
-            Put_Line (File, "     with Pre => Object.Has_Proxy;");
-            Put_Line (File, "");
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
-            Put_Line (File, "     with Global => null;");
-            Put_Line (File, "");
-            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
 
             if Name in "Xdg_Wm_Base" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+               Generate_Spec_Bind_Subprogram (Name);
             end if;
 
             if Name = "Xdg_Wm_Base" then
@@ -2049,28 +2047,11 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
-            Put_Line (File, "     with Pre  => Object.Has_Proxy,");
-            Put_Line (File, "          Post => not Object.Has_Proxy;");
-
-            Put_Line (File, "");
-            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
-            Put_Line (File, "     with Pre => Object.Has_Proxy;");
-            Put_Line (File, "");
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
-            Put_Line (File, "     with Global => null;");
-            Put_Line (File, "");
-            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
 
             if Name in "Presentation" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   with Pre => not Object.Has_Proxy and Registry.Has_Proxy;");
+               Generate_Spec_Bind_Subprogram (Name);
             end if;
 
             if Name = "Presentation" then
@@ -3394,23 +3375,8 @@ procedure XML_Parser is
       end Create_Wl_Thin_Body_File;
 
       procedure Generate_Manually_Edited_Code (Protocol_Name : String) is
-         procedure Handle_Interface_Client
-           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
-         is
-            Name : constant String
-              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         procedure Generate_Body_Utility_Functions (Name : String) is
          begin
-            if Name /= "Display" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
-               Put_Line (File, "   begin");
-               Put_Line (File, "      if Object.Proxy /= null then");
-               Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
-               Put_Line (File, "         Object.Proxy := null;");
-               Put_Line (File, "      end if;");
-               Put_Line (File, "   end Destroy;");
-            end if;
-
             Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
             Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
@@ -3420,6 +3386,76 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+         end Generate_Body_Utility_Functions;
+
+         procedure Generate_Body_Destroy_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      if Object.Proxy /= null then");
+            Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
+            Put_Line (File, "         Object.Proxy := null;");
+            Put_Line (File, "      end if;");
+            Put_Line (File, "   end Destroy;");
+         end Generate_Body_Destroy_Subprogram;
+
+         procedure Generate_Body_Bind_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   procedure Bind");
+            Put_Line (File, "     (Object   : in out " & Name & ";");
+            Put_Line (File, "      Registry : Client.Registry'Class;");
+            Put_Line (File, "      Id       : Unsigned_32;");
+            Put_Line (File, "      Version  : Unsigned_32)");
+            Put_Line (File, "   is");
+            Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
+            Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
+            Put_Line (File, "   begin");
+            Put_Line (File, "      if Proxy /= null then");
+            Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
+            Put_Line (File, "      end if;");
+            Put_Line (File, "   end Bind;");
+         end Generate_Body_Bind_Subprogram;
+
+         procedure Generate_Prefix_Body_Events (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   package body " & Name & "_Events is");
+            Put_Line (File, "");
+            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
+            Put_Line (File, "");
+         end Generate_Prefix_Body_Events;
+
+         procedure Generate_Suffix_Body_Events (Name : String) is
+            function Align (Value : String) return String is (SF.Head (Value, Natural'Max (8, Name'Length), ' '));
+         begin
+            Put_Line (File, "      function Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      is");
+            Put_Line (File, "         I : int;");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
+            Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
+            Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
+            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
+            Put_Line (File, "         return (if I = 0 then Success else Error);");
+            Put_Line (File, "      end Subscribe;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_Events;");
+         end Generate_Suffix_Body_Events;
+
+         procedure Handle_Interface_Client
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name /= "Display" then
+               Generate_Body_Destroy_Subprogram (Name);
+            end if;
+
+            Generate_Body_Utility_Functions (Name);
 
             if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
                Put_Line (File, "");
@@ -3433,20 +3469,7 @@ procedure XML_Parser is
             end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   is");
-               Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-               Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
-               Put_Line (File, "   begin");
-               Put_Line (File, "      if Proxy /= null then");
-               Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-               Put_Line (File, "      end if;");
-               Put_Line (File, "   end Bind;");
+               Generate_Body_Bind_Subprogram (Name);
             end if;
          end Handle_Interface_Client;
 
@@ -3455,18 +3478,12 @@ procedure XML_Parser is
          is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-
-            function Align (Value : String) return String is (SF.Head (Value, Natural'Max (8, Name'Length), ' '));
          begin
             if Name in "Compositor" | "Shm_Pool" | "Data_Device_Manager" | "Region" | "Subcompositor" | "Subsurface" then
                return;
             end if;
 
-            Put_Line (File, "");
-            Put_Line (File, "   package body " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
-            Put_Line (File, "");
+            Generate_Prefix_Body_Events (Name);
 
             if Name = "Display" then
                Put_Line (File, "      procedure Internal_Error");
@@ -4547,19 +4564,7 @@ procedure XML_Parser is
                Put_Line (File, "");
             end if;
 
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      is");
-            Put_Line (File, "         I : int;");
-            Put_Line (File, "      begin");
-            Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
-            Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
-            Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
-            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
-            Put_Line (File, "         return (if I = 0 then Success else Error);");
-            Put_Line (File, "      end Subscribe;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Client;
 
          procedure Handle_Interface_Xdg_Shell
@@ -4568,40 +4573,11 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
-            Put_Line (File, "   begin");
-            Put_Line (File, "      if Object.Proxy /= null then");
-            Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
-            Put_Line (File, "         Object.Proxy := null;");
-            Put_Line (File, "      end if;");
-            Put_Line (File, "   end Destroy;");
-
-            Put_Line (File, "");
-            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
-            Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
-            Put_Line (File, "");
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
-            Put_Line (File, "     (Object.Proxy /= null);");
-            Put_Line (File, "");
-            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
-            Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
 
             if Name in "Xdg_Wm_Base" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   is");
-               Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-               Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
-               Put_Line (File, "   begin");
-               Put_Line (File, "      if Proxy /= null then");
-               Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-               Put_Line (File, "      end if;");
-               Put_Line (File, "   end Bind;");
+               Generate_Body_Bind_Subprogram (Name);
             end if;
 
             if Name in "Xdg_Wm_Base" then
@@ -4843,18 +4819,12 @@ procedure XML_Parser is
          is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-
-            function Align (Value : String) return String is (SF.Head (Value, Natural'Max (8, Name'Length), ' '));
          begin
             if Name = "Xdg_Positioner" then
                return;
             end if;
 
-            Put_Line (File, "");
-            Put_Line (File, "   package body " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
-            Put_Line (File, "");
+            Generate_Prefix_Body_Events (Name);
 
             if Name = "Xdg_Wm_Base" then
                Put_Line (File, "      procedure Internal_Ping");
@@ -4998,19 +4968,7 @@ procedure XML_Parser is
                Put_Line (File, "");
             end if;
 
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      is");
-            Put_Line (File, "         I : int;");
-            Put_Line (File, "      begin");
-            Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
-            Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
-            Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
-            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
-            Put_Line (File, "         return (if I = 0 then Success else Error);");
-            Put_Line (File, "      end Subscribe;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Xdg_Shell;
 
          procedure Handle_Interface_Presentation_Time
@@ -5019,40 +4977,11 @@ procedure XML_Parser is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
-            Put_Line (File, "   begin");
-            Put_Line (File, "      if Object.Proxy /= null then");
-            Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
-            Put_Line (File, "         Object.Proxy := null;");
-            Put_Line (File, "      end if;");
-            Put_Line (File, "   end Destroy;");
-
-            Put_Line (File, "");
-            Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
-            Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");
-            Put_Line (File, "");
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean is");
-            Put_Line (File, "     (Object.Proxy /= null);");
-            Put_Line (File, "");
-            Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
-            Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
 
             if Name in "Presentation" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Bind");
-               Put_Line (File, "     (Object   : in out " & Name & ";");
-               Put_Line (File, "      Registry : Client.Registry'Class;");
-               Put_Line (File, "      Id       : Unsigned_32;");
-               Put_Line (File, "      Version  : Unsigned_32)");
-               Put_Line (File, "   is");
-               Put_Line (File, "      Proxy : constant Thin.Proxy_Ptr :=");
-               Put_Line (File, "        Thin.Proxy_Ptr (Registry.Bind (" & Name & "_Interface, Id, Version));");
-               Put_Line (File, "   begin");
-               Put_Line (File, "      if Proxy /= null then");
-               Put_Line (File, "         Object.Proxy := Proxy.all'Access;");
-               Put_Line (File, "      end if;");
-               Put_Line (File, "   end Bind;");
+               Generate_Body_Bind_Subprogram (Name);
             end if;
 
             if Name = "Presentation" then
@@ -5072,14 +5001,8 @@ procedure XML_Parser is
          is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
-
-            function Align (Value : String) return String is (SF.Head (Value, Natural'Max (8, Name'Length), ' '));
          begin
-            Put_Line (File, "");
-            Put_Line (File, "   package body " & Name & "_Events is");
-            Put_Line (File, "");
-            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
-            Put_Line (File, "");
+            Generate_Prefix_Body_Events (Name);
 
             if Name = "Presentation" then
                Put_Line (File, "      procedure Internal_Clock_Id");
@@ -5186,19 +5109,7 @@ procedure XML_Parser is
                Put_Line (File, "");
             end if;
 
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
-            Put_Line (File, "      is");
-            Put_Line (File, "         I : int;");
-            Put_Line (File, "      begin");
-            Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
-            Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
-            Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
-            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
-            Put_Line (File, "         return (if I = 0 then Success else Error);");
-            Put_Line (File, "      end Subscribe;");
-            Put_Line (File, "");
-            Put_Line (File, "   end " & Name & "_Events;");
+            Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Presentation_Time;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
