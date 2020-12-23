@@ -68,6 +68,7 @@ package body Xml_Parser_Utils is
       Is_Previous_Lowercase    : Boolean := False;
       Is_Previous_A_Number     : Boolean := False;
       Is_Previous_An_Undercase : Boolean := False;
+      Is_Previous_V            : Boolean := False;
    begin
       CP := Old_Name (P);
       P := P + 1;
@@ -88,6 +89,9 @@ package body Xml_Parser_Utils is
                   Append (New_Name, CP);
                elsif Is_Previous_An_Undercase then
                   Append (New_Name, CP);
+               elsif Is_Previous_V then
+                  Append (New_Name, CP);
+                  Is_Previous_V := False;
                else
                   Append (New_Name, "_");
                   Remove_Prefix (New_Name);
@@ -111,6 +115,7 @@ package body Xml_Parser_Utils is
                else
                   if Is_Previous_An_Undercase then
                      Append (New_Name, To_Upper (CP));
+                     Is_Previous_V := CP = 'v';
                   else
                      Append (New_Name, CP);
                   end if;
