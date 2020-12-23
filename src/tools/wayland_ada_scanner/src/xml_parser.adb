@@ -880,6 +880,9 @@ procedure XML_Parser is
          New_Line (File);
          if Protocol_Name = "client" then
             Put_Line (File, "with C_Binding.Linux.Files;");
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Put_Line (File, "with Wayland.Protocols.Client;");
+            Put_Line (File, "with Wayland.Protocols.Xdg_Shell;");
          else
             Put_Line (File, "with Wayland.Protocols.Client;");
          end if;
@@ -932,6 +935,7 @@ procedure XML_Parser is
 
          -----------------------------------------------------------------------
 
+         --  TODO Do not generate file if there are no enum constants
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
             Out_Folder & "wayland-enums-" & Protocol_Name & ".ads");
@@ -959,7 +963,12 @@ procedure XML_Parser is
          Put_Line (File, "");
          Put_Line (File, "with Wayland.API;");
          Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
-         if Protocol_Name /= "client" then
+
+         if Protocol_Name = "client" then
+            null;
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Put_Line (File, "with Wayland.Protocols.Thin_Xdg_Shell;");
+         else
             Put_Line (File, "with Wayland.Protocols.Thin_Client;");
          end if;
          Put_Line (File, "");
@@ -2116,20 +2125,20 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Get_Viewport");
                Put_Line (File, "     (Object   : Viewporter;");
                Put_Line (File, "      Surface  : Client.Surface'Class;");
-               Put_Line (File, "      Viewport : in out Viewporter.Viewport'Class)");
+               Put_Line (File, "      Viewport : in out Protocols.Viewporter.Viewport'Class)");
                Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
             elsif Name = "Viewport" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Source");
                Put_Line (File, "     (Object              : Viewport;");
                Put_Line (File, "      X, Y, Width, Height : Fixed)");
-               Put_Line (File, "   with Pre => (X = -1 and Y = -1 and Width = -1 and Height = -1)");
-               Put_Line (File, "                 or (Width > 0 and Height > 0 and X >= 0 and Y >= 0);");
+               Put_Line (File, "   with Pre => (X = -1.0 and Y = -1.0 and Width = -1.0 and Height = -1.0)");
+               Put_Line (File, "                 or (Width > 0.0 and Height > 0.0 and X >= 0.0 and Y >= 0.0);");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Destination");
                Put_Line (File, "     (Object        : Viewport;");
                Put_Line (File, "      Width, Height : Fixed)");
-               Put_Line (File, "   with Pre => (Width = -1 and Height = -1) or (Width > 0 and Height > 0);");
+               Put_Line (File, "   with Pre => (Width = -1.0 and Height = -1.0) or (Width > 0.0 and Height > 0.0);");
             end if;
          end Handle_Interface_Subprograms_Viewporter;
 
@@ -2142,21 +2151,74 @@ procedure XML_Parser is
             Generate_Spec_Destroy_Subprogram (Name);
             Generate_Spec_Utility_Functions (Name);
 
-            if Name in "Idle_Inhibit_Manager_V_1" then
+            if Name in "Idle_Inhibit_Manager_V1" then
                Generate_Spec_Bind_Subprogram (Name);
             end if;
 
-            if Name = "Idle_Inhibit_Manager_V_1" then
+            if Name = "Idle_Inhibit_Manager_V1" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Create_Inhibitor");
-               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V_1;");
+               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V1;");
                Put_Line (File, "      Surface   : Client.Surface'Class;");
-               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V_1'Class)");
+               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V1'Class)");
                Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy;");
-            elsif Name = "Idle_Inhibitor_V_1" then
+            elsif Name = "Idle_Inhibitor_V1" then
                null;
             end if;
          end Handle_Interface_Subprogram_Idle_Inhibit;
+
+         procedure Handle_Interface_Subprogram_Xdg_Decoration
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Decoration_Manager_V1" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Decoration_Manager_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Toplevel_Decoration");
+               Put_Line (File, "     (Object     : Decoration_Manager_V1;");
+               Put_Line (File, "      Toplevel   : Xdg_Shell.Xdg_Toplevel'Class;");
+               Put_Line (File, "      Decoration : in out Toplevel_Decoration_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Toplevel.Has_Proxy;");
+            elsif Name = "Toplevel_Decoration_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Mode");
+               Put_Line (File, "     (Object : Toplevel_Decoration_V1;");
+               Put_Line (File, "      Mode   : Toplevel_Decoration_V1_Mode)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Unset_Mode (Object : Toplevel_Decoration_V1)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy;");
+            end if;
+         end Handle_Interface_Subprogram_Xdg_Decoration;
+
+         procedure Handle_Interface_Events_Xdg_Decoration
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Decoration_Manager_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Spec_Events;
+
+            if Name = "Toplevel_Decoration_V1" then
+               Put_Line (File, "      with procedure Configure");
+               Put_Line (File, "        (Decoration : in out Toplevel_Decoration_V1'Class;");
+               Put_Line (File, "         Mode       : Toplevel_Decoration_V1_Mode);");
+            end if;
+
+            Generate_Suffix_Spec_Events (Name);
+         end Handle_Interface_Events_Xdg_Decoration;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2171,6 +2233,9 @@ procedure XML_Parser is
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Viewporter'Access);
          elsif Protocol_Name = "idle_inhibit_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Subprogram_Idle_Inhibit'Access);
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprogram_Xdg_Decoration'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Decoration'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -2941,6 +3006,8 @@ procedure XML_Parser is
             Put_Line (File, "   function Display_Connect return Display_Ptr;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Display_Disconnect (This : in out Display_Ptr);");
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Put_Line (File, "   use Wayland.Protocols.Thin_Xdg_Shell;");
          else
             Put_Line (File, "   use Wayland.Protocols.Thin_Client;");
          end if;
@@ -3025,6 +3092,7 @@ procedure XML_Parser is
            (File, Ada.Text_IO.Out_File,
             Out_Folder & "wayland-protocols-" & Protocol_Name & ".adb");
 
+         --  TODO Do not import System.Address_To_Access_Conversions if there are no generic *_Events packages
          Put_Line (File, "with System.Address_To_Access_Conversions;");
          New_Line (File);
          Put_Line (File, "with Interfaces.C.Strings;");
@@ -3036,6 +3104,8 @@ procedure XML_Parser is
             Put_Line (File, "with Ada.Unchecked_Conversion;");
             Put_Line (File, "");
             Put_Line (File, "with Wayland.Protocols.Thin_Client;");
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Put_Line (File, "with Wayland.Protocols.Thin_Xdg_Shell;");
          else
             Put_Line (File, "with Wayland.Protocols.Thin_Client;");
          end if;
@@ -5190,7 +5260,7 @@ procedure XML_Parser is
                Put_Line (File, "   procedure Get_Viewport");
                Put_Line (File, "     (Object   : Viewporter;");
                Put_Line (File, "      Surface  : Client.Surface'Class;");
-               Put_Line (File, "      Viewport : in out Viewporter.Viewport'Class) is");
+               Put_Line (File, "      Viewport : in out Protocols.Viewporter.Viewport'Class) is");
                Put_Line (File, "   begin");
                Put_Line (File, "      Viewport.Proxy := Thin.Viewporter_Get_Viewport (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
                Put_Line (File, "   end Feedback;");
@@ -5221,23 +5291,98 @@ procedure XML_Parser is
             Generate_Body_Destroy_Subprogram (Name);
             Generate_Body_Utility_Functions (Name);
 
-            if Name in "Idle_Inhibit_Manager_V_1" then
+            if Name in "Idle_Inhibit_Manager_V1" then
                Generate_Body_Bind_Subprogram (Name);
             end if;
 
-            if Name = "Idle_Inhibit_Manager_V_1" then
+            if Name = "Idle_Inhibit_Manager_V1" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Create_Inhibitor");
-               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V_1;");
+               Put_Line (File, "     (Object    : Idle_Inhibit_Manager_V1;");
                Put_Line (File, "      Surface   : Client.Surface'Class;");
-               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V_1'Class) is");
+               Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V1'Class) is");
                Put_Line (File, "   begin");
-               Put_Line (File, "      Inhibitor.Proxy := Thin.Idle_Inhibit_Manager_V_1_Create_Inhibitor (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "      Inhibitor.Proxy := Thin.Idle_Inhibit_Manager_V1_Create_Inhibitor (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
                Put_Line (File, "   end Create_Inhibitor;");
-            elsif Name = "Idle_Inhibitor_V_1" then
+            elsif Name = "Idle_Inhibitor_V1" then
                null;
             end if;
          end Handle_Interface_Idle_Inhibit;
+
+         procedure Handle_Interface_Xdg_Decoration
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Decoration_Manager_V1" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Decoration_Manager_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Toplevel_Decoration");
+               Put_Line (File, "     (Object     : Decoration_Manager_V1;");
+               Put_Line (File, "      Toplevel   : Xdg_Shell.Xdg_Toplevel'Class;");
+               Put_Line (File, "      Decoration : in out Toplevel_Decoration_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Decoration.Proxy := Thin.Decoration_Manager_V1_Get_Toplevel_Decoration (Object.Proxy, Thin_Xdg_Shell.Xdg_Toplevel_Ptr (Toplevel.Get_Proxy));");
+               Put_Line (File, "   end Get_Toplevel_Decoration;");
+            elsif Name = "Toplevel_Decoration_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Mode");
+               Put_Line (File, "     (Object : Toplevel_Decoration_V1;");
+               Put_Line (File, "      Mode   : Toplevel_Decoration_V1_Mode) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Toplevel_Decoration_V1_Set_Mode (Object.Proxy, Mode);");
+               Put_Line (File, "   end Set_Mode;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Unset_Mode (Object : Toplevel_Decoration_V1) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Toplevel_Decoration_V1_Unset_Mode (Object.Proxy);");
+               Put_Line (File, "   end Unset_Mode;");
+            end if;
+         end Handle_Interface_Xdg_Decoration;
+
+         procedure Handle_Interface_Events_Xdg_Decoration
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Decoration_Manager_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Body_Events (Name);
+
+            if Name = "Toplevel_Decoration_V1" then
+               Put_Line (File, "      procedure Internal_Configure");
+               Put_Line (File, "        (Data       : Void_Ptr;");
+               Put_Line (File, "         Decoration : Thin.Toplevel_Decoration_V1_Ptr;");
+               Put_Line (File, "         Mode       : Enums.Toplevel_Decoration_V1_Mode)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Configure");
+               Put_Line (File, "        (Data       : Void_Ptr;");
+               Put_Line (File, "         Decoration : Thin.Toplevel_Decoration_V1_Ptr;");
+               Put_Line (File, "         Mode       : Enums.Toplevel_Decoration_V1_Mode)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Configure (Conversion.To_Pointer (Data).all, Mode);");
+               Put_Line (File, "      end Internal_Configure;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Configure => Internal_Configure'Unrestricted_Access);");
+               Put_Line (File, "");
+            end if;
+
+            Generate_Suffix_Body_Events (Name);
+         end Handle_Interface_Events_Xdg_Decoration;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5681,6 +5826,9 @@ procedure XML_Parser is
             Iterate_Over_Interfaces (Handle_Interface_Viewporter'Access);
          elsif Protocol_Name = "idle_inhibit_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Idle_Inhibit'Access);
+         elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Decoration'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Xdg_Decoration'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
