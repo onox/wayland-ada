@@ -923,6 +923,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
          elsif Protocol_Name = "xdg_shell" then
@@ -1018,6 +1019,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
+            Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
          elsif Protocol_Name = "xdg_shell" then
@@ -2228,6 +2230,56 @@ procedure XML_Parser is
 
             Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Xdg_Decoration;
+
+         procedure Handle_Interface_Subprogram_Relative_Pointer
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Relative_Pointer_Manager_V1" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Relative_Pointer_Manager_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Relative_Pointer");
+               Put_Line (File, "     (Object   : Relative_Pointer_Manager_V1;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Relative : in out Relative_Pointer_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Pointer.Has_Proxy;");
+            elsif Name = "Relative_Pointer_V1" then
+               null;
+            end if;
+         end Handle_Interface_Subprogram_Relative_Pointer;
+
+         procedure Handle_Interface_Events_Relative_Pointer
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Relative_Pointer_Manager_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Spec_Events;
+
+            if Name = "Relative_Pointer_V1" then
+               Put_Line (File, "      with procedure Relative_Motion");
+               Put_Line (File, "        (Pointer    : in out Relative_Pointer_V1'Class;");
+               Put_Line (File, "         Timestamp  : Duration;");
+               Put_Line (File, "         Dx         : Fixed;");
+               Put_Line (File, "         Dy         : Fixed;");
+               Put_Line (File, "         Dx_Unaccel : Fixed;");
+               Put_Line (File, "         Dy_Unaccel : Fixed);");
+            end if;
+
+            Generate_Suffix_Spec_Events (Name);
+         end Handle_Interface_Events_Relative_Pointer;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2245,6 +2297,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "xdg_decoration_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Subprogram_Xdg_Decoration'Access);
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Decoration'Access);
+         elsif Protocol_Name = "relative_pointer_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprogram_Relative_Pointer'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Events_Relative_Pointer'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -3109,7 +3164,7 @@ procedure XML_Parser is
 
          if Protocol_Name = "client" then
             Put_Line (File, "with C_Binding.Linux;");
-         elsif Protocol_Name = "presentation_time" then
+         elsif Protocol_Name in "presentation_time" | "relative_pointer_unstable_v1" then
             Put_Line (File, "with Ada.Unchecked_Conversion;");
             Put_Line (File, "");
             Put_Line (File, "with Wayland.Protocols.Thin_Client;");
@@ -5392,6 +5447,96 @@ procedure XML_Parser is
 
             Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Xdg_Decoration;
+
+         procedure Handle_Interface_Relative_Pointer
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Relative_Pointer_Manager_V1" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Relative_Pointer_Manager_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Relative_Pointer");
+               Put_Line (File, "     (Object   : Relative_Pointer_Manager_V1;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Relative : in out Relative_Pointer_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Relative.Proxy := Thin.Relative_Pointer_Manager_V1_Get_Relative_Pointer (Object.Proxy, Thin_Client.Pointer_Ptr (Pointer.Get_Proxy));");
+               Put_Line (File, "   end Get_Relative_Pointer;");
+            elsif Name = "Toplevel_Decoration_V1" then
+               null;
+            end if;
+         end Handle_Interface_Relative_Pointer;
+
+         procedure Handle_Interface_Events_Relative_Pointer
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Relative_Pointer_Manager_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Body_Events (Name);
+
+            if Name = "Relative_Pointer_V1" then
+               Put_Line (File, "      procedure Internal_Relative_Motion");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Relative_Pointer_V1 : Thin.Relative_Pointer_V1_Ptr;");
+               Put_Line (File, "         Utime_Hi            : Unsigned_32;");
+               Put_Line (File, "         Utime_Lo            : Unsigned_32;");
+               Put_Line (File, "         Dx                  : Fixed;");
+               Put_Line (File, "         Dy                  : Fixed;");
+               Put_Line (File, "         Dx_Unaccel          : Fixed;");
+               Put_Line (File, "         Dy_Unaccel          : Fixed)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Relative_Motion");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Relative_Pointer_V1 : Thin.Relative_Pointer_V1_Ptr;");
+               Put_Line (File, "         Utime_Hi            : Unsigned_32;");
+               Put_Line (File, "         Utime_Lo            : Unsigned_32;");
+               Put_Line (File, "         Dx                  : Fixed;");
+               Put_Line (File, "         Dy                  : Fixed;");
+               Put_Line (File, "         Dx_Unaccel          : Fixed;");
+               Put_Line (File, "         Dy_Unaccel          : Fixed)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         type Unsigned_64_Group is record");
+               Put_Line (File, "            Low, High : Unsigned_32;");
+               Put_Line (File, "         end record;");
+               Put_Line (File, "");
+               Put_Line (File, "         for Unsigned_64_Group use record");
+               Put_Line (File, "            Low  at 0 range 0 .. 31;");
+               Put_Line (File, "            High at 0 range 32 .. 63;");
+               Put_Line (File, "         end record;");
+               Put_Line (File, "");
+               Put_Line (File, "         function Convert is new Ada.Unchecked_Conversion");
+               Put_Line (File, "           (Source => Unsigned_64_Group, Target => Unsigned_64);");
+               Put_Line (File, "");
+               Put_Line (File, "         Microseconds   : constant Unsigned_64 := Convert ((Low => Utime_Lo, High => Utime_Hi));");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Microseconds) / 1e6;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Relative_Motion (Conversion.To_Pointer (Data).all, Timestamp, Dx, Dy, Dx_Unaccel, Dy_Unaccel);");
+               Put_Line (File, "      end Internal_Relative_Motion;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Relative_Motion => Internal_Relative_Motion'Unrestricted_Access);");
+               Put_Line (File, "");
+            end if;
+
+            Generate_Suffix_Body_Events (Name);
+         end Handle_Interface_Events_Relative_Pointer;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5838,6 +5983,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "xdg_decoration_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Xdg_Decoration'Access);
             Iterate_Over_Interfaces (Handle_Interface_Xdg_Decoration'Access);
+         elsif Protocol_Name = "relative_pointer_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Events_Relative_Pointer'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Relative_Pointer'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
