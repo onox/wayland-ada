@@ -30,12 +30,14 @@ with Wayland.Protocols.Presentation_Time;
 with Wayland.Protocols.Viewporter;
 with Wayland.Protocols.Idle_Inhibit_Unstable_V1;
 with Wayland.Protocols.Xdg_Decoration_Unstable_V1;
+with Wayland.Protocols.Relative_Pointer_Unstable_V1;
 
 with Wayland.Enums.Client;
 with Wayland.Enums.Presentation_Time;
 with Wayland.Enums.Viewporter;
 with Wayland.Enums.Idle_Inhibit_Unstable_V1;
 with Wayland.Enums.Xdg_Decoration_Unstable_V1;
+with Wayland.Enums.Relative_Pointer_Unstable_V1;
 
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
@@ -85,6 +87,9 @@ package body Hdante_Hello_World is
 
       Decorator  : Wayland.Protocols.Xdg_Decoration_Unstable_V1.Decoration_Manager_V1;
       Decoration : Wayland.Protocols.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1;
+
+      Relative_Manager : Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_Manager_V1;
+      Relative_Pointer : Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_V1;
 
       Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
    end record;
@@ -309,6 +314,12 @@ package body Hdante_Hello_World is
          if not Data.Decorator.Has_Proxy then
             raise Wayland_Error with "No xdg_decoration_manager";
          end if;
+      elsif Name = Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_Manager_V1_Interface.Name then
+         Data.Relative_Manager.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.Relative_Manager.Has_Proxy then
+            raise Wayland_Error with "No relative_pointer_manager";
+         end if;
       end if;
    end Global_Registry_Handler;
 
@@ -374,6 +385,17 @@ package body Hdante_Hello_World is
       Put_Line ("xdg_toplevel_decoration: " & Mode'Image);
    end XDG_Toplevel_Decoration_Configure;
 
+   procedure Relative_Pointer_Relative_Motion
+     (Pointer    : in out Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_V1'Class;
+      Timestamp  : Duration;
+      Dx         : Fixed;
+      Dy         : Fixed;
+      Dx_Unaccel : Fixed;
+      Dy_Unaccel : Fixed) is
+   begin
+      Put_Line ("relative pointer on " & Timestamp'Image & ": (" & Dx'Image & ", " & Dy'Image & ") unaccel: (" & Dx_Unaccel'Image & ", " & Dy_Unaccel'Image & ")");
+   end Relative_Pointer_Relative_Motion;
+
    package XDG_Surface_Events is new Wayland.Protocols.Xdg_Shell.Xdg_Surface_Events
      (Configure => XDG_Surface_Configure);
 
@@ -383,6 +405,9 @@ package body Hdante_Hello_World is
 
    package XDG_Toplevel_Decoration_Events is new Wayland.Protocols.Xdg_Decoration_Unstable_V1.Toplevel_Decoration_V1_Events
      (Configure => XDG_Toplevel_Decoration_Configure);
+
+   package Relative_Pointer_Events is new Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_V1_Events
+     (Relative_Motion => Relative_Pointer_Relative_Motion);
 
    procedure Pointer_Enter
      (Pointer   : in out Wayland.Protocols.Client.Pointer'Class;
@@ -573,6 +598,18 @@ package body Hdante_Hello_World is
 
          if Pointer_Events.Subscribe (Data.Pointer) = Error then
             raise Wayland_Error with "Failed to subscribe to pointer events";
+         end if;
+
+         if Data.Relative_Manager.Has_Proxy then
+            Data.Relative_Manager.Get_Relative_Pointer (Data.Pointer, Data.Relative_Pointer);
+
+            if not Data.Relative_Pointer.Has_Proxy then
+               raise Wayland_Error with "No relative_pointer";
+            end if;
+
+            if Relative_Pointer_Events.Subscribe (Data.Relative_Pointer) = Error then
+               raise Wayland_Error with "Failed to subscribe to relative_pointer events";
+            end if;
          end if;
       end if;
 
