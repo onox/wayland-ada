@@ -560,7 +560,7 @@ package Wayland_XML is
    type Interface_Tag_Ptr is access all Interface_Tag;
 
    type Protocol_Child_Kind_Id is
-     (Child_Dummy, Child_Copyright, Child_Interface);
+     (Child_Dummy, Child_Copyright, Child_Interface, Child_Description);
 
    type Protocol_Child
      (Kind_Id : Protocol_Child_Kind_Id := Child_Dummy)
@@ -572,6 +572,8 @@ package Wayland_XML is
             Copyright_Tag : not null Copyright_Ptr;
          when Child_Interface =>
             Interface_Tag : not null Interface_Tag_Ptr;
+         when Child_Description =>
+            Description_Tag : not null Description_Tag_Ptr;
       end case;
    end record;
 
@@ -611,6 +613,10 @@ package Wayland_XML is
    procedure Append_Child
      (This : in out Protocol_Tag;
       Item :        not null Interface_Tag_Ptr);
+
+   procedure Append_Child
+     (This : in out Protocol_Tag;
+      Item :        not null Description_Tag_Ptr);
 
    type Protocol_Tag_Ptr is access all Protocol_Tag;
 

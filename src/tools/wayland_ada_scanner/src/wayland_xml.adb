@@ -350,8 +350,9 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Protocol_Tag;
                            Item  : not null Wayland_XML.Copyright_Ptr)
    is
-      C : constant Protocol_Child := (Kind_Id       => Child_Copyright,
-                             Copyright_Tag => Item);
+      C : constant Protocol_Child :=
+        (Kind_Id       => Child_Copyright,
+         Copyright_Tag => Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;
@@ -359,8 +360,19 @@ package body Wayland_XML is
    procedure Append_Child (This  : in out Protocol_Tag;
                            Item  : not null Interface_Tag_Ptr)
    is
-      C : constant Protocol_Child := (Kind_Id       => Child_Interface,
-                             Interface_Tag => Item);
+      C : constant Protocol_Child :=
+        (Kind_Id       => Child_Interface,
+         Interface_Tag => Item);
+   begin
+      This.My_Children.Append (C);
+   end Append_Child;
+
+   procedure Append_Child (This  : in out Protocol_Tag;
+                           Item  : not null Description_Tag_Ptr)
+   is
+      C : constant Protocol_Child :=
+        (Kind_Id         => Child_Description,
+         Description_Tag => Item);
    begin
       This.My_Children.Append (C);
    end Append_Child;

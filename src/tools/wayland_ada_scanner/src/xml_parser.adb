@@ -795,6 +795,9 @@ procedure XML_Parser is
                   elsif Name (Child.Tag) = "copyright" then
                      Append_Child
                        (Protocol_Tag.all, Identify_Copyright (Child));
+                  elsif Name (Child.Tag) = "description" then
+                     Append_Child
+                       (Protocol_Tag.all, Identify_Description (Child));
                   else
                      raise XML_Exception with "Unexpected tag " & Name (Child.Tag);
                   end if;
