@@ -924,6 +924,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
          elsif Protocol_Name = "xdg_shell" then
@@ -1020,6 +1021,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy;");
+            Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
          elsif Protocol_Name = "xdg_shell" then
@@ -2280,6 +2282,87 @@ procedure XML_Parser is
 
             Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Relative_Pointer;
+
+         procedure Handle_Interface_Subprogram_Pointer_Constraints
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Pointer_Constraints_V1" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Pointer_Constraints_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Lock_Pointer");
+               Put_Line (File, "     (Object   : Pointer_Constraints_V1;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Region   : Client.Region'Class;");
+               Put_Line (File, "      Lifetime : Pointer_Constraints_V1_Lifetime;");
+               Put_Line (File, "      Locked   : in out Locked_Pointer_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy and Pointer.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Confine_Pointer");
+               Put_Line (File, "     (Object   : Pointer_Constraints_V1;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Region   : Client.Region'Class;");
+               Put_Line (File, "      Lifetime : Pointer_Constraints_V1_Lifetime;");
+               Put_Line (File, "      Confined : in out Confined_Pointer_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Surface.Has_Proxy and Pointer.Has_Proxy;");
+            elsif Name = "Locked_Pointer_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Cursor_Position_Hint");
+               Put_Line (File, "     (Object : Locked_Pointer_V1;");
+               Put_Line (File, "      X, Y   : Fixed)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Region");
+               Put_Line (File, "     (Object : Locked_Pointer_V1;");
+               Put_Line (File, "      Region : Client.Region'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Region.Has_Proxy;");
+            elsif Name = "Confined_Pointer_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Region");
+               Put_Line (File, "     (Object : Confined_Pointer_V1;");
+               Put_Line (File, "      Region : Client.Region'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Region.Has_Proxy;");
+            end if;
+         end Handle_Interface_Subprogram_Pointer_Constraints;
+
+         procedure Handle_Interface_Events_Pointer_Constraints
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Pointer_Constraints_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Spec_Events;
+
+            if Name = "Locked_Pointer_V1" then
+               Put_Line (File, "      with procedure Locked");
+               Put_Line (File, "        (Pointer : in out Locked_Pointer_V1'Class);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Unlocked");
+               Put_Line (File, "        (Pointer : in out Locked_Pointer_V1'Class);");
+            elsif Name = "Confined_Pointer_V1" then
+               Put_Line (File, "      with procedure Confined");
+               Put_Line (File, "        (Pointer : in out Confined_Pointer_V1'Class);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Unconfined");
+               Put_Line (File, "        (Pointer : in out Confined_Pointer_V1'Class);");
+            end if;
+
+            Generate_Suffix_Spec_Events (Name);
+         end Handle_Interface_Events_Pointer_Constraints;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2300,6 +2383,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "relative_pointer_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Subprogram_Relative_Pointer'Access);
             Iterate_Over_Interfaces (Handle_Interface_Events_Relative_Pointer'Access);
+         elsif Protocol_Name = "pointer_constraints_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprogram_Pointer_Constraints'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Constraints'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -5537,6 +5623,161 @@ procedure XML_Parser is
 
             Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Relative_Pointer;
+
+         procedure Handle_Interface_Pointer_Constraints
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Pointer_Constraints_V1" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name = "Pointer_Constraints_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Lock_Pointer");
+               Put_Line (File, "     (Object   : Pointer_Constraints_V1;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Region   : Client.Region'Class;");
+               Put_Line (File, "      Lifetime : Pointer_Constraints_V1_Lifetime;");
+               Put_Line (File, "      Locked   : in out Locked_Pointer_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Locked.Proxy := Thin.Pointer_Constraints_V1_Lock_Pointer");
+               Put_Line (File, "        (Object.Proxy,");
+               Put_Line (File, "         Thin_Client.Surface_Ptr (Surface.Get_Proxy),");
+               Put_Line (File, "         Thin_Client.Pointer_Ptr (Pointer.Get_Proxy),");
+               Put_Line (File, "         Thin_Client.Region_Ptr (Region.Get_Proxy),");
+               Put_Line (File, "         Lifetime);");
+               Put_Line (File, "   end Lock_Pointer;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Confine_Pointer");
+               Put_Line (File, "     (Object   : Pointer_Constraints_V1;");
+               Put_Line (File, "      Surface  : Client.Surface'Class;");
+               Put_Line (File, "      Pointer  : Client.Pointer'Class;");
+               Put_Line (File, "      Region   : Client.Region'Class;");
+               Put_Line (File, "      Lifetime : Pointer_Constraints_V1_Lifetime;");
+               Put_Line (File, "      Confined : in out Confined_Pointer_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Confined.Proxy := Thin.Pointer_Constraints_V1_Confine_Pointer");
+               Put_Line (File, "        (Object.Proxy,");
+               Put_Line (File, "         Thin_Client.Surface_Ptr (Surface.Get_Proxy),");
+               Put_Line (File, "         Thin_Client.Pointer_Ptr (Pointer.Get_Proxy),");
+               Put_Line (File, "         Thin_Client.Region_Ptr (Region.Get_Proxy),");
+               Put_Line (File, "         Lifetime);");
+               Put_Line (File, "   end Confine_Pointer;");
+            elsif Name = "Locked_Pointer_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Cursor_Position_Hint");
+               Put_Line (File, "     (Object : Locked_Pointer_V1;");
+               Put_Line (File, "      X, Y   : Fixed) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Locked_Pointer_V1_Set_Cursor_Position_Hint (Object.Proxy, X, Y);");
+               Put_Line (File, "   end Set_Cursor_Position_Hint;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Region");
+               Put_Line (File, "     (Object : Locked_Pointer_V1;");
+               Put_Line (File, "      Region : Client.Region'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Locked_Pointer_V1_Set_Region (Object.Proxy, Thin_Client.Region_Ptr (Region.Get_Proxy));");
+               Put_Line (File, "   end Set_Region;");
+            elsif Name = "Confined_Pointer_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Region");
+               Put_Line (File, "     (Object : Confined_Pointer_V1;");
+               Put_Line (File, "      Region : Client.Region'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Thin.Confined_Pointer_V1_Set_Region (Object.Proxy, Thin_Client.Region_Ptr (Region.Get_Proxy));");
+               Put_Line (File, "   end Set_Region;");
+            end if;
+         end Handle_Interface_Pointer_Constraints;
+
+         procedure Handle_Interface_Events_Pointer_Constraints
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Pointer_Constraints_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Body_Events (Name);
+
+            if Name = "Locked_Pointer_V1" then
+               Put_Line (File, "      procedure Internal_Locked");
+               Put_Line (File, "        (Data              : Void_Ptr;");
+               Put_Line (File, "         Locked_Pointer_V1 : Thin.Locked_Pointer_V1_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Unlocked");
+               Put_Line (File, "        (Data              : Void_Ptr;");
+               Put_Line (File, "         Locked_Pointer_V1 : Thin.Locked_Pointer_V1_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Locked");
+               Put_Line (File, "        (Data              : Void_Ptr;");
+               Put_Line (File, "         Locked_Pointer_V1 : Thin.Locked_Pointer_V1_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Locked (Conversion.To_Pointer (Data).all);");
+               Put_Line (File, "      end Internal_Locked;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Unlocked");
+               Put_Line (File, "        (Data              : Void_Ptr;");
+               Put_Line (File, "         Locked_Pointer_V1 : Thin.Locked_Pointer_V1_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Unlocked (Conversion.To_Pointer (Data).all);");
+               Put_Line (File, "      end Internal_Unlocked;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Locked   => Internal_Locked'Unrestricted_Access,");
+               Put_Line (File, "         Unlocked => Internal_Unlocked'Unrestricted_Access);");
+               Put_Line (File, "");
+            elsif Name = "Confined_Pointer_V1" then
+               Put_Line (File, "      procedure Internal_Confined");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Confined_Pointer_V1 : Thin.Confined_Pointer_V1_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Unconfined");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Confined_Pointer_V1 : Thin.Confined_Pointer_V1_Ptr)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Confined");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Confined_Pointer_V1 : Thin.Confined_Pointer_V1_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Confined (Conversion.To_Pointer (Data).all);");
+               Put_Line (File, "      end Internal_Confined;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Unconfined");
+               Put_Line (File, "        (Data                : Void_Ptr;");
+               Put_Line (File, "         Confined_Pointer_V1 : Thin.Confined_Pointer_V1_Ptr)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Unconfined (Conversion.To_Pointer (Data).all);");
+               Put_Line (File, "      end Internal_Unconfined;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Confined   => Internal_Confined'Unrestricted_Access,");
+               Put_Line (File, "         Unconfined => Internal_Unconfined'Unrestricted_Access);");
+               Put_Line (File, "");
+            end if;
+
+            Generate_Suffix_Body_Events (Name);
+         end Handle_Interface_Events_Pointer_Constraints;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -5986,6 +6227,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "relative_pointer_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Relative_Pointer'Access);
             Iterate_Over_Interfaces (Handle_Interface_Relative_Pointer'Access);
+         elsif Protocol_Name = "pointer_constraints_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Constraints'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Pointer_Constraints'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
