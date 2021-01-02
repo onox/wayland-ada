@@ -30,6 +30,8 @@ with Wayland.Protocols.Presentation_Time;
 with Wayland.Protocols.Viewporter;
 with Wayland.Protocols.Idle_Inhibit_Unstable_V1;
 with Wayland.Protocols.Xdg_Decoration_Unstable_V1;
+with Wayland.Protocols.Pointer_Constraints_Unstable_V1;
+with Wayland.Protocols.Pointer_Gestures_Unstable_V1;
 with Wayland.Protocols.Relative_Pointer_Unstable_V1;
 
 with Wayland.Enums.Client;
@@ -37,6 +39,8 @@ with Wayland.Enums.Presentation_Time;
 with Wayland.Enums.Viewporter;
 with Wayland.Enums.Idle_Inhibit_Unstable_V1;
 with Wayland.Enums.Xdg_Decoration_Unstable_V1;
+with Wayland.Enums.Pointer_Constraints_Unstable_V1;
+with Wayland.Enums.Pointer_Gestures_Unstable_V1;
 with Wayland.Enums.Relative_Pointer_Unstable_V1;
 
 -- sudo apt install libwayland-dev
@@ -90,6 +94,10 @@ package body Hdante_Hello_World is
 
       Relative_Manager : Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_Manager_V1;
       Relative_Pointer : Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_V1;
+
+      Gestures      : Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gestures_V1;
+      Gesture_Swipe : Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Swipe_V1;
+      Gesture_Pinch : Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Pinch_V1;
 
       Capabilities : Wayland.Enums.Client.Seat_Capability := (others => False);
    end record;
@@ -314,12 +322,21 @@ package body Hdante_Hello_World is
          if not Data.Decorator.Has_Proxy then
             raise Wayland_Error with "No xdg_decoration_manager";
          end if;
+         Put_Line ("Got xdg_decoration_manager proxy");
       elsif Name = Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_Manager_V1_Interface.Name then
          Data.Relative_Manager.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
 
          if not Data.Relative_Manager.Has_Proxy then
             raise Wayland_Error with "No relative_pointer_manager";
          end if;
+         Put_Line ("Got relative_pointer_manager proxy");
+      elsif Name = Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gestures_V1_Interface.Name then
+         Data.Gestures.Bind (Registry, Id, Unsigned_32'Min (Version, 1));
+
+         if not Data.Gestures.Has_Proxy then
+            raise Wayland_Error with "No pointer_gestures";
+         end if;
+         Put_Line ("Got pointer_gestures proxy");
       end if;
    end Global_Registry_Handler;
 
@@ -408,6 +425,72 @@ package body Hdante_Hello_World is
 
    package Relative_Pointer_Events is new Wayland.Protocols.Relative_Pointer_Unstable_V1.Relative_Pointer_V1_Events
      (Relative_Motion => Relative_Pointer_Relative_Motion);
+
+   procedure Gesture_Begin_Swipe
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Swipe_V1'Class;
+      Serial     : Unsigned_32;
+      Timestamp  : Duration;
+      Surface    : Wayland.Protocols.Client.Surface;
+      Fingers    : Unsigned_32) is
+   begin
+      Put_Line ("swipe begin with " & Fingers'Image & " fingers");
+   end Gesture_Begin_Swipe;
+
+   procedure Gesture_Update_Swipe
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Swipe_V1'Class;
+      Timestamp  : Duration;
+      Dx, Dy     : Fixed) is
+   begin
+      Put_Line ("swipe update (" & Dx'Image & "," & Dy'Image & ")");
+   end Gesture_Update_Swipe;
+
+   procedure Gesture_End_Swipe
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Swipe_V1'Class;
+      Serial     : Unsigned_32;
+      Timestamp  : Duration;
+      Cancelled  : Boolean) is
+   begin
+      Put_Line ("swipe end cancelled? " & Cancelled'Image);
+   end Gesture_End_Swipe;
+
+   procedure Gesture_Begin_Pinch
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Pinch_V1'Class;
+      Serial     : Unsigned_32;
+      Timestamp  : Duration;
+      Surface    : Wayland.Protocols.Client.Surface;
+      Fingers    : Unsigned_32) is
+   begin
+      Put_Line ("pinch begin with " & Fingers'Image & " fingers");
+   end Gesture_Begin_Pinch;
+
+   procedure Gesture_Update_Pinch
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Pinch_V1'Class;
+      Timestamp  : Duration;
+      Dx, Dy     : Fixed;
+      Scale      : Fixed;
+      Rotation   : Fixed) is
+   begin
+      Put_Line ("pinch update (" & Dx'Image & "," & Dy'Image & ") scale: " & Scale'Image & " rotation: " & Rotation'Image);
+   end Gesture_Update_Pinch;
+
+   procedure Gesture_End_Pinch
+     (Gesture    : in out Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Pinch_V1'Class;
+      Serial     : Unsigned_32;
+      Timestamp  : Duration;
+      Cancelled  : Boolean) is
+   begin
+      Put_Line ("pinch end cancelled? " & Cancelled'Image);
+   end Gesture_End_Pinch;
+
+   package Gesture_Swipe_Events is new Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Swipe_V1_Events
+     (Gesture_Begin  => Gesture_Begin_Swipe,
+      Gesture_Update => Gesture_Update_Swipe,
+      Gesture_End    => Gesture_End_Swipe);
+
+   package Gesture_Pinch_Events is new Wayland.Protocols.Pointer_Gestures_Unstable_V1.Pointer_Gesture_Pinch_V1_Events
+     (Gesture_Begin  => Gesture_Begin_Pinch,
+      Gesture_Update => Gesture_Update_Pinch,
+      Gesture_End    => Gesture_End_Pinch);
 
    procedure Pointer_Enter
      (Pointer   : in out Wayland.Protocols.Client.Pointer'Class;
@@ -609,6 +692,28 @@ package body Hdante_Hello_World is
 
             if Relative_Pointer_Events.Subscribe (Data.Relative_Pointer) = Error then
                raise Wayland_Error with "Failed to subscribe to relative_pointer events";
+            end if;
+         end if;
+
+         if Data.Gestures.Has_Proxy then
+            Data.Gestures.Get_Swipe_Gesture (Data.Pointer, Data.Gesture_Swipe);
+
+            if not Data.Gesture_Swipe.Has_Proxy then
+               raise Wayland_Error with "No pointer_gesture_swipe";
+            end if;
+
+            if Gesture_Swipe_Events.Subscribe (Data.Gesture_Swipe) = Error then
+               raise Wayland_Error with "Failed to subscribe to gesture_swipe events";
+            end if;
+
+            Data.Gestures.Get_Pinch_Gesture (Data.Pointer, Data.Gesture_Pinch);
+
+            if not Data.Gesture_Pinch.Has_Proxy then
+               raise Wayland_Error with "No pointer_gesture_pinch";
+            end if;
+
+            if Gesture_Pinch_Events.Subscribe (Data.Gesture_Pinch) = Error then
+               raise Wayland_Error with "Failed to subscribe to gesture_pinch events";
             end if;
          end if;
       end if;
