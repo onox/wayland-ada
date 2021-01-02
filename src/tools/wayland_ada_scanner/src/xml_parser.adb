@@ -68,6 +68,9 @@ procedure XML_Parser is
 
    function Trim (Value : String) return String is (SF.Trim (Value, Ada.Strings.Both));
 
+   function Is_Reserved_Keyword (Name : String) return Boolean is
+     (Name in "Begin" | "End");
+
    procedure Put
      (File : Ada.Text_IO.File_Type;
       Item : String) renames Ada.Text_IO.Put;
@@ -927,6 +930,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface is (Proxy => Thin.Surface_Ptr (Proxy));");
          elsif Protocol_Name = "xdg_shell" then
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
@@ -1024,6 +1028,7 @@ procedure XML_Parser is
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface;");
          elsif Protocol_Name = "xdg_shell" then
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy;");
@@ -2363,6 +2368,90 @@ procedure XML_Parser is
 
             Generate_Suffix_Spec_Events (Name);
          end Handle_Interface_Events_Pointer_Constraints;
+
+         procedure Handle_Interface_Subprogram_Pointer_Gestures
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Utility_Functions (Name);
+
+            if Name in "Pointer_Gestures_V1" then
+               Generate_Spec_Bind_Subprogram (Name);
+            end if;
+
+            if Name in "Pointer_Gestures_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Swipe_Gesture");
+               Put_Line (File, "     (Object  : Pointer_Gestures_V1;");
+               Put_Line (File, "      Pointer : Client.Pointer'Class;");
+               Put_Line (File, "      Gesture : in out Pointer_Gesture_Swipe_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Pointer.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Pinch_Gesture");
+               Put_Line (File, "     (Object  : Pointer_Gestures_V1;");
+               Put_Line (File, "      Pointer : Client.Pointer'Class;");
+               Put_Line (File, "      Gesture : in out Pointer_Gesture_Pinch_V1'Class)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Pointer.Has_Proxy;");
+            end if;
+         end Handle_Interface_Subprogram_Pointer_Gestures;
+
+         procedure Handle_Interface_Events_Pointer_Gestures
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Pointer_Gestures_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Spec_Events;
+
+            if Name = "Pointer_Gesture_Swipe_V1" then
+               Put_Line (File, "      with procedure Gesture_Begin");
+               Put_Line (File, "        (Gesture    : in out Pointer_Gesture_Swipe_V1'Class;");
+               Put_Line (File, "         Serial     : Unsigned_32;");
+               Put_Line (File, "         Timestamp  : Duration;");
+               Put_Line (File, "         Surface    : Client.Surface;");
+               Put_Line (File, "         Fingers    : Unsigned_32);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Gesture_Update");
+               Put_Line (File, "        (Gesture   : in out Pointer_Gesture_Swipe_V1'Class;");
+               Put_Line (File, "         Timestamp : Duration;");
+               Put_Line (File, "         Dx, Dy    : Fixed);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Gesture_End");
+               Put_Line (File, "        (Gesture : in out Pointer_Gesture_Swipe_V1'Class;");
+               Put_Line (File, "         Serial    : Unsigned_32;");
+               Put_Line (File, "         Timestamp : Duration;");
+               Put_Line (File, "         Cancelled : Boolean);");
+            elsif Name = "Pointer_Gesture_Pinch_V1" then
+               Put_Line (File, "      with procedure Gesture_Begin");
+               Put_Line (File, "        (Gesture : in out Pointer_Gesture_Pinch_V1'Class;");
+               Put_Line (File, "         Serial     : Unsigned_32;");
+               Put_Line (File, "         Timestamp  : Duration;");
+               Put_Line (File, "         Surface    : Client.Surface;");
+               Put_Line (File, "         Fingers    : Unsigned_32);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Gesture_Update");
+               Put_Line (File, "        (Gesture   : in out Pointer_Gesture_Pinch_V1'Class;");
+               Put_Line (File, "         Timestamp : Duration;");
+               Put_Line (File, "         Dx, Dy    : Fixed;");
+               Put_Line (File, "         Scale     : Fixed;");
+               Put_Line (File, "         Rotation  : Fixed);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Gesture_End");
+               Put_Line (File, "        (Gesture   : in out Pointer_Gesture_Pinch_V1'Class;");
+               Put_Line (File, "         Serial    : Unsigned_32;");
+               Put_Line (File, "         Timestamp : Duration;");
+               Put_Line (File, "         Cancelled : Boolean);");
+            end if;
+
+            Generate_Suffix_Spec_Events (Name);
+         end Handle_Interface_Events_Pointer_Gestures;
       begin
          if Protocol_Name = "client" then
             Iterate_Over_Interfaces (Handle_Interface_Subprograms_Client'Access);
@@ -2386,6 +2475,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "pointer_constraints_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Subprogram_Pointer_Constraints'Access);
             Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Constraints'Access);
+         elsif Protocol_Name = "pointer_gestures_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Subprogram_Pointer_Gestures'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Gestures'Access);
          end if;
       end Generate_Manually_Edited_Partial_Type_Declarations;
 
@@ -2927,7 +3019,7 @@ procedure XML_Parser is
                          (Name (Interface_Tag) & "_" &
                               Name (Event_Tag) & "_Subprogram_Ptr");
 
-                     Component_Name_Aligned : constant String := SF.Head (Component_Name, Name_Length, ' ');
+                     Component_Name_Aligned : constant String := SF.Head (Component_Name & (if Is_Reserved_Keyword (Component_Name) then "_F" else ""), Name_Length, ' ');
                   begin
                      Put_Line (File, "      " & Component_Name_Aligned & " : " & Component_Type_Name & ";");
                   end Generate_Code_For_Record_Component;
@@ -2946,7 +3038,7 @@ procedure XML_Parser is
                         declare
                            Arg_Name : constant String := Get_Name (Child.Event_Tag.all);
                         begin
-                           Name_Length := Natural'Max (Name_Length, Arg_Name'Length);
+                           Name_Length := Natural'Max (Name_Length, Arg_Name'Length + (if Is_Reserved_Keyword (Arg_Name) then 2 else 0));
                         end;
                      end if;
                   end loop;
@@ -5778,6 +5870,214 @@ procedure XML_Parser is
 
             Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Events_Pointer_Constraints;
+
+         procedure Handle_Interface_Pointer_Gestures
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Utility_Functions (Name);
+
+            if Name in "Pointer_Gestures_V1" then
+               Generate_Body_Bind_Subprogram (Name);
+            end if;
+
+            if Name in "Pointer_Gestures_V1" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Swipe_Gesture");
+               Put_Line (File, "     (Object  : Pointer_Gestures_V1;");
+               Put_Line (File, "      Pointer : Client.Pointer'Class;");
+               Put_Line (File, "      Gesture : in out Pointer_Gesture_Swipe_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Gesture.Proxy := Thin.Pointer_Gestures_V1_Get_Swipe_Gesture");
+               Put_Line (File, "        (Object.Proxy, Thin_Client.Pointer_Ptr (Pointer.Get_Proxy));");
+               Put_Line (File, "   end Get_Swipe_Gesture;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Get_Pinch_Gesture");
+               Put_Line (File, "     (Object  : Pointer_Gestures_V1;");
+               Put_Line (File, "      Pointer : Client.Pointer'Class;");
+               Put_Line (File, "      Gesture : in out Pointer_Gesture_Pinch_V1'Class) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      Gesture.Proxy := Thin.Pointer_Gestures_V1_Get_Pinch_Gesture");
+               Put_Line (File, "        (Object.Proxy, Thin_Client.Pointer_Ptr (Pointer.Get_Proxy));");
+               Put_Line (File, "   end Get_Pinch_Gesture;");
+            end if;
+         end Handle_Interface_Pointer_Gestures;
+
+         procedure Handle_Interface_Events_Pointer_Gestures
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String
+              := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+         begin
+            if Name = "Pointer_Gestures_V1" then
+               return;
+            end if;
+
+            Generate_Prefix_Body_Events (Name);
+
+            if Name = "Pointer_Gesture_Swipe_V1" then
+               Put_Line (File, "      procedure Internal_Begin");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Surface                  : Thin_Client.Surface_Ptr;");
+               Put_Line (File, "         Fingers                  : Unsigned_32)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Update");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Dx                       : Fixed;");
+               Put_Line (File, "         Dy                       : Fixed)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_End");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Cancelled                : Integer)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Begin");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Surface                  : Thin_Client.Surface_Ptr;");
+               Put_Line (File, "         Fingers                  : Unsigned_32)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "");
+               Put_Line (File, "         S : constant Protocols.Client.Surface := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Surface));");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_Begin (Conversion.To_Pointer (Data).all, Serial, Timestamp, S, Fingers);");
+               Put_Line (File, "      end Internal_Begin;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Update");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Dx                       : Fixed;");
+               Put_Line (File, "         Dy                       : Fixed)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_Update (Conversion.To_Pointer (Data).all, Timestamp, Dx, Dy);");
+               Put_Line (File, "      end Internal_Update;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_End");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Swipe_V1 : Thin.Pointer_Gesture_Swipe_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Cancelled                : Integer)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_End (Conversion.To_Pointer (Data).all, Serial, Timestamp, Cancelled = 1);");
+               Put_Line (File, "      end Internal_End;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Begin_F => Internal_Begin'Unrestricted_Access,");
+               Put_Line (File, "         Update  => Internal_Update'Unrestricted_Access,");
+               Put_Line (File, "         End_F   => Internal_End'Unrestricted_Access);");
+               Put_Line (File, "");
+            elsif Name = "Pointer_Gesture_Pinch_V1" then
+               Put_Line (File, "      procedure Internal_Begin");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Surface                  : Thin_Client.Surface_Ptr;");
+               Put_Line (File, "         Fingers                  : Unsigned_32)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Update");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Dx                       : Fixed;");
+               Put_Line (File, "         Dy                       : Fixed;");
+               Put_Line (File, "         Scale                    : Fixed;");
+               Put_Line (File, "         Rotation                 : Fixed)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_End");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Cancelled                : Integer)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Begin");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Surface                  : Thin_Client.Surface_Ptr;");
+               Put_Line (File, "         Fingers                  : Unsigned_32)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "");
+               Put_Line (File, "         S : constant Protocols.Client.Surface := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Surface));");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_Begin (Conversion.To_Pointer (Data).all, Serial, Timestamp, S, Fingers);");
+               Put_Line (File, "      end Internal_Begin;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Update");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Dx                       : Fixed;");
+               Put_Line (File, "         Dy                       : Fixed;");
+               Put_Line (File, "         Scale                    : Fixed;");
+               Put_Line (File, "         Rotation                 : Fixed)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_Update (Conversion.To_Pointer (Data).all, Timestamp, Dx, Dy, Scale, Rotation);");
+               Put_Line (File, "      end Internal_Update;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_End");
+               Put_Line (File, "        (Data                     : Void_Ptr;");
+               Put_Line (File, "         Pointer_Gesture_Pinch_V1 : Thin.Pointer_Gesture_Pinch_V1_Ptr;");
+               Put_Line (File, "         Serial                   : Unsigned_32;");
+               Put_Line (File, "         Time                     : Unsigned_32;");
+               Put_Line (File, "         Cancelled                : Integer)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Gesture_End (Conversion.To_Pointer (Data).all, Serial, Timestamp, Cancelled = 1);");
+               Put_Line (File, "      end Internal_End;");
+               Put_Line (File, "");
+               Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
+               Put_Line (File, "        (Begin_F => Internal_Begin'Unrestricted_Access,");
+               Put_Line (File, "         Update  => Internal_Update'Unrestricted_Access,");
+               Put_Line (File, "         End_F   => Internal_End'Unrestricted_Access);");
+               Put_Line (File, "");
+            end if;
+
+            Generate_Suffix_Body_Events (Name);
+         end Handle_Interface_Events_Pointer_Gestures;
       begin
          Put_Line (File, "   subtype int is Interfaces.C.int;");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
@@ -6230,6 +6530,9 @@ procedure XML_Parser is
          elsif Protocol_Name = "pointer_constraints_unstable_v1" then
             Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Constraints'Access);
             Iterate_Over_Interfaces (Handle_Interface_Pointer_Constraints'Access);
+         elsif Protocol_Name = "pointer_gestures_unstable_v1" then
+            Iterate_Over_Interfaces (Handle_Interface_Events_Pointer_Gestures'Access);
+            Iterate_Over_Interfaces (Handle_Interface_Pointer_Gestures'Access);
          end if;
          Put_Line (File, "");
       end Generate_Manually_Edited_Code;
