@@ -21,10 +21,6 @@ private with System;
 package Wayland is
    pragma Pure;
 
-   pragma Linker_Options ("-lwayland-client");
-   --  Added this linker option here to avoid adding it
-   --  to each gpr file that with's this Wayland Ada binding
-
    type Unsigned_32 is mod 2 ** Integer'Size
      with Size => Integer'Size;
 

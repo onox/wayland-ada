@@ -25,6 +25,8 @@ with Interfaces.C.Strings;
 private package Wayland.API is
    pragma Preelaborate;
 
+   pragma Linker_Options ("-lwayland-client");
+
    type Proxy is limited private;
 
    type Proxy_Ptr is access all Proxy
