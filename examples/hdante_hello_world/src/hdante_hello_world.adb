@@ -43,6 +43,8 @@ with Wayland.Enums.Pointer_Constraints_Unstable_V1;
 with Wayland.Enums.Pointer_Gestures_Unstable_V1;
 with Wayland.Enums.Relative_Pointer_Unstable_V1;
 
+with Wayland.EGL;
+
 -- sudo apt install libwayland-dev
 -- This is a wayland hello world application. It uses the wayland
 -- client library and the wayland protocol to display a window.

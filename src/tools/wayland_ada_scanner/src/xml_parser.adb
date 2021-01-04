@@ -31,7 +31,7 @@ with Xml_Parser_Utils;
 
 procedure XML_Parser is
 
-   Out_Folder : constant String := "src/wayland/";
+   Out_Folder : constant String := "generated/";
 
    use type Ada.Containers.Count_Type;
    use type Wayland_XML.Event_Child;
