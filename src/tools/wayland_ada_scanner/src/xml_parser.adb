@@ -5703,7 +5703,7 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "         Microseconds   : constant Unsigned_64 := Convert ((Low => Utime_Lo, High => Utime_Hi));");
                Put_Line (File, "");
-               Put_Line (File, "         Timestamp : constant Duration := Duration (Microseconds) / 1e6;");
+               Put_Line (File, "         Timestamp : constant Duration := Duration (Microseconds / 1e6) + Duration (Microseconds mod 1e6) / 1e6;");
                Put_Line (File, "      begin");
                Put_Line (File, "         Relative_Motion (Conversion.To_Pointer (Data).all, Timestamp, Dx, Dy, Dx_Unaccel, Dy_Unaccel);");
                Put_Line (File, "      end Internal_Relative_Motion;");
