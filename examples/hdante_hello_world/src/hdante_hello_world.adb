@@ -378,7 +378,7 @@ package body Hdante_Hello_World is
      (Xdg_Toplevel : in out Wayland.Protocols.Xdg_Shell.Xdg_Toplevel'Class;
       Width        : Natural;
       Height       : Natural;
-      States       : Wayland.Unsigned_32_Array) is
+      States       : Wayland.Protocols.Xdg_Shell.State_Array) is
    begin
       Put_Line ("Configure xdg_toplevel" & Width'Image & Height'Image);
 

@@ -899,6 +899,12 @@ procedure XML_Parser is
          New_Line (File);
          Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
 
+         if Protocol_Name = "xdg_shell" then
+            New_Line (File);
+            Put_Line (File, "   type State_Array is array (Positive range <>) of Xdg_Toplevel_State;");
+            New_Line (File);
+         end if;
+
          Generate_Code_For_Type_Declarations;
          Generate_Code_For_External_Proxies (Protocol_Name);
          Generate_Code_For_The_Interface_Constants;
@@ -2049,7 +2055,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Xdg_Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class;");
                Put_Line (File, "         Width        : Natural;");
                Put_Line (File, "         Height       : Natural;");
-               Put_Line (File, "         States       : Unsigned_32_Array);");
+               Put_Line (File, "         States       : State_Array);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Close");
                Put_Line (File, "        (Xdg_Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class) is null;");
@@ -5263,7 +5269,7 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "         State_Size : constant := Unsigned_32'Size / System.Storage_Unit;");
                Put_Line (File, "");
-               Put_Line (File, "         Current_States : Unsigned_32_Array (1 .. Natural (States.Size) / State_Size)");
+               Put_Line (File, "         Current_States : State_Array (1 .. Natural (States.Size) / State_Size)");
                Put_Line (File, "           with Address => States.Data;");
                Put_Line (File, "      begin");
                Put_Line (File, "         Configure (Conversion.To_Pointer (Data).all, Width, Height, Current_States);");
