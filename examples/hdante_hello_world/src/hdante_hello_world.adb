@@ -165,7 +165,10 @@ package body Hdante_Hello_World is
          raise Wayland_Error with "Failed to memory map image";
       end if;
 
-      Data.Shm.Create_Pool (Image, Integer (Size (File_Status)), Pool);
+      Data.Shm.Create_Pool
+        (Wayland.File_Descriptor (Linux.Files.File_Descriptor (Image)),
+         Integer (Size (File_Status)),
+         Pool);
 
       if not Pool.Has_Proxy then
          raise Wayland_Error with "No shm pool";
@@ -583,7 +586,7 @@ package body Hdante_Hello_World is
    procedure Keyboard_Keymap
      (Keyboard : in out Wayland.Protocols.Client.Keyboard'Class;
       Format   : Wayland.Enums.Client.Keyboard_Keymap_Format;
-      Fd       : Integer;
+      Fd       : Wayland.File_Descriptor;
       Size     : Unsigned_32) is
    begin
       Put_Line ("Keyboard keymap: " & Format'Image & Size'Image);

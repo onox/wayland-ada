@@ -161,7 +161,7 @@ package body Xml_Parser_Utils is
          when Type_String =>
             Set_Unbounded_String (N, "chars_ptr");
          when Type_FD =>
-            Set_Unbounded_String (N, "Integer");
+            Set_Unbounded_String (N, "File_Descriptor");
          when Type_New_Id =>
             Set_Unbounded_String (N, "Unsigned_32");
          when Type_Object =>

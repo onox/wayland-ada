@@ -885,7 +885,7 @@ procedure XML_Parser is
 
          New_Line (File);
          if Protocol_Name = "client" then
-            Put_Line (File, "with C_Binding.Linux.Files;");
+            null;
          elsif Protocol_Name = "xdg_decoration_unstable_v1" then
             Put_Line (File, "with Wayland.Protocols.Client;");
             Put_Line (File, "with Wayland.Protocols.Xdg_Shell;");
@@ -1441,7 +1441,7 @@ procedure XML_Parser is
             elsif Name = "Shm" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Create_Pool (Object          : Shm;");
-               Put_Line (File, "                          File_Descriptor : C_Binding.Linux.Files.File;");
+               Put_Line (File, "                          File_Descriptor : Wayland.File_Descriptor;");
                Put_Line (File, "                          Size            : Positive;");
                Put_Line (File, "                          Pool            : in out Shm_Pool'Class);");
             elsif Name = "Data_Offer" then
@@ -1457,7 +1457,7 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   procedure Receive (Object          : Data_Offer;");
                Put_Line (File, "                      Mime_Type       : String;");
-               Put_Line (File, "                      File_Descriptor : Integer)");
+               Put_Line (File, "                      File_Descriptor : Wayland.File_Descriptor)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Finish (Object : Data_Offer)");
@@ -1650,7 +1650,7 @@ procedure XML_Parser is
                Put_Line (File, "      with procedure Send");
                Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
                Put_Line (File, "         Mime_Type   : String;");
-               Put_Line (File, "         Fd          : Integer) is null;");
+               Put_Line (File, "         Fd          : File_Descriptor) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Cancelled");
                Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class) is null;");
@@ -1758,7 +1758,7 @@ procedure XML_Parser is
                Put_Line (File, "      with procedure Keymap");
                Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
                Put_Line (File, "         Format   : Keyboard_Keymap_Format;");
-               Put_Line (File, "         Fd       : Integer;");
+               Put_Line (File, "         Fd       : File_Descriptor;");
                Put_Line (File, "         Size     : Unsigned_32) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Enter");
@@ -4077,7 +4077,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr;");
                Put_Line (File, "         Mime_Type   : chars_ptr;");
-               Put_Line (File, "         Fd          : Integer)");
+               Put_Line (File, "         Fd          : File_Descriptor)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Cancelled");
@@ -4117,7 +4117,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr;");
                Put_Line (File, "         Mime_Type   : chars_ptr;");
-               Put_Line (File, "         Fd          : Integer)");
+               Put_Line (File, "         Fd          : File_Descriptor)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);");
                Put_Line (File, "");
@@ -4553,7 +4553,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Data     : Void_Ptr;");
                Put_Line (File, "         Keyboard : Thin.Keyboard_Ptr;");
                Put_Line (File, "         Format   : Keyboard_Keymap_Format;");
-               Put_Line (File, "         Fd       : Integer;");
+               Put_Line (File, "         Fd       : File_Descriptor;");
                Put_Line (File, "         Size     : Unsigned_32)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
@@ -4602,7 +4602,7 @@ procedure XML_Parser is
                Put_Line (File, "        (Data     : Void_Ptr;");
                Put_Line (File, "         Keyboard : Thin.Keyboard_Ptr;");
                Put_Line (File, "         Format   : Keyboard_Keymap_Format;");
-               Put_Line (File, "         Fd       : Integer;");
+               Put_Line (File, "         Fd       : File_Descriptor;");
                Put_Line (File, "         Size     : Unsigned_32)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Keyboard);");
@@ -6139,7 +6139,7 @@ procedure XML_Parser is
             Put_Line (File, "   is");
             Put_Line (File, "      I : constant Integer :=");
             Put_Line (File, "        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout");
-            Put_Line (File, "          (Wayland.API.Display_Get_File_Descriptor (Object.Proxy), Timeout);");
+            Put_Line (File, "          (Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy)), Timeout);");
             Put_Line (File, "   begin");
             Put_Line (File, "      case I is");
             Put_Line (File, "         when 1 .. Integer'Last   => return Events_Need_Processing;");
@@ -6263,13 +6263,13 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   procedure Create_Pool");
             Put_Line (File, "     (Object          : Shm;");
-            Put_Line (File, "      File_Descriptor : C_Binding.Linux.Files.File;");
+            Put_Line (File, "      File_Descriptor : Wayland.File_Descriptor;");
             Put_Line (File, "      Size            : Positive;");
             Put_Line (File, "      Pool            : in out Client.Shm_Pool'Class) is");
             Put_Line (File, "   begin");
             Put_Line (File, "      Pool.Proxy := Thin.Shm_Create_Pool");
             Put_Line (File, "        (Object.Proxy,");
-            Put_Line (File, "         C_Binding.Linux.Files.File_Descriptor (File_Descriptor),");
+            Put_Line (File, "         File_Descriptor,");
             Put_Line (File, "         Size);");
             Put_Line (File, "   end Create_Pool;");
             Put_Line (File, "");
@@ -6309,7 +6309,7 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   procedure Receive (Object          : Data_Offer;");
             Put_Line (File, "                      Mime_Type       : String;");
-            Put_Line (File, "                      File_Descriptor : Integer)");
+            Put_Line (File, "                      File_Descriptor : Wayland.File_Descriptor)");
             Put_Line (File, "   is");
             Put_Line (File, "      MT : Interfaces.C.Strings.chars_ptr := Interfaces.C.Strings.New_String (Mime_Type);");
             Put_Line (File, "   begin");

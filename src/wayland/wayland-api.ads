@@ -120,7 +120,7 @@ private package Wayland.API is
      (Object : in out Proxy;
       Opcode : Unsigned_32;
       Arg_1  : Interfaces.C.Strings.chars_ptr;
-      Arg_2  : Integer)
+      Arg_2  : File_Descriptor)
    with Import, Convention => C, External_Name => "wl_proxy_marshal";
 
    procedure Proxy_Marshal
@@ -260,7 +260,7 @@ private package Wayland.API is
       Opcode  : Unsigned_32;
       Subject : Interface_Ptr;
       New_ID  : Unsigned_32;
-      Arg_1   : Integer;
+      Arg_1   : File_Descriptor;
       Arg_2   : Integer) return Proxy_Ptr
    with Import, Convention => C, External_Name => "wl_proxy_marshal_constructor";
 
@@ -364,7 +364,7 @@ private package Wayland.API is
    procedure Display_Disconnect (Object : Display_Ptr)
      with Import, Convention => C, External_Name => "wl_display_disconnect";
 
-   function Display_Get_File_Descriptor (Object : Display_Ptr) return Integer
+   function Display_Get_File_Descriptor (Object : Display_Ptr) return File_Descriptor
      with Import, Convention => C, External_Name => "wl_display_get_fd";
 
 --   function Display_Get_Error (Object : Display_Ptr) return Integer

@@ -34,6 +34,8 @@ package Wayland is
      with Small => 2.0 ** (-8),
           Size  => Integer'Size;
 
+   type File_Descriptor is new Integer;
+
    type Call_Result_Code is (Success, Error);
 
    type Optional_Result (Is_Success : Boolean := False) is record
