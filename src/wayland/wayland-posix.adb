@@ -46,14 +46,41 @@ package body Wayland.Posix is
    Poll_In  : constant := 1;
    Poll_Out : constant := 4;
 
-   function Poll (Descriptor : Integer; Timeout : Duration) return Integer is
+   Error_Interrupt : constant := 4;
+   Error_Again     : constant := 11;
+
+   function Errno return Interfaces.C.int
+     with Import, Convention => C, External_Name => "get_errno";
+
+   function Error_Number return Integer is (Integer (Errno));
+
+   function Poll
+     (Descriptor : Integer;
+      Timeout    : Duration;
+      Mode       : Poll_Mode) return Integer
+   is
       File_Descriptors : constant Poll_File_Descriptor_Array
         := (1 => (Descriptor => Descriptor,
-                  Events     => Poll_In,
+                  Events     => (case Mode is
+                                   when Input  => Poll_In,
+                                   when Output => Poll_Out),
                   Revents    => 0));
+      Milliseconds : constant Integer := Integer (Timeout * 1e3);
    begin
-      return Poll (File_Descriptors, Integer (Timeout * 1e3));
-      --  TODO If 'Result = -1 and errno in EINT | EAGAIN then poll again
+      while True loop
+         declare
+            Result : constant Integer := Poll (File_Descriptors, Milliseconds);
+         begin
+            if Result /= -1 or else Errno not in Error_Interrupt | Error_Again then
+               return Result;
+            end if;
+         end;
+      end loop;
    end Poll;
+
+   function Poll
+     (Descriptor : Integer;
+      Timeout    : Duration) return Integer
+   is (Poll (Descriptor, Timeout, Input));
 
 end Wayland.Posix;

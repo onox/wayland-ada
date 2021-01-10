@@ -1337,12 +1337,12 @@ procedure XML_Parser is
                Put_Line (File, "");
                Put_Line (File, "   type Check_For_Events_Status is (Events_Need_Processing, No_Events, Error);");
                Put_Line (File, "   type Poll_Access is access function (Descriptor : Integer; Timeout : Duration) return Integer;");
+               Put_Line (File, "   --  The timeout must have at least milliseconds granularity");
                Put_Line (File, "");
                Put_Line (File, "   function Check_For_Events");
                Put_Line (File, "     (Object  : Display;");
                Put_Line (File, "      Timeout : Duration;");
                Put_Line (File, "      Poll    : Poll_Access := null) return Check_For_Events_Status;");
-               Put_Line (File, "   --  The timeout is given in milliseconds");
                Put_Line (File, "");
                Put_Line (File, "   function Flush (Object : Display) return Optional_Result");
                Put_Line (File, "     with Pre => Object.Is_Connected;");
@@ -3342,7 +3342,8 @@ procedure XML_Parser is
            (File, Ada.Text_IO.Out_File,
             Out_Folder & "wayland-protocols-" & Protocol_Name & ".adb");
 
-         --  TODO Do not import System.Address_To_Access_Conversions if there are no generic *_Events packages
+         --  TODO Do not import System.Address_To_Access_Conversions if
+         --  there are no generic *_Events packages
          Put_Line (File, "with System.Address_To_Access_Conversions;");
          New_Line (File);
          Put_Line (File, "with Interfaces.C.Strings;");
@@ -6141,10 +6142,12 @@ procedure XML_Parser is
             Put_Line (File, "      Poll    : Poll_Access := null) return Check_For_Events_Status");
             Put_Line (File, "   is");
             Put_Line (File, "      Poll_Ptr : not null Poll_Access := (if Poll = null then Wayland.Posix.Poll'Access else Poll);");
-            Put_Line (File, "      I : constant Integer :=");
-            Put_Line (File, "        Poll_Ptr (Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy)), Timeout);");
+            Put_Line (File, "");
+            Put_Line (File, "      Descriptor : constant Integer :=");
+            Put_Line (File, "        Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy));");
+            Put_Line (File, "      Result : constant Integer := Poll_Ptr (Descriptor, Timeout);");
             Put_Line (File, "   begin");
-            Put_Line (File, "      case I is");
+            Put_Line (File, "      case Result is");
             Put_Line (File, "         when 1 .. Integer'Last   => return Events_Need_Processing;");
             Put_Line (File, "         when 0                   => return No_Events;");
             Put_Line (File, "         when Integer'First .. -1 => return Error;");
@@ -6158,19 +6161,32 @@ procedure XML_Parser is
             Put_Line (File, "   end Get_Registry;");
             Put_Line (File, "");
             Put_Line (File, "   function Flush (Object : Display) return Optional_Result is");
-            Put_Line (File, "      Result : constant Integer := Wayland.API.Display_Flush (Object.Proxy);");
+            Put_Line (File, "      Descriptor : constant Integer :=");
+            Put_Line (File, "        Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy));");
             Put_Line (File, "   begin");
-            Put_Line (File, "      if Result /= -1 then");
-            Put_Line (File, "         return (Is_Success => True, Count => Result);");
-            Put_Line (File, "      else");
-            Put_Line (File, "         return (Is_Success => False);");
-            Put_Line (File, "      end if;");
+            Put_Line (File, "      while True loop");
+            Put_Line (File, "         declare");
+            Put_Line (File, "            Result : constant Integer := Wayland.API.Display_Flush (Object.Proxy);");
+            Put_Line (File, "            Error_Again : constant := 11;");
+            Put_Line (File, "         begin");
+            Put_Line (File, "            if Result /= -1 or else Wayland.Posix.Error_Number /= Error_Again then");
+            Put_Line (File, "               if Result /= -1 then");
+            Put_Line (File, "                  return (Is_Success => True, Count => Result);");
+            Put_Line (File, "               else");
+            Put_Line (File, "                  return (Is_Success => False);");
+            Put_Line (File, "               end if;");
+            Put_Line (File, "            end if;");
+            Put_Line (File, "");
+            Put_Line (File, "            if Wayland.Posix.Poll (Descriptor, Duration'Last, Wayland.Posix.Output) = -1 then");
+            Put_Line (File, "               return (Is_Success => False);");
+            Put_Line (File, "            end if;");
+            Put_Line (File, "         end;");
+            Put_Line (File, "      end loop;");
             Put_Line (File, "   end Flush;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Flush (Object : Display) is");
             Put_Line (File, "      Result : constant Optional_Result := Object.Flush;");
             Put_Line (File, "   begin");
-            Put_Line (File, "      --  FIXME If not Result.Is_Success and errno = EAGAIN then poll on FD and try again");
             Put_Line (File, "      if not Result.Is_Success then");
             Put_Line (File, "         raise Program_Error;");
             Put_Line (File, "      end if;");
