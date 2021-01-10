@@ -371,10 +371,10 @@ private package Wayland.API is
 --     with Import, Convention => C, External_Name => "wl_display_get_error";
 
 --   function Display_Get_Protocol_Error
---     (Arg1 : System.Address;
---      Arg2 : System.Address;
---      Arg3 : access Unsigned_32) return Unsigned_32
---     with Import, Convention => C, External_Name => "wl_display_get_protocol_error";
+--     (Object      : Display_Ptr;
+--      Interface_V : out Interface_Ptr;
+--      ID          : out Unsigned_32) return Unsigned_32
+--   with Import, Convention => C, External_Name => "wl_display_get_protocol_error";
 
 --   procedure Log_Set_Handler_Client (Arg1 : Wayland_Util_H.WL_Log_Func_T)
 --     with Import, Convention => C, External_Name => "wl_log_set_handler_client";

@@ -1,4 +1,3 @@
-with "ubuntu_posix.gpr";
 with "config";
 
 project Wayland_Client is

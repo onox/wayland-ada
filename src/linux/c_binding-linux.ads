@@ -16,8 +16,6 @@
 
 with Ada.Streams;
 
-private with Ada.Unchecked_Conversion;
-
 --  This package was originally named Posix but is nowadays Linux to avoid
 --  name clash with the Ada binding to Posix named Florist.
 package C_Binding.Linux is
@@ -64,7 +62,9 @@ package C_Binding.Linux is
    EDOM    : constant := 33;
    ERANGE  : constant := 34;
 
-   function Poll_File_Descriptor_Until_Timeout (Descriptor, Timeout : Integer) return Integer;
+   EPROTO  : constant := 71;
+
+   function Poll (Descriptor : Integer; Timeout : Duration) return Integer;
 
 private
 

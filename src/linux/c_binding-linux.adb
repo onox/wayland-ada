@@ -37,13 +37,14 @@ package body C_Binding.Linux is
       File_Descriptor := Convert_Unchecked (Temp);
    end Set_File_Descriptor_Flag_Non_Blocking;
 
-   function Poll_File_Descriptor_Until_Timeout (Descriptor, Timeout : Integer) return Integer is
+   function Poll (Descriptor : Integer; Timeout : Duration) return Integer is
       File_Descriptors : constant C_Binding.Linux.Poll_File_Descriptor_Array
         := (1 => (Descriptor => Descriptor,
                   Events     => C_Binding.Linux.POLLIN,
                   Revents    => 0));
    begin
-      return Poll (File_Descriptors, Timeout);
-   end Poll_File_Descriptor_Until_Timeout;
+      return Poll (File_Descriptors, Integer (Timeout * 1e3));
+      --  TODO If 'Result = -1 and errno in EINT | EAGAIN then poll again
+   end Poll;
 
 end C_Binding.Linux;

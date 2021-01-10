@@ -1336,10 +1336,12 @@ procedure XML_Parser is
                Put_Line (File, "   --  Attempts connecting with the Wayland server");
                Put_Line (File, "");
                Put_Line (File, "   type Check_For_Events_Status is (Events_Need_Processing, No_Events, Error);");
+               Put_Line (File, "   type Poll_Access is access function (Descriptor : Integer; Timeout : Duration) return Integer;");
                Put_Line (File, "");
                Put_Line (File, "   function Check_For_Events");
                Put_Line (File, "     (Object  : Display;");
-               Put_Line (File, "      Timeout : Integer) return Check_For_Events_Status;");
+               Put_Line (File, "      Timeout : Duration;");
+               Put_Line (File, "      Poll    : Poll_Access := null) return Check_For_Events_Status;");
                Put_Line (File, "   --  The timeout is given in milliseconds");
                Put_Line (File, "");
                Put_Line (File, "   function Flush (Object : Display) return Optional_Result");
@@ -3347,7 +3349,7 @@ procedure XML_Parser is
          New_Line (File);
 
          if Protocol_Name = "client" then
-            Put_Line (File, "with C_Binding.Linux;");
+            Put_Line (File, "with Wayland.Posix;");
          elsif Protocol_Name in "presentation_time" | "relative_pointer_unstable_v1" then
             Put_Line (File, "with Ada.Unchecked_Conversion;");
             Put_Line (File, "");
@@ -6135,11 +6137,12 @@ procedure XML_Parser is
             Put_Line (File, "");
             Put_Line (File, "   function Check_For_Events");
             Put_Line (File, "     (Object  : Display;");
-            Put_Line (File, "      Timeout : Integer) return Check_For_Events_Status");
+            Put_Line (File, "      Timeout : Duration;");
+            Put_Line (File, "      Poll    : Poll_Access := null) return Check_For_Events_Status");
             Put_Line (File, "   is");
+            Put_Line (File, "      Poll_Ptr : not null Poll_Access := (if Poll = null then Wayland.Posix.Poll'Access else Poll);");
             Put_Line (File, "      I : constant Integer :=");
-            Put_Line (File, "        C_Binding.Linux.Poll_File_Descriptor_Until_Timeout");
-            Put_Line (File, "          (Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy)), Timeout);");
+            Put_Line (File, "        Poll_Ptr (Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy)), Timeout);");
             Put_Line (File, "   begin");
             Put_Line (File, "      case I is");
             Put_Line (File, "         when 1 .. Integer'Last   => return Events_Need_Processing;");

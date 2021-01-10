@@ -809,11 +809,10 @@ package body Hdante_Hello_World is
          declare
             Events_Interval : constant Ada.Real_Time.Time_Span := Seconds (1);
 
-            Timeout : constant Integer
-              := Integer (To_Duration ((Timestamp + Events_Interval) - Clock) * 1_000);
-            --  The timeout to check for events in millisends
+            Timeout : constant Duration
+              := To_Duration ((Timestamp + Events_Interval) - Clock);
          begin
-            Events_Status := Display.Check_For_Events (if Timeout > 0 then Timeout else 0);
+            Events_Status := Display.Check_For_Events (if Timeout > 0.0 then Timeout else 0.0);
          end;
 
          case Events_Status is
