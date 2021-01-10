@@ -804,7 +804,10 @@ package body Hdante_Hello_World is
                raise Wayland_Error with "failed dispatching pending events";
             end if;
          end loop;
-         Display.Flush;
+         if not Display.Flush.Is_Success then
+            Display.Cancel_Read;
+            raise Wayland_Error with "failed to flush";
+         end if;
 
          declare
             Events_Interval : constant Ada.Real_Time.Time_Span := Seconds (1);
