@@ -16,6 +16,8 @@
 
 abstract project Config is
 
+   Version := "1";
+
    type Mode_Type is ("debug", "development", "release", "coverage");
    Mode : Mode_Type := external ("Mode", "development");
 
