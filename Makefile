@@ -30,7 +30,4 @@ generate: build
 clean:
 	$(GPRCLEAN) -r -P src/tools/wayland_ada_scanner/scanner.gpr
 	$(GPRCLEAN) -P tools/tools.gpr
-	rm -rf bin build
-	rm src/wayland/wayland-protocols-*.ads
-	rm src/wayland/wayland-protocols-*.adb
-	rm src/wayland/wayland-enums-*.ads
+	rm -rf bin build generated
