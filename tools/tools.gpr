@@ -1,0 +1,7 @@
+aggregate project Tools is
+
+   for Create_Missing_Dirs use "True";
+
+   for Project_Files use
+     ("../src/tools/wayland_ada_info/wayland_ada_info.gpr");
+end Tools;

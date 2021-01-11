@@ -5,15 +5,15 @@ GPRCLEAN = gprclean -q
 
 PROTOCOLS_DIR = ../wayland-protocols
 
-.PHONY: build examples generate clean
+.PHONY: build tools generate clean
 
 all: generate
 
 build:
 	$(GPRBUILD) -P src/tools/wayland_ada_scanner/scanner.gpr -cargs $(CFLAGS)
 
-examples: generate
-	$(GPRBUILD) -P tools/examples.gpr -cargs $(CFLAGS)
+tools: generate
+	$(GPRBUILD) -P tools/tools.gpr -cargs $(CFLAGS)
 
 generate: build
 	mkdir -p generated
@@ -29,7 +29,7 @@ generate: build
 
 clean:
 	$(GPRCLEAN) -r -P src/tools/wayland_ada_scanner/scanner.gpr
-	$(GPRCLEAN) -P tools/examples.gpr
+	$(GPRCLEAN) -P tools/tools.gpr
 	rm -rf bin build
 	rm src/wayland/wayland-protocols-*.ads
 	rm src/wayland/wayland-protocols-*.adb
