@@ -76,6 +76,7 @@ package body Wayland.Posix is
             end if;
          end;
       end loop;
+      raise Program_Error;
    end Poll;
 
    function Poll

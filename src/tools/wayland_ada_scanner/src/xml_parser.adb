@@ -883,13 +883,14 @@ procedure XML_Parser is
          New_Line (File);
          Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
 
-         New_Line (File);
          if Protocol_Name = "client" then
             null;
          elsif Protocol_Name = "xdg_decoration_unstable_v1" then
+            New_Line (File);
             Put_Line (File, "with Wayland.Protocols.Client;");
             Put_Line (File, "with Wayland.Protocols.Xdg_Shell;");
          else
+            New_Line (File);
             Put_Line (File, "with Wayland.Protocols.Client;");
          end if;
 
@@ -6141,7 +6142,7 @@ procedure XML_Parser is
             Put_Line (File, "      Timeout : Duration;");
             Put_Line (File, "      Poll    : Poll_Access := null) return Check_For_Events_Status");
             Put_Line (File, "   is");
-            Put_Line (File, "      Poll_Ptr : not null Poll_Access := (if Poll = null then Wayland.Posix.Poll'Access else Poll);");
+            Put_Line (File, "      Poll_Ptr : constant not null Poll_Access := (if Poll = null then Wayland.Posix.Poll'Access else Poll);");
             Put_Line (File, "");
             Put_Line (File, "      Descriptor : constant Integer :=");
             Put_Line (File, "        Integer (Wayland.API.Display_Get_File_Descriptor (Object.Proxy));");
@@ -6182,6 +6183,7 @@ procedure XML_Parser is
             Put_Line (File, "            end if;");
             Put_Line (File, "         end;");
             Put_Line (File, "      end loop;");
+            Put_Line (File, "      raise Program_Error;");
             Put_Line (File, "   end Flush;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Flush (Object : Display) is");
