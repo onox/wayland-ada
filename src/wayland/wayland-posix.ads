@@ -23,16 +23,12 @@ private package Wayland.Posix is
      (Descriptor : Integer;
       Timeout    : Duration) return Integer;
    --  Wait for data to become readable on the file descriptor
-   --
-   --  Timeout has only millisecond granularity
 
    function Poll
      (Descriptor : Integer;
       Timeout    : Duration;
       Mode       : Poll_Mode) return Integer;
    --  Wait for data to become readable or writable on the file descriptor
-   --
-   --  Timeout has only millisecond granularity
 
    function Error_Number return Integer;
 
