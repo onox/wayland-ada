@@ -25,10 +25,10 @@ package Xml_Parser_Utils is
 
    function Adaify_Name (Old_Name : String) return String;
 
-   -- If the variable name is "Interface" then it will be recognized as
-   -- a reserved word in Ada and it will be suffixed with "_V" resulting
-   -- in "Interface_V".
    function Adaify_Variable_Name (Old_Name : String) return String;
+   --  If the variable name is "Interface" then it will be recognized as
+   --  a reserved word in Ada and it will be suffixed with "_V" resulting
+   --  in "Interface_V"
 
    function Arg_Type_As_String (Arg_Tag : Wayland_XML.Arg_Tag) return String;
 
@@ -44,10 +44,10 @@ package Xml_Parser_Utils is
 
    Interface_Not_Found_Exception : exception;
 
-   -- will raise Interface_Not_Found_Exception is pre-condition is not met.
    function Find_Specified_Interface
      (Request_Tag : aliased Wayland_XML.Request_Tag) return String with
      Pre => Is_Interface_Specified (Request_Tag);
+   --  Will raise Interface_Not_Found_Exception is pre-condition is not met
 
    function Is_Request_Destructor
      (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;

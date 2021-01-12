@@ -53,11 +53,11 @@ package Wayland_XML is
    function Exists_Name (This : Arg_Tag) return Boolean with
       Global => null;
 
-      -- raises TYPE_ATTRIBUTE_EXCEPTION if Value cannot be interpreted
    procedure Set_Type_Attribute (This : in out Arg_Tag; Value : String) with
       Global => null,
       Pre    => not Exists_Type_Attribute (This),
       Post   => Exists_Type_Attribute (This);
+   --  Raises TYPE_ATTRIBUTE_EXCEPTION if Value cannot be interpreted
 
    function Type_Attribute (This : Arg_Tag) return Arg_Type_Attribute with
       Global => null,
@@ -474,9 +474,9 @@ package Wayland_XML is
       Global => null,
       Pre    => Exists_Description (This);
 
-      -- Returns true if there is one unique description.
    function Exists_Description (This : aliased Request_Tag) return Boolean with
       Global => null;
+   --  Returns true if there is one unique description
 
    type Request_Tag_Ptr is access all Request_Tag;
 

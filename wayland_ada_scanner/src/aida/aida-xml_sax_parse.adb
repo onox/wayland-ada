@@ -423,10 +423,10 @@ is
                         Attribute_Value_Last_Index := Prev_Prev_P;
                         State_Id := Expecting_G_Sign_Or_Attributes;
                         declare
-                           Name : String :=
+                           Name : constant String :=
                              Contents
                                (Attribute_First_Index .. Attribute_Last_Index);
-                           Value : String :=
+                           Value : constant String :=
                              Contents
                                (Attribute_Value_First_Index ..
                                   Attribute_Value_Last_Index);

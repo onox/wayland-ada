@@ -40,7 +40,7 @@ package Aida with SPARK_Mode is
       Code_2 : Integer)
    with Global     => null,
         Pre'Class  => not Has_Failed (This),
-        Post'Class => This.Has_Failed = True;
+        Post'Class => This.Has_Failed;
 
    function Has_Failed (This : Call_Result) return Boolean
      with Global => null;

@@ -29,7 +29,7 @@ with Aida.Deepend.XML_DOM_Parser;
 with Wayland_XML;
 with Xml_Parser_Utils;
 
-procedure XML_Parser is
+procedure Wayland_Ada_Scanner is
 
    Out_Folder : constant String := "generated/";
 
@@ -6565,4 +6565,4 @@ begin
    Read_Wayland_XML_File
      (File_Name       => Ada.Command_Line.Argument (1),
       Enable_Comments => False);
-end XML_Parser;
+end Wayland_Ada_Scanner;

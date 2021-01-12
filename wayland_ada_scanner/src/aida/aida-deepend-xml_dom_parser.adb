@@ -17,12 +17,10 @@
 package body Aida.Deepend.XML_DOM_Parser is
 
    type State_T is
-     (
-      Expecting_Object_Start, -- seems to only apply to the root start tag
+     (Expecting_Object_Start, -- seems to only apply to the root start tag
       --  Expecting_Attribute_Or_Text_Or_Comment_Or_CDATA_Or_Object_Start_Or_Object_End,
       Expecting_Default, -- Attribute_Or_Text_Or_Comment_Or_CDATA_Or_Object_Start_Or_Object_End
-      End_State
-     );
+      End_State);
 
    function Name (This : Attribute) return String is
      (This.My_Name.all);
@@ -39,10 +37,9 @@ package body Aida.Deepend.XML_DOM_Parser is
    function Attributes (This : aliased XML_Tag) return Attributes_Ref is
      ((Element => This.My_Attributes'Access));
 
-   type Argument_Type
-   is limited record
+   type Argument_Type is limited record
       Current_Nodes : Node_Vectors.Vector;
-      -- The current node is the last Node pointed to in the container
+      --  The current node is the last Node pointed to in the container
 
       Root_Node : Node_Ptr := null;
       State     : State_T := Expecting_Object_Start;
@@ -60,7 +57,7 @@ package body Aida.Deepend.XML_DOM_Parser is
               Argument.Current_Nodes.Is_Empty
             then
                declare
-                  Current_Node : not null Node_Ptr
+                  Current_Node : constant not null Node_Ptr
                     := new Node;
                begin
                   Current_Node.Tag.My_Name
@@ -73,15 +70,11 @@ package body Aida.Deepend.XML_DOM_Parser is
                Call_Result.Initialize (-2132671123, 1966624808);
             end if;
          when Expecting_Default =>
-            if
-              Tag_Name'Length > 0
-            then
+            if Tag_Name'Length > 0 then
                declare
-                  Current_Node : not null Node_Ptr
-                    := new Node;
+                  Current_Node : constant not null Node_Ptr := new Node;
                begin
-                  Current_Node.Tag.My_Name
-                    := new String'(Tag_Name);
+                  Current_Node.Tag.My_Name := new String'(Tag_Name);
 
                   if
                     Argument.Current_Nodes.Constant_Reference
@@ -128,8 +121,7 @@ package body Aida.Deepend.XML_DOM_Parser is
             else
                Call_Result.Initialize (-1355522791, 1675536860);
             end if;
-         when Expecting_Object_Start |
-              End_State =>
+         when Expecting_Object_Start | End_State =>
             Call_Result.Initialize (-0728861922, -0299445966);
       end case;
    end Handle_End_Tag;
@@ -150,11 +142,9 @@ package body Aida.Deepend.XML_DOM_Parser is
                       Value (I) = Character'Val (13)))
             then
                null;
-            elsif
-              not Argument.Current_Nodes.Is_Empty
-            then
+            elsif not Argument.Current_Nodes.Is_Empty then
                declare
-                  Current_Node : not null Node_Ptr
+                  Current_Node : constant not null Node_Ptr
                     := new Node (Node_Kind_Text);
                begin
                   Current_Node.all
@@ -175,8 +165,7 @@ package body Aida.Deepend.XML_DOM_Parser is
             else
                Call_Result.Initialize (0536156601, 0921613311);
             end if;
-         when Expecting_Object_Start |
-              End_State =>
+         when Expecting_Object_Start | End_State =>
             Call_Result.Initialize (0240750889, 1723362921);
       end case;
    end Handle_Text;
@@ -190,12 +179,9 @@ package body Aida.Deepend.XML_DOM_Parser is
       case Argument.State is
          when Expecting_Default =>
             if not Argument.Current_Nodes.Is_Empty then
-               if
-                 Attribute_Name'Length > 0
-               then
+               if Attribute_Name'Length > 0 then
                   declare
-                     Attr : not null Attribute_Ptr
-                       := new Attribute;
+                     Attr : constant not null Attribute_Ptr := new Attribute;
                   begin
                      Attr.My_Name
                        := new String'(Attribute_Name);
@@ -219,8 +205,7 @@ package body Aida.Deepend.XML_DOM_Parser is
             else
                Call_Result.Initialize (-0372407662, -1139199208);
             end if;
-         when Expecting_Object_Start |
-              End_State =>
+         when Expecting_Object_Start | End_State =>
             Call_Result.Initialize (1103012185, 0319457400);
       end case;
    end Handle_Attribute;
@@ -232,14 +217,10 @@ package body Aida.Deepend.XML_DOM_Parser is
    begin
       case Argument.State is
          when Expecting_Default =>
-            if
-              not Argument.Current_Nodes.Is_Empty
-            then
-               if
-                 Value'Length > 0
-               then
+            if not Argument.Current_Nodes.Is_Empty then
+               if Value'Length > 0 then
                   declare
-                     Current_Node : Node_Ptr
+                     Current_Node : constant Node_Ptr
                        := new Node (Node_Kind_Comment);
                   begin
                      Current_Node.all
@@ -279,11 +260,9 @@ package body Aida.Deepend.XML_DOM_Parser is
             if
               not Argument.Current_Nodes.Is_Empty
             then
-               if
-                 Value'Length > 0
-               then
+               if Value'Length > 0 then
                   declare
-                     Current_Node : Node_Ptr
+                     Current_Node : constant Node_Ptr
                        := new Node (Node_Kind_CDATA);
                   begin
                      Current_Node.all
@@ -307,8 +286,7 @@ package body Aida.Deepend.XML_DOM_Parser is
             else
                Call_Result.Initialize (-0076965217, 0193355440);
             end if;
-         when Expecting_Object_Start |
-              End_State =>
+         when Expecting_Object_Start | End_State =>
             Call_Result.Initialize (0698504230, -0963685542);
       end case;
    end Handle_CDATA;

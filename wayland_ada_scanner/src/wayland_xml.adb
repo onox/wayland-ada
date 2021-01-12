@@ -181,10 +181,7 @@ package body Wayland_XML is
       Child : constant Enum_Child := (Child_Entry, Item);
    begin
       This.My_Children.Append (Child);
-
-      if Child.Kind_Id = Child_Entry then
-         This.My_Entries.Append (Child);
-      end if;
+      This.My_Entries.Append (Child);
    end Append_Child;
 
    procedure Sort_Entries (This : in out Enum_Tag) is
