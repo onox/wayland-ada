@@ -31,7 +31,7 @@ with Xml_Parser_Utils;
 
 procedure Wayland_Ada_Scanner is
 
-   Out_Folder : constant String := "generated/";
+   Out_Folder : constant String := "./";
 
    use type Ada.Containers.Count_Type;
    use type Wayland_XML.Event_Child;

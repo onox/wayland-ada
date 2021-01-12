@@ -6,7 +6,7 @@ library project Wayland_Client is
 
    for Create_Missing_Dirs use "True";
 
-   for Source_Dirs use ("../src/wayland");
+   for Source_Dirs use ("../src/wayland", "../generated/wayland");
 
    for Object_Dir use "../build/obj/wayland";
 

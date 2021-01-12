@@ -18,38 +18,47 @@ installcmd = $(GNATINSTALL) -p \
 	--ali-subdir=$(alidir) \
 	--prefix=$(PREFIX)
 
-PROTOCOLS_DIR = ../wayland-protocols
+PROTOCOLS = ../../../wayland-protocols
 
-SCANNER = ./wayland_ada_scanner/alire/build/bin/wayland_ada_scanner
+GEN_WAYLAND = generated/wayland
+GEN_PROTOCOLS = generated/protocols
 
-.PHONY: scanner tools generate clean
+SCANNER = ../../wayland_ada_scanner/alire/build/bin/wayland_ada_scanner
+
+.PHONY: scanner tools libs clean
 
 all: libs
 
 scanner:
-	cd wayland_ada_scanner && alr build && cd ..
+	cd wayland_ada_scanner && alr build
 
-tools: generate
+tools: protocols
 	$(GPRBUILD) -P tools/tools.gpr -cargs $(CFLAGS)
 
-libs: generate
+libs: wayland protocols
 	$(GPRBUILD) -P tools/wayland_egl.gpr -cargs $(CFLAGS)
+	$(GPRBUILD) -P tools/wayland_protocols.gpr -cargs $(CFLAGS)
 
-generate: scanner
-	mkdir -p generated
-	$(SCANNER) /usr/share/wayland/wayland.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/stable/xdg-shell/xdg-shell.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/stable/presentation-time/presentation-time.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/stable/viewporter/viewporter.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/unstable/pointer-gestures/pointer-gestures-unstable-v1.xml
-	$(SCANNER) $(PROTOCOLS_DIR)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
+wayland: scanner
+	mkdir -p $(GEN_WAYLAND)
+	cd $(GEN_WAYLAND) && $(SCANNER) /usr/share/wayland/wayland.xml
+
+protocols: scanner wayland
+	mkdir -p $(GEN_PROTOCOLS)
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/stable/xdg-shell/xdg-shell.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/stable/presentation-time/presentation-time.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/stable/viewporter/viewporter.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/pointer-gestures/pointer-gestures-unstable-v1.xml
+	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
 
 clean:
-	$(GPRCLEAN) -r -P src/tools/wayland_ada_scanner/scanner.gpr
+	cd wayland_ada_scanner && alr clean
 	$(GPRCLEAN) -P tools/tools.gpr
+	$(GPRCLEAN) -P tools/wayland_egl.gpr
+	$(GPRCLEAN) -P tools/wayland_protocols.gpr
 	rm -rf bin build generated
 
 install:

@@ -1,4 +1,4 @@
-with "wayland_protocols";
+with "wayland_client";
 with "config";
 
 library project Wayland_EGL is
