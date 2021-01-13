@@ -20,7 +20,6 @@ installcmd = $(GNATINSTALL) -p \
 
 PROTOCOLS = ../../../wayland-protocols
 
-GEN_WAYLAND = generated/wayland
 GEN_PROTOCOLS = generated/protocols
 
 SCANNER = ../../wayland_ada_scanner/alire/build/bin/wayland_ada_scanner
@@ -40,8 +39,7 @@ libs: wayland protocols
 	$(GPRBUILD) -P tools/wayland_protocols.gpr -cargs $(CFLAGS)
 
 wayland: scanner
-	mkdir -p $(GEN_WAYLAND)
-	cd $(GEN_WAYLAND) && $(SCANNER) /usr/share/wayland/wayland.xml
+	cd wayland_client_ada && alr build
 
 protocols: scanner wayland
 	mkdir -p $(GEN_PROTOCOLS)
@@ -55,6 +53,7 @@ protocols: scanner wayland
 	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
 
 clean:
+	cd wayland_client_ada && alr clean
 	cd wayland_ada_scanner && alr clean
 	$(GPRCLEAN) -P tools/tools.gpr
 	$(GPRCLEAN) -P tools/wayland_egl.gpr

@@ -1,6 +1,6 @@
 name = "wayland_ada_scanner"
 description = "A tool to generate thick Ada 2012 bindings for Wayland protocols"
-version = "0.0.0"
+version = "0.1.0"
 website = "https://github.com/onox/wayland-ada"
 licenses = ["Apache 2.0"]
 tags = ["wayland", "egl"]
@@ -10,3 +10,6 @@ maintainers = ["onox <denkpadje@gmail.com>"]
 maintainers-logins = ["onox"]
 
 executables = ["wayland_ada_scanner"]
+
+[environment]
+PATH.append = "${CRATE_ROOT}/alire/build/bin"

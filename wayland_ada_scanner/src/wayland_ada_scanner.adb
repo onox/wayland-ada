@@ -31,8 +31,6 @@ with Xml_Parser_Utils;
 
 procedure Wayland_Ada_Scanner is
 
-   Out_Folder : constant String := "./";
-
    use type Ada.Containers.Count_Type;
    use type Wayland_XML.Event_Child;
    use type Wayland_XML.Request_Child;
@@ -88,7 +86,6 @@ procedure Wayland_Ada_Scanner is
 
    XML_Exception : exception;
 
-   procedure Read_Wayland_XML_File (File_Name : String; Enable_Comments : Boolean);
    procedure Create_Wayland_Spec_File (Enable_Comments : Boolean);
    procedure Create_Wayland_Body_File;
 
@@ -280,27 +277,17 @@ procedure Wayland_Ada_Scanner is
       end loop;
    end Get_Max_Arg_Length;
 
-   procedure Read_Wayland_XML_File (File_Name : String; Enable_Comments : Boolean) is
-
-      procedure Check_Wayland_XML_File_Exists;
-      procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String);
-      procedure Parse_Contents;
+   procedure Read_Wayland_XML_File
+     (File_Name, Out_Folder : String;
+      Enable_Comments       : Boolean)
+   is
       procedure Identify_Protocol_Tag;
       procedure Identify_Protocol_Children;
 
-      procedure Check_Wayland_XML_File_Exists is
-      begin
-         if not Ada.Directories.Exists (File_Name) then
-            raise Constraint_Error with File_Name & " does not exist";
-         end if;
-
-         Allocate_Space_For_Wayland_XML_Contents (File_Name);
-         Parse_Contents;
-      end Check_Wayland_XML_File_Exists;
-
-      File_Contents : Aida.Deepend.String_Ptr;
-
-      procedure Allocate_Space_For_Wayland_XML_Contents (File_Name : String) is
+      procedure Allocate_Space_For_Wayland_XML_Contents
+        (File_Name     : String;
+         File_Contents : out Aida.Deepend.String_Ptr)
+      is
          package IO renames Ada.Streams.Stream_IO;
 
          Size : constant Natural := Natural (Ada.Directories.Size (File_Name));
@@ -318,7 +305,7 @@ procedure Wayland_Ada_Scanner is
 
       Root_Node : Aida.Deepend.XML_DOM_Parser.Node_Ptr;
 
-      procedure Parse_Contents is
+      procedure Parse_Contents (File_Contents : Aida.Deepend.String_Ptr) is
          Call_Result : Aida.Call_Result;
       begin
          Aida.Deepend.XML_DOM_Parser.Parse
@@ -816,8 +803,35 @@ procedure Wayland_Ada_Scanner is
          Create_Wayland_Body_File;
       end Identify_Protocol_Children;
 
+      File_Contents : Aida.Deepend.String_Ptr;
+
+      use type Ada.Directories.File_Kind;
    begin
-      Check_Wayland_XML_File_Exists;
+      if not Ada.Directories.Exists (File_Name) then
+         raise Constraint_Error with File_Name & " does not exist";
+      end if;
+
+      Allocate_Space_For_Wayland_XML_Contents (File_Name, File_Contents);
+
+      if not Ada.Directories.Exists (Out_Folder) then
+         Ada.Directories.Create_Directory (Out_Folder);
+      elsif Ada.Directories.Kind (Out_Folder) /= Ada.Directories.Directory then
+         raise Constraint_Error with Out_Folder & " is not a directory";
+      end if;
+
+      declare
+         Current_Folder : constant String := Ada.Directories.Current_Directory;
+      begin
+         Ada.Directories.Set_Directory (Out_Folder);
+         begin
+            Parse_Contents (File_Contents);
+         exception
+            when others =>
+               Ada.Directories.Set_Directory (Current_Folder);
+               raise;
+         end;
+         Ada.Directories.Set_Directory (Current_Folder);
+      end;
    end Read_Wayland_XML_File;
 
    procedure Generate_Code_For_Numeric_Constants (File : Ada.Text_IO.File_Type) is
@@ -877,7 +891,7 @@ procedure Wayland_Ada_Scanner is
       begin
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
-            Out_Folder & "wayland-protocols-" & Protocol_Name & ".ads");
+            "wayland-protocols-" & Protocol_Name & ".ads");
 
          Put_Line (File, "private with Wayland.Protocols.Thin_" & Package_Name & ";");
          New_Line (File);
@@ -955,7 +969,7 @@ procedure Wayland_Ada_Scanner is
          --  TODO Do not generate file if there are no enum constants
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
-            Out_Folder & "wayland-enums-" & Protocol_Name & ".ads");
+            "wayland-enums-" & Protocol_Name & ".ads");
 
          Put_Line (File, "package Wayland.Enums." & Package_Name & " is");
          Put_Line (File, "   pragma Preelaborate;");
@@ -974,7 +988,7 @@ procedure Wayland_Ada_Scanner is
 
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
-            Out_Folder & "wayland-protocols-thin_" & Protocol_Name & ".ads");
+            "wayland-protocols-thin_" & Protocol_Name & ".ads");
 
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
@@ -3338,7 +3352,7 @@ procedure Wayland_Ada_Scanner is
       begin
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
-            Out_Folder & "wayland-protocols-" & Protocol_Name & ".adb");
+            "wayland-protocols-" & Protocol_Name & ".adb");
 
          --  TODO Do not import System.Address_To_Access_Conversions if
          --  there are no generic *_Events packages
@@ -3373,7 +3387,7 @@ procedure Wayland_Ada_Scanner is
 
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
-            Out_Folder & "wayland-protocols-thin_" & Protocol_Name & ".adb");
+            "wayland-protocols-thin_" & Protocol_Name & ".adb");
 
          Put_Line (File, "with Ada.Unchecked_Conversion;");
          Put_Line (File, "");
@@ -6564,5 +6578,6 @@ procedure Wayland_Ada_Scanner is
 begin
    Read_Wayland_XML_File
      (File_Name       => Ada.Command_Line.Argument (1),
+      Out_Folder      => Ada.Command_Line.Argument (2),
       Enable_Comments => False);
 end Wayland_Ada_Scanner;

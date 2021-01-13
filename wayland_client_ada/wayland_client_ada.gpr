@@ -1,19 +1,28 @@
-project Wayland_Ada_Scanner is
+project Wayland_Client_Ada is
 
-   for Source_Dirs use ("src", "src/aida");
+   for Library_Name use "Wayland_Client_Ada";
+   for Library_Version use "0.1.0";
+
+   for Languages use ("ada", "c");
+
+   for Source_Dirs use ("src", "src/protocols");
    for Object_Dir use "obj";
    for Create_Missing_Dirs use "True";
-   for Exec_Dir use "bin";
-   for Main use ("wayland_ada_scanner.adb");
+   for Library_Dir use "lib";
+
+   type Library_Type_Type is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Type_Type :=
+     external ("WAYLAND_CLIENT_ADA_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+   for Library_Kind use Library_Type;
 
    type Enabled_Kind is ("enabled", "disabled");
-   Compile_Checks : Enabled_Kind := External ("WAYLAND_ADA_SCANNER_COMPILE_CHECKS", "enabled");
-   Runtime_Checks : Enabled_Kind := External ("WAYLAND_ADA_SCANNER_RUNTIME_CHECKS", "enabled");
-   Style_Checks : Enabled_Kind := External ("WAYLAND_ADA_SCANNER_STYLE_CHECKS", "enabled");
-   Contracts_Checks : Enabled_Kind := External ("WAYLAND_ADA_SCANNER_CONTRACTS", "enabled");
+   Compile_Checks : Enabled_Kind := External ("WAYLAND_CLIENT_ADA_COMPILE_CHECKS", "enabled");
+   Runtime_Checks : Enabled_Kind := External ("WAYLAND_CLIENT_ADA_RUNTIME_CHECKS", "enabled");
+   Style_Checks : Enabled_Kind := External ("WAYLAND_CLIENT_ADA_STYLE_CHECKS", "enabled");
+   Contracts_Checks : Enabled_Kind := External ("WAYLAND_CLIENT_ADA_CONTRACTS", "enabled");
 
    type Build_Kind is ("debug", "optimize");
-   Build_Mode : Build_Kind := External ("WAYLAND_ADA_SCANNER_BUILD_MODE", "debug");
+   Build_Mode : Build_Kind := External ("WAYLAND_CLIENT_ADA_BUILD_MODE", "debug");
 
    Compile_Checks_Switches := ();
    case Compile_Checks is
@@ -22,8 +31,8 @@ project Wayland_Ada_Scanner is
            ("-gnatwa",  -- All warnings
             "-gnatVa",  -- All validity checks
             "-gnatf",   -- Full errors
-            "-gnatwFl.l.s",
-            "-gnatwe"); -- Warnings as errors
+            "-gnatwFl.l.s");
+--            "-gnatwe"); -- Warnings as errors
       when others => null;
    end case;
 
@@ -41,8 +50,7 @@ project Wayland_Ada_Scanner is
          Style_Checks_Switches :=
            ("-gnatyg",   -- GNAT Style checks
             "-gnaty-Is", -- Disable check mode in and separate subprogram spec
-            "-gnaty-m",  -- Disable maximum line length
---            "-gnatyM99", -- Maximum line length
+            "-gnatyM99", -- Maximum line length
             "-gnatyA",   -- Array attribute indexes
             "-gnatyO");  -- Overriding subprograms explicitly marked as such
       when others => null;
@@ -84,4 +92,4 @@ project Wayland_Ada_Scanner is
       for Switches ("Ada") use ("-Es"); --  Symbolic traceback
    end Binder;
 
-end Wayland_Ada_Scanner;
+end Wayland_Client_Ada;

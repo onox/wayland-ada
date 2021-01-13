@@ -306,7 +306,7 @@ private package Wayland.API is
 --      Opcode : Unsigned_32;
 --      Args : access wayland_util_h.wl_argument;
 --      Interface : in out Interface) return access Proxy
---     with Import, Convention => C, External_Name => "wl_proxy_marshal_array_constructor";
+--   with Import, Convention => C, External_Name => "wl_proxy_marshal_array_constructor";
 
 --   function Proxy_Marshal_Array_Constructor_Versioned
 --     (Object : in out Proxy;
@@ -314,7 +314,7 @@ private package Wayland.API is
 --      Args : access wayland_util_h.wl_argument;
 --      Interface : in out Interface;
 --      Version : Unsigned_32) return access Proxy
---     with Import, Convention => C, External_Name => "wl_proxy_marshal_array_constructor_versioned";
+--   with Import, Convention => C, External_Name => "wl_proxy_marshal_array_constructor_versioned";
 
    procedure Proxy_Destroy (Object : in out Proxy)
      with Import, Convention => C, External_Name => "wl_proxy_destroy";
