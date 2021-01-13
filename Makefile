@@ -35,7 +35,7 @@ tools: protocols
 	$(GPRBUILD) -P tools/tools.gpr -cargs $(CFLAGS)
 
 libs: wayland protocols
-	$(GPRBUILD) -P tools/wayland_egl.gpr -cargs $(CFLAGS)
+	cd wayland_egl_ada && alr build
 	$(GPRBUILD) -P tools/wayland_protocols.gpr -cargs $(CFLAGS)
 
 wayland: scanner
@@ -53,10 +53,10 @@ protocols: scanner wayland
 	cd $(GEN_PROTOCOLS) && $(SCANNER) $(PROTOCOLS)/unstable/relative-pointer/relative-pointer-unstable-v1.xml
 
 clean:
+	cd wayland_egl_ada && alr clean
 	cd wayland_client_ada && alr clean
 	cd wayland_ada_scanner && alr clean
 	$(GPRCLEAN) -P tools/tools.gpr
-	$(GPRCLEAN) -P tools/wayland_egl.gpr
 	$(GPRCLEAN) -P tools/wayland_protocols.gpr
 	rm -rf bin build generated
 
