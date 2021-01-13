@@ -1,0 +1,54 @@
+# THIS IS A MACHINE-GENERATED FILE. DO NOT EDIT MANUALLY.
+
+[solution]
+[solution.context]
+solved = true
+[[solution.state]]
+crate = "libwayland"
+fulfilment = "solved"
+pinned = false
+transitivity = "indirect"
+versions = "^1.16"
+[solution.state.release]
+description = "Wayland libraries and protocol"
+licenses = [
+"MIT",
+]
+maintainers = [
+"onox <denkpadje@gmail.com>",
+]
+maintainers-logins = [
+"onox",
+]
+name = "libwayland"
+notes = "Provided by system package: libwayland-dev"
+tags = [
+"wayland",
+"client",
+"egl",
+"server",
+"cursor",
+]
+version = "1.16.0"
+website = "https://wayland.freedesktop.org"
+[solution.state.release.origin]
+url = "system:libwayland-dev"
+[[solution.state]]
+crate = "wayland_ada_scanner"
+fulfilment = "linked"
+pinned = false
+transitivity = "direct"
+versions = "^0.1.0"
+[solution.state.link]
+kind = "softlink"
+path = "file:../wayland_ada_scanner"
+[[solution.state]]
+crate = "wayland_client_ada"
+fulfilment = "linked"
+pinned = false
+transitivity = "direct"
+versions = "^0.1.0"
+[solution.state.link]
+kind = "softlink"
+path = "file:../wayland_client_ada"
+
