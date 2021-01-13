@@ -12,6 +12,9 @@ The following [Alire][url-alire] crates exist:
  - *wayland_ada_scanner*. A tool to generate thick bindings for various
    Wayland protocols.
 
+ - *wayland_ada_info*. A tool to display information about interfaces
+   advertised by the currently running Wayland compositor.
+
  - *wayland_client_ada*. Thick bindings for the core Wayland protocol.
    Additionally provides thin bindings for libwayland-client to be used
    by this crate and *wayland_protocols_ada*.

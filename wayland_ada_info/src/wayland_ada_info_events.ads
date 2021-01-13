@@ -14,7 +14,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-procedure Wayland_Ada_Info.Main is
-begin
-   Run;
-end Wayland_Ada_Info.Main;
+package Wayland_Ada_Info_Events is
+
+   procedure Run;
+
+end Wayland_Ada_Info_Events;

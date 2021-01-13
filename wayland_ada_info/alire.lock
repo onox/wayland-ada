@@ -1,0 +1,14 @@
+# THIS IS A MACHINE-GENERATED FILE. DO NOT EDIT MANUALLY.
+
+[solution]
+[solution.context]
+solved = true
+[[solution.state]]
+crate = "wayland_protocols_ada"
+fulfilment = "linked"
+pinned = false
+transitivity = "direct"
+versions = "^0.1.0"
+[solution.state.link]
+kind = "softlink"
+path = "file:../wayland_protocols_ada"

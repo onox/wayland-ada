@@ -24,8 +24,7 @@ with Wayland.Enums.Client;
 with Wayland.Protocols.Client;
 with Wayland.Protocols.Presentation_Time;
 
-package body Wayland_Ada_Info is
-
+package body Wayland_Ada_Info_Events is
    procedure Put_Line (Value : String) renames Ada.Text_IO.Put_Line;
    procedure Put (Value : String) renames Ada.Text_IO.Put;
 
@@ -458,4 +457,4 @@ package body Wayland_Ada_Info is
          end if;
    end Run;
 
-end Wayland_Ada_Info;
+end Wayland_Ada_Info_Events;
