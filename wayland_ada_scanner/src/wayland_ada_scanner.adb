@@ -2025,9 +2025,14 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Fullscreen");
                Put_Line (File, "     (Object : Xdg_Toplevel;");
+               Put_Line (File, "      Enable : Boolean)");
+               Put_Line (File, "   with Pre => Object.Has_Proxy;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Fullscreen");
+               Put_Line (File, "     (Object : Xdg_Toplevel;");
                Put_Line (File, "      Enable : Boolean;");
                Put_Line (File, "      Output : Protocols.Client.Output'Class)");
-               Put_Line (File, "   with Pre => Object.Has_Proxy;");
+               Put_Line (File, "   with Pre => Object.Has_Proxy and Output.Has_Proxy;");
             elsif Name = "Xdg_Popup" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Grab");
@@ -5175,6 +5180,17 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Thin.Xdg_Toplevel_Unset_Maximized (Object.Proxy);");
                Put_Line (File, "      end if;");
                Put_Line (File, "   end Set_Maximized;");
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Set_Fullscreen");
+               Put_Line (File, "     (Object : Xdg_Toplevel;");
+               Put_Line (File, "      Enable : Boolean) is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      if Enable then");
+               Put_Line (File, "         Thin.Xdg_Toplevel_Set_Fullscreen (Object.Proxy, null);");
+               Put_Line (File, "      else");
+               Put_Line (File, "         Thin.Xdg_Toplevel_Unset_Fullscreen (Object.Proxy);");
+               Put_Line (File, "      end if;");
+               Put_Line (File, "   end Set_Fullscreen;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Fullscreen");
                Put_Line (File, "     (Object : Xdg_Toplevel;");
