@@ -2,7 +2,7 @@ name = "wayland_egl_ada"
 description = "Ada 2012 bindings for libwayland-egl"
 version = "0.1.0"
 website = "https://github.com/onox/wayland-ada"
-licenses = ["Apache 2.0"]
+licenses = "Apache-2.0"
 tags = ["wayland", "egl"]
 
 authors = ["onox"]

@@ -2,7 +2,7 @@ name = "wayland_ada_info"
 description = "A tool to display information about supported Wayland interfaces"
 version = "0.1.0"
 website = "https://github.com/onox/wayland-ada"
-licenses = ["Apache 2.0"]
+licenses = "Apache-2.0"
 tags = ["wayland"]
 
 authors = ["onox"]

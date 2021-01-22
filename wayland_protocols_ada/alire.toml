@@ -2,7 +2,7 @@ name = "wayland_protocols_ada"
 description = "Ada 2012 bindings for various Wayland protocols"
 version = "0.1.0"
 website = "https://github.com/onox/wayland-ada"
-licenses = ["Apache 2.0"]
+licenses = "Apache-2.0"
 tags = ["wayland", "protocols"]
 
 authors = ["onox"]
