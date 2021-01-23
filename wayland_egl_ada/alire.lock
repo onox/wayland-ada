@@ -11,9 +11,7 @@ transitivity = "direct"
 versions = "^1.16"
 [solution.state.release]
 description = "Wayland libraries and protocol"
-licenses = [
-"MIT",
-]
+licenses = "MIT"
 maintainers = [
 "onox <denkpadje@gmail.com>",
 ]
