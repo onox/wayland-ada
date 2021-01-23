@@ -46,7 +46,7 @@ project Wayland_Protocols_Ada is
 
    Style_Checks_Switches := ();
    case Style_Checks is
-      when "enabled" => null;
+      when "enabled" =>
          Style_Checks_Switches :=
            ("-gnatyg",   -- GNAT Style checks
             "-gnaty-Is", -- Disable check mode in and separate subprogram spec
@@ -58,10 +58,10 @@ project Wayland_Protocols_Ada is
 
    Contracts_Switches := ();
    case Contracts_Checks is
-      when "enabled" => null;
+      when "enabled" =>
          Contracts_Switches :=
            ("-gnata"); --  Enable assertions and contracts
-      when others =>
+      when others => null;
    end case;
 
    Build_Switches := ();
