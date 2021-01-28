@@ -1,0 +1,10 @@
+name = "wayland_cursor_ada"
+description = "Shiny new project"
+version = "0.0.0"
+
+authors = ["onox"]
+maintainers = ["onox <denkpadje@gmail.com>"]
+maintainers-logins = ["onox"]
+
+[[depends-on]]
+wayland_client_ada = "^0.1.0"

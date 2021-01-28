@@ -945,10 +945,12 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
+            Put_Line (File, "   function Get_Proxy (Object : Shm) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Buffer is (Proxy => Thin.Buffer_Ptr (Proxy));");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface is (Proxy => Thin.Surface_Ptr (Proxy));");
          elsif Protocol_Name = "xdg_shell" then
@@ -1043,10 +1045,12 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Surface) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Seat) return Secret_Proxy;");
+            Put_Line (File, "   function Get_Proxy (Object : Shm) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy;");
             Put_Line (File, "");
+            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Buffer;");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
             Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface;");
          elsif Protocol_Name = "xdg_shell" then

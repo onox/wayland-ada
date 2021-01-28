@@ -26,7 +26,6 @@ The following [Alire][url-alire] crates exist:
    bindings of [Orka][url-orka].
 
  - *wayland_cursor_ada*. Bindings for libwayland-cursor.
-   (Not yet implemented. See #3)
 
 The following stable protocols are supported:
 
