@@ -15,10 +15,6 @@ linux = true
 
 [[actions]]
 type = "pre-build"
-command = ["mkdir", "-p", "src"]
-
-[[actions]]
-type = "pre-build"
 command = ["git", "submodule", "update", "--init"]
 
 [[actions]]
