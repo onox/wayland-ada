@@ -1,9 +1,12 @@
-.PHONY: scanner tools libs clean
+.PHONY: scanner info tools libs clean
 
 all: libs
 
 scanner:
 	cd wayland_ada_scanner && alr build
+
+info: tools
+	cd wayland_ada_info && alr run
 
 tools: protocols
 	cd wayland_ada_info && alr build

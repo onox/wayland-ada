@@ -48,6 +48,11 @@ And the following unstable protocols:
 
  - relative-pointer
 
+## Building
+
+To build the *wayland_\*_ada* crates, run `make libs`.
+To build and run the *wayland_ada_info* tool, run `make info`.
+
 ## Dependencies
 
 Requires Wayland 1.16 or higher and wayland-protocols 1.21 (or git d10d18f) or higher.
