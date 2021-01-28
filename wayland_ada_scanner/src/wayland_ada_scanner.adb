@@ -917,7 +917,6 @@ procedure Wayland_Ada_Scanner is
          if Protocol_Name = "xdg_shell" then
             New_Line (File);
             Put_Line (File, "   type State_Array is array (Positive range <>) of Xdg_Toplevel_State;");
-            New_Line (File);
          end if;
 
          Generate_Code_For_Type_Declarations;
@@ -1277,8 +1276,7 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
-            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean");
-            Put_Line (File, "     with Global => null;");
+            Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean;");
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
          end Generate_Spec_Utility_Functions;
@@ -2861,7 +2859,9 @@ procedure Wayland_Ada_Scanner is
                      Index_Match : constant Match := Find_Match (All_Types, Types);
                      pragma Assert (Index_Match.Is_Match);
                   begin
-                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access, " & Type_String & "'Access, Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
+                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access,");
+                     Put_Line (File, "     " & "  " & Type_String & "'Access,");
+                     Put_Line (File, "     " & "  " & "Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
                   end;
                   Request_Index := Request_Index + 1;
                end Handle_Request_Tuple;
@@ -2888,7 +2888,9 @@ procedure Wayland_Ada_Scanner is
                      Index_Match : constant Match := Find_Match (All_Types, Types);
                      pragma Assert (Index_Match.Is_Match);
                   begin
-                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access, " & Type_String & "'Access, Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
+                     Put_Line (File, "     " & Prefix & "(" & Name_String & "'Access,");
+                     Put_Line (File, "     " & "  " & Type_String & "'Access,");
+                     Put_Line (File, "     " & "  " & "Interface_Pointers (" & Trim (Index_Match.Index'Image) & ")'Access)" & Suffix);
                   end;
                   Event_Index := Event_Index + 1;
                end Handle_Event_Tuple;
@@ -3467,7 +3469,8 @@ procedure Wayland_Ada_Scanner is
                       ((+"Listener", +Ptr_Listener_Name),
                        (+"Data", +"Void_Ptr")));
                   Put_Line (File, "   begin");
-                  Put_Line (File, "      return Wayland.API.Proxy_Add_Listener (" & Name & ".all, Listener.all'Address, Data);");
+                  Put_Line (File, "      return Wayland.API.Proxy_Add_Listener");
+                  Put_Line (File, "        (" & Name & ".all, Listener.all'Address, Data);");
                   Put_Line (File, "   end " & Name & "_Add_Listener;");
                end Generate_Code_For_Add_Listener_Subprogram_Implementations;
 
@@ -3821,7 +3824,8 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "");
             Put_Line (File, "   package body " & Name & "_Events is");
             Put_Line (File, "");
-            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (" & Name & "'Class);");
+            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions");
+            Put_Line (File, "        (" & Name & "'Class);");
             Put_Line (File, "");
          end Generate_Prefix_Body_Events;
 
@@ -5581,7 +5585,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      Surface   : Client.Surface'Class;");
                Put_Line (File, "      Inhibitor : in out Idle_Inhibitor_V1'Class) is");
                Put_Line (File, "   begin");
-               Put_Line (File, "      Inhibitor.Proxy := Thin.Idle_Inhibit_Manager_V1_Create_Inhibitor (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
+               Put_Line (File, "      Inhibitor.Proxy := Thin.Idle_Inhibit_Manager_V1_Create_Inhibitor");
+               Put_Line (File, "        (Object.Proxy, Thin_Client.Surface_Ptr (Surface.Get_Proxy));");
                Put_Line (File, "   end Create_Inhibitor;");
             elsif Name = "Idle_Inhibitor_V1" then
                null;
@@ -5608,7 +5613,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      Toplevel   : Xdg_Shell.Xdg_Toplevel'Class;");
                Put_Line (File, "      Decoration : in out Toplevel_Decoration_V1'Class) is");
                Put_Line (File, "   begin");
-               Put_Line (File, "      Decoration.Proxy := Thin.Decoration_Manager_V1_Get_Toplevel_Decoration (Object.Proxy, Thin_Xdg_Shell.Xdg_Toplevel_Ptr (Toplevel.Get_Proxy));");
+               Put_Line (File, "      Decoration.Proxy := Thin.Decoration_Manager_V1_Get_Toplevel_Decoration");
+               Put_Line (File, "        (Object.Proxy, Thin_Xdg_Shell.Xdg_Toplevel_Ptr (Toplevel.Get_Proxy));");
                Put_Line (File, "   end Get_Toplevel_Decoration;");
             elsif Name = "Toplevel_Decoration_V1" then
                Put_Line (File, "");

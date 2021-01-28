@@ -4,6 +4,18 @@
 [solution.context]
 solved = true
 [[solution.state]]
+crate = "wayland_ada_scanner"
+fulfilment = "missed"
+pinned = false
+transitivity = "indirect"
+versions = "^0.1.0"
+[[solution.state]]
+crate = "wayland_client_ada"
+fulfilment = "missed"
+pinned = false
+transitivity = "indirect"
+versions = "^0.1.0"
+[[solution.state]]
 crate = "wayland_protocols_ada"
 fulfilment = "linked"
 pinned = false

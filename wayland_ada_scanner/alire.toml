@@ -12,4 +12,4 @@ maintainers-logins = ["onox"]
 executables = ["wayland_ada_scanner"]
 
 [environment]
-PATH.append = "${CRATE_ROOT}/alire/build/bin"
+PATH.append = "${CRATE_ROOT}/build/bin"
