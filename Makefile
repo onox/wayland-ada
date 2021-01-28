@@ -14,7 +14,6 @@ tools: protocols
 libs: wayland protocols
 	cd wayland_egl_ada && alr build
 	cd wayland_cursor_ada && alr build
-	cd wayland_protocols_ada && alr build
 
 wayland: scanner
 	cd wayland_client_ada && alr build
