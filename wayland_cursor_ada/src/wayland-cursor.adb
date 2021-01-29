@@ -56,6 +56,8 @@ package body Wayland.Cursor is
       return Image_Index (Index) + Image_Index'First;
    end Index_At_Elapsed_Time;
 
+   function Length (Object : Cursor) return Natural is (Natural (Object.Handle.Count));
+
    function Image (Object : Cursor; Index : Image_Index) return Cursor_Image'Class is
       use type Cursor_API.Zero_Index;
 

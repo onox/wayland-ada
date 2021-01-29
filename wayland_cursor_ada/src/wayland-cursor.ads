@@ -44,6 +44,8 @@ package Wayland.Cursor is
       Time   : Duration;
       Next   : out Duration) return Image_Index;
 
+   function Length (Object : Cursor) return Natural;
+
    function Image (Object : Cursor; Index : Image_Index) return Cursor_Image'Class;
 
    -----------------------------------------------------------------------------
