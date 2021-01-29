@@ -7,7 +7,7 @@ solved = true
 crate = "libwayland"
 fulfilment = "solved"
 pinned = false
-transitivity = "indirect"
+transitivity = "direct"
 versions = "^1.16"
 [solution.state.release]
 description = "Wayland libraries and protocol"
