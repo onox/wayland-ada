@@ -239,7 +239,8 @@ package body Xml_Parser_Utils is
    end Find_Specified_Interface;
 
    function Is_Request_Destructor
-     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean is
+     (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean
+   is
       Result : Boolean := False;
 
       V : Wayland_XML.Request_Child_Vectors.Vector;
@@ -252,9 +253,8 @@ package body Xml_Parser_Utils is
 
       if Exists_Type_Attribute (Request_Tag)
         and then Type_Attribute (Request_Tag) = "destructor"
-        and then Name (Request_Tag) = "destroy"
-        and then V.Length = 0
       then
+         pragma Assert (V.Length = 0);
          Result := True;
       end if;
 
@@ -262,7 +262,8 @@ package body Xml_Parser_Utils is
    end Is_Request_Destructor;
 
    function Exists_Destructor
-     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean is
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean
+   is
       Result : Boolean := False;
    begin
       for Child of Children (Interface_Tag) loop
@@ -287,7 +288,8 @@ package body Xml_Parser_Utils is
    end Exists_Destructor;
 
    function Exists_Any_Event_Tag
-     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean is
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean
+   is
       Result : Boolean := False;
    begin
       for Child of Children (Interface_Tag) loop

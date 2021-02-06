@@ -512,8 +512,13 @@ procedure Wayland_Ada_Scanner is
                              (Event_Tag.all, Wayland_XML.Version_Number (V));
                         end if;
                      end;
+                  elsif Name (A.all) = "type" and Value (A.all) = "destructor" then
+                     --  FIXME Handle destructor events by destroying the proxy
+                     --  See https://gitlab.freedesktop.org/wayland/wayland/-/issues/96
+                     null;
                   else
-                     raise XML_Exception;
+                     raise XML_Exception with
+                       "Tag 'event' has unexpected attribute " & Value (A.all);
                   end if;
                end loop;
 
@@ -688,8 +693,12 @@ procedure Wayland_Ada_Scanner is
                      else
                         raise XML_Exception;
                      end if;
+                  elsif Child.Id = Node_Kind_Comment then
+                     --  Ignore any comments inside <enum>
+                     null;
                   else
-                     raise XML_Exception;
+                     raise XML_Exception with
+                       "Tag 'enum' has unexpected child " & Child.Id'Image;
                   end if;
                end loop;
 
@@ -3138,9 +3147,11 @@ procedure Wayland_Ada_Scanner is
                         end loop;
                      end Generate_Comment;
 
+                     Request_Name : constant String
+                       := Xml_Parser_Utils.Adaify_Name (Name (Request_Tag));
                      Subprogram_Name : constant String
                        := Xml_Parser_Utils.Adaify_Name
-                         (Name (Interface_Tag) & "_" & Name (Request_Tag));
+                         (Name (Interface_Tag) & "_" & Request_Name);
                      Name            : constant String
                        := Xml_Parser_Utils.Adaify_Name
                          (Wayland_XML.Name (Interface_Tag));
@@ -3176,8 +3187,8 @@ procedure Wayland_Ada_Scanner is
                         end loop;
                      end Generate_Pretty_Function_Code;
                   begin
+                     Put_Line (File, "");
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
-                        Put_Line (File, "");
                         if Enable_Comments and Exists_Description (Request_Tag) then
                            Generate_Comment
                              (Xml_Parser_Utils.Remove_Tabs (Description (Request_Tag)));
@@ -3220,9 +3231,9 @@ procedure Wayland_Ada_Scanner is
                            end if;
                         end if;
                      elsif Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
-                        null; -- Already has generated declaration earlier in Generate_Code_For_Destroy_Subprogram
+                        Generate_Pretty_Code_For_Subprogram
+                          (File, Declaration, Interface_Tag, Request_Name, "");
                      else
-                        Put_Line (File, "");
                         if Enable_Comments and Exists_Description (Request_Tag) then
                            Generate_Comment
                              (Xml_Parser_Utils.Remove_Tabs (Description (Request_Tag)));
@@ -3259,7 +3270,9 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Generate_Code_For_Get_Version_Subprogram_Declaration;
 
-               if Wayland_XML.Name (Interface_Tag) /= "wl_display" then
+               if Wayland_XML.Name (Interface_Tag) /= "wl_display"
+                 and then not Xml_Parser_Utils.Exists_Destructor (Interface_Tag)
+               then
                   Put_Line (File, "");
                   Generate_Code_For_Destroy_Subprogram_Declaration;
                end if;
@@ -3511,13 +3524,6 @@ procedure Wayland_Ada_Scanner is
                   Generate_Pretty_Code_For_Subprogram
                     (File, Implementation, Interface_Tag, "Destroy", "");
                   Put_Line (File, "   begin");
-
-                  if Xml_Parser_Utils.Exists_Destructor (Interface_Tag) then
-                     Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, Constants." &
-                       Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag) & "_Destroy") & ");");
-                     Put_Line (File, "");
-                  end if;
-
                   Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
                   Put_Line (File, "   end " & Name & "_Destroy;");
                end Generate_Code_For_Destroy_Subprogram_Implementations;
@@ -3527,9 +3533,12 @@ procedure Wayland_Ada_Scanner is
                   procedure Generate_Code_For_Subprogram_Implementation
                     (Request_Tag : aliased Wayland_XML.Request_Tag)
                   is
+                     Request_Name : constant String :=
+                       Xml_Parser_Utils.Adaify_Name (Name (Request_Tag));
+
                      Subprogram_Name : constant String
                        := Xml_Parser_Utils.Adaify_Name
-                            (Name (Interface_Tag) & "_" & Name (Request_Tag));
+                            (Name (Interface_Tag) & "_" & Request_Name);
                      Opcode : constant String := "Constants." & Subprogram_Name;
                      Name            : constant String
                        := Xml_Parser_Utils.Adaify_Name
@@ -3605,8 +3614,8 @@ procedure Wayland_Ada_Scanner is
 
                      function Align (Value : String) return String is (SF.Head (Value, Max_Name_Length, ' '));
                   begin
+                     Put_Line (File, "");
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
-                        Put_Line (File, "");
                         if Xml_Parser_Utils.Is_Interface_Specified (Request_Tag) then
                            declare
                               Return_Type : constant String := Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
@@ -3697,10 +3706,7 @@ procedure Wayland_Ada_Scanner is
                               Generate_Code_After_Arguments;
                            end if;
                         end if;
-                     elsif Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
-                        null; -- Body is generated in Generate_Code_For_Destroy_Subprogram_Implementation
                      else
-                        Put_Line (File, "");
                         if Xml_Parser_Utils.Number_Of_Args (Request_Tag) > 0 then
                            Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
@@ -3735,11 +3741,20 @@ procedure Wayland_Ada_Scanner is
                            Generate_Arguments (9, False);
 
                            Put_Line (File, ");");
+
+                           if Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
+                              Put_Line (File, "");
+                              Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
+                           end if;
                            Put_Line (File, "   end " & Subprogram_Name & ";");
                         else
                            Put_Line (File, "   procedure " & Subprogram_Name & " (" & Name & " : " & Ptr_Name & ") is");
                            Put_Line (File, "   begin");
                            Put_Line (File, "      Wayland.API.Proxy_Marshal (" & Name & ".all, " & Opcode & ");");
+                           if Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
+                              Put_Line (File, "");
+                              Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
+                           end if;
                            Put_Line (File, "   end " & Subprogram_Name & ";");
                         end if;
                      end if;
@@ -3764,7 +3779,9 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Generate_Code_For_Get_Version_Subprogram_Implementations (Name);
 
-               if Wayland_XML.Name (Interface_Tag) /= "wl_display" then
+               if Wayland_XML.Name (Interface_Tag) /= "wl_display"
+                 and then not Xml_Parser_Utils.Exists_Destructor (Interface_Tag)
+               then
                   Put_Line (File, "");
                   Generate_Code_For_Destroy_Subprogram_Implementations (Name);
                end if;
