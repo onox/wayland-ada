@@ -32,7 +32,7 @@ private package Wayland.Cursor_API is
 
    type Zero_Index is range 0 .. Natural'Last;
 
-   type Cursor_Image_Ptr_Array is array (Zero_Index range <>) of aliased not null Cursor_Image_Ptr
+   type Cursor_Image_Ptr_Array is array (Zero_Index range <>) of aliased Cursor_Image_Ptr
      with Convention => C;
 
    type Cursor is record

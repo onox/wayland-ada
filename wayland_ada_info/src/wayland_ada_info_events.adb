@@ -237,7 +237,7 @@ package body Wayland_Ada_Info_Events is
                end if;
 
                if Keyboard_Events.Subscribe (E.Keyboard) = Error then
-                  E.Keyboard.Destroy;
+                  E.Keyboard.Release;
                   raise Wayland_Error with "Failed to subscribe to keyboard events";
                end if;
             end if;
@@ -362,7 +362,7 @@ package body Wayland_Ada_Info_Events is
             end if;
 
             if Seat_Events.Subscribe (Seat) = Error then
-               Seat.Destroy;
+               Seat.Release;
                raise Wayland_Error with "Failed to subscribe to seat events";
             end if;
 
@@ -379,7 +379,7 @@ package body Wayland_Ada_Info_Events is
             end if;
 
             if Output_Events.Subscribe (Output) = Error then
-               Output.Destroy;
+               Output.Release;
                raise Wayland_Error with "Failed to subscribe to output events";
             end if;
 
