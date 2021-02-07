@@ -52,8 +52,8 @@ package Xml_Parser_Utils is
    function Is_Request_Destructor
      (Request_Tag : aliased Wayland_XML.Request_Tag) return Boolean;
 
-   function Exists_Destructor
-     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean;
+   function Get_Destructor
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return String;
 
    function Exists_Any_Event_Tag
      (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean;

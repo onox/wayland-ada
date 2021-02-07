@@ -261,10 +261,8 @@ package body Xml_Parser_Utils is
       return Result;
    end Is_Request_Destructor;
 
-   function Exists_Destructor
-     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean
-   is
-      Result : Boolean := False;
+   function Get_Destructor
+     (Interface_Tag : aliased Wayland_XML.Interface_Tag) return String is
    begin
       for Child of Children (Interface_Tag) loop
          case Child.Kind_Id is
@@ -274,8 +272,7 @@ package body Xml_Parser_Utils is
                null;
             when Child_Request =>
                if Is_Request_Destructor (Child.Request_Tag.all) then
-                  Result := True;
-                  exit;
+                  return Name (Child.Request_Tag.all);
                end if;
             when Child_Event =>
                null;
@@ -284,8 +281,8 @@ package body Xml_Parser_Utils is
          end case;
       end loop;
 
-      return Result;
-   end Exists_Destructor;
+      return "";
+   end Get_Destructor;
 
    function Exists_Any_Event_Tag
      (Interface_Tag : aliased Wayland_XML.Interface_Tag) return Boolean

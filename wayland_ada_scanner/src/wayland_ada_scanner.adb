@@ -1294,10 +1294,21 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
          end Generate_Spec_Utility_Functions;
 
-         procedure Generate_Spec_Destroy_Subprogram (Name : String) is
+         procedure Generate_Spec_Destroy_Subprogram
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String :=
+              Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+
+            Destructor_Name : constant String :=
+              Xml_Parser_Utils.Get_Destructor (Interface_Tag);
+
+            Request_Name : constant String :=
+              Xml_Parser_Utils.Adaify_Name
+                (if Destructor_Name /= "" then Destructor_Name else "Destroy");
          begin
             Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ")");
+            Put_Line (File, "   procedure " & Request_Name & " (Object : in out " & Name & ")");
             Put_Line (File, "     with Pre  => Object.Has_Proxy,");
             Put_Line (File, "          Post => not Object.Has_Proxy;");
          end Generate_Spec_Destroy_Subprogram;
@@ -1337,17 +1348,9 @@ procedure Wayland_Ada_Scanner is
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             if Name /= "Display" then
-               Generate_Spec_Destroy_Subprogram (Name);
+               Generate_Spec_Destroy_Subprogram (Interface_Tag);
             end if;
-
             Generate_Spec_Utility_Functions (Name);
-
-            if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Release (Object : in out " & Name & ")");
-               Put_Line (File, "     with Pre  => Object.Has_Proxy,");
-               Put_Line (File, "          Post => not Object.Has_Proxy;");
-            end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
                Generate_Spec_Bind_Subprogram (Name);
@@ -1888,7 +1891,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Xdg_Wm_Base" then
@@ -2113,7 +2116,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Presentation" then
@@ -2167,7 +2170,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Viewporter" then
@@ -2202,7 +2205,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Idle_Inhibit_Manager_V1" then
@@ -2227,7 +2230,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Decoration_Manager_V1" then
@@ -2280,7 +2283,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Relative_Pointer_Manager_V1" then
@@ -2330,7 +2333,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Pointer_Constraints_V1" then
@@ -2411,7 +2414,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Spec_Destroy_Subprogram (Name);
+            Generate_Spec_Destroy_Subprogram (Interface_Tag);
             Generate_Spec_Utility_Functions (Name);
 
             if Name in "Pointer_Gestures_V1" then
@@ -3271,7 +3274,7 @@ procedure Wayland_Ada_Scanner is
                Generate_Code_For_Get_Version_Subprogram_Declaration;
 
                if Wayland_XML.Name (Interface_Tag) /= "wl_display"
-                 and then not Xml_Parser_Utils.Exists_Destructor (Interface_Tag)
+                 and then Xml_Parser_Utils.Get_Destructor (Interface_Tag) = ""
                then
                   Put_Line (File, "");
                   Generate_Code_For_Destroy_Subprogram_Declaration;
@@ -3781,7 +3784,7 @@ procedure Wayland_Ada_Scanner is
                Generate_Code_For_Get_Version_Subprogram_Implementations (Name);
 
                if Wayland_XML.Name (Interface_Tag) /= "wl_display"
-                 and then not Xml_Parser_Utils.Exists_Destructor (Interface_Tag)
+                 and then Xml_Parser_Utils.Get_Destructor (Interface_Tag) = ""
                then
                   Put_Line (File, "");
                   Generate_Code_For_Destroy_Subprogram_Implementations (Name);
@@ -3811,16 +3814,27 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
          end Generate_Body_Utility_Functions;
 
-         procedure Generate_Body_Destroy_Subprogram (Name : String) is
+         procedure Generate_Body_Destroy_Subprogram
+           (Interface_Tag : aliased Wayland_XML.Interface_Tag)
+         is
+            Name : constant String :=
+              Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
+
+            Destructor_Name : constant String :=
+              Xml_Parser_Utils.Get_Destructor (Interface_Tag);
+
+            Request_Name : constant String :=
+              Xml_Parser_Utils.Adaify_Name
+                (if Destructor_Name /= "" then Destructor_Name else "Destroy");
          begin
             Put_Line (File, "");
-            Put_Line (File, "   procedure Destroy (Object : in out " & Name & ") is");
+            Put_Line (File, "   procedure " & Request_Name & " (Object : in out " & Name & ") is");
             Put_Line (File, "   begin");
             Put_Line (File, "      if Object.Proxy /= null then");
-            Put_Line (File, "         Thin." & Name & "_Destroy (Object.Proxy);");
+            Put_Line (File, "         Thin." & Name & "_" & Request_Name & " (Object.Proxy);");
             Put_Line (File, "         Object.Proxy := null;");
             Put_Line (File, "      end if;");
-            Put_Line (File, "   end Destroy;");
+            Put_Line (File, "   end " & Request_Name & ";");
          end Generate_Body_Destroy_Subprogram;
 
          procedure Generate_Body_Bind_Subprogram (Name : String) is
@@ -3876,21 +3890,9 @@ procedure Wayland_Ada_Scanner is
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
             if Name /= "Display" then
-               Generate_Body_Destroy_Subprogram (Name);
+               Generate_Body_Destroy_Subprogram (Interface_Tag);
             end if;
-
             Generate_Body_Utility_Functions (Name);
-
-            if Name in "Data_Device" | "Seat" | "Pointer" | "Keyboard" | "Touch" | "Output" then
-               Put_Line (File, "");
-               Put_Line (File, "   procedure Release (Object : in out " & Name & ") is");
-               Put_Line (File, "   begin");
-               Put_Line (File, "      if Object.Proxy /= null then");
-               Put_Line (File, "         Thin." & Name & "_Release (Object.Proxy);");
-               Put_Line (File, "         Object.Proxy := null;");
-               Put_Line (File, "      end if;");
-               Put_Line (File, "   end Release;");
-            end if;
 
             if Name in "Compositor" | "Seat" | "Shm" | "Output" then
                Generate_Body_Bind_Subprogram (Name);
@@ -4997,7 +4999,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Xdg_Wm_Base" then
@@ -5412,7 +5414,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Presentation" then
@@ -5553,7 +5555,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Viewporter" then
@@ -5593,7 +5595,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Idle_Inhibit_Manager_V1" then
@@ -5621,7 +5623,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Decoration_Manager_V1" then
@@ -5697,7 +5699,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Relative_Pointer_Manager_V1" then
@@ -5787,7 +5789,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Pointer_Constraints_V1" then
@@ -5942,7 +5944,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            Generate_Body_Destroy_Subprogram (Name);
+            Generate_Body_Destroy_Subprogram (Interface_Tag);
             Generate_Body_Utility_Functions (Name);
 
             if Name in "Pointer_Gestures_V1" then
