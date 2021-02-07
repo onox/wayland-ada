@@ -1489,8 +1489,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Actions (Object           : Data_Offer;");
-               Put_Line (File, "                          Dnd_Actions      : Unsigned_32;");
-               Put_Line (File, "                          Preferred_Action : Unsigned_32)");
+               Put_Line (File, "                          Dnd_Actions      : Data_Device_Manager_Dnd_Action;");
+               Put_Line (File, "                          Preferred_Action : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
             elsif Name = "Data_Source" then
                Put_Line (File, "");
@@ -1499,7 +1499,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Actions (Object      : Data_Source;");
-               Put_Line (File, "                          Dnd_Actions : Unsigned_32)");
+               Put_Line (File, "                          Dnd_Actions : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
             elsif Name = "Data_Device" then
                Put_Line (File, "");
@@ -1662,11 +1662,11 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "      with procedure Source_Actions");
                Put_Line (File, "        (Data_Offer     : in out Client.Data_Offer'Class;");
-               Put_Line (File, "         Source_Actions : Unsigned_32) is null;");
+               Put_Line (File, "         Source_Actions : Data_Device_Manager_Dnd_Action) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Action");
                Put_Line (File, "        (Data_Offer : in out Client.Data_Offer'Class;");
-               Put_Line (File, "         Dnd_Action : Unsigned_32) is null;");
+               Put_Line (File, "         Dnd_Action : Data_Device_Manager_Dnd_Action) is null;");
             elsif Name = "Data_Source" then
                Put_Line (File, "      with procedure Target");
                Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
@@ -1688,7 +1688,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "      with procedure Action");
                Put_Line (File, "        (Data_Source : in out Client.Data_Source'Class;");
-               Put_Line (File, "         Dnd_Action  : Unsigned_32) is null;");
+               Put_Line (File, "         Dnd_Action  : Data_Device_Manager_Dnd_Action) is null;");
             elsif Name = "Data_Device" then
                Put_Line (File, "      with procedure Data_Offer");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
@@ -3602,7 +3602,8 @@ procedure Wayland_Ada_Scanner is
                            From : constant String := String_Maps.Key (Cursor);
                            To   : constant String := String_Maps.Element (Cursor);
                         begin
-                           Put_Line (File, "      function Convert is new Ada.Unchecked_Conversion (" & From & ", " & To & ");");
+                           Put_Line (File, "      function Convert is new Ada.Unchecked_Conversion");
+                           Put_Line (File, "        (" & From & ", " & To & ");");
                         end Generate_Convert;
                      begin
                         Enum_Types.Iterate (Generate_Convert'Access);
@@ -4064,13 +4065,13 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Source_Actions");
                Put_Line (File, "        (Data           : Void_Ptr;");
                Put_Line (File, "         Data_Offer     : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Source_Actions : Unsigned_32)");
+               Put_Line (File, "         Source_Actions : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Action");
                Put_Line (File, "        (Data       : Void_Ptr;");
                Put_Line (File, "         Data_Offer : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Dnd_Action : Unsigned_32)");
+               Put_Line (File, "         Dnd_Action : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Offer");
@@ -4088,7 +4089,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Source_Actions");
                Put_Line (File, "        (Data           : Void_Ptr;");
                Put_Line (File, "         Data_Offer     : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Source_Actions : Unsigned_32)");
+               Put_Line (File, "         Source_Actions : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);");
                Put_Line (File, "      begin");
@@ -4099,7 +4100,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Action");
                Put_Line (File, "        (Data       : Void_Ptr;");
                Put_Line (File, "         Data_Offer : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Dnd_Action : Unsigned_32)");
+               Put_Line (File, "         Dnd_Action : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);");
                Put_Line (File, "      begin");
@@ -4143,7 +4144,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Action");
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr;");
-               Put_Line (File, "         Dnd_Action  : Unsigned_32)");
+               Put_Line (File, "         Dnd_Action  : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Target");
@@ -4201,7 +4202,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Action");
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Source : Thin.Data_Source_Ptr;");
-               Put_Line (File, "         Dnd_Action  : Unsigned_32)");
+               Put_Line (File, "         Dnd_Action  : Data_Device_Manager_Dnd_Action)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Source);");
                Put_Line (File, "      begin");
@@ -6395,8 +6396,8 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   end Finish;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Set_Actions (Object           : Data_Offer;");
-            Put_Line (File, "                          Dnd_Actions      : Unsigned_32;");
-            Put_Line (File, "                          Preferred_Action : Unsigned_32) is");
+            Put_Line (File, "                          Dnd_Actions      : Data_Device_Manager_Dnd_Action;");
+            Put_Line (File, "                          Preferred_Action : Data_Device_Manager_Dnd_Action) is");
             Put_Line (File, "   begin");
             Put_Line (File, "      Thin.Data_Offer_Set_Actions");
             Put_Line (File, "        (Object.Proxy, Dnd_Actions, Preferred_Action);");
@@ -6550,7 +6551,7 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   end Offer;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Set_Actions (Object      : Data_Source;");
-            Put_Line (File, "                          Dnd_Actions : Unsigned_32) is");
+            Put_Line (File, "                          Dnd_Actions : Data_Device_Manager_Dnd_Action) is");
             Put_Line (File, "   begin");
             Put_Line (File, "      Thin.Data_Source_Set_Actions (Object.Proxy, Dnd_Actions);");
             Put_Line (File, "   end Set_Actions;");
