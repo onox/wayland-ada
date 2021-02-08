@@ -1334,8 +1334,8 @@ procedure Wayland_Ada_Scanner is
          begin
             Put_Line (File, "   package " & Name & "_Events is");
             Put_Line (File, "");
-            Put_Line (File, "      function Subscribe");
-            Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
+            Put_Line (File, "      procedure Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class)");
             Put_Line (File, "      with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
             Put_Line (File, "   end " & Name & "_Events;");
@@ -3880,6 +3880,13 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "         return (if I = 0 then Success else Error);");
             Put_Line (File, "      end Subscribe;");
             Put_Line (File, "");
+            Put_Line (File, "      procedure Subscribe");
+            Put_Line (File, "        (Object : aliased in out " & Name & "'Class)");
+            Put_Line (File, "      is");
+            Put_Line (File, "         Result : constant Call_Result_Code := Subscribe (Object);");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         pragma Assert (Result = Success);");
+            Put_Line (File, "      end Subscribe;");
             Put_Line (File, "   end " & Name & "_Events;");
          end Generate_Suffix_Body_Events;
 

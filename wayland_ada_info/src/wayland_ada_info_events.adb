@@ -236,10 +236,7 @@ package body Wayland_Ada_Info_Events is
                   raise Wayland_Error with "No keyboard";
                end if;
 
-               if Keyboard_Events.Subscribe (E.Keyboard) = Error then
-                  E.Keyboard.Release;
-                  raise Wayland_Error with "Failed to subscribe to keyboard events";
-               end if;
+               Keyboard_Events.Subscribe (E.Keyboard);
             end if;
          end if;
       end loop;
@@ -347,10 +344,7 @@ package body Wayland_Ada_Info_Events is
             raise Wayland_Error with "No shm";
          end if;
 
-         if Shm_Events.Subscribe (Shm) = Error then
-            Shm.Destroy;
-            raise Wayland_Error with "Failed to subscribe to shm events";
-         end if;
+         Shm_Events.Subscribe (Shm);
       elsif Name = WP.Client.Seat_Interface.Name then
          declare
             Seat : WP.Client.Seat renames Seats (Seat_Last_Index + 1).Seat;
@@ -361,10 +355,7 @@ package body Wayland_Ada_Info_Events is
                raise Wayland_Error with "No seat";
             end if;
 
-            if Seat_Events.Subscribe (Seat) = Error then
-               Seat.Release;
-               raise Wayland_Error with "Failed to subscribe to seat events";
-            end if;
+            Seat_Events.Subscribe (Seat);
 
             Seat_Last_Index := Seat_Last_Index + 1;
          end;
@@ -378,10 +369,7 @@ package body Wayland_Ada_Info_Events is
                raise Wayland_Error with "No output";
             end if;
 
-            if Output_Events.Subscribe (Output) = Error then
-               Output.Release;
-               raise Wayland_Error with "Failed to subscribe to output events";
-            end if;
+            Output_Events.Subscribe (Output);
 
             Output_Last_Index := Output_Last_Index + 1;
          end;
@@ -392,10 +380,7 @@ package body Wayland_Ada_Info_Events is
             raise Wayland_Error with "No presentation";
          end if;
 
-         if Presentation_Events.Subscribe (Presentation) = Error then
-            Presentation.Destroy;
-            raise Wayland_Error with "Failed to subscribe to presentation events";
-         end if;
+         Presentation_Events.Subscribe (Presentation);
       end if;
    end Global_Registry_Handler;
 
@@ -416,10 +401,7 @@ package body Wayland_Ada_Info_Events is
          raise Wayland_Error with "No global registry";
       end if;
 
-      if Registry_Events.Subscribe (Registry) = Error then
-         Registry.Destroy;
-         raise Wayland_Error with "Failed to subscribe to registry events";
-      end if;
+      Registry_Events.Subscribe (Registry);
 
       Display.Roundtrip;
       Display.Roundtrip;
