@@ -512,6 +512,8 @@ package Wayland_XML is
 
    type Interface_Tag is limited private;
 
+   function Exists_Events (This : aliased Interface_Tag) return Boolean;
+
    procedure Set_Name
      (This    : in out Interface_Tag;
       Value   :        String) with

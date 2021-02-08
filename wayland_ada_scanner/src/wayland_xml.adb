@@ -276,17 +276,18 @@ package body Wayland_XML is
    end Exists_Description;
 
    function Description (This : aliased Request_Tag) return String is
-      C : Request_Child;
    begin
       for Child of Children (This) loop
          if Child.Kind_Id = Child_Description then
-            C := Child;
-            exit;
+            return Text (Child.Description_Tag.all);
          end if;
       end loop;
 
-      return Text (C.Description_Tag.all);
+      raise Program_Error;
    end Description;
+
+   function Exists_Events (This : aliased Interface_Tag) return Boolean is
+     (for some Child of Children (This) => Child.Kind_Id = Child_Event);
 
    procedure Set_Name (This    : in out Interface_Tag;
                        Value   : String)
