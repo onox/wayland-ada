@@ -1313,6 +1313,25 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "          Post => not Object.Has_Proxy;");
          end Generate_Spec_Destroy_Subprogram;
 
+         procedure Generate_Spec_User_Data_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "");
+            Put_Line (File, "   generic");
+            Put_Line (File, "      type Data_Type is limited private;");
+            Put_Line (File, "   package " & Name & "_User_Data is");
+            Put_Line (File, "");
+            Put_Line (File, "      procedure Set_Data");
+            Put_Line (File, "        (Object  : " & Name & "'Class;");
+            Put_Line (File, "         Subject : aliased in out Data_Type)");
+            Put_Line (File, "      with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "      function Get_Data");
+            Put_Line (File, "        (Object  : " & Name & "'Class) return access Data_Type");
+            Put_Line (File, "      with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_User_Data;");
+         end Generate_Spec_User_Data_Subprogram;
+
          procedure Generate_Spec_Bind_Subprogram (Name : String) is
          begin
             Put_Line (File, "");
@@ -2477,6 +2496,10 @@ procedure Wayland_Ada_Scanner is
                Generate_Spec_Destroy_Subprogram (Interface_Tag);
             end if;
             Generate_Spec_Utility_Functions (Name);
+
+            if Protocol_Name /= "client" or Name /= "Display" then
+               Generate_Spec_User_Data_Subprogram (Name);
+            end if;
          end Handle_Interface_Common_Subprograms;
 
          procedure Handle_Interface_Common_Events
@@ -3842,6 +3865,48 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "      end if;");
             Put_Line (File, "   end " & Request_Name & ";");
          end Generate_Body_Destroy_Subprogram;
+
+         procedure Generate_Body_User_Data_Subprogram (Name : String) is
+         begin
+            Put_Line (File, "   package body " & Name & "_User_Data is");
+            Put_Line (File, "");
+            Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (Data_Type);");
+            Put_Line (File, "");
+            Put_Line (File, "      function Set_Data");
+            Put_Line (File, "        (Object  : " & Name & "'Class;");
+            Put_Line (File, "         Subject : aliased in out Data_Type) return Call_Result_Code is");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         Thin." & Name & "_Set_User_Data");
+            Put_Line (File, "           (Object.Proxy, Conversion.To_Address (Subject'Access));");
+            Put_Line (File, "         return Success;");
+            Put_Line (File, "      end Set_Data;");
+            Put_Line (File, "");
+            Put_Line (File, "      procedure Set_Data");
+            Put_Line (File, "        (Object  : " & Name & "'Class;");
+            Put_Line (File, "         Subject : aliased in out Data_Type)");
+            Put_Line (File, "      is");
+            Put_Line (File, "         Result : constant Call_Result_Code := Set_Data (Object, Subject);");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         pragma Assert (Result = Success);");
+            Put_Line (File, "      end Set_Data;");
+            Put_Line (File, "");
+            Put_Line (File, "      function Get_Data");
+            Put_Line (File, "        (Object  : " & Name & "'Class) return access Data_Type");
+            Put_Line (File, "      is");
+            Put_Line (File, "         Subject_Address : constant Void_Ptr :=");
+            Put_Line (File, "           Thin." & Name & "_Get_User_Data (Object.Proxy);");
+            Put_Line (File, "");
+            Put_Line (File, "         use type Void_Ptr;");
+            Put_Line (File, "      begin");
+            Put_Line (File, "         if Subject_Address /= System.Null_Address then");
+            Put_Line (File, "            return Conversion.To_Pointer (Subject_Address).all'Access;");
+            Put_Line (File, "         else");
+            Put_Line (File, "            return null;");
+            Put_Line (File, "         end if;");
+            Put_Line (File, "      end Get_Data;");
+            Put_Line (File, "");
+            Put_Line (File, "   end " & Name & "_User_Data;");
+         end Generate_Body_User_Data_Subprogram;
 
          procedure Generate_Body_Bind_Subprogram (Name : String) is
          begin
@@ -6585,6 +6650,10 @@ procedure Wayland_Ada_Scanner is
                Generate_Body_Destroy_Subprogram (Interface_Tag);
             end if;
             Generate_Body_Utility_Functions (Name);
+
+            if Protocol_Name /= "client" or Name /= "Display" then
+               Generate_Body_User_Data_Subprogram (Name);
+            end if;
          end Handle_Interface_Common_Subprograms;
 
          procedure Handle_Interface_Common_Events
