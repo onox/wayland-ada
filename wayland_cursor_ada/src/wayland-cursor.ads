@@ -27,9 +27,23 @@ package Wayland.Cursor is
 
    type Cursor_Image is tagged limited private;
 
+   type Image_State is record
+      Width, Height, Hotspot_X, Hotspot_Y : Natural;
+      Interval                            : Duration;
+   end record;
+
+   function State (Object : Cursor_Image) return Image_State;
+
    function Get_Buffer
      (Object : in out Cursor_Image) return Wayland.Protocols.Client.Buffer'Class
    with Post => Get_Buffer'Result.Has_Proxy;
+   --  Return the buffer of the image
+   --
+   --  The buffer can be attached to a separate surface. After the surface
+   --  has been committed, it can be set via the procedure Set_Cursor of a
+   --  Pointer object.
+   --
+   --  The buffer must not be destroyed.
 
    -----------------------------------------------------------------------------
 
@@ -44,7 +58,7 @@ package Wayland.Cursor is
       Time   : Duration;
       Next   : out Duration) return Image_Index;
 
-   function Length (Object : Cursor) return Natural;
+   function Length (Object : Cursor) return Positive;
 
    function Image (Object : Cursor; Index : Image_Index) return Cursor_Image'Class;
 
@@ -54,11 +68,12 @@ package Wayland.Cursor is
 
    function Is_Initialized (Object : Cursor_Theme) return Boolean;
 
-   function Load_Theme
-     (Name : String;
-      Size : Positive;
-      Shm  : Wayland.Protocols.Client.Shm) return Cursor_Theme
-   with Post => Load_Theme'Result.Is_Initialized and Shm.Has_Proxy;
+   procedure Load_Theme
+     (Object : in out Cursor_Theme;
+      Name   : String;
+      Size   : Positive;
+      Shm    : Wayland.Protocols.Client.Shm)
+   with Post => Object.Is_Initialized and Shm.Has_Proxy;
 
    procedure Destroy (Object : in out Cursor_Theme)
      with Pre  => Object.Is_Initialized,

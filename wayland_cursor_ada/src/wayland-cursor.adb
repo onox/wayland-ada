@@ -18,6 +18,17 @@ with Interfaces.C.Strings;
 
 package body Wayland.Cursor is
 
+   function State (Object : Cursor_Image) return Image_State is
+      Image : constant Cursor_API.Cursor_Image := Object.Handle.all;
+   begin
+      return
+        (Width       => Natural (Image.Width),
+         Height      => Natural (Image.Height),
+         Hotspot_X   => Natural (Image.Hotspot_X),
+         Hotspot_Y   => Natural (Image.Hotspot_Y),
+         Interval    => Duration (Image.Delay_In_Milliseconds) / 1e3);
+   end State;
+
    function Get_Buffer
      (Object : in out Cursor_Image) return Wayland.Protocols.Client.Buffer'Class is
    begin
@@ -56,7 +67,7 @@ package body Wayland.Cursor is
       return Image_Index (Index) + Image_Index'First;
    end Index_At_Elapsed_Time;
 
-   function Length (Object : Cursor) return Natural is (Natural (Object.Handle.Count));
+   function Length (Object : Cursor) return Positive is (Positive (Object.Handle.Count));
 
    function Image (Object : Cursor; Index : Image_Index) return Cursor_Image'Class is
       use type Cursor_API.Zero_Index;
@@ -85,10 +96,11 @@ package body Wayland.Cursor is
 
    function Is_Initialized (Object : Cursor_Theme) return Boolean is (Object.Handle /= null);
 
-   function Load_Theme
-     (Name : String;
-      Size : Positive;
-      Shm  : Wayland.Protocols.Client.Shm) return Cursor_Theme
+   procedure Load_Theme
+     (Object : in out Cursor_Theme;
+      Name   : String;
+      Size   : Positive;
+      Shm    : Wayland.Protocols.Client.Shm)
    is
       C_Name : CS.chars_ptr := CS.New_String (Name);
 
@@ -102,7 +114,7 @@ package body Wayland.Cursor is
          raise Constraint_Error;
       end if;
 
-      return (Handle => Handle);
+      Object.Handle := Handle;
    end Load_Theme;
 
    procedure Destroy (Object : in out Cursor_Theme) is
