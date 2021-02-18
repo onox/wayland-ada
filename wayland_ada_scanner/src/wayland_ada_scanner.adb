@@ -958,10 +958,6 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   function Get_Proxy (Object : Output) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
-            Put_Line (File, "");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Buffer is (Proxy => Thin.Buffer_Ptr (Proxy));");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output is (Proxy => Thin.Output_Ptr (Proxy));");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface is (Proxy => Thin.Surface_Ptr (Proxy));");
          elsif Protocol_Name = "xdg_shell" then
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy is (Secret_Proxy (Object.Proxy));");
@@ -1059,9 +1055,11 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   function Get_Proxy (Object : Pointer) return Secret_Proxy;");
             Put_Line (File, "   function Get_Proxy (Object : Region) return Secret_Proxy;");
             Put_Line (File, "");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Buffer;");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Output;");
-            Put_Line (File, "   function Set_Proxy (Proxy : Secret_Proxy) return Surface;");
+            Put_Line (File, "   package Constructors is");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Buffer;");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Output;");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Surface;");
+            Put_Line (File, "   end Constructors;");
          elsif Protocol_Name = "xdg_shell" then
             Put_Line (File, "");
             Put_Line (File, "   function Get_Proxy (Object : Xdg_Toplevel) return Secret_Proxy;");
@@ -3432,6 +3430,20 @@ procedure Wayland_Ada_Scanner is
          New_Line (File);
          Put_Line (File, "package body Wayland.Protocols." & Package_Name & " is");
          New_Line (File);
+
+         if Protocol_Name = "client" then
+            Put_Line (File, "   package body Constructors is");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Buffer is");
+            Put_Line (File, "         (Proxy => Thin.Buffer_Ptr (Proxy));");
+            Put_Line (File, "");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Output is");
+            Put_Line (File, "         (Proxy => Thin.Output_Ptr (Proxy));");
+            Put_Line (File, "");
+            Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Surface is");
+            Put_Line (File, "         (Proxy => Thin.Surface_Ptr (Proxy));");
+            Put_Line (File, "   end Constructors;");
+            Put_Line (File, "");
+         end if;
 
          Generate_Manually_Edited_Code (Protocol_Name);
 
@@ -6004,7 +6016,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
                Put_Line (File, "");
-               Put_Line (File, "         O : constant Protocols.Client.Output := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Output));");
+               Put_Line (File, "         O : constant Protocols.Client.Output :=");
+               Put_Line (File, "           Protocols.Client.Constructors.Set_Proxy (Proxy => Secret_Proxy (Output));");
                Put_Line (File, "      begin");
                Put_Line (File, "         Synchronized_Output (Conversion.To_Pointer (Data).all, O);");
                Put_Line (File, "      end Internal_Sync_Output;");
@@ -6517,7 +6530,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
                Put_Line (File, "");
-               Put_Line (File, "         S : constant Protocols.Client.Surface := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Surface));");
+               Put_Line (File, "         S : constant Protocols.Client.Surface :=");
+               Put_Line (File, "           Protocols.Client.Constructors.Set_Proxy (Proxy => Secret_Proxy (Surface));");
                Put_Line (File, "      begin");
                Put_Line (File, "         Gesture_Begin (Conversion.To_Pointer (Data).all, Serial, Timestamp, S, Fingers);");
                Put_Line (File, "      end Internal_Begin;");
@@ -6595,7 +6609,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "         Timestamp : constant Duration := Duration (Time) / 1e3;");
                Put_Line (File, "");
-               Put_Line (File, "         S : constant Protocols.Client.Surface := Protocols.Client.Set_Proxy (Proxy => Secret_Proxy (Surface));");
+               Put_Line (File, "         S : constant Protocols.Client.Surface :=");
+               Put_Line (File, "           Protocols.Client.Constructors.Set_Proxy (Proxy => Secret_Proxy (Surface));");
                Put_Line (File, "      begin");
                Put_Line (File, "         Gesture_Begin (Conversion.To_Pointer (Data).all, Serial, Timestamp, S, Fingers);");
                Put_Line (File, "      end Internal_Begin;");

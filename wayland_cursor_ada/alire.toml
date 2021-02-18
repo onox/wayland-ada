@@ -15,6 +15,4 @@ linux = true
 
 [[depends-on]]
 wayland_client_ada = "^0.1.0"
-
-[[depends-on]]
 libwayland = "^1.16"

@@ -32,7 +32,7 @@ package body Wayland.Cursor is
    function Get_Buffer
      (Object : in out Cursor_Image) return Wayland.Protocols.Client.Buffer'Class is
    begin
-      return Wayland.Protocols.Client.Set_Proxy
+      return Wayland.Protocols.Client.Constructors.Set_Proxy
         (Cursor_API.Cursor_Image_Get_Buffer (Object.Handle));
    end Get_Buffer;
 
