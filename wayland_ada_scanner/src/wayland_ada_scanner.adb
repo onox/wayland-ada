@@ -1284,6 +1284,9 @@ procedure Wayland_Ada_Scanner is
          procedure Generate_Spec_Utility_Functions (Name : String) is
          begin
             Put_Line (File, "");
+            Put_Line (File, "   function Get_ID (Object : " & Name & ") return Unsigned_32");
+            Put_Line (File, "     with Pre => Object.Has_Proxy;");
+            Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32");
             Put_Line (File, "     with Pre => Object.Has_Proxy;");
             Put_Line (File, "");
@@ -3144,6 +3147,12 @@ procedure Wayland_Ada_Scanner is
                     (File, Declaration, Interface_Tag, "Get_User_Data", "Void_Ptr");
                end Generate_Code_For_Get_User_Data_Subprogram_Declaration;
 
+               procedure Generate_Code_For_Get_ID_Subprogram_Declaration is
+               begin
+                  Generate_Pretty_Code_For_Subprogram
+                    (File, Declaration, Interface_Tag, "Get_ID", "Unsigned_32");
+               end Generate_Code_For_Get_ID_Subprogram_Declaration;
+
                procedure Generate_Code_For_Get_Version_Subprogram_Declaration is
                begin
                   Generate_Pretty_Code_For_Subprogram
@@ -3297,6 +3306,8 @@ procedure Wayland_Ada_Scanner is
                Generate_Code_For_Set_User_Data_Subprogram_Declaration;
                Put_Line (File, "");
                Generate_Code_For_Get_User_Data_Subprogram_Declaration;
+               Put_Line (File, "");
+               Generate_Code_For_Get_ID_Subprogram_Declaration;
                Put_Line (File, "");
                Generate_Code_For_Get_Version_Subprogram_Declaration;
 
@@ -3553,6 +3564,15 @@ procedure Wayland_Ada_Scanner is
                   Put_Line (File, "      return Wayland.API.Proxy_Get_User_Data (" & Name & ".all);");
                   Put_Line (File, "   end " & Name & "_Get_User_Data;");
                end Generate_Code_For_Get_User_Data_Subprogram_Implementations;
+
+               procedure Generate_Code_For_Get_ID_Subprogram_Implementations (Name : String) is
+               begin
+                  Generate_Pretty_Code_For_Subprogram
+                    (File, Implementation, Interface_Tag, "Get_ID", "Unsigned_32");
+                  Put_Line (File, "   begin");
+                  Put_Line (File, "      return Wayland.API.Proxy_Get_Id (" & Name & ".all);");
+                  Put_Line (File, "   end " & Name & "_Get_ID;");
+               end Generate_Code_For_Get_ID_Subprogram_Implementations;
 
                procedure Generate_Code_For_Get_Version_Subprogram_Implementations (Name : String) is
                begin
@@ -3822,6 +3842,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Generate_Code_For_Get_User_Data_Subprogram_Implementations (Name);
                Put_Line (File, "");
+               Generate_Code_For_Get_ID_Subprogram_Implementations (Name);
+               Put_Line (File, "");
                Generate_Code_For_Get_Version_Subprogram_Implementations (Name);
 
                if Wayland_XML.Name (Interface_Tag) /= "wl_display"
@@ -3844,6 +3866,9 @@ procedure Wayland_Ada_Scanner is
       procedure Generate_Manually_Edited_Code (Protocol_Name : String) is
          procedure Generate_Body_Utility_Functions (Name : String) is
          begin
+            Put_Line (File, "");
+            Put_Line (File, "   function Get_ID (Object : " & Name & ") return Unsigned_32 is");
+            Put_Line (File, "     (Thin." & Name & "_Get_ID (Object.Proxy));");
             Put_Line (File, "");
             Put_Line (File, "   function Get_Version (Object : " & Name & ") return Unsigned_32 is");
             Put_Line (File, "     (Thin." & Name & "_Get_Version (Object.Proxy));");

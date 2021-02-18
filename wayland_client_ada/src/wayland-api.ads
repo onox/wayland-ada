@@ -345,8 +345,8 @@ private package Wayland.API is
    function Proxy_Get_Version (Object : in out Proxy) return Unsigned_32
      with Import, Convention => C, External_Name => "wl_proxy_get_version";
 
---   function Proxy_Get_Id (Object : in out Proxy) return Unsigned_32
---     with Import, Convention => C, External_Name => "wl_proxy_get_id";
+   function Proxy_Get_Id (Object : in out Proxy) return Unsigned_32
+     with Import, Convention => C, External_Name => "wl_proxy_get_id";
 
 --   function Proxy_Get_Class (Object : in out Proxy) return Interfaces.C.Strings.chars_ptr
 --     with Import, Convention => C, External_Name => "wl_proxy_get_class";
