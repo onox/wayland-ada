@@ -1318,7 +1318,7 @@ procedure Wayland_Ada_Scanner is
          begin
             Put_Line (File, "");
             Put_Line (File, "   generic");
-            Put_Line (File, "      type Data_Type is limited private;");
+            Put_Line (File, "      type Data_Type (<>) is limited private;");
             Put_Line (File, "   package " & Name & "_User_Data is");
             Put_Line (File, "");
             Put_Line (File, "      procedure Set_Data");
@@ -3905,6 +3905,7 @@ procedure Wayland_Ada_Scanner is
 
          procedure Generate_Body_User_Data_Subprogram (Name : String) is
          begin
+            Put_Line (File, "");
             Put_Line (File, "   package body " & Name & "_User_Data is");
             Put_Line (File, "");
             Put_Line (File, "      package Conversion is new System.Address_To_Access_Conversions (Data_Type);");
