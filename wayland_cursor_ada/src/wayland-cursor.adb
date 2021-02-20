@@ -47,7 +47,7 @@ package body Wayland.Cursor is
       Index : constant Cursor_API.Zero_Index :=
         Cursor_API.Cursor_Frame (Object.Handle, Milliseconds);
    begin
-      return Image_Index (Index) + Image_Index'First;
+      return Image_Index'Base (Index) + Image_Index'First;
    end Index_At_Elapsed_Time;
 
    function Index_At_Elapsed_Time
@@ -64,7 +64,7 @@ package body Wayland.Cursor is
           (Object.Handle, Milliseconds, Milliseconds_Until_Next);
    begin
       Next := Duration (Milliseconds_Until_Next) / 1e3;
-      return Image_Index (Index) + Image_Index'First;
+      return Image_Index'Base (Index) + Image_Index'First;
    end Index_At_Elapsed_Time;
 
    function Length (Object : Cursor) return Positive is (Positive (Object.Handle.Count));
