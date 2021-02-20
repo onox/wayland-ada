@@ -1367,7 +1367,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+            if Name in "Compositor" | "Seat" | "Shm" | "Output" | "Data_Device_Manager" then
                Generate_Spec_Bind_Subprogram (Name);
             end if;
 
@@ -4446,7 +4446,7 @@ procedure Wayland_Ada_Scanner is
             Name : constant String
               := Xml_Parser_Utils.Adaify_Name (Wayland_XML.Name (Interface_Tag));
          begin
-            if Name in "Compositor" | "Seat" | "Shm" | "Output" then
+            if Name in "Compositor" | "Seat" | "Shm" | "Output" | "Data_Device_Manager" then
                Generate_Body_Bind_Subprogram (Name);
             end if;
          end Handle_Interface_Client;
