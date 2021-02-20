@@ -1541,7 +1541,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "   procedure Get_Data_Device (Object : Data_Device_Manager;");
                Put_Line (File, "                              Seat   : Client.Seat'Class;");
                Put_Line (File, "                              Device : in out Data_Device'Class)");
-               Put_Line (File, "     with Pre => Object.Has_Proxy;");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and Seat.Has_Proxy;");
             elsif Name = "Surface" then
                Put_Line (File, "");
                Put_Line (File, "   procedure Attach (Object : Surface;");
@@ -1710,7 +1710,7 @@ procedure Wayland_Ada_Scanner is
             elsif Name = "Data_Device" then
                Put_Line (File, "      with procedure Data_Offer");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
-               Put_Line (File, "         Id          : Unsigned_32) is null;");
+               Put_Line (File, "         Data_Offer  : Client.Data_Offer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Enter");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
@@ -4775,7 +4775,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Data_Offer");
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Device : Thin.Data_Device_Ptr;");
-               Put_Line (File, "         Id          : Unsigned_32)");
+               Put_Line (File, "         Id          : Thin.Data_Offer_Ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Enter");
@@ -4813,11 +4813,13 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Data_Offer");
                Put_Line (File, "        (Data        : Void_Ptr;");
                Put_Line (File, "         Data_Device : Thin.Data_Device_Ptr;");
-               Put_Line (File, "         Id          : Unsigned_32)");
+               Put_Line (File, "         Id          : Thin.Data_Offer_Ptr)");
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
+               Put_Line (File, "");
+               Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
                Put_Line (File, "      begin");
-               Put_Line (File, "         Data_Offer (Conversion.To_Pointer (Data).all, Id);");
+               Put_Line (File, "         Data_Offer (Conversion.To_Pointer (Data).all, Offer);");
                Put_Line (File, "      end Internal_Data_Offer;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Enter");

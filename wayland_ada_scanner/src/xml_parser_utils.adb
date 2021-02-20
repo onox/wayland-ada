@@ -162,9 +162,7 @@ package body Xml_Parser_Utils is
             Set_Unbounded_String (N, "chars_ptr");
          when Type_FD =>
             Set_Unbounded_String (N, "File_Descriptor");
-         when Type_New_Id =>
-            Set_Unbounded_String (N, "Unsigned_32");
-         when Type_Object =>
+         when Type_New_Id | Type_Object =>
             if Exists_Interface_Attribute (Arg_Tag) then
                Set_Unbounded_String
                  (N, Adaify_Name (Interface_Attribute (Arg_Tag)) & "_Ptr");
