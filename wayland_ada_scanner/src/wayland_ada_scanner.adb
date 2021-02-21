@@ -1293,6 +1293,13 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "   function Has_Proxy (Object : " & Name & ") return Boolean;");
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean;");
+
+            if Protocol_Name = "client" and Name in "Data_Offer" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Move (From, To : in out " & Name & ")");
+               Put_Line (File, "     with Pre  =>     From.Has_Proxy and not To.Has_Proxy,");
+               Put_Line (File, "          Post => not From.Has_Proxy and     To.Has_Proxy;");
+            end if;
          end Generate_Spec_Utility_Functions;
 
          procedure Generate_Spec_Destroy_Subprogram
@@ -1710,14 +1717,14 @@ procedure Wayland_Ada_Scanner is
             elsif Name = "Data_Device" then
                Put_Line (File, "      with procedure Data_Offer");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
-               Put_Line (File, "         Data_Offer  : Client.Data_Offer) is null;");
+               Put_Line (File, "         Data_Offer  : in out Client.Data_Offer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Enter");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
                Put_Line (File, "         Serial      : Unsigned_32;");
                Put_Line (File, "         Surface     : Client.Surface;");
                Put_Line (File, "         X, Y        : Fixed;");
-               Put_Line (File, "         Id          : Client.Data_Offer) is null;");
+               Put_Line (File, "         Id          : in out Client.Data_Offer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Leave");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class) is null;");
@@ -1732,7 +1739,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "      with procedure Selection");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
-               Put_Line (File, "         Id          : Client.Data_Offer) is null;");
+               Put_Line (File, "         Id          : in out Client.Data_Offer) is null;");
             elsif Name = "Surface" then
                Put_Line (File, "      with procedure Enter");
                Put_Line (File, "        (Surface : in out Client.Surface'Class;");
@@ -3878,6 +3885,15 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "");
             Put_Line (File, "   function ""="" (Left, Right : " & Name & "'Class) return Boolean is");
             Put_Line (File, "     (Left.Proxy = Right.Proxy);");
+
+            if Protocol_Name = "client" and Name in "Data_Offer" then
+               Put_Line (File, "");
+               Put_Line (File, "   procedure Move (From, To : in out " & Name & ") is");
+               Put_Line (File, "   begin");
+               Put_Line (File, "      To.Proxy := From.Proxy;");
+               Put_Line (File, "      From.Proxy := null;");
+               Put_Line (File, "   end Move;");
+            end if;
          end Generate_Body_Utility_Functions;
 
          procedure Generate_Body_Destroy_Subprogram
@@ -4633,11 +4649,11 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Data_Offer : Thin.Data_Offer_Ptr;");
                Put_Line (File, "         Mime_Type  : chars_ptr)");
                Put_Line (File, "      is");
-               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Offer);");
+               Put_Line (File, "         O : Client.Data_Offer := (Proxy => Data_Offer);");
                Put_Line (File, "");
                Put_Line (File, "         M : constant String := Interfaces.C.Strings.Value (Mime_Type);");
                Put_Line (File, "      begin");
-               Put_Line (File, "         Offer (Conversion.To_Pointer (Data).all, M);");
+               Put_Line (File, "         Offer (O, M);");
                Put_Line (File, "      end Internal_Offer;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Source_Actions");
@@ -4817,7 +4833,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
                Put_Line (File, "");
-               Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
+               Put_Line (File, "         Offer : Client.Data_Offer := (Proxy => Id);");
                Put_Line (File, "      begin");
                Put_Line (File, "         Data_Offer (Conversion.To_Pointer (Data).all, Offer);");
                Put_Line (File, "      end Internal_Data_Offer;");
@@ -4833,7 +4849,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
                Put_Line (File, "");
                Put_Line (File, "         S : constant Client.Surface     := (Proxy => Surface);");
-               Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
+               Put_Line (File, "         Offer : Client.Data_Offer := (Proxy => Id);");
                Put_Line (File, "      begin");
                Put_Line (File, "         Enter (Conversion.To_Pointer (Data).all, Serial, S, X, Y, Offer);");
                Put_Line (File, "      end Internal_Enter;");
@@ -4874,7 +4890,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      is");
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Data_Device);");
                Put_Line (File, "");
-               Put_Line (File, "         Offer : constant Client.Data_Offer := (Proxy => Id);");
+               Put_Line (File, "         Offer : Client.Data_Offer := (Proxy => Id);");
                Put_Line (File, "      begin");
                Put_Line (File, "         Selection (Conversion.To_Pointer (Data).all, Offer);");
                Put_Line (File, "      end Internal_Selection;");
