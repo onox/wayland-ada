@@ -39,7 +39,7 @@ package body Wayland.EGL is
       Size   : Dimension;
       X, Y   : Integer := 0) is
    begin
-      EGL_API.Window_Resize (Object.Handle, Integer (Size.Width), Integer (Size.Height), X, Y);
+      EGL_API.Window_Resize (Object.Handle, Size.Width, Size.Height, X, Y);
    end Resize;
 
    function Attached_Size (Object : Window) return Dimension is
@@ -47,7 +47,7 @@ package body Wayland.EGL is
    begin
       EGL_API.Get_Attached_Size (Object.Handle, Width, Height);
 
-      return (Width => Unsigned_32 (Width), Height => Unsigned_32 (Height));
+      return (Width => Width, Height => Height);
    end Attached_Size;
 
 end Wayland.EGL;

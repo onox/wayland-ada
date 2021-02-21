@@ -22,7 +22,7 @@ package Wayland.EGL is
    pragma Preelaborate;
 
    type Dimension is record
-      Width, Height : Unsigned_32;
+      Width, Height : Natural;
    end record;
 
    type Window is tagged limited private;
