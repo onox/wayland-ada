@@ -1562,8 +1562,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "                     Height : Natural)");
                Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
-               Put_Line (File, "   function Frame (Object : Surface) return Callback'Class");
-               Put_Line (File, "     with Pre => Object.Has_Proxy;");
+               Put_Line (File, "   procedure Frame (Object : Surface; Subject : in out Callback'Class)");
+               Put_Line (File, "     with Pre => Object.Has_Proxy and not Subject.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Set_Opaque_Region (Object : Surface;");
                Put_Line (File, "                                Region : Client.Region'Class)");
@@ -4282,11 +4282,9 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "      Thin.Surface_Damage (Object.Proxy, X, Y, Width, Height);");
             Put_Line (File, "   end Damage;");
             Put_Line (File, "");
-            Put_Line (File, "   function Frame (Object : Surface) return Callback'Class is");
+            Put_Line (File, "   procedure Frame (Object : Surface; Subject : in out Callback'Class) is");
             Put_Line (File, "   begin");
-            Put_Line (File, "      return Result : Callback do");
-            Put_Line (File, "         Result.Proxy := Thin.Surface_Frame (Object.Proxy);");
-            Put_Line (File, "      end return;");
+            Put_Line (File, "      Subject.Proxy := Thin.Surface_Frame (Object.Proxy);");
             Put_Line (File, "   end Frame;");
             Put_Line (File, "");
             Put_Line (File, "   procedure Set_Opaque_Region (Object : Surface;");
