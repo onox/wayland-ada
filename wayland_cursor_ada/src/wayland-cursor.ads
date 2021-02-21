@@ -73,8 +73,8 @@ package Wayland.Cursor is
       Name   : String;
       Size   : Positive;
       Shm    : Wayland.Protocols.Client.Shm)
-   with Pre  => Shm.Has_Proxy,
-        Post => Object.Is_Initialized;
+   with Pre  => not Object.Is_Initialized and Shm.Has_Proxy,
+        Post =>     Object.Is_Initialized;
 
    procedure Destroy (Object : in out Cursor_Theme)
      with Pre  => Object.Is_Initialized,
