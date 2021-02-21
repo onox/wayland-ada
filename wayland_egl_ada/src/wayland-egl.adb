@@ -20,13 +20,12 @@ package body Wayland.EGL is
 
    function Is_Initialized (Object : Window) return Boolean is (Object.Handle /= null);
 
-   function Create_Window
-     (Surface       : Protocols.Client.Surface;
-      Width, Height : Integer) return Window is
+   procedure Create_Window
+     (Object        : in out Window;
+      Surface       : Protocols.Client.Surface;
+      Width, Height : Integer) is
    begin
-      return Result : Window do
-         Result.Handle := EGL_API.Window_Create (Surface.Get_Proxy, Width, Height);
-      end return;
+      Object.Handle := EGL_API.Window_Create (Surface.Get_Proxy, Width, Height);
    end Create_Window;
 
    procedure Destroy (Object : in out Window) is

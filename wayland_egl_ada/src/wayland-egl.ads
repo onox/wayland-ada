@@ -29,10 +29,12 @@ package Wayland.EGL is
 
    function Is_Initialized (Object : Window) return Boolean;
 
-   function Create_Window
-     (Surface       : Protocols.Client.Surface;
-      Width, Height : Integer) return Window
-   with Post => Create_Window'Result.Is_Initialized;
+   procedure Create_Window
+     (Object        : in out Window;
+      Surface       : Protocols.Client.Surface;
+      Width, Height : Integer)
+   with Pre  => not Object.Is_Initialized and Surface.Has_Proxy,
+        Post =>     Object.Is_Initialized;
 
    procedure Destroy (Object : in out Window)
      with Pre  => Object.Is_Initialized,
