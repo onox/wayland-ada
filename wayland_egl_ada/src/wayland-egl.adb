@@ -23,7 +23,7 @@ package body Wayland.EGL is
    procedure Create_Window
      (Object        : in out Window;
       Surface       : Protocols.Client.Surface;
-      Width, Height : Integer) is
+      Width, Height : Natural) is
    begin
       Object.Handle := EGL_API.Window_Create (Surface.Get_Proxy, Width, Height);
    end Create_Window;
@@ -43,7 +43,7 @@ package body Wayland.EGL is
    end Resize;
 
    function Attached_Size (Object : Window) return Dimension is
-      Width, Height : Integer;
+      Width, Height : Natural;
    begin
       EGL_API.Get_Attached_Size (Object.Handle, Width, Height);
 

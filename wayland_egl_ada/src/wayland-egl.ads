@@ -32,12 +32,12 @@ package Wayland.EGL is
    procedure Create_Window
      (Object        : in out Window;
       Surface       : Protocols.Client.Surface;
-      Width, Height : Integer)
+      Width, Height : Natural)
    with Pre  => not Object.Is_Initialized and Surface.Has_Proxy,
         Post =>     Object.Is_Initialized;
 
    procedure Destroy (Object : in out Window)
-     with Pre  => Object.Is_Initialized,
+     with Pre  =>     Object.Is_Initialized,
           Post => not Object.Is_Initialized;
 
    procedure Resize
