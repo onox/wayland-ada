@@ -932,6 +932,11 @@ procedure Wayland_Ada_Scanner is
          Generate_Code_For_External_Proxies (Protocol_Name);
          Generate_Code_For_The_Interface_Constants;
 
+         if Protocol_Name /= "client" then
+            New_Line (File);
+            Put_Line (File, "   procedure Initialize;");
+         end if;
+
          if Protocol_Name = "client" then
             Put_Line (File, "");
             Put_Line (File, "   function Bind");
@@ -3349,7 +3354,7 @@ procedure Wayland_Ada_Scanner is
          Generate_Code_For_Interface_Constants;
          if Protocol_Name /= "client" then
             New_Line (File);
-            Put_Line (File, "   function Initialize return Boolean;");
+            Put_Line (File, "   procedure Initialize;");
             New_Line (File);
          end if;
 
@@ -3449,6 +3454,11 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "package body Wayland.Protocols." & Package_Name & " is");
          New_Line (File);
 
+         if Protocol_Name /= "client" then
+            Put_Line (File, "   procedure Initialize renames Thin.Initialize;");
+            Put_Line (File, "");
+         end if;
+
          if Protocol_Name = "client" then
             Put_Line (File, "   package body Constructors is");
             Put_Line (File, "      function Set_Proxy (Proxy : Secret_Proxy) return Buffer is");
@@ -3481,7 +3491,7 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "");
 
          if Protocol_Name /= "client" then
-            Put_Line (File, "   function Initialize return Boolean is");
+            Put_Line (File, "   procedure Initialize is");
             Put_Line (File, "   begin");
 
             Put_Line (File, "      Interface_Pointers :=");
@@ -3496,7 +3506,6 @@ procedure Wayland_Ada_Scanner is
                end;
             end loop;
 
-            Put_Line (File, "      return True;");
             Put_Line (File, "   end Initialize;");
             Put_Line (File, "");
          end if;
