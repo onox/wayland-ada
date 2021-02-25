@@ -77,6 +77,9 @@ procedure Wayland_Ada_Scanner is
      (File : Ada.Text_IO.File_Type;
       Item : String) renames Ada.Text_IO.Put_Line;
 
+   procedure Put_Line
+     (Item : String) renames Ada.Text_IO.Put_Line;
+
    procedure New_Line
      (File    : Ada.Text_IO.File_Type;
       Spacing : Ada.Text_IO.Positive_Count := 1) renames Ada.Text_IO.New_Line;
@@ -159,6 +162,7 @@ procedure Wayland_Ada_Scanner is
    type Subprogram_Kind is (Declaration, Implementation);
 
    Max_Line_Length : constant := 99;
+   Generate_Interfaces_For_Client : constant Boolean := False;
 
    procedure Generate_Pretty_Code_For_Subprogram
      (File : Ada.Text_IO.File_Type;
@@ -932,7 +936,7 @@ procedure Wayland_Ada_Scanner is
          Generate_Code_For_External_Proxies (Protocol_Name);
          Generate_Code_For_The_Interface_Constants;
 
-         if Protocol_Name /= "client" then
+         if Generate_Interfaces_For_Client or Protocol_Name /= "client" then
             New_Line (File);
             Put_Line (File, "   procedure Initialize;");
          end if;
@@ -2570,7 +2574,7 @@ procedure Wayland_Ada_Scanner is
                  := Xml_Parser_Utils.Adaify_Name
                    (Wayland_XML.Name (Interface_Tag) & "_Interface");
             begin
-               if Protocol_Name = "client" then
+               if not Generate_Interfaces_For_Client and Protocol_Name = "client" then
                   Put_Line (File, "   " & Name & " : aliased constant Interface_T");
                   Put_Line (File, "     with Import, Convention => C, External_Name => """ & Wayland_XML.Name (Interface_Tag) & "_interface"";");
                   New_Line (File);
@@ -2698,10 +2702,16 @@ procedure Wayland_Ada_Scanner is
                      case Type_Attribute (Child.Arg_Tag.all) is
                         when Type_New_Id | Type_Object =>
                            if not Wayland_XML.Exists_Interface_Attribute (Child.Arg_Tag.all) then
-                              raise XML_Exception with
-                                "Argument of type 'object' or 'new_id' has no attribute 'interface'";
+--                              raise XML_Exception with
+                              Put_Line
+                                ("Request " & Name (Request_Tag) & ": " &
+                                 "Argument of type 'object' or 'new_id' has no attribute 'interface'");
+                              Result.Append (+"");
+                              Result.Append (+"");
+                              Result.Append (+"");
+                           else
+                              Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
                            end if;
-                           Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
                         when others =>
                            Result.Append (+"");
                      end case;
@@ -2721,10 +2731,16 @@ procedure Wayland_Ada_Scanner is
                      case Type_Attribute (Child.Arg_Tag.all) is
                         when Type_New_Id | Type_Object =>
                            if not Wayland_XML.Exists_Interface_Attribute (Child.Arg_Tag.all) then
-                              raise XML_Exception with
-                                "Argument of type 'object' or 'new_id' has no attribute 'interface'";
+--                              raise XML_Exception with
+                              Put_Line
+                                ("Event " & Name (Event_Tag) & ": " &
+                                 "Argument of type 'object' or 'new_id' has no attribute 'interface'");
+                              Result.Append (+"");
+                              Result.Append (+"");
+                              Result.Append (+"");
+                           else
+                              Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
                            end if;
-                           Result.Append (+Wayland_XML.Interface_Attribute (Child.Arg_Tag.all));
                         when others =>
                            Result.Append (+"");
                      end case;
@@ -2753,6 +2769,10 @@ procedure Wayland_Ada_Scanner is
                   when Type_FD =>
                      SU.Append (Signature, "h");
                   when Type_New_Id =>
+                     --  TODO For Type_Object as well if no interface attribute exists?
+                     if not Wayland_XML.Exists_Interface_Attribute (Argument) then
+                        SU.Append (Signature, "su");
+                     end if;
                      SU.Append (Signature, "n");
                   when Type_Object =>
                      SU.Append (Signature, "o");
@@ -3352,7 +3372,7 @@ procedure Wayland_Ada_Scanner is
          end if;
          Put_Line (File, "");
          Generate_Code_For_Interface_Constants;
-         if Protocol_Name /= "client" then
+         if Generate_Interfaces_For_Client or Protocol_Name /= "client" then
             New_Line (File);
             Put_Line (File, "   procedure Initialize;");
             New_Line (File);
@@ -3361,7 +3381,7 @@ procedure Wayland_Ada_Scanner is
          Generate_Code_For_Interface_Ptrs;
          Generate_Code_For_Each_Interface;
 
-         if Protocol_Name /= "client" then
+         if Generate_Interfaces_For_Client or Protocol_Name /= "client" then
             Put_Line (File, "private");
             New_Line (File);
 
@@ -3454,7 +3474,7 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "package body Wayland.Protocols." & Package_Name & " is");
          New_Line (File);
 
-         if Protocol_Name /= "client" then
+         if Generate_Interfaces_For_Client or Protocol_Name /= "client" then
             Put_Line (File, "   procedure Initialize renames Thin.Initialize;");
             Put_Line (File, "");
          end if;
@@ -3490,7 +3510,7 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "package body Wayland.Protocols.Thin_" & Package_Name & " is");
          Put_Line (File, "");
 
-         if Protocol_Name /= "client" then
+         if Generate_Interfaces_For_Client or Protocol_Name /= "client" then
             Put_Line (File, "   procedure Initialize is");
             Put_Line (File, "   begin");
 
