@@ -1576,7 +1576,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "   procedure Attach (Object : Surface;");
                Put_Line (File, "                     Buffer : Client.Buffer'Class;");
                Put_Line (File, "                     X, Y   : Integer)");
-               Put_Line (File, "     with Pre => Object.Has_Proxy and Buffer.Has_Proxy;");
+               Put_Line (File, "     with Pre => Object.Has_Proxy;");
                Put_Line (File, "");
                Put_Line (File, "   procedure Damage (Object : Surface;");
                Put_Line (File, "                     X, Y   : Integer;");
