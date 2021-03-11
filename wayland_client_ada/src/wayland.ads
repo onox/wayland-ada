@@ -45,6 +45,8 @@ package Wayland is
       end case;
    end record;
 
+   subtype Unused_Type is Boolean range False .. False;
+
 private
 
    subtype Void_Ptr is System.Address;

@@ -163,6 +163,7 @@ procedure Wayland_Ada_Scanner is
 
    Max_Line_Length : constant := 99;
    Generate_Interfaces_For_Client : constant Boolean := False;
+   Unused_Padding_Name : constant String := "Unused";
 
    procedure Generate_Pretty_Code_For_Subprogram
      (File : Ada.Text_IO.File_Type;
@@ -1135,17 +1136,23 @@ procedure Wayland_Ada_Scanner is
                Is_Bitfield : constant Boolean :=
                   Exists_Bitfield (Enum_Tag) and then Bitfield (Enum_Tag);
 
-               Max_Length : constant Natural := Get_Max_Child_Length (Enum_Tag);
+               Max_Length : constant Natural :=
+                 Natural'Max (Get_Max_Child_Length (Enum_Tag), Unused_Padding_Name'Length);
 
                procedure Generate_Summary_For_Entry
                  (Entry_Tag : Wayland_XML.Entry_Tag)
                is
-                  Summary_String : constant String := (if Enable_Comments and Exists_Summary (Entry_Tag) then Summary (Entry_Tag) else "");
+                  Summary_String : constant String :=
+                    (if Enable_Comments and Exists_Summary (Entry_Tag) then
+                       Summary (Entry_Tag)
+                     else "");
                begin
                   if Summary_String'Length > 0 then
                      Put_Line (File, "      --  " & Summary_String);
                   end if;
                end Generate_Summary_For_Entry;
+
+               Count_components : Natural := 0;
 
                procedure Generate_Code_For_Entry_Component
                  (Entry_Tag : Wayland_XML.Entry_Tag)
@@ -1160,6 +1167,8 @@ procedure Wayland_Ada_Scanner is
                   if Value = 0 then
                      return;
                   end if;
+
+                  Count_components := Count_components + 1;
 
                   Put_Line (File, "      " & Aligned_Name & " : Boolean := False;");
                   Generate_Summary_For_Entry (Entry_Tag);
@@ -1185,6 +1194,14 @@ procedure Wayland_Ada_Scanner is
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
                      Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
                   end loop;
+                  if Count_components < 32 then
+                     declare
+                        Aligned_Name : constant String :=
+                          SF.Head (Unused_Padding_Name, Max_Length, ' ');
+                     begin
+                        Put_Line (File, "      " & Aligned_Name & " : Unused_Type;");
+                     end;
+                  end if;
                   Put_Line (File, "   end record");
                   Put_Line (File, "     with Convention => C_Pass_By_Copy;");
                else
@@ -1220,7 +1237,10 @@ procedure Wayland_Ada_Scanner is
                Is_Bitfield : constant Boolean :=
                   Exists_Bitfield (Enum_Tag) and then Bitfield (Enum_Tag);
 
-               Max_Length : constant Natural := Get_Max_Child_Length (Enum_Tag);
+               Max_Length : constant Natural :=
+                 Natural'Max (Get_Max_Child_Length (Enum_Tag), Unused_Padding_Name'Length);
+
+               Count_Components : Natural := 0;
 
                procedure Generate_Code_For_Entry_Component
                  (Entry_Tag : Wayland_XML.Entry_Tag)
@@ -1242,6 +1262,8 @@ procedure Wayland_Ada_Scanner is
                   if (Value and (Value - 1)) /= 0 then
                      raise Constraint_Error with Value'Image & " is not a power of two";
                   end if;
+
+                  Count_Components := Count_Components + 1;
 
                   declare
                      Bit : Natural := 0;
@@ -1275,6 +1297,15 @@ procedure Wayland_Ada_Scanner is
                   for Child of Wayland_XML.Entries (Enum_Tag) loop
                      Generate_Code_For_Entry_Component (Child.Entry_Tag.all);
                   end loop;
+                  if Count_Components < 32 then
+                     declare
+                        Aligned_Name : constant String :=
+                          SF.Head (Unused_Padding_Name, Max_Length, ' ');
+                     begin
+                        Put_Line (File, "      " & Aligned_Name & " at 0 range " &
+                          Trim (Count_Components'Image) & " .. 31;");
+                     end;
+                  end if;
                   Put_Line (File, "   end record;");
                   Put_Line (File, "   for " & Enum_Type_Name & "'Size use Unsigned_32'Size;");
                else
