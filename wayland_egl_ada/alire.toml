@@ -1,6 +1,6 @@
 name = "wayland_egl_ada"
 description = "Ada 2012 bindings for libwayland-egl"
-version = "0.1.0"
+version = "1.0.0"
 website = "https://github.com/onox/wayland-ada"
 licenses = "Apache-2.0"
 tags = ["wayland", "egl"]
@@ -15,4 +15,4 @@ linux = true
 
 [[depends-on]]
 libwayland = "^1.16"
-wayland_client_ada = "^0.1.0"
+wayland_client_ada = "^1.0.0"

@@ -1,6 +1,6 @@
 name = "wayland_client_ada"
 description = "Ada 2012 bindings for libwayland-client and the Wayland protocol"
-version = "0.1.0"
+version = "1.0.0"
 website = "https://github.com/onox/wayland-ada"
 licenses = "Apache-2.0"
 tags = ["wayland", "client"]
@@ -18,5 +18,5 @@ type = "pre-build"
 command = ["wayland_ada_scanner", "/usr/share/wayland/wayland.xml", "src/protocols"]
 
 [[depends-on]]
-wayland_ada_scanner = "^0.1.0"
+wayland_ada_scanner = "^1.0.0"
 libwayland = "^1.16"

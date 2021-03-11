@@ -1,6 +1,6 @@
 name = "wayland_ada_scanner"
 description = "A tool to generate thick Ada 2012 bindings for Wayland protocols"
-version = "0.1.0"
+version = "1.0.0"
 website = "https://github.com/onox/wayland-ada"
 licenses = "Apache-2.0"
 tags = ["wayland", "egl"]

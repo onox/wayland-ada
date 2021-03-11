@@ -1,13 +1,14 @@
 project Wayland_Client_Ada is
 
-   for Library_Name use "Wayland_Client_Ada";
-   for Library_Version use "0.1.0";
+   for Library_Name use "wayland_client_ada";
+   for Library_Version use "1.0.0";
 
    for Languages use ("ada", "c");
 
+   for Create_Missing_Dirs use "True";
+
    for Source_Dirs use ("src", "src/protocols");
    for Object_Dir use "build/obj";
-   for Create_Missing_Dirs use "True";
    for Library_Dir use "build/lib";
 
    type Library_Type_Type is ("relocatable", "static", "static-pic");

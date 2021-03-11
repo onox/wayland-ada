@@ -1,6 +1,6 @@
 name = "wayland_ada_info"
 description = "A tool to display information about supported Wayland interfaces"
-version = "0.1.0"
+version = "1.0.0"
 website = "https://github.com/onox/wayland-ada"
 licenses = "Apache-2.0"
 tags = ["wayland"]
@@ -12,4 +12,4 @@ maintainers-logins = ["onox"]
 executables = ["wayland_ada_info"]
 
 [[depends-on]]
-wayland_protocols_ada = "^0.1.0"
+wayland_protocols_ada = "^1.0.0"
