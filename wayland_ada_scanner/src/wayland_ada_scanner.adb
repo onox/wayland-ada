@@ -1746,7 +1746,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Serial      : Unsigned_32;");
                Put_Line (File, "         Surface     : Client.Surface;");
                Put_Line (File, "         X, Y        : Fixed;");
-               Put_Line (File, "         Id          : in out Client.Data_Offer) is null;");
+               Put_Line (File, "         Data_Offer  : in out Client.Data_Offer) is null;");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Leave");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class) is null;");
@@ -1761,7 +1761,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "      with procedure Selection");
                Put_Line (File, "        (Data_Device : in out Client.Data_Device'Class;");
-               Put_Line (File, "         Id          : in out Client.Data_Offer) is null;");
+               Put_Line (File, "         Data_Offer  : in out Client.Data_Offer) is null;");
             elsif Name = "Surface" then
                Put_Line (File, "      with procedure Enter");
                Put_Line (File, "        (Surface : in out Client.Surface'Class;");
