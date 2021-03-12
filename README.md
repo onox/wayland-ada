@@ -22,8 +22,7 @@ The following [Alire][url-alire] crates exist:
  - *wayland_protocols_ada*. Thick bindings for various stable and
    unstable protocols (see below) from the wayland-protocols project.
 
- - *wayland_egl_ada*. Bindings for libwayland-egl. To be used by the EGL
-   bindings of [Orka][url-orka].
+ - *wayland_egl_ada*. Bindings for libwayland-egl.
 
  - *wayland_cursor_ada*. Bindings for libwayland-cursor.
 
@@ -47,10 +46,14 @@ And the following unstable protocols:
 
  - relative-pointer
 
+These crates and Wayland protocols are used by [AWT][url-awt], a window
+toolkit that takes care of window management, locking and animating the
+pointer cursor, and handling input devices.
+
 ## Building
 
-To build the *wayland_\*_ada* crates, run `make libs`.
-To build and run the *wayland_ada_info* tool, run `make info`.
+Build and run the *wayland_ada_info* crate with Alire to display information
+about Wayland interfaces.
 
 ## Dependencies
 
@@ -72,5 +75,5 @@ wayland-ada is distributed under the terms of the [Apache License 2.0][url-apach
 
   [url-alire]: https://alire.ada.dev/
   [url-apache]: https://opensource.org/licenses/Apache-2.0
+  [url-awt]: https://github.com/onox/awt
   [url-contributing]: /CONTRIBUTING.md
-  [url-orka]: https://github.com/onox/orka
