@@ -28,3 +28,5 @@ clean:
 	cd wayland_client_ada && alr clean
 	cd wayland_ada_scanner && alr clean
 	cd wayland_ada_info && alr clean
+	rm wayland_client_ada/src/protocols/*
+	rm wayland_protocols_ada/src/*

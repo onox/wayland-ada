@@ -33,38 +33,12 @@ website = "https://wayland.freedesktop.org"
 url = "system:libwayland-dev"
 [[solution.state]]
 crate = "wayland_ada_scanner"
-fulfilment = "solved"
+fulfilment = "linked"
 pinned = false
 transitivity = "direct"
 versions = "^1.0.0"
-[solution.state.release]
-authors = [
-"onox",
-]
-description = "A tool to generate thick Ada 2012 bindings for Wayland protocols"
-executables = [
-"wayland_ada_scanner",
-]
-licenses = "Apache-2.0"
-maintainers = [
-"onox <denkpadje@gmail.com>",
-]
-maintainers-logins = [
-"onox",
-]
-name = "wayland_ada_scanner"
-tags = [
-"wayland",
-"egl",
-]
-version = "1.0.0"
-website = "https://github.com/onox/wayland-ada"
-[solution.state.release.environment]
-[solution.state.release.environment.PATH]
-append = "${CRATE_ROOT}/build/bin"
-[solution.state.release.origin]
-hashes = [
-"sha512:6d4ce3c860eaac739dde5a6f776f7fda5c5c3086f16aa74f9647c7760df4e69e6a46e8ee81309cdf86c3f8af77b7deddfe37fe9b3e5c7d48d12d56c4d5939ca6",
-]
-url = "https://github.com/onox/wayland-ada/releases/download/v1.0.0/wayland_ada_scanner-1.0.0.tgz"
+[solution.state.link]
+kind = "softlink"
+path = "file:../wayland_ada_scanner"
+relative = true
 
