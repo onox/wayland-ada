@@ -41,4 +41,5 @@ versions = "^1.0.0"
 kind = "softlink"
 path = "file:../wayland_ada_scanner"
 relative = true
+remote = false
 
