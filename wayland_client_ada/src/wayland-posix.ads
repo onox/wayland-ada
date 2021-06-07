@@ -17,19 +17,43 @@
 private package Wayland.Posix is
    pragma Preelaborate;
 
-   type Poll_Mode is (Input, Output);
+   type Event_Bits is record
+      Input    : Boolean := False;
+      Priority : Boolean := False;
+      Output   : Boolean := False;
+   end record;
+
+   type Requested_Event is record
+      FD     : File_Descriptor;
+      Events : Event_Bits;
+   end record;
+
+   type Returned_Event (Is_Success : Boolean := False) is record
+      FD     : File_Descriptor;
+      case Is_Success is
+         when True  => Events : Event_Bits;
+         when False => null;
+      end case;
+   end record;
+
+   type Requested_Event_Array is array (Positive range <>) of Requested_Event;
+
+   type Returned_Event_Array is array (Positive range <>) of Returned_Event;
 
    function Poll
-     (Descriptor : Integer;
-      Timeout    : Duration) return Integer;
-   --  Wait for data to become readable on the file descriptor
-
-   function Poll
-     (Descriptor : Integer;
-      Timeout    : Duration;
-      Mode       : Poll_Mode) return Integer;
+     (Events  : Requested_Event_Array;
+      Timeout : Duration) return Returned_Event_Array;
    --  Wait for data to become readable or writable on the file descriptor
 
    function Error_Number return Integer;
+
+private
+
+   for Event_Bits use record
+      Input    at 0 range 0 .. 0;
+      Priority at 0 range 1 .. 1;
+      Output   at 0 range 2 .. 2;
+   end record;
+   for Event_Bits'Size use Interfaces.C.short'Size;
 
 end Wayland.Posix;
