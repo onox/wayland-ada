@@ -57,11 +57,11 @@ about Wayland interfaces.
 
 ## Dependencies
 
-Requires Wayland 1.16 or higher and wayland-protocols 1.21 (or git d10d18f) or higher.
+Requires Wayland 1.16 or higher and wayland-protocols 1.21 or higher.
 
 ## Thanks
 
-Much thanks to @joakim-strandberg for starting this project and writing
+Much thanks to [**@joakim-strandberg**][url-user-joakim-strandberg] for starting this project and writing
 most of the wayland scanner.
 
 ## Contributing
@@ -77,3 +77,4 @@ wayland-ada is distributed under the terms of the [Apache License 2.0][url-apach
   [url-apache]: https://opensource.org/licenses/Apache-2.0
   [url-awt]: https://github.com/onox/awt
   [url-contributing]: /CONTRIBUTING.md
+  [url-user-joakim-strandberg]: https://github.com/joakim-strandberg
