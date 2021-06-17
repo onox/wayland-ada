@@ -16,3 +16,6 @@ linux = true
 [[depends-on]]
 libwayland = "^1.16"
 wayland_client_ada = "^1.0.0"
+
+[[pins]]
+wayland_client_ada = { path = "../wayland_client_ada" }
