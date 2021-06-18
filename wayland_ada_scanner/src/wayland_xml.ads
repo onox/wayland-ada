@@ -98,7 +98,7 @@ package Wayland_XML is
    procedure Set_Allow_Null (This : in out Arg_Tag; Value : Boolean) with
       Global => null,
       Pre    => not Exists_Allow_Null (This),
-      Post   => Exists_Allow_Null (This) and Allow_Null (This) = Value;
+      Post   => Exists_Allow_Null (This) and (Allow_Null (This) = Value);
 
    function Allow_Null (This : Arg_Tag) return Boolean with
       Global => null,
@@ -295,7 +295,7 @@ package Wayland_XML is
    procedure Set_Bitfield (This : in out Enum_Tag; Value : Boolean) with
       Global => null,
       Pre    => not Exists_Bitfield (This),
-      Post   => Exists_Bitfield (This) and Bitfield (This) = Value;
+      Post   => Exists_Bitfield (This) and (Bitfield (This) = Value);
 
    function Bitfield (This : Enum_Tag) return Boolean with
       Global => null,
