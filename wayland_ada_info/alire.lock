@@ -38,10 +38,8 @@ pinned = false
 transitivity = "direct"
 versions = "^1.0.0"
 [solution.state.link]
-kind = "softlink"
-path = "file:../wayland_ada_scanner"
-relative = true
-remote = false
+lockfiled = true
+path = "../wayland_ada_scanner"
 [[solution.state]]
 crate = "wayland_client_ada"
 fulfilment = "linked"
@@ -49,10 +47,8 @@ pinned = false
 transitivity = "direct"
 versions = "^1.0.0"
 [solution.state.link]
-kind = "softlink"
-path = "file:../wayland_client_ada"
-relative = true
-remote = false
+lockfiled = true
+path = "../wayland_client_ada"
 [[solution.state]]
 crate = "wayland_protocols_ada"
 fulfilment = "linked"
@@ -60,8 +56,6 @@ pinned = false
 transitivity = "direct"
 versions = "^1.0.0"
 [solution.state.link]
-kind = "softlink"
-path = "file:../wayland_protocols_ada"
-relative = true
-remote = false
+lockfiled = true
+path = "../wayland_protocols_ada"
 
