@@ -25,6 +25,7 @@ package body Wayland.Posix is
       Error    : Boolean := False;
       Hang_Up  : Boolean := False;
       Invalid  : Boolean := False;
+      Unused   : Unused_Type;
    end record;
 
    for Returned_Event_Bits use record
@@ -34,6 +35,7 @@ package body Wayland.Posix is
       Error    at 0 range 3 .. 3;
       Hang_Up  at 0 range 4 .. 4;
       Invalid  at 0 range 5 .. 5;
+      Unused   at 0 range 6 .. 15;
    end record;
    for Returned_Event_Bits'Size use Interfaces.C.short'Size;
 
@@ -95,7 +97,9 @@ package body Wayland.Posix is
                      declare
                         FD : Poll_File_Descriptor renames File_Descriptors (Index);
                      begin
-                        if FD.Returned.Error or FD.Returned.Hang_Up or FD.Returned.Invalid then
+                        if Count = -1
+                          or else (FD.Returned.Error or FD.Returned.Hang_Up or FD.Returned.Invalid)
+                        then
                            Result (Index) :=
                              (Is_Success => False,
                               FD         => File_Descriptor (FD.Descriptor));
@@ -106,7 +110,8 @@ package body Wayland.Posix is
                               Events     =>
                                 (Input    => FD.Returned.Input,
                                  Priority => FD.Returned.Priority,
-                                 Output   => FD.Returned.Output));
+                                 Output   => FD.Returned.Output,
+                                 Unused   => False));
                         end if;
                      end;
                   end loop;

@@ -21,6 +21,7 @@ private package Wayland.Posix is
       Input    : Boolean := False;
       Priority : Boolean := False;
       Output   : Boolean := False;
+      Unused   : Unused_Type;
    end record;
 
    type Requested_Event is record
@@ -53,6 +54,7 @@ private
       Input    at 0 range 0 .. 0;
       Priority at 0 range 1 .. 1;
       Output   at 0 range 2 .. 2;
+      Unused   at 0 range 3 .. 15;
    end record;
    for Event_Bits'Size use Interfaces.C.short'Size;
 
