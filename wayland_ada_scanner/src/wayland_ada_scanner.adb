@@ -4010,7 +4010,7 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "         Subject : aliased in out Data_Type) return Call_Result_Code is");
             Put_Line (File, "      begin");
             Put_Line (File, "         Thin." & Name & "_Set_User_Data");
-            Put_Line (File, "           (Object.Proxy, Conversion.To_Address (Subject'Access));");
+            Put_Line (File, "           (Object.Proxy, Subject'Address);");
             Put_Line (File, "         return Success;");
             Put_Line (File, "      end Set_Data;");
             Put_Line (File, "");
@@ -4080,7 +4080,7 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
             Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
             Put_Line (File, "            " & Align ("Listener") & " => Listener'Access,");
-            Put_Line (File, "            " & Align ("Data")     & " => Conversion.To_Address (Object'Access));");
+            Put_Line (File, "            " & Align ("Data")     & " => Object'Address);");
             Put_Line (File, "         return (if I = 0 then Success else Error);");
             Put_Line (File, "      end Subscribe;");
             Put_Line (File, "");
