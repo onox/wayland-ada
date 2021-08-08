@@ -11,5 +11,7 @@ maintainers-logins = ["onox"]
 
 executables = ["wayland_ada_scanner"]
 
+configuration.disabled = true
+
 [environment]
 PATH.append = "${CRATE_ROOT}/build/bin"
