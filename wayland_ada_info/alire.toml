@@ -11,7 +11,8 @@ maintainers-logins = ["onox"]
 
 executables = ["wayland_ada_info"]
 
-configuration.disabled = true
+[configuration]
+disabled = true
 
 [[depends-on]]
 wayland_protocols_ada = "^1.0.0"
