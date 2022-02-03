@@ -76,6 +76,6 @@ wayland-ada is distributed under the terms of the [Apache License 2.0][url-apach
 
   [url-alire]: https://alire.ada.dev/
   [url-apache]: https://opensource.org/licenses/Apache-2.0
-  [url-awt]: https://github.com/onox/awt
+  [url-awt]: https://github.com/onox/orka/tree/master/awt
   [url-contributing]: /CONTRIBUTING.md
   [url-user-joakim-strandberg]: https://github.com/joakim-strandberg
