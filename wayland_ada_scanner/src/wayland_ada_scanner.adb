@@ -3162,7 +3162,17 @@ procedure Wayland_Ada_Scanner is
                               Name (Event_Tag) & "_Subprogram_Ptr");
 
                      Component_Name_Aligned : constant String := SF.Head (Component_Name & (if Is_Reserved_Keyword (Component_Name) then "_F" else ""), Name_Length, ' ');
+
+                     use type Wayland_XML.Version_Number;
                   begin
+                     --  Patch out events from wl_output that exist since v4 because
+                     --  the high level bindings assume v3
+                     if Wayland_XML.Name (Interface_Tag) = "wl_output"
+                       and (Exists_Since (Event_Tag) and then Since (Event_Tag) >= 4)
+                     then
+                        return;
+                     end if;
+
                      Put_Line (File, "      " & Component_Name_Aligned & " : " & Component_Type_Name & ";");
                   end Generate_Code_For_Record_Component;
 
