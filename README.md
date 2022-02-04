@@ -58,7 +58,7 @@ about Wayland interfaces.
 
 ## Dependencies
 
-Requires Wayland 1.16 or higher and wayland-protocols 1.21 or higher.
+Requires Wayland 1.18 or higher and wayland-protocols 1.21 or higher.
 
 ## Thanks
 

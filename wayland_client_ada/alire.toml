@@ -26,7 +26,7 @@ command = ["wayland_ada_scanner", "/usr/share/wayland/wayland.xml", "src/protoco
 
 [[depends-on]]
 wayland_ada_scanner = "^1.0.0"
-libwayland = "^1.16"
+libwayland = "^1.18"
 
 [[pins]]
 wayland_ada_scanner = { path = "../wayland_ada_scanner" }

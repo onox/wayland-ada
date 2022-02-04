@@ -431,19 +431,6 @@ procedure Wayland_Ada_Scanner is
          begin
             Iterate (Node.Tag);
 
-            --  Patch in missing enum values for old versions (1.16) of Wayland
-            if Name (Protocol_Tag.all) = "wayland" then
-               if not Exists_Enum (Arg_Tag.all)
-                 and then Exists_Type_Attribute (Arg_Tag.all) and then
-                   Type_Attribute (Arg_Tag.all) = Type_Unsigned_Integer
-                 and then Name (Arg_Tag.all) in
-                   "dnd_action" | "dnd_actions" | "preferred_action" | "source_actions"
-               then
-                  Set_Enum (Arg_Tag.all, "wl_data_device_manager.dnd_action");
-                  Put_Line ("Patched in missing enum for " & Name (Arg_Tag.all));
-               end if;
-            end if;
-
             return Arg_Tag;
          end Identify_Arg;
 

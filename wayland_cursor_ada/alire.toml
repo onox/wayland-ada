@@ -17,7 +17,7 @@ linux = true
 '...' = false
 
 [[depends-on]]
-libwayland = "^1.16"
+libwayland = "^1.18"
 wayland_client_ada = "^1.0.0"
 
 [[pins]]
