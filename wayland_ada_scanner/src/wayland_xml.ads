@@ -35,7 +35,7 @@ package Wayland_XML is
       Type_Fixed,
       Type_Array);
 
-   TYPE_ATTRIBUTE_EXCEPTION : exception;
+   Type_Attribute_Exception : exception;
 
    type Arg_Tag is limited private;
 
@@ -57,7 +57,7 @@ package Wayland_XML is
       Global => null,
       Pre    => not Exists_Type_Attribute (This),
       Post   => Exists_Type_Attribute (This);
-   --  Raises TYPE_ATTRIBUTE_EXCEPTION if Value cannot be interpreted
+   --  Raises Type_Attribute_Exception if Value cannot be interpreted
 
    function Type_Attribute (This : Arg_Tag) return Arg_Type_Attribute with
       Global => null,

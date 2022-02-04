@@ -61,7 +61,7 @@ package body Wayland_XML is
          This.My_Type_Attribute := (Exists => True,
                                     Value  => Type_Array);
       else
-         raise TYPE_ATTRIBUTE_EXCEPTION with Value;
+         raise Type_Attribute_Exception with Value;
       end if;
 
    end Set_Type_Attribute;
