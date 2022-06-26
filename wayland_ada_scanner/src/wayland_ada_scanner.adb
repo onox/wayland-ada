@@ -50,7 +50,6 @@ procedure Wayland_Ada_Scanner is
    use all type Aida.Deepend.XML_DOM_Parser.XML_Tag;
    use all type Wayland_XML.Protocol_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
-   use all type Wayland_XML.Enum_Child_Kind_Id;
    use all type Wayland_XML.Event_Child_Kind_Id;
    use all type Wayland_XML.Arg_Type_Attribute;
    use all type Wayland_XML.Request_Child_Kind_Id;
@@ -179,8 +178,6 @@ procedure Wayland_Ada_Scanner is
       Ptr_Name : constant String
         := Xml_Parser_Utils.Adaify_Name
           (Wayland_XML.Name (Interface_Tag) & "_Ptr");
-
-      use Ada.Strings.Fixed;
 
       Subprogram_Kind : constant String := (if Return_Type'Length > 0 then "function" else "procedure");
       Return_String   : constant String := (if Return_Type'Length > 0 then " return " & Return_Type else "");
@@ -902,14 +899,24 @@ procedure Wayland_Ada_Scanner is
       procedure Create_File is
          Protocol_Name : constant String := Get_Protocol_Name (Name (Protocol_Tag.all));
          Package_Name  : constant String := Xml_Parser_Utils.Adaify_Name (Protocol_Name);
+
+         Has_Enums : constant Boolean :=
+           Protocol_Name in
+             "client" |
+             "pointer_constraints_unstable_v1" |
+             "presentation_time" |
+             "xdg_decoration_unstable_v1" |
+             "xdg_shell";
       begin
          Ada.Text_IO.Create
            (File, Ada.Text_IO.Out_File,
             "wayland-protocols-" & Protocol_Name & ".ads");
 
          Put_Line (File, "private with Wayland.Protocols.Thin_" & Package_Name & ";");
-         New_Line (File);
-         Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
+         if Has_Enums then
+            New_Line (File);
+            Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
+         end if;
 
          if Protocol_Name = "client" then
             null;
@@ -925,8 +932,11 @@ procedure Wayland_Ada_Scanner is
          New_Line (File);
          Put_Line (File, "package Wayland.Protocols." & Package_Name & " is");
          Put_Line (File, "   pragma Preelaborate;");
-         New_Line (File);
-         Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
+
+         if Has_Enums then
+            New_Line (File);
+            Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
+         end if;
 
          if Protocol_Name = "xdg_shell" then
             New_Line (File);
@@ -1009,7 +1019,9 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "with Interfaces.C.Strings;");
          Put_Line (File, "");
          Put_Line (File, "with Wayland.API;");
-         Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
+         if Has_Enums then
+            Put_Line (File, "with Wayland.Enums." & Package_Name & ";");
+         end if;
 
          if Protocol_Name = "client" then
             null;
@@ -1021,8 +1033,12 @@ procedure Wayland_Ada_Scanner is
          Put_Line (File, "");
          Put_Line (File, "private package Wayland.Protocols.Thin_" & Package_Name & " is");
          Put_Line (File, "   pragma Preelaborate;");
-         Put_Line (File, "");
-         Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
+
+         if Has_Enums then
+            Put_Line (File, "");
+            Put_Line (File, "   use Wayland.Enums." & Package_Name & ";");
+         end if;
+
          Put_Line (File, "");
          Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
          Put_Line (File, "");
@@ -2221,7 +2237,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Timestamp             : Duration;");
                Put_Line (File, "         Refresh               : Duration;");
                Put_Line (File, "         Counter               : Unsigned_64;");
-               Put_Line (File, "         Flags                 : Enums.Presentation_Time.Presentation_Feedback_Kind);");
+               Put_Line (File, "         Flags                 : Presentation_Feedback_Kind);");
                Put_Line (File, "");
                Put_Line (File, "      with procedure Discarded");
                Put_Line (File, "        (Presentation_Feedback : in out Presentation_Time.Presentation_Feedback'Class);");
@@ -3502,10 +3518,10 @@ procedure Wayland_Ada_Scanner is
          --  there are no generic *_Events packages
          Put_Line (File, "with System.Address_To_Access_Conversions;");
          New_Line (File);
-         Put_Line (File, "with Interfaces.C.Strings;");
-         New_Line (File);
 
          if Protocol_Name = "client" then
+            Put_Line (File, "with Interfaces.C.Strings;");
+            New_Line (File);
             Put_Line (File, "with Wayland.Posix;");
          elsif Protocol_Name in "presentation_time" | "relative_pointer_unstable_v1" then
             Put_Line (File, "with Ada.Unchecked_Conversion;");
@@ -3724,8 +3740,8 @@ procedure Wayland_Ada_Scanner is
                      end Generate_Arguments;
 
                      procedure Generate_Code_Before_Arguments is
-                        Interface_Name : constant String :=
-                          Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface";
+                        Interface_Name : constant String := Xml_Parser_Utils.Adaify_Name
+                          (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag)) & "_Interface";
                      begin
                         Put_Line (File, "      P : constant Proxy_Ptr :=");
                         Put_Line (File, "        Wayland.API.Proxy_Marshal_Constructor");
@@ -3766,7 +3782,8 @@ procedure Wayland_Ada_Scanner is
                      if Xml_Parser_Utils.Is_New_Id_Argument_Present (Request_Tag) then
                         if Xml_Parser_Utils.Is_Interface_Specified (Request_Tag) then
                            declare
-                              Return_Type : constant String := Xml_Parser_Utils.Adaify_Name (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
+                              Return_Type : constant String := Xml_Parser_Utils.Adaify_Name
+                                (Xml_Parser_Utils.Find_Specified_Interface (Request_Tag) & "_Ptr");
                            begin
                               Get_Max_Arg_Length (Request_Tag, V, Max_Name_Length);
 
@@ -4072,7 +4089,9 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "      function Subscribe");
             Put_Line (File, "        (Object : aliased in out " & Name & "'Class) return Call_Result_Code");
             Put_Line (File, "      is");
-            Put_Line (File, "         I : int;");
+            Put_Line (File, "         I : Interfaces.C.int;");
+            Put_Line (File, "");
+            Put_Line (File, "         use type Interfaces.C.int;");
             Put_Line (File, "      begin");
             Put_Line (File, "         I := Thin." & Name & "_Add_Listener");
             Put_Line (File, "           (" & Align (Name)       & " => Object.Proxy,");
@@ -4151,8 +4170,6 @@ procedure Wayland_Ada_Scanner is
             Put_Line (File, "            end loop;");
             Put_Line (File, "         end return;");
             Put_Line (File, "      end Get_Events;");
-            Put_Line (File, "");
-            Put_Line (File, "      use type Wayland.Posix.Requested_Event_Array;");
             Put_Line (File, "");
             Put_Line (File, "      Events : constant Wayland.Posix.Returned_Event_Array := Wayland.Posix.Poll");
             Put_Line (File, "        (Get_Events (Descriptor & Descriptors), Timeout);");
@@ -4585,7 +4602,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Error");
                Put_Line (File, "        (Data      : Void_Ptr;");
                Put_Line (File, "         Display   : Thin.Display_Ptr;");
-               Put_Line (File, "         Object_Id : Void_Ptr;");
+               Put_Line (File, "         Unused_Object_Id : Void_Ptr;");
                Put_Line (File, "         Code      : Unsigned_32;");
                Put_Line (File, "         Message   : chars_ptr)");
                Put_Line (File, "      with Convention => C;");
@@ -4599,7 +4616,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Error");
                Put_Line (File, "        (Data      : Void_Ptr;");
                Put_Line (File, "         Display   : Thin.Display_Ptr;");
-               Put_Line (File, "         Object_Id : Void_Ptr;");
+               Put_Line (File, "         Unused_Object_Id : Void_Ptr;");
                Put_Line (File, "         Code      : Unsigned_32;");
                Put_Line (File, "         Message   : chars_ptr)");
                Put_Line (File, "      is");
@@ -4649,7 +4666,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Registry);");
                Put_Line (File, "      begin");
                Put_Line (File, "         Global_Object_Added");
-               Put_Line (File, "           (Conversion.To_Pointer (Data).all, Id, Value (Interface_V), Version);");
+               Put_Line (File, "           (Conversion.To_Pointer (Data).all, Id, Interfaces.C.Strings.Value (Interface_V), Version);");
                Put_Line (File, "      end Internal_Object_Added;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Object_Removed");
@@ -4729,9 +4746,9 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
             elsif Name = "Data_Offer" then
                Put_Line (File, "      procedure Internal_Offer");
-               Put_Line (File, "        (Data       : Void_Ptr;");
-               Put_Line (File, "         Data_Offer : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Mime_Type  : chars_ptr)");
+               Put_Line (File, "        (Unused_Data : Void_Ptr;");
+               Put_Line (File, "         Data_Offer  : Thin.Data_Offer_Ptr;");
+               Put_Line (File, "         Mime_Type   : chars_ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Source_Actions");
@@ -4747,15 +4764,19 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Offer");
-               Put_Line (File, "        (Data       : Void_Ptr;");
-               Put_Line (File, "         Data_Offer : Thin.Data_Offer_Ptr;");
-               Put_Line (File, "         Mime_Type  : chars_ptr)");
+               Put_Line (File, "        (Unused_Data : Void_Ptr;");
+               Put_Line (File, "         Data_Offer  : Thin.Data_Offer_Ptr;");
+               Put_Line (File, "         Mime_Type   : chars_ptr)");
                Put_Line (File, "      is");
                Put_Line (File, "         O : Client.Data_Offer := (Proxy => Data_Offer);");
+               Put_Line (File, "         --  For a Data_Offer object to be usable it needs to be saved so that it can");
+               Put_Line (File, "         --  be used later when the user presses Ctrl + v to initiate pasting");
+               Put_Line (File, "         --  something from the clipboard. Because the type Data_Offer (in the package spec");
+               Put_Line (File, "         --  of the thick bindings) is limited, the internal Proxy must be moved to a new object.");
                Put_Line (File, "");
                Put_Line (File, "         M : constant String := Interfaces.C.Strings.Value (Mime_Type);");
                Put_Line (File, "      begin");
-               Put_Line (File, "         Offer (O, M);");
+               Put_Line (File, "         Data_Offer_Events.Offer (O, M);");
                Put_Line (File, "      end Internal_Offer;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Source_Actions");
@@ -5056,7 +5077,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Seat_Name");
                Put_Line (File, "        (Data : Void_Ptr;");
                Put_Line (File, "         Seat : Thin.Seat_Ptr;");
-               Put_Line (File, "         Name : Interfaces.C.Strings.chars_ptr)");
+               Put_Line (File, "         Name : chars_ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Seat_Capabilities");
@@ -5072,7 +5093,7 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      procedure Internal_Seat_Name");
                Put_Line (File, "        (Data : Void_Ptr;");
                Put_Line (File, "         Seat : Thin.Seat_Ptr;");
-               Put_Line (File, "         Name : Interfaces.C.Strings.chars_ptr)");
+               Put_Line (File, "         Name : chars_ptr)");
                Put_Line (File, "      is");
                Put_Line (File, "         N : constant String := Interfaces.C.Strings.Value (Name);");
                Put_Line (File, "");
@@ -6372,7 +6393,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "      Pointer  : Client.Pointer'Class;");
                Put_Line (File, "      Relative : in out Relative_Pointer_V1'Class) is");
                Put_Line (File, "   begin");
-               Put_Line (File, "      Relative.Proxy := Thin.Relative_Pointer_Manager_V1_Get_Relative_Pointer (Object.Proxy, Thin_Client.Pointer_Ptr (Pointer.Get_Proxy));");
+               Put_Line (File, "      Relative.Proxy := Thin.Relative_Pointer_Manager_V1_Get_Relative_Pointer");
+               Put_Line (File, "        (Object.Proxy, Thin_Client.Pointer_Ptr (Pointer.Get_Proxy));");
                Put_Line (File, "   end Get_Relative_Pointer;");
             elsif Name = "Toplevel_Decoration_V1" then
                null;
@@ -6836,12 +6858,10 @@ procedure Wayland_Ada_Scanner is
             Generate_Suffix_Body_Events (Name);
          end Handle_Interface_Common_Events;
       begin
-         Put_Line (File, "   subtype int is Interfaces.C.int;");
-         Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
-         Put_Line (File, "");
-         Put_Line (File, "   use type int;");
-         Put_Line (File, "   use all type chars_ptr;");
-         Put_Line (File, "");
+         if Protocol_Name = "client" then
+            Put_Line (File, "   subtype chars_ptr is Interfaces.C.Strings.chars_ptr;");
+            Put_Line (File, "");
+         end if;
          Put_Line (File, "   use type Thin.Proxy_Ptr;");
 
          Iterate_Over_Interfaces (Handle_Interface_Common_Subprograms'Access);

@@ -16,10 +16,6 @@
 
 with Ada.Containers.Vectors;
 
-with Aida.XML_SAX_Parse;
-
-pragma Elaborate_All (Aida.XML_SAX_Parse);
-
 package Aida.Deepend.XML_DOM_Parser is
 
    type Attribute is limited private;

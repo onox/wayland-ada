@@ -15,11 +15,7 @@
 --  limitations under the License.
 
 with Wayland_XML;
-with Aida;
 with Ada.Containers.Vectors;
-
-pragma Elaborate_All (Wayland_XML);
-pragma Elaborate_All (Aida);
 
 package Xml_Parser_Utils is
 

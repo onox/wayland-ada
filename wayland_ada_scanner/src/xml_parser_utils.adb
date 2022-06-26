@@ -26,15 +26,11 @@ package body Xml_Parser_Utils is
 
    use all type Ada.Strings.Unbounded.Unbounded_String;
    use all type Wayland_XML.Arg_Tag;
-   use all type Wayland_XML.Event_Tag;
    use all type Wayland_XML.Request_Tag;
    use all type Wayland_XML.Interface_Tag;
-   use all type Wayland_XML.Protocol_Tag;
    use all type Wayland_XML.Arg_Type_Attribute;
-   use all type Wayland_XML.Event_Child_Kind_Id;
    use all type Wayland_XML.Request_Child_Kind_Id;
    use all type Wayland_XML.Interface_Child_Kind_Id;
-   use all type Wayland_XML.Protocol_Child_Kind_Id;
 
    use type Ada.Containers.Count_Type;
 

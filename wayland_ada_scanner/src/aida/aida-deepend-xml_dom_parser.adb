@@ -14,6 +14,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
+with Aida.XML_SAX_Parse;
+
 package body Aida.Deepend.XML_DOM_Parser is
 
    type State_T is

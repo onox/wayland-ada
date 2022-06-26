@@ -53,7 +53,7 @@ abstract project Wayland_Ada_Config is
          Style_Checks_Switches :=
            ("-gnatyg",   -- GNAT Style checks
             "-gnaty-Is", -- Disable check mode in and separate subprogram spec
-            "-gnatyM99", -- Maximum line length
+            "-gnatyM120", -- Maximum line length
             "-gnatyA",   -- Array attribute indexes
             "-gnatyO");  -- Overriding subprograms explicitly marked as such
       when "disabled" => null;

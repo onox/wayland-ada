@@ -40,7 +40,6 @@ package body Wayland.Posix is
    for Returned_Event_Bits'Size use Interfaces.C.short'Size;
 
    use type Interfaces.C.int;
-   use type Interfaces.C.short;
 
    type Poll_File_Descriptor is record
       Descriptor : Interfaces.C.int    := -1;
