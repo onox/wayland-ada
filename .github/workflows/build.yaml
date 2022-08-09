@@ -9,33 +9,16 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**.md'
+  workflow_dispatch:
   release:
     types: [created]
 
 jobs:
   build:
-    name: Building on ${{matrix.os}} using ${{matrix.compiler}}
-    runs-on: ${{matrix.os}}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        compiler: [fsf, community]
+    runs-on: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
-
-    - name: Install toolchain
-      uses: ada-actions/toolchain@ce2021
-      with:
-        distrib: ${{matrix.compiler}}
-        target: native
-
-    - name: Install Alire
-      uses: alire-project/setup-alire@v1
-      with:
-        toolchain: "gnat_external"
-
-    - name: Install EGL
-      run: sudo apt install libwayland-egl1 libwayland-cursor0
+    - uses: alire-project/setup-alire@v1
 
     - name: Build crates
       run: make
