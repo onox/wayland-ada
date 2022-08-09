@@ -4666,7 +4666,9 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Registry);");
                Put_Line (File, "      begin");
                Put_Line (File, "         Global_Object_Added");
-               Put_Line (File, "           (Conversion.To_Pointer (Data).all, Id, Interfaces.C.Strings.Value (Interface_V), Version);");
+               Put_Line (File, "           (Conversion.To_Pointer (Data).all,");
+               Put_Line (File, "            Id,");
+               Put_Line (File, "            Interfaces.C.Strings.Value (Interface_V), Version);");
                Put_Line (File, "      end Internal_Object_Added;");
                Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Object_Removed");

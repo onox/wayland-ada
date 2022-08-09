@@ -199,8 +199,8 @@ package body Wayland_Ada_Info_Events is
    end Image;
 
    procedure Shm_Format
-     (Shm    : in out WP.Client.Shm'Class;
-      Format : WE.Client.Shm_Format) is
+     (Unused_Shm : in out WP.Client.Shm'Class;
+      Format     : WE.Client.Shm_Format) is
    begin
       Formats.Append (Format);
    end Shm_Format;
@@ -306,8 +306,8 @@ package body Wayland_Ada_Info_Events is
    end Output_Scale;
 
    procedure Presentation_Clock
-     (Presentation : in out WP.Presentation_Time.Presentation'Class;
-      Id           : Unsigned_32) is
+     (Unused_Presentation : in out WP.Presentation_Time.Presentation'Class;
+      Id                  : Unsigned_32) is
    begin
       Clock := Id;
    end Presentation_Clock;

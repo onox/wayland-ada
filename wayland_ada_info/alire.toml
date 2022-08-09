@@ -11,8 +11,9 @@ maintainers-logins = ["onox"]
 
 executables = ["wayland_ada_info"]
 
-[configuration]
-disabled = true
+[build-switches]
+validation.compile_checks = "warnings"
+"*".style_checks = ["-gnatygAO-Is"]
 
 [[depends-on]]
 wayland_protocols_ada = "^1.0.0"
