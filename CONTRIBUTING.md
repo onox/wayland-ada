@@ -3,10 +3,10 @@
 #### **Did you find a bug?**
 
 * **Ensure the bug was not already reported** by searching on GitHub
-  under [Issues](https://github.com/onox/wayland-ada/issues).
+  under the Issues page.
 
 * If you're unable to find an open issue addressing the problem,
-  [open a new one](https://github.com/onox/wayland-ada/issues/new). Be sure to
+  open a new issue. Be sure to
   include a **title and clear description**, as much relevant information
   as possible, and labels.
 
@@ -30,7 +30,7 @@
 #### **Did you fix whitespace, format code, or make a purely cosmetic patch?**
 
 Changes that are cosmetic in nature and do not add anything substantial
-to the stability, functionality, or testability will generally
+to the stability, functionality, or testability of the software will generally
 not be accepted for various reasons, including polluting the git history
 and making backporting fixes harder.
 
@@ -44,7 +44,7 @@ and making backporting fixes harder.
 #### **Branches**
 
 * Make sure that your branch name starts with the issue number and contains
-  only a few words in lower case. For example: `1-xdg-shell`.
+  only a few words in lower case. For example: `1-performance`.
 
 * Make sure that each commit contains one logical change. Do not add
   commits that only fix whitespace, formatting, or typo's. Instead amend
@@ -69,8 +69,9 @@ and making backporting fixes harder.
 
 #### **Commit messages**
 
-* Prefix the first line of your commit message with `egl: `, `tools: `, or
-  `examples: ` if applicable.
+* Prefix the first line of your commit message with (for example) `foo: `
+  if applicable. See previous commits to see whether the project regularly
+  uses prefixes in commit messages.
 
 * Make sure each line is at most 72 characters. If necessary, leave the
   second line blank and write a more detailed explanation starting on the
@@ -99,50 +100,16 @@ and making backporting fixes harder.
   next line, and UNIX line endings.
 
 * If you add a subprogram with many parameters, put the parameters on the
-  next line and try to align the `:`, like this:
-
-  ```ada
-  procedure Display_Set_User_Data
-    (Display : Display_Ptr;
-     Data    : Void_Ptr);
-  ```
-
-  If the subprogram header is less than about 90 characters, then you can
+  next line and try to align the `:`.
+  If the subprogram header is less than about 90 characters, then you may
   keep it all on one line.
 
-* If you add aspects, indent `with` by 2 spaces, unless the parameters
-  are already on separate lines:
+* If you add aspects, indent `with` by 2 spaces. If the parameters
+  are on separate lines then indent by zero spaces.
 
-  ```ada
-  procedure Proxy_Destroy (Object : in out Proxy)
-    with Import, Convention => C, External_Name => "wl_proxy_destroy";
-  ```
-
-  and:
-
-  ```ada
-  function Proxy_Add_Listener
-    (Object  : in out Proxy;
-     Subject : Void_Ptr;
-     Data    : Void_Ptr) return Interfaces.C.int
-  with Import, Convention => C, External_Name => "wl_proxy_add_listener";
-  ```
-
-* If you add declarations to the declarative part of a subprogram's body,
-  put the `is` keyword on a separate line if the parameters are on separate
-  lines as well:
-
-  ```ada
-  procedure Surface_Set_Buffer_Transform
-    (Surface   : Surface_Ptr;
-     Transform : Output_Transform)
-  is
-     function Convert is new Ada.Unchecked_Conversion (Output_Transform, Integer);
-  begin
-  ```
-
-  If the declarative part is empty, then place `is` after the parameters
-  or return type.
+* Put the `is` keyword on a separate line if the parameters are on separate
+  lines *and* the declarative part is not empty. Otherwise place `is` after
+  the parameters or return type.
 
 * In general, try to follow the coding style of the surrounding code.
 
@@ -150,7 +117,7 @@ and making backporting fixes harder.
 
 * Each file should contain an `SPDX-License-Identifier` tag and a license
   header. Contributions created in whole by you should be licensed under
-  the Apache License 2.0.
+  the main license of the project, as specified in the [README][url-readme].
 
 ## Developer Certificate of Origin
 
@@ -175,7 +142,4 @@ information I submit with it, including my sign-off) is maintained
 indefinitely and may be redistributed consistent with this project or
 the open source license(s) involved.
 
-## License
-
-This project is licensed under the Apache License 2.0. See the SPDX license
-identifier at the top of each file.
+  [url-readme]: /README.md
