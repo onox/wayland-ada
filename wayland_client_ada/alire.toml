@@ -19,10 +19,6 @@ linux = true
 
 [[actions]]
 type = "pre-build"
-command = ["mkdir", "-p", "src/protocols"]
-
-[[actions]]
-type = "pre-build"
 command = ["wayland_ada_scanner", "/usr/share/wayland/wayland.xml", "src/protocols"]
 
 [[depends-on]]
