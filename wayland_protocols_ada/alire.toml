@@ -19,10 +19,6 @@ linux = true
 
 [[actions]]
 type = "pre-build"
-command = ["git", "submodule", "update", "--init"]
-
-[[actions]]
-type = "pre-build"
 command = ["wayland_ada_scanner", "wayland-protocols/stable/xdg-shell/xdg-shell.xml", "src"]
 
 [[actions]]
