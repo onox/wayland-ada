@@ -21,7 +21,7 @@ The following [Alire][url-alire] crates exist:
    by this crate and *wayland_protocols_ada*.
 
  - *wayland_protocols_ada*. Thick bindings for various stable and
-   unstable protocols (see below) from the wayland-protocols project.
+   unstable protocols (see below) from the [wayland-protocols][url-wayland-protocols] project.
 
  - *wayland_egl_ada*. Bindings for libwayland-egl.
 
@@ -29,7 +29,7 @@ The following [Alire][url-alire] crates exist:
 
 The following stable protocols are supported:
 
- - xdg-shell (This protocol replaces the wl_shell and wl_shell_surface interfaces)
+ - xdg-shell (This protocol replaces the wl\_shell and wl\_shell\_surface interfaces)
 
  - presentation-time
 
@@ -47,23 +47,28 @@ And the following unstable protocols:
 
  - relative-pointer
 
-These crates and Wayland protocols are used by [AWT][url-awt], a window
+These crates and Wayland protocols are used by [Orka][url-orka],
+a game engine which includes a window
 toolkit that takes care of window management, locking and animating the
 pointer cursor, and handling input devices.
 
 ## Building
 
-Build and run the *wayland_ada_info* crate with Alire to display information
-about Wayland interfaces.
+Build and run the *wayland_ada_info* crate with Alire or by running `make info`
+to display information about Wayland interfaces.
 
 ## Dependencies
 
-Requires Wayland 1.18 or higher and wayland-protocols 1.21 or higher.
+Requires Wayland 1.18 or higher.
+The scanner requires [wayland-protocols][url-wayland-protocols] 1.26
+to generate the Ada bindings.
+This project has been vendorized using `git subtree add` and can be found in
+the wayland\_protocols\_ada/wayland-protocols/ folder.
 
 ## Thanks
 
-Much thanks to [**@joakim-strandberg**][url-user-joakim-strandberg] for starting this project and writing
-most of the wayland scanner.
+Much thanks to [**@joakim-strandberg**][url-user-joakim-strandberg] for starting
+this project and writing most of the wayland scanner.
 
 ## Contributing
 
@@ -74,8 +79,13 @@ issues or pull requests.
 
 wayland-ada is distributed under the terms of the [Apache License 2.0][url-apache].
 
+The XML files found in the wayland\_protocols\_ada/wayland-protocols/ folder
+(vendorized from tag 1.26 of the [wayland-protocols][url-wayland-protocols] project)
+are licensed under the MIT license.
+
   [url-alire]: https://alire.ada.dev/
   [url-apache]: https://opensource.org/licenses/Apache-2.0
   [url-awt]: https://github.com/onox/orka/tree/master/awt
   [url-contributing]: /CONTRIBUTING.md
   [url-user-joakim-strandberg]: https://github.com/joakim-strandberg
+  [url-wayland-protocols]: https://gitlab.freedesktop.org/wayland/wayland-protocols
