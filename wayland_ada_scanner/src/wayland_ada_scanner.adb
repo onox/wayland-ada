@@ -941,6 +941,7 @@ procedure Wayland_Ada_Scanner is
          if Protocol_Name = "xdg_shell" then
             New_Line (File);
             Put_Line (File, "   type State_Array is array (Positive range <>) of Xdg_Toplevel_State;");
+            Put_Line (File, "   type Capability_Array is array (Positive range <>) of Xdg_Toplevel_Wm_Capabilities;");
          end if;
 
          Generate_Code_For_Type_Declarations;
@@ -2173,6 +2174,15 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "");
                Put_Line (File, "      with procedure Close");
                Put_Line (File, "        (Xdg_Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class) is null;");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Configure_Bounds");
+               Put_Line (File, "        (Xdg_Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class;");
+               Put_Line (File, "         Width        : Natural;");
+               Put_Line (File, "         Height       : Natural);");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Capabilities");
+               Put_Line (File, "        (Xdg_Toplevel : in out Xdg_Shell.Xdg_Toplevel'Class;");
+               Put_Line (File, "         Capabilities : Capability_Array);");
             elsif Name = "Xdg_Popup" then
                Put_Line (File, "      with procedure Configure");
                Put_Line (File, "        (Xdg_Popup : in out Xdg_Shell.Xdg_Popup'Class;");
@@ -6023,6 +6033,19 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Xdg_Toplevel : Thin.Xdg_Toplevel_Ptr)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Configure_Bounds");
+               Put_Line (File, "        (Data         : Void_Ptr;");
+               Put_Line (File, "         Xdg_Toplevel : Thin.Xdg_Toplevel_Ptr;");
+               Put_Line (File, "         Width        : Integer;");
+               Put_Line (File, "         Height       : Integer)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Capabilities");
+               Put_Line (File, "        (Data            : Void_Ptr;");
+               Put_Line (File, "         Xdg_Toplevel    : Thin.Xdg_Toplevel_Ptr;");
+               Put_Line (File, "         Wm_Capabilities : Wayland_Array)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Configure");
                Put_Line (File, "        (Data         : Void_Ptr;");
                Put_Line (File, "         Xdg_Toplevel : Thin.Xdg_Toplevel_Ptr;");
@@ -6049,9 +6072,37 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Close (Conversion.To_Pointer (Data).all);");
                Put_Line (File, "      end Internal_Close;");
                Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Configure_Bounds");
+               Put_Line (File, "        (Data         : Void_Ptr;");
+               Put_Line (File, "         Xdg_Toplevel : Thin.Xdg_Toplevel_Ptr;");
+               Put_Line (File, "         Width        : Integer;");
+               Put_Line (File, "         Height       : Integer)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Configure_Bounds (Conversion.To_Pointer (Data).all, Width, Height);");
+               Put_Line (File, "      end Internal_Configure_Bounds;");
+               Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Capabilities");
+               Put_Line (File, "        (Data            : Void_Ptr;");
+               Put_Line (File, "         Xdg_Toplevel    : Thin.Xdg_Toplevel_Ptr;");
+               Put_Line (File, "         Wm_Capabilities : Wayland_Array)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = " & Name & ");");
+               Put_Line (File, "");
+               Put_Line (File, "         Capability_Size : constant := Unsigned_32'Size / System.Storage_Unit;");
+               Put_Line (File, "");
+               Put_Line (File, "         Typed_Capabilities : Capability_Array (1 .. Natural (Wm_Capabilities.Size) / Capability_Size)");
+               Put_Line (File, "           with Address => Wm_Capabilities.Data;");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Capabilities (Conversion.To_Pointer (Data).all, Typed_Capabilities);");
+               Put_Line (File, "      end Internal_Capabilities;");
+               Put_Line (File, "");
                Put_Line (File, "      Listener : aliased Thin." & Name & "_Listener_T :=");
-               Put_Line (File, "        (Configure => Internal_Configure'Unrestricted_Access,");
-               Put_Line (File, "         Close     => Internal_Close'Unrestricted_Access);");
+               Put_Line (File, "        (Configure        => Internal_Configure'Unrestricted_Access,");
+               Put_Line (File, "         Close            => Internal_Close'Unrestricted_Access,");
+               Put_Line (File, "         Configure_Bounds => Internal_Configure_Bounds'Unrestricted_Access,");
+               Put_Line (File, "         Wm_Capabilities  => Internal_Capabilities'Unrestricted_Access);");
                Put_Line (File, "");
             elsif Name = "Xdg_Popup" then
                Put_Line (File, "      procedure Internal_Configure");
