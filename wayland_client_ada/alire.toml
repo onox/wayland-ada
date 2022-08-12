@@ -22,7 +22,7 @@ type = "pre-build"
 command = ["wayland_ada_scanner", "/usr/share/wayland/wayland.xml", "src/protocols"]
 
 [[depends-on]]
-wayland_ada_scanner = "^1.0.0"
+wayland_ada_scanner = "~1.0.0"
 libwayland = "^1.18"
 
 [[pins]]

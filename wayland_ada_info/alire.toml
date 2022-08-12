@@ -16,7 +16,7 @@ validation.compile_checks = "warnings"
 "*".style_checks = ["-gnatygAO-Is"]
 
 [[depends-on]]
-wayland_protocols_ada = "^1.0.0"
+wayland_protocols_ada = "~1.0.0"
 
 [[pins]]
 wayland_protocols_ada = { path = "../wayland_protocols_ada" }

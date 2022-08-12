@@ -50,8 +50,8 @@ type = "pre-build"
 command = ["wayland_ada_scanner", "wayland-protocols/unstable/relative-pointer/relative-pointer-unstable-v1.xml", "src"]
 
 [[depends-on]]
-wayland_ada_scanner = "^1.0.0"
-wayland_client_ada = "^1.0.0"
+wayland_ada_scanner = "~1.0.0"
+wayland_client_ada = "~1.0.0"
 
 [[pins]]
 wayland_ada_scanner = { path = "../wayland_ada_scanner" }
