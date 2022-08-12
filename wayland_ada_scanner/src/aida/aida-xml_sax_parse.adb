@@ -439,7 +439,8 @@ is
                         if Call_Result.Has_Failed then
                            exit;
                         end if;
-                     elsif CP = L1.LF or CP = L1.CR then
+                     elsif CP = '<' or CP = '&' then
+                        --  https://www.w3.org/TR/REC-xml/#NT-AttValue
                         Call_Result.Initialize (0587945467, 1683764896);
                         exit;
                      end if;
