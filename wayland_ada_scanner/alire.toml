@@ -5,7 +5,7 @@ website = "https://github.com/onox/wayland-ada"
 licenses = "Apache-2.0"
 tags = ["wayland", "egl"]
 
-authors = ["onox"]
+authors = ["onox", "Joakim Strandberg"]
 maintainers = ["onox <denkpadje@gmail.com>"]
 maintainers-logins = ["onox"]
 
