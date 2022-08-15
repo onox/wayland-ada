@@ -1867,6 +1867,11 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "        (Pointer  : in out Client.Pointer'Class;");
                Put_Line (File, "         Axis     : Pointer_Axis;");
                Put_Line (File, "         Discrete : Integer) is null;");
+               Put_Line (File, "");
+               Put_Line (File, "      with procedure Pointer_Scroll_Value120");
+               Put_Line (File, "        (Pointer  : in out Client.Pointer'Class;");
+               Put_Line (File, "         Axis     : Pointer_Axis;");
+               Put_Line (File, "         Value120 : Integer) is null;");
             elsif Name = "Keyboard" then
                Put_Line (File, "      with procedure Keymap");
                Put_Line (File, "        (Keyboard : in out Client.Keyboard'Class;");
@@ -5199,6 +5204,13 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Discrete : Integer)");
                Put_Line (File, "      with Convention => C;");
                Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Pointer_Axis_Value120");
+               Put_Line (File, "        (Data     : Void_Ptr;");
+               Put_Line (File, "         Pointer  : Thin.Pointer_Ptr;");
+               Put_Line (File, "         Axis     : Pointer_Axis;");
+               Put_Line (File, "         Value120 : Integer)");
+               Put_Line (File, "      with Convention => C;");
+               Put_Line (File, "");
                Put_Line (File, "      procedure Internal_Pointer_Enter");
                Put_Line (File, "        (Data      : Void_Ptr;");
                Put_Line (File, "         Pointer   : Thin.Pointer_Ptr;");
@@ -5304,6 +5316,17 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Pointer_Scroll_Discrete (Conversion.To_Pointer (Data).all, Axis, Discrete);");
                Put_Line (File, "      end Internal_Pointer_Axis_Discrete;");
                Put_Line (File, "");
+               Put_Line (File, "      procedure Internal_Pointer_Axis_Value120");
+               Put_Line (File, "        (Data     : Void_Ptr;");
+               Put_Line (File, "         Pointer  : Thin.Pointer_Ptr;");
+               Put_Line (File, "         Axis     : Pointer_Axis;");
+               Put_Line (File, "         Value120 : Integer)");
+               Put_Line (File, "      is");
+               Put_Line (File, "         pragma Assert (Conversion.To_Pointer (Data).Proxy = Pointer);");
+               Put_Line (File, "      begin");
+               Put_Line (File, "         Pointer_Scroll_Value120 (Conversion.To_Pointer (Data).all, Axis, Value120);");
+               Put_Line (File, "      end Internal_Pointer_Axis_Value120;");
+               Put_Line (File, "");
                Put_Line (File, "      Listener : aliased Thin.Pointer_Listener_T :=");
                Put_Line (File, "        (Enter         => Internal_Pointer_Enter'Unrestricted_Access,");
                Put_Line (File, "         Leave         => Internal_Pointer_Leave'Unrestricted_Access,");
@@ -5313,7 +5336,8 @@ procedure Wayland_Ada_Scanner is
                Put_Line (File, "         Frame         => Internal_Pointer_Frame'Unrestricted_Access,");
                Put_Line (File, "         Axis_Source   => Internal_Pointer_Axis_Source'Unrestricted_Access,");
                Put_Line (File, "         Axis_Stop     => Internal_Pointer_Axis_Stop'Unrestricted_Access,");
-               Put_Line (File, "         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access);");
+               Put_Line (File, "         Axis_Discrete => Internal_Pointer_Axis_Discrete'Unrestricted_Access,");
+               Put_Line (File, "         Axis_Value120 => Internal_Pointer_Axis_Value120'Unrestricted_Access);");
                Put_Line (File, "");
             elsif Name = "Keyboard" then
                Put_Line (File, "      procedure Internal_Keymap");
