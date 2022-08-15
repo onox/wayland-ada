@@ -161,7 +161,7 @@ procedure Wayland_Ada_Scanner is
    type Subprogram_Kind is (Declaration, Implementation);
 
    Max_Line_Length : constant := 99;
-   Generate_Interfaces_For_Client : constant Boolean := False;
+   Generate_Interfaces_For_Client : constant Boolean := True;
    Unused_Padding_Name : constant String := "Unused";
 
    procedure Generate_Pretty_Code_For_Subprogram

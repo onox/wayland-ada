@@ -64,6 +64,8 @@ The scanner requires [wayland-protocols][url-wayland-protocols] 1.26
 to generate the Ada bindings.
 This project has been vendorized using `git subtree add` and can be found in
 the wayland\_protocols\_ada/wayland-protocols/ folder.
+The core protocol uses wayland.xml of [Wayland][url-wayland] 1.21.0 and
+has been vendorized as well.
 
 ## Thanks
 
@@ -83,9 +85,14 @@ The XML files found in the wayland\_protocols\_ada/wayland-protocols/ folder
 (vendorized from tag 1.26 of the [wayland-protocols][url-wayland-protocols] project)
 are licensed under the MIT license.
 
+The XML file wayland\_client\_ada/protocol/wayland.xml
+(vendorized from tag 1.21.0 of [wayland][url-wayland] project)
+is licensed under the MIT license.
+
   [url-alire]: https://alire.ada.dev/
   [url-apache]: https://opensource.org/licenses/Apache-2.0
   [url-awt]: https://github.com/onox/orka/tree/master/awt
   [url-contributing]: /CONTRIBUTING.md
   [url-user-joakim-strandberg]: https://github.com/joakim-strandberg
   [url-wayland-protocols]: https://gitlab.freedesktop.org/wayland/wayland-protocols
+  [url-wayland]: https://gitlab.freedesktop.org/wayland/wayland
