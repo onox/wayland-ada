@@ -389,6 +389,7 @@ package body Wayland_Ada_Info_Events is
 
    procedure Run is
    begin
+      WP.Client.Initialize;
       Display.Connect;
 
       if not Display.Is_Connected then
