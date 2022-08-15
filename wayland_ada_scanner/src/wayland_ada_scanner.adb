@@ -3936,6 +3936,9 @@ procedure Wayland_Ada_Scanner is
 
                            Put_Line (File, ");");
 
+                           --  TODO Replace Proxy_Marshal + Proxy_Destroy with
+                           --  Proxy_Marshal_Flags when requiring libwayland >= 1.20
+                           --  to avoid race condition (see 23e4a70 in wayland project)
                            if Xml_Parser_Utils.Is_Request_Destructor (Request_Tag) then
                               Put_Line (File, "");
                               Put_Line (File, "      Wayland.API.Proxy_Destroy (" & Name & ".all);");
