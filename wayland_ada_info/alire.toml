@@ -13,7 +13,7 @@ executables = ["wayland_ada_info"]
 
 [build-switches]
 validation.compile_checks = "warnings"
-"*".style_checks = ["-gnatygAO-Is"]
+"*".style_checks = ["-gnatygAOM99-Is"]
 
 [[depends-on]]
 wayland_protocols_ada = "~1.0.0"

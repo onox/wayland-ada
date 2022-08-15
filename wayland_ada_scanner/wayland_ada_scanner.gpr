@@ -11,8 +11,7 @@ project Wayland_Ada_Scanner is
    for Main use ("wayland_ada_scanner.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use Wayland_Ada_Scanner_Config.Ada_Compiler_Switches &
-        ("-gnatyM190");
+      for Default_Switches ("Ada") use Wayland_Ada_Scanner_Config.Ada_Compiler_Switches;
       for Local_Configuration_Pragmas use "gnat.adc";
    end Compiler;
 

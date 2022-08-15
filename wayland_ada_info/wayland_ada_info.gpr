@@ -11,8 +11,7 @@ project Wayland_Ada_Info is
    for Main use ("wayland_ada_info.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use Wayland_Ada_Info_Config.Ada_Compiler_Switches &
-        ("-gnatyM99");
+      for Default_Switches ("Ada") use Wayland_Ada_Info_Config.Ada_Compiler_Switches;
       for Local_Configuration_Pragmas use "gnat.adc";
    end Compiler;
 
